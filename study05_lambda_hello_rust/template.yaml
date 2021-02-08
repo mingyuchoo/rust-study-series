@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: "AWS::Serverless-2016-10-31"
+
+Resources:
+  HelloRustFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: HelloRust
+      Handler: bootstrap.is.real.handler
+      Runtime: provided
+      MemorySize: 128
+      CodeUri: rust.zip
+    Metadata:
+      BuildMethod: makefile
