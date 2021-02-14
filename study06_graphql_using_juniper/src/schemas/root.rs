@@ -1,13 +1,14 @@
 use juniper::{FieldError, FieldResult, RootNode};
+use mysql::prelude::*;
 use mysql::{from_row, params, Error as DBError, Row};
 
-use crate::db::Pool;
+use crate::db::DBPool;
 
 use super::product::{Product, ProductInput};
 use super::user::{User, UserInput};
 
 pub struct Context {
-    pub dbpool: Pool,
+    pub dbpool: DBPool,
 }
 
 impl juniper::Context for Context {}
@@ -18,28 +19,25 @@ pub struct QueryRoot;
 impl QueryRoot {
     #[graphql(description = "List of all users")]
     fn users(context: &Context) -> FieldResult<Vec<User>> {
-        let mut conn = context.dbpool.get().unwrap();
+        let mut conn = context.dbpool.get_conn().unwrap();
         let users = conn
-            .prep_exec("SELECT * FROM user", ())
-            .map(|result| {
-                result
-                    .map(|x| x.unwrap())
-                    .map(|mut row| {
-                        let (id, name, email) = from_row(row);
-                        User { id, name, email }
-                    })
-                    .collect()
+            .query_map("select id, name, email from user", |(id, name, email)| {
+                User {
+                    id: id,
+                    name: name,
+                    email: email,
+                }
             })
             .unwrap();
+
         Ok(users)
     }
 
     #[graphql(description = "Get Single user reference by user ID")]
     fn user(context: &Context, id: String) -> FieldResult<User> {
-        let mut conn = context.dbpool.get().unwrap();
-
+        let mut conn = context.dbpool.get_conn().unwrap();
         let user: Result<Option<Row>, DBError> =
-            conn.first_exec("SELECT * FROM user WHERE id=:id", params! {"id" => id});
+            conn.exec_first("SELECT * FROM user WHERE id=:id", params! {"id" => id});
 
         if let Err(err) = user {
             return Err(FieldError::new(
@@ -54,22 +52,15 @@ impl QueryRoot {
 
     #[graphql(description = "List of all products")]
     fn products(context: &Context) -> FieldResult<Vec<Product>> {
-        let mut conn = context.dbpool.get().unwrap();
+        let mut conn = context.dbpool.get_conn().unwrap();
         let products = conn
-            .prep_exec("SELECT * FROM product", ())
-            .map(|result| {
-                result
-                    .map(|x| x.unwrap())
-                    .map(|mut row| {
-                        let (id, user_id, name, price) = from_row(row);
-                        Product {
-                            id,
-                            user_id,
-                            name,
-                            price,
-                        }
-                    })
-                    .collect()
+            .query_map("SELECT * FROM product", |(id, user_id, name, price)| {
+                Product {
+                    id,
+                    user_id,
+                    name,
+                    price,
+                }
             })
             .unwrap();
         Ok(products)
@@ -77,9 +68,9 @@ impl QueryRoot {
 
     #[graphql(description = "Get Single product reference by product ID")]
     fn product(context: &Context, id: String) -> FieldResult<Product> {
-        let mut conn = context.dbpool.get().unwrap();
+        let mut conn = context.dbpool.get_conn().unwrap();
         let product: Result<Option<Row>, DBError> =
-            conn.first_exec("SELECT * FROM product WHERE id=:id", params! {"id" => id});
+            conn.exec_first("SELECT * FROM product WHERE id=:id", params! {"id" => id});
         if let Err(err) = product {
             return Err(FieldError::new(
                 "Product Not Found",
@@ -103,10 +94,10 @@ pub struct MutationRoot;
 impl MutationRoot {
     #[graphql(description = "Create Single user")]
     fn create_user(context: &Context, user: UserInput) -> FieldResult<User> {
-        let mut conn = context.dbpool.get().unwrap();
+        let mut conn = context.dbpool.get_conn().unwrap();
         let new_id = uuid::Uuid::new_v4().to_simple().to_string();
 
-        let insert: Result<Option<Row>, DBError> = conn.first_exec(
+        let insert: Result<Option<Row>, DBError> = conn.exec_first(
             "INSERT INTO user(id, name, email) VALUES(:id, :name, :email)",
             params! {
                 "id" => &new_id,
@@ -133,13 +124,43 @@ impl MutationRoot {
             }
         }
     }
+    // TODO: handling when deleting data not exists
+    #[graphql(description = "Delete Single user")]
+    fn delete_user(context: &Context, user: UserInput) -> FieldResult<User> {
+        let mut conn = context.dbpool.get_conn().unwrap();
+
+        let delete: Result<Option<Row>, DBError> = conn.exec_first(
+            "DELETE FROM user WHERE name = :name AND email = :email",
+            params! {
+                "name" => &user.name,
+                "email" => &user.email,
+            },
+        );
+        match delete {
+            Ok(opt_row) => Ok(User {
+                id: "".to_string(),
+                name: user.name,
+                email: user.email,
+            }),
+            Err(err) => {
+                let msg = match err {
+                    DBError::MySqlError(err) => err.message,
+                    _ => "internal error".to_owned(),
+                };
+                Err(FieldError::new(
+                    "Failed to delete a user",
+                    graphql_value!({ "internal_error": msg }),
+                ))
+            }
+        }
+    }
 
     #[graphql(description = "Create Single product")]
     fn create_product(context: &Context, product: ProductInput) -> FieldResult<Product> {
-        let mut conn = context.dbpool.get().unwrap();
+        let mut conn = context.dbpool.get_conn().unwrap();
         let new_id = uuid::Uuid::new_v4().to_simple().to_string();
 
-        let insert: Result<Option<Row>, DBError> = conn.first_exec(
+        let insert: Result<Option<Row>, DBError> = conn.exec_first(
             "INSERT INTO product(id, user_id, name, price) VALUES(:id, :user_id, :name, :price)",
             params! {
                 "id" => &new_id,
@@ -163,6 +184,40 @@ impl MutationRoot {
                 };
                 Err(FieldError::new(
                     "Failed to create new product",
+                    graphql_value!({ "internal_error": msg }),
+                ))
+            }
+        }
+    }
+
+    // TODO: handling when deleting data not exists
+    #[graphql(description = "Delete Single product")]
+    fn delete_product(context: &Context, product: ProductInput) -> FieldResult<Product> {
+        let mut conn = context.dbpool.get_conn().unwrap();
+
+        let insert: Result<Option<Row>, DBError> = conn.exec_first(
+            "DELETE FROM product WHERE user_id = :user_id AND name = :name AND price = :price",
+            params! {
+                "user_id" => &product.user_id,
+                "name" => &product.name,
+                "price" => &product.price.to_owned(),
+            },
+        );
+
+        match insert {
+            Ok(opt_row) => Ok(Product {
+                id: "".to_string(),
+                user_id: product.user_id,
+                name: product.name,
+                price: product.price,
+            }),
+            Err(err) => {
+                let msg = match err {
+                    DBError::MySqlError(err) => err.message,
+                    _ => "internal error".to_owned(),
+                };
+                Err(FieldError::new(
+                    "Failed to delete a product",
                     graphql_value!({ "internal_error": msg }),
                 ))
             }

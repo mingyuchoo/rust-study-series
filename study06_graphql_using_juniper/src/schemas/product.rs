@@ -1,4 +1,5 @@
-use mysql::{from_row, params, Error as DBError, Row};
+use mysql::prelude::*;
+use mysql::{from_row, params};
 
 use crate::schemas::root::Context;
 use crate::schemas::user::User;
@@ -28,8 +29,8 @@ impl Product {
     }
 
     fn user(&self, context: &Context) -> Option<User> {
-        let mut conn = context.dbpool.get().unwrap();
-        let user: Result<Option<Row>, DBError> = conn.first_exec(
+        let mut conn = context.dbpool.get_conn().unwrap();
+        let user = conn.exec_first(
             "SELECT * FROM user WHERE id=:id",
             params! {"id" => &self.user_id},
         );

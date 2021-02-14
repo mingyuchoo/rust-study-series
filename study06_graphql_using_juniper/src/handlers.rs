@@ -2,11 +2,11 @@ use actix_web::{web, Error, HttpResponse};
 use juniper::http::playground::playground_source;
 use juniper::http::GraphQLRequest;
 
-use crate::db::Pool;
+use crate::db::DBPool;
 use crate::schemas::root::{create_schema, Context, Schema};
 
 pub async fn graphql(
-    pool: web::Data<Pool>,
+    pool: web::Data<DBPool>,
     schema: web::Data<Schema>,
     data: web::Json<GraphQLRequest>,
 ) -> Result<HttpResponse, Error> {

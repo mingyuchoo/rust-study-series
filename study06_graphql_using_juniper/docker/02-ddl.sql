@@ -29,7 +29,7 @@ CREATE TABLE `product` (
   `price` decimal(10,0) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `product_fk0` (`user_id`),
-  CONSTRAINT `product_fk0` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`)
+  CONSTRAINT `product_fk0` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

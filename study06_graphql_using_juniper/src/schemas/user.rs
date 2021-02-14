@@ -1,4 +1,5 @@
-use mysql::{from_row, params};
+use mysql::params;
+use mysql::prelude::*;
 
 use crate::schemas::product::Product;
 use crate::schemas::root::Context;
@@ -31,28 +32,17 @@ impl User {
     }
 
     fn products(&self, context: &Context) -> Vec<Product> {
-        let mut conn = context.dbpool.get().unwrap();
-
-        conn.prep_exec(
+        let mut conn = context.dbpool.get_conn().unwrap();
+        conn.exec_map(
             "SELECT * FROM product WHERE user_id=:user_id",
-            params! {
-                "user_id" => &self.id
+            params! { "user_id" => &self.id},
+            |(id, user_id, name, price)| Product {
+                id,
+                user_id,
+                name,
+                price,
             },
         )
-        .map(|result| {
-            result
-                .map(|x| x.unwrap())
-                .map(|mut row| {
-                    let (id, user_id, name, price) = from_row(row);
-                    Product {
-                        id,
-                        user_id,
-                        name,
-                        price,
-                    }
-                })
-                .collect()
-        })
         .unwrap()
     }
 }
