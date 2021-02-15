@@ -8,3 +8,7 @@ $ cargo run
 $ cargo check
 $ cargo build -- release
 ```
+
+## Reference
+
+- https://learning-rust.github.io/

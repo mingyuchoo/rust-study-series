@@ -16,3 +16,6 @@ pkg/
 
 # Logs
 wasm-pack.log
+
+# binary
+main
