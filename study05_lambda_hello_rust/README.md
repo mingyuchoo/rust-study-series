@@ -12,8 +12,9 @@
 
 ## 빌드하는 방법
 
-- `yarn clean`: `target`디렉토리와 `package.yaml` 파일을 삭제한다.
-- `yarn cargo:build`: `src` 소스 파일을 트랜스파일해서 `target/x86_64-unknown-linux-musl/release`에 빌드한다.
+- `yarn`: `package.json`에 선언된 패키지를 설치합니다.
+- `yarn clean`: `target`디렉토리와 `package.yaml` 파일을 삭제합니다.
+- `yarn cargo:build`: `src` 소스 파일을 트랜스파일해서 `target/x86_64-unknown-linux-musl/release`에 빌드합니다.
 - `yarn zip`: 빌드한 바이너리를 `rust.zip` 파일로 압축합니다.
 - `yarn sam:validate`: `template.yaml` 파일에 오류가 없는지 검증합니다.
 - `yarn sam:package`: `template.yaml`을 이용하여 `package.yaml` 파일을 만듭니다.
