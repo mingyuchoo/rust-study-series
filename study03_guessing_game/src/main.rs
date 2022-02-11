@@ -1,40 +1,33 @@
-use rand::Rng;
-use std::cmp::Ordering;
 use std::io;
-
-
+use std::cmp::Ordering;
+use rand::Rng;
 
 fn main() {
-  println!("Guess the number!");
-  
+  println!("숫자를 맞혀봅시다!");
   let secret_number = rand::thread_rng().gen_range(1, 101);
 
-  println!("The secret number is: {}", secret_number);
+  // println!("게임 플레이어가 맞혀야 할 숫자: {}", secret_number);
 
   loop {
-    println!("Please input your guess.");
-
+    println!("정답이라고 생각하는 숫자를 입력하세요.");
     let mut guess = String::new();
 
-    io::stdin()
-    .read_line(&mut guess)
-    .expect("Failed to read line");
+    io::stdin().read_line(&mut guess).expect("입력한 값을 읽지 못했습니다.");
 
     let guess: u32 = match guess.trim().parse() {
-      Ok(num) => num,
-      Err(_) => continue,
-    };
+        Ok(num) => num,
+        Err(_) => continue,
+      };
 
-
-    println!("You guessed: {}", guess);
+    println!("입력한 값: {}", guess);
 
     match guess.cmp(&secret_number) {
-        Ordering::Less => println!("Too small!"),
-        Ordering::Greater => println!("Too big!"),
-        Ordering::Equal => {
-          println!("You win!");
-          break;
-        }
-    }  
+      Ordering::Less => println!("입력한 숫자가 작습니다!"),
+      Ordering::Greater => println!("입력한 숫자가 큽니다!"),
+      Ordering::Equal =>  {
+        println!("정답!");
+        break;
+      }
+    }
   }
 }
