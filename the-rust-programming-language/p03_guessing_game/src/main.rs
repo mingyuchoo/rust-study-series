@@ -4,13 +4,13 @@ use rand::Rng;
 
 fn main() {
   println!("숫자를 맞혀봅시다!");
-  let secret_number = rand::thread_rng().gen_range(1, 101);
+  let secret_number: u32 = rand::thread_rng().gen_range(1, 101);
 
   // println!("게임 플레이어가 맞혀야 할 숫자: {}", secret_number);
 
   loop {
     println!("정답이라고 생각하는 숫자를 입력하세요.");
-    let mut guess = String::new();
+    let mut guess: String = String::new();
 
     io::stdin().read_line(&mut guess).expect("입력한 값을 읽지 못했습니다.");
 
