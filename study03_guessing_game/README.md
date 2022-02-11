@@ -1,4 +1,6 @@
-# How to build and run
+# study03_guessing_game
+
+## How to build and run
 
 ```bash
 $ cargo bulid

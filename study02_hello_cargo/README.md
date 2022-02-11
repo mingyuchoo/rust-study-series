@@ -1,4 +1,5 @@
-# How to build and run
+# study02_hello_cargo
+## How to build and run
 
 ```
 $ cargo new study02_hello_cargo
