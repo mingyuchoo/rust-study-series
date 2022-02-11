@@ -1,4 +1,4 @@
-# study03_guessing_game
+# 03_guessing_game
 
 ## How to build and run
 

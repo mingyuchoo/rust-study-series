@@ -1,4 +1,5 @@
-# study1_hello_world
+# 1_hello_world
+
 ## How to build and run
 
 ```
