@@ -21,3 +21,27 @@ pub fn return_value() {
     some_string.push_str(", world");
   }
 }
+
+pub fn mutable_reference() {
+  println!("-- mutable_reference()");
+
+  let mut s = String::from("hello");
+  {
+    let r1 = &mut s;
+    println!("{}", r1);
+  }
+  let r2 = &mut s;
+
+  println!("{}", r2);
+}
+
+pub fn dead_reference() {
+  let referend_to_nothing = dangle();
+  println!("{}", referend_to_nothing);
+
+  // fn dangle() -> &String {      // bad
+  fn dangle() -> String {          // good
+    let s = String::from("hellO");
+    s
+  }
+}

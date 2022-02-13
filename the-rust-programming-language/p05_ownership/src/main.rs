@@ -2,6 +2,7 @@ mod variable_scope;
 mod complex_data_type;
 mod memory_allocation;
 mod reference_and_borrow;
+mod slice_type;
 
 fn main() {
     variable_scope::scope();
@@ -14,4 +15,8 @@ fn main() {
     memory_allocation::return_ownership();
 
     reference_and_borrow::return_value();
+    reference_and_borrow::mutable_reference();
+    reference_and_borrow::dead_reference();
+
+    slice_type::get_first_word();
 }
