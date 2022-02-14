@@ -19,4 +19,5 @@ fn main() {
     reference_and_borrow::dead_reference();
 
     slice_type::get_first_word();
+    slice_type::get_element_of_array();
 }

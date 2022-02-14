@@ -29,3 +29,24 @@ pub fn get_first_word() {
     &s[..]
   }
 }
+
+pub fn get_element_of_array() {
+  println!("-- get_element_of_array()");
+
+  let a = [1,2,3,4,5];
+
+  for item in a.iter() {
+    println!("item: {}", item);
+  }
+
+
+  let slice = &a[1..3];
+
+  for item in slice.iter() {
+    println!("item: {}", item);
+  }
+
+  for (i, &item) in slice.iter().enumerate() {
+    println!("index: {}, item: {}", i, item);
+  }
+}
