@@ -16,4 +16,7 @@ fn main() {
     traits::call2();
     traits::call3();
     traits::call4();
+    traits::call5();
+    traits::call6();
+    traits::call7();
 }

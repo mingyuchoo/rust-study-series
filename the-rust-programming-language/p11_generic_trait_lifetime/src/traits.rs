@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 pub fn call1() {
   pub trait Summary {
     fn summarize(&self) -> String;
@@ -128,5 +130,79 @@ pub fn call5() {
   {
     // need to implement
     1
+  }
+}
+
+pub fn call6() {
+  pub trait Summary {
+    fn summarize(&self) -> String {
+      String::from("(계속 읽기)")
+    }
+  }
+  pub struct NewsArticle {
+    pub headline: String,
+    pub location: String,
+    pub author: String,
+    pub content: String,
+  }
+  impl Summary for NewsArticle {}
+
+  pub struct Tweet {
+    pub username: String,
+    pub content: String,
+    pub reply: bool,
+    pub retweet: bool,
+  }
+  impl Summary for Tweet {}
+
+  pub fn returns_summarizable1() -> impl Summary {
+    Tweet {
+      username: String::from("hourse_ebooks"),
+      content: String::from("러스트 공부를 시작했습니다."),
+      reply: false,
+      retweet: false,
+    }
+  }
+
+  // pub fn returns_summarizable2(switch: bool) -> impl Summary {
+  //   if switch {
+  //     NewsArticle {
+  //       headline: String::from("대한민국, 러시아 월드컵 예선에서 독일을 이겼다."),
+  //       location: String::from("카잔 아레나, 러시아"),
+  //       author: String::from("위키백과"),
+  //       content: String::from("2018년 6월 27일 러시아 카잔의 카잔 아레나에서 열린 2018년 월드컵..."),
+  //     }
+  //   } else {
+  //     Tweet {
+  //       username: String::from("hourse_ebook"),
+  //       content: String::from("러스트 언어 공부를 시작했습니다."),
+  //       reply: false,
+  //       retweet: false,
+  //     }
+  //   }
+  // }
+}
+
+pub fn call7() {
+  struct Pair<T> {
+    x: T,
+    y: T,
+  }
+  impl<T> Pair<T> {
+    fn new (x: T, y: T) -> Self {
+      Self {
+        x,
+        y,
+      }
+    }
+  }
+  impl<T: Display + PartialOrd> Pair<T> {
+    fn cmp_display(&self) {
+      if self.x >= self.y {
+        println!("가장 큰 멤버는  x: {}", self.x);
+      } else {
+        println!("가장 큰 멤버는  y: {}", self.y);
+      }
+    }
   }
 }
