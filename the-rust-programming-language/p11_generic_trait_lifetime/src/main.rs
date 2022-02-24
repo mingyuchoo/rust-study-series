@@ -1,6 +1,7 @@
 mod generic_functions;
 mod generic_data_types;
 mod traits;
+mod lifetime;
 
 fn main() {
     generic_functions::call1();
@@ -19,4 +20,9 @@ fn main() {
     traits::call5();
     traits::call6();
     traits::call7();
+
+    lifetime::call1();
+    lifetime::call2();
+    lifetime::call3();
+    lifetime::call4();
 }
