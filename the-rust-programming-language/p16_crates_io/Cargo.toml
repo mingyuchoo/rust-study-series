@@ -1,0 +1,12 @@
+[workspace]
+members = [
+  "adder",
+  "add_one",
+  "art",
+]
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 3
