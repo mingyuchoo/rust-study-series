@@ -36,26 +36,26 @@ templates and usages of `wasm-pack`.
 
 [Learn more about `cargo generate` here.](https://github.com/ashleygwilliams/cargo-generate)
 
-```
+```bash
 cargo generate --git https://github.com/rustwasm/wasm-pack-template.git --name my-project
 cd my-project
 ```
 
 ### 🛠️ Build with `wasm-pack build`
 
-```
+```bash
 wasm-pack build
 ```
 
 ### 🔬 Test in Headless Browsers with `wasm-pack test`
 
-```
+```bash
 wasm-pack test --headless --firefox
 ```
 
 ### 🎁 Publish to NPM with `wasm-pack publish`
 
-```
+```bash
 wasm-pack publish
 ```
 

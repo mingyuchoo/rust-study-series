@@ -3,10 +3,11 @@
 ## How to create rust workspace
 
 ```bash
-$ mkdir <workspace_name>
-$ cd <workspace_name>
-$ touch Cargo.toml
+mkdir <workspace_name>
+cd <workspace_name>
+touch Cargo.toml
 ```
+
 edit `<workspace_name>/Cargo.toml`
 
 ```toml
@@ -20,7 +21,7 @@ members = [
 add a binary crate
 
 ```bash
-$ cargo new <binary_crate_name>
+cargo new <binary_crate_name>
 ```
 
 edit `<workspace_name>/Cargo.toml`
@@ -37,19 +38,19 @@ members = [
 add a library crate
 
 ```bash
-$ cargo new <library_crate_name> --lib
+cargo new <library_crate_name> --lib
 ```
 
 ## How to build
 
 ```bash
-$ cargo clean
-$ cargo fmt
-$ cargo test
-$ cargo doc  # cargo doc --open
-$ cargo build
-$ cargo build --release
-$ cargo run -p adder # or cargo run
+cargo clean
+cargo fmt
+cargo test
+cargo doc  # cargo doc --open
+cargo build
+cargo build --release
+cargo run -p adder # or cargo run
 ```
 
 ## Important

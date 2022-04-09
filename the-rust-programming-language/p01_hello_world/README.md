@@ -3,7 +3,6 @@
 ## How to build and run
 
 ```
-$ rustc main.rs
-$ ./main
-
+rustc main.rs
+./main
 ```

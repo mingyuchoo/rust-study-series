@@ -22,6 +22,6 @@
 
 ## 참고할 페이지
 
-- https://aws.amazon.com/blogs/opensource/rust-runtime-for-aws-lambda/
-- https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-custom-runtimes.html
-- http://arun-gupta.github.io/rust-lambda/
+- <https://aws.amazon.com/blogs/opensource/rust-runtime-for-aws-lambda/>
+- <https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-custom-runtimes.html>
+- <http://arun-gupta.github.io/rust-lambda/>

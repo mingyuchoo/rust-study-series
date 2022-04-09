@@ -3,9 +3,9 @@
 ## How to build and run
 
 ```bash
-$ cargo bulid
-$ cargo test
-$ cargo run
+cargo bulid
+cargo test
+cargo run
 ```
 
 ## Optional commands
@@ -13,11 +13,11 @@ $ cargo run
 ### Update dependencies using in project
 
 ```
-$ cargo update
+cargo update
 ```
 
 ### Create HTML document and Open it with Web browser
 
 ```
-$ cargo doc --open
+cargo doc --open
 ```
