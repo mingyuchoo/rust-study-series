@@ -1,4 +1,4 @@
-# p03_guessing_game
+# p10_errors
 
 ## How to build and run
 

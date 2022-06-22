@@ -1,13 +1,14 @@
-# 02_hello_cargo
+# p02_hello_cargo
 
 ## How to build and run
 
-```
+```bash
 cargo new 02_hello_cargo
 cd 02_hello_cargo
-cargo build
-cargo run
 cargo check
+cargo build
+cargo test
+cargo run
 cargo build -- release
 ```
 

@@ -1,4 +1,4 @@
-# p03_guessing_game
+# p08_organize
 
 ## How to build and run
 

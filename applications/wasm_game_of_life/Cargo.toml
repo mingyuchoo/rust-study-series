@@ -2,7 +2,7 @@
 name = "wasm-game-of-life"
 version = "0.1.0"
 authors = ["mingyuchoo <mingyuchoo@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

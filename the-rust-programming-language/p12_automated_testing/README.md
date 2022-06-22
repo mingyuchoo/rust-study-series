@@ -1,4 +1,4 @@
-# p03_guessing_game
+# p12_automated_testing
 
 ## How to build and run
 

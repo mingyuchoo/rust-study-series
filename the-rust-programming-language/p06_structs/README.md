@@ -1,4 +1,4 @@
-# p03_guessing_game
+# p06_structs
 
 ## How to build and run
 

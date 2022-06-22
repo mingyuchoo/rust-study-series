@@ -1,4 +1,4 @@
-# p03_guessing_game
+# p18_concurrent_parallel
 
 ## How to build and run
 

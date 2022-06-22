@@ -1,4 +1,4 @@
-# p03_guessing_game
+# p17_smart_pointer
 
 ## How to build and run
 
