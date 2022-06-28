@@ -29,11 +29,12 @@
 ## How do you use this?
 
 ```bash
-$ cargo run test poem.txt
+rustup default stable
+rustup update stable
 
+cargo run test poem.txt
 # or
-
-$ ./run.sh
+./run.sh
 ```
 
 ## What do you get from this?

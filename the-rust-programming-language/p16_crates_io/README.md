@@ -3,6 +3,9 @@
 ## How to create rust workspace
 
 ```bash
+rustup default stable
+rustup update stable
+
 mkdir <workspace_name>
 cd <workspace_name>
 touch Cargo.toml

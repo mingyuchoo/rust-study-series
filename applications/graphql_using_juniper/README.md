@@ -7,6 +7,11 @@ GraphQL Implementation in Rust using Actix, Juniper, and Mysql as Database
 - Rust Installed
 - MySql as Database
 
+```bash
+rustup default stable
+rustup update stable
+```
+
 ## Database Configuration
 
 Create a new database for this project, and import the existing database schema has been provided named `01-init.sql, 02-ddl.sql, 03-dml.sql`.

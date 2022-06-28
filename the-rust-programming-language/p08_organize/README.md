@@ -3,6 +3,9 @@
 ## How to build and run
 
 ```bash
+rustup default stable
+rustup update stable
+
 cargo check
 cargo bulid
 cargo test
