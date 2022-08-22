@@ -6,7 +6,7 @@ fn main() {
   println!("숫자를 맞혀봅시다!");
   let secret_number: u32 = rand::thread_rng().gen_range(1, 101);
 
-  // println!("게임 플레이어가 맞혀야 할 숫자: {}", secret_number);
+  println!("게임 플레이어가 맞혀야 할 숫자: {}", secret_number);
 
   loop {
     println!("정답이라고 생각하는 숫자를 입력하세요.");
