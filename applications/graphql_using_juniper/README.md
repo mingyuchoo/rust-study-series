@@ -7,7 +7,7 @@ GraphQL Implementation in Rust using Actix, Juniper, and Mysql as Database
 - Rust Installed
 - MySql as Database
 
-```bash
+```sh
 rustup default stable
 rustup update stable
 ```
@@ -18,9 +18,15 @@ Create a new database for this project, and import the existing database schema 
 
 Create `.env` file on the root directory of this project and set environment variable named `DATABASE_URL`, the example file has been provided named `.env.test`, you can see the format on there.
 
-## Run
+## How to build
 
-```bash
+```sh
+cargo build
+```
+
+## How to run
+
+```sh
 # go to the root dir
 $ cd graphql_using_juniper
 

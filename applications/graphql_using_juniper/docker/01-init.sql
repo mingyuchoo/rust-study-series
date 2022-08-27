@@ -3,4 +3,4 @@
 -- 단지 개발/테스트용으로 만든 스크립트입니다.
 -- ----------------------------------------------------------------------------
 GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
-GRANT ALL PRIVILEGES ON *.* TO 'myusername'@'%' WITH GRANT OPTION;
+GRANT ALL PRIVILEGES ON *.* TO 'test'@'%' WITH GRANT OPTION;
