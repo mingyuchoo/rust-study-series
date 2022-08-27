@@ -23,7 +23,6 @@ cd <project-name>
 
 Change your Cargo.toml and *.rs
 
-
 ## Run your Lambda function locally
 
 ```sh
@@ -49,8 +48,6 @@ cargo lambda build --release --target x86_64-unknown-linux-musl
 cargo lambda deploy
 ```
 
-
 ## References
 
-- https://www.cargo-lambda.info/
-
+- <https://www.cargo-lambda.info/>
