@@ -1,0 +1,17 @@
+[package]
+name = "diesel_postgres_init"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+diesel = { version = "2.0.0-rc.1", features = ["postgres"] }
+dotenvy = "0.15"
+
+[[bin]]
+name = "posts"
+path = "src/bin/posts.rs"
+doc = false
+
+[lib]
+doc = false
