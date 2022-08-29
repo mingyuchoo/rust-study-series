@@ -2,7 +2,7 @@
 
 ## How to build and run
 
-```bash
+```sh
 rustup default stable
 rustup update stable
 

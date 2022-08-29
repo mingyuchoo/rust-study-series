@@ -13,7 +13,7 @@ $ sudo apt install -y musl-tools
 
 - <https://rustup.rs/>
 
-```bash
+```sh
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ rustup default stable
 $ rustup update stable

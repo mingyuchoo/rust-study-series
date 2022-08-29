@@ -14,7 +14,11 @@ pub fn if_conditions() {
 
 pub fn let_and_if() {
   let condition = true;
-  let number = if condition { 5 } else { 6 };
+  let number = if condition {
+                   5
+               } else {
+                   6
+               };
 
   println!("number의 값: {}", number);
 }
