@@ -1,4 +1,13 @@
-# async_graphql_v40
+# async_graphql_v4_with_diesel_v2
+
+## How to use Diesel
+
+```sh
+cargo install diesel_cli --no-default-features --features postgres
+echo DATABASE_URL=postgres://postgres:postgres@localhost/postgres > .env
+diesel setup
+diesel migration generate <migration_name>
+```
 
 ## How to code format & lint
 
@@ -16,7 +25,7 @@ cargo run
 
 ```sh
 cargo install cargo-watch
-cargo watch -x 'run -- async_graphql_v40'
+cargo watch -x 'run -- async_graphql_v4_with_diesel_v2'
 ```
 
 ## GraphQL Query for test

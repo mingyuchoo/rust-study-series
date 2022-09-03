@@ -1,11 +1,6 @@
-struct QueryRoot;
+mod graphql_schema;
+use crate::graphql_schema::{create_schema, Schema};
 
-#[async_graphql::Object]
-impl QueryRoot {
-    async fn add(&self, a: i32, b: i32) -> i32 {
-        a + b
-    }
-}
 
 async fn graphiql() -> actix_web::HttpResponse {
     actix_web::HttpResponse::Ok()
@@ -19,27 +14,18 @@ async fn graphiql() -> actix_web::HttpResponse {
 }
 
 async fn graphql(
-    schema: actix_web::web::Data<
-        async_graphql::Schema<
-            QueryRoot,
-            async_graphql::EmptyMutation,
-            async_graphql::EmptySubscription,
-        >,
-    >,
+    schema: actix_web::web::Data<Schema>,
     req: async_graphql_actix_web::GraphQLRequest,
 ) -> async_graphql_actix_web::GraphQLResponse {
     schema.execute(req.into_inner()).await.into()
 }
 
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            .app_data(actix_web::web::Data::new(async_graphql::Schema::new(
-                QueryRoot,
-                async_graphql::EmptyMutation,
-                async_graphql::EmptySubscription,
-            )))
+            .app_data(actix_web::web::Data::new(create_schema()))
             .route("/", actix_web::web::get().to(graphiql))
             .route("/", actix_web::web::post().to(graphql))
     })
