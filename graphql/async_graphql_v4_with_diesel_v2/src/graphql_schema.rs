@@ -1,16 +1,4 @@
-// use std::env;
-// use diesel::pg::PgConnection;
-// use diesel::prelude::*;
-// use dotenv::dotenv;
-// use crate::diesel_schema::members;
-
-fn establish_connection() -> diesel::pg::PgConnection {
-    dotenv::dotenv().ok();
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    diesel::pg::PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
-}
-
-pub struct QueryRoot;
+use diesel::Connection;
 
 #[derive(diesel::prelude::Queryable)]
 pub struct Member {
@@ -55,28 +43,24 @@ impl Team {
     }
 }
 
+fn establish_connection() -> diesel::pg::PgConnection {
+    dotenv::dotenv().ok();
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    diesel::pg::PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
+}
+
+pub struct QueryRoot;
+
 #[async_graphql::Object]
 impl QueryRoot {
-    async fn add(&self, a: i32, b: i32) -> i32 {
-        a + b
+    async fn members(&self) -> Vec<Member> {
+        use diesel::RunQueryDsl;
+        use diesel::query_dsl::methods::LimitDsl;
+
+        let connection = &mut establish_connection();
+        crate::diesel_schema::members::dsl::members.limit(100).load::<Member>(connection).expect("Error loading members")
     }
 
-    async fn members(&self) -> Vec<Member> {
-        vec![
-            Member {
-                id: 1,
-                name: "Link".to_owned(),
-                knockouts: 1,
-                team_id: 1,
-            },
-            Member {
-                id: 2,
-                name: "Mario".to_owned(),
-                knockouts: 2,
-                team_id: 2,
-            },
-        ]
-    }
 }
 
 
