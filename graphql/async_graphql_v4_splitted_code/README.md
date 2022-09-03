@@ -1,4 +1,4 @@
-# async_graphql_v4_with_diesel_v2
+# async_graphql_v4_splitted_code
 
 ## How to use Diesel
 
