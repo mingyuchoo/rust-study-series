@@ -1,7 +1,3 @@
-use actix_web;
-use async_graphql;
-use async_graphql_actix_web;
-
 struct QueryRoot;
 
 #[async_graphql::Object]
