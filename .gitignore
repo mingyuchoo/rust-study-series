@@ -137,3 +137,7 @@ db_data/
 
 # macos
 .DS_Store
+
+
+# IDEA
+.idea/
