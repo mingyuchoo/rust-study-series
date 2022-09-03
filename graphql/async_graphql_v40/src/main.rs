@@ -18,7 +18,7 @@ async fn graphiql() -> actix_web::HttpResponse {
         )
 }
 
-async fn index(
+async fn graphql(
     schema: actix_web::web::Data<
         async_graphql::Schema<
             QueryRoot,
@@ -40,16 +40,8 @@ async fn main() -> std::io::Result<()> {
                 async_graphql::EmptyMutation,
                 async_graphql::EmptySubscription,
             )))
-            .service(
-                actix_web::web::resource("/")
-                    .guard(actix_web::guard::Get())
-                    .to(graphiql),
-            )
-            .service(
-                actix_web::web::resource("/")
-                    .guard(actix_web::guard::Post())
-                    .to(index),
-            )
+            .route("/", actix_web::web::get().to(graphiql))
+            .route("/", actix_web::web::post().to(graphql))
     })
     .bind("127.0.0.1:4000")?
     .run()
