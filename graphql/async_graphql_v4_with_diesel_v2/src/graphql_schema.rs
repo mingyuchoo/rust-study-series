@@ -1,3 +1,14 @@
+// use std::env;
+// use diesel::pg::PgConnection;
+// use diesel::prelude::*;
+// use dotenv::dotenv;
+// use crate::diesel_schema::members;
+
+fn establish_connection() -> diesel::pg::PgConnection {
+    dotenv::dotenv().ok();
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    diesel::pg::PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
+}
 
 pub struct QueryRoot;
 
