@@ -1,0 +1,10 @@
+[package]
+name = "Rust"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+patch = "src/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
