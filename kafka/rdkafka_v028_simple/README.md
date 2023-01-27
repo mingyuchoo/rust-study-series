@@ -4,7 +4,7 @@
 
 ### For Ubuntu
 
-```sh
+```bash
 sudo apt install -y cmake
 sudo apt install -y libssl-dev
 sudo apt install -y libsasl2-dev
@@ -16,7 +16,7 @@ sudo apt install -y libsasl2-dev
 
 ## How to build
 
-```sh
+```bash
 cargo build
 ```
 
@@ -24,13 +24,13 @@ cargo build
 
 ### Run a producer
 
-```sh
+```bash
 cargo run --bin producer
 ```
 
 ### Run a consumer
 
-```sh
+```bash
 cargo run --bin consumer
 ```
 

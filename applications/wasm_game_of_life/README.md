@@ -19,7 +19,7 @@ templates and usages of `wasm-pack`.
 
 [Learn more about `cargo generate` here.](https://github.com/ashleygwilliams/cargo-generate)
 
-```sh
+```bash
 rustup default stable
 rustup update stable
 
@@ -29,19 +29,19 @@ cd my-project
 
 ### 🛠️ Build with `wasm-pack build`
 
-```sh
+```bash
 wasm-pack build
 ```
 
 ### 🔬 Test in Headless Browsers with `wasm-pack test`
 
-```sh
+```bash
 wasm-pack test --headless --firefox
 ```
 
 ### 🎁 Publish to NPM with `wasm-pack publish`
 
-```sh
+```bash
 wasm-pack publish
 ```
 

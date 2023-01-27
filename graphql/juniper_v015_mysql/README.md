@@ -7,7 +7,7 @@ GraphQL Implementation in Rust using Actix, Juniper, and Mysql as Database
 - install rustup
 - install MySql
 
-```sh
+```bash
 rustup default stable
 rustup update stable
 ```
@@ -20,14 +20,14 @@ Create `.env` file on the root directory of this project and set environment var
 
 ## How to build
 
-```sh
+```bash
 cd juniper_v015_mysql
 cargo build
 ```
 
 ## How to run
 
-```sh
+```bash
 docker-compose --file docker-compose.yml up --build --detach
 cp .env.test .env
 cargo run

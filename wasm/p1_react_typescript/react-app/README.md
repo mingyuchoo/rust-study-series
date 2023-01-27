@@ -2,19 +2,19 @@
 
 ## How to create project
 
-```sh
+```bash
 npx create-react-app <react-app> --template typescript
 ```
 
 ## How to add wasm library
 
-```sh
+```bash
 npm install ../wasm-lib/pkg
 ```
 
 ## How to run
 
-```sh
+```bash
 npm start
 ```
 

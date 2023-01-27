@@ -2,7 +2,7 @@
 
 ## How to use Diesel
 
-```sh
+```bash
 cargo install diesel_cli --no-default-features --features postgres
 echo DATABASE_URL=postgres://postgres:postgres@localhost/postgres > .env
 diesel setup
@@ -11,19 +11,19 @@ diesel migration generate <migration_name>
 
 ## How to code format & lint
 
-```sh
+```bash
 cargo fmt && cargo clippy --fix
 ```
 
 ## How to build & run
 
-```sh
+```bash
 cargo run
 ```
 
 ### How to run as watch mod
 
-```sh
+```bash
 cargo install cargo-watch
 cargo watch -x 'run -- async_graphql_v4_with_diesel_v2'
 ```

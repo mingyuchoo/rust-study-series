@@ -2,7 +2,7 @@
 
 ## How to create project
 
-```sh
+```bash
 cargo new <project-name>
 cd <project-name>
 ```

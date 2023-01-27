@@ -2,19 +2,19 @@
 
 ## How to create WASM project
 
-```sh
+```bash
 cargo new <wasm-lib> --lib
 ```
 
 ## How to install `wasm-pack`
 
-```sh
+```bash
 cargo install wasm-pack
 ```
 
 ## How to test
 
-```sh
+```bash
 cargo test
 ```
 

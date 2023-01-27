@@ -2,7 +2,7 @@
 
 ## How to create rust workspace
 
-```sh
+```bash
 rustup default stable
 rustup update stable
 
@@ -23,7 +23,7 @@ members = [
 
 add a binary crate
 
-```sh
+```bash
 cargo new <binary_crate_name>
 ```
 
@@ -40,13 +40,13 @@ members = [
 
 add a library crate
 
-```sh
+```bash
 cargo new <library_crate_name> --lib
 ```
 
 ## How to build
 
-```sh
+```bash
 cargo clean
 cargo fmt
 cargo test

@@ -9,7 +9,7 @@
 
 Create `<project-name>` directory
 
-```sh
+```bash
 mkdir p0_init
 cd p0_init
 ```
@@ -18,7 +18,7 @@ cd p0_init
 
 Create `<rust-project-name>` project
 
-```sh
+```bash
 cargo new Rust --lib
 cd Rust
 ```
@@ -27,7 +27,7 @@ Develop some code for WASM
 
 ## Build Rust project
 
-```sh
+```bash
 build.sh
 ```
 
@@ -35,7 +35,7 @@ build.sh
 
 Create `<node-project-name` directory
 
-```sh
+```bash
 mkdir Node && cd Node
 npm init -y
 touch index.js
@@ -43,7 +43,7 @@ touch index.js
 
 ## Run Node application
 
-```sh
+```bash
 yarn start
 ```
 

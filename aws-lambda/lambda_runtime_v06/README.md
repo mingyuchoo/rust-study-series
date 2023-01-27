@@ -2,7 +2,7 @@
 
 ## Prerequisite
 
-```sh
+```bash
 sudo apt update
 sudo apt install -y musl-tools
 
@@ -14,7 +14,7 @@ cargo install cargo-lambda
 
 ## Create a project for Lambda for Rust
 
-```sh
+```bash
 cargo lambda new <project-name>
 cd <project-name>
 ```
@@ -25,26 +25,26 @@ Change your Cargo.toml and *.rs
 
 ## Run your Lambda function locally
 
-```sh
+```bash
 cargo lambda watch
 ```
 
 ## Test your Lambda
 
-```sh
+```bash
 # for test
 cargo lambda invoke --data-ascii '{"command": "hi"}'
 ```
 
 ## Build your Lambda for deploy
 
-```sh
+```bash
 cargo lambda build --release --target x86_64-unknown-linux-musl
 ```
 
 ## Deploy your Lambda to AWS
 
-```sh
+```bash
 cargo lambda deploy
 ```
 

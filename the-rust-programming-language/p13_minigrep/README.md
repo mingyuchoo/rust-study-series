@@ -28,7 +28,7 @@
 
 ## How do you use this?
 
-```sh
+```bash
 rustup default stable
 rustup update stable
 
@@ -41,6 +41,6 @@ cargo run test poem.txt
 
 ## How can you test this?
 
-```sh
+```bash
 cargo test
 ```

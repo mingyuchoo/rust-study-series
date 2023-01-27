@@ -2,7 +2,7 @@
 
 ## How to build and run
 
-```sh
+```bash
 rustup default stable
 rustup update stable
 
@@ -16,12 +16,12 @@ cargo run
 
 ### Update dependencies using in project
 
-```sh
+```bash
 cargo update
 ```
 
 ### Create HTML document and Open it with Web browser
 
-```sh
+```bash
 cargo doc --open
 ```

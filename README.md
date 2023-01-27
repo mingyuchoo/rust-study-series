@@ -13,36 +13,36 @@ $ sudo apt install -y musl-tools
 
 - <https://rustup.rs/>
 
-```sh
+```bash
 $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ rustup default stable
 $ rustup update stable
 ```
 ## How to code foramting and linting
 
-### Install component 
+### Install component
 
-```sh
+```bash
 $ rustup component add rustfmt
 $ rustup component add clippy
 ```
 ### Run
 
-```sh
+```bash
 $ cargo fmt
 $ cargo clippy --fix
 ```
 
 ## use Watch mode for Actix-web
 
-### Install 
+### Install
 
-```sh
+```bash
 cargo install cargo-watch
 ```
 
 ### Run
 
-```sh
+```bash
 cargo watch -x 'run --bin app'
 ```
