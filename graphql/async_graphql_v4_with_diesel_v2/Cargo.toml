@@ -8,7 +8,7 @@ async-graphql = "4.0"
 async-graphql-actix-web = "4.0"
 actix-web = "4"
 
-diesel = { version = "2.0.0", features = ["postgres"] }
+diesel = { version = "2.0.3", features = ["postgres"] }
 
 dotenv = "0.15"
 
