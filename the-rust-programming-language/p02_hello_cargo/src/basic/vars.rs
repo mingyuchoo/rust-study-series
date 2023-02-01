@@ -7,21 +7,21 @@ pub fn main() {
 
 /// This function is an example for variable bindings
 pub fn variables() {
-    let a;               // Declaration; without data type
-    a = 1;               // Assignment
+    let a;                       // Declaration; without data type
+    a = 1;                       // Assignment
     println!("{0}", a);
 
-    let b: i8;           // Declaration; with data type
+    let b: i8;                   // Declaration; with data type
     b = 2;
     println!("{b}", b = b);
 
-    let t = true;        // Declaration + assignment; without data type
+    let t = true;                // Declaration + assignment; without data type
     println!("{}", t);
 
-    let f: bool = false; // Declaration + aasignment; with data type
+    let f: bool = false;         // Declaration + aasignment; with data type
     println!("{}", f);
 
-    let (x, y) = (1, 2); // x = 1 and y = 2
+    let (x, y) = (1, 2);         // x = 1 and y = 2
     println!("{:?}", (x, y));
     println!("{:#?}", (x, y));
 
@@ -31,7 +31,7 @@ pub fn variables() {
     z = 6;
     println!("{0}", z);
 
-    let z = { x + y };   // z = 3
+    let z = { x + y };           // z = 3
     println!("{0}", z);
 
     let z = {
@@ -39,7 +39,7 @@ pub fn variables() {
         let y = 4;
 
         x + y
-    };                   // z = 7
+    };                          // z = 7
     println!("{0}", z);
 }
 
@@ -57,9 +57,9 @@ pub fn statics() {
 
 /// This function is an example for variable shadowing
 pub fn shadowing() {
-    let x: f64 = -20.48;           // float
-    let x: i64 = x.floor() as i64; // int
-    println!("{}", x);             // -21
+    let x: f64 = -20.48;              // float
+    let x: i64 = x.floor() as i64;    // int
+    println!("{}", x);                // -21
 
     let s: &str = "hello";            // &str
     let s: String = s.to_uppercase(); // String
