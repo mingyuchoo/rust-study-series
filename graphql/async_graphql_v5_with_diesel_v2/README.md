@@ -1,4 +1,4 @@
-# async_graphql_v4_splitted_code
+# async_graphql_v5_with_diesel_v2
 
 ## How to use Diesel
 
@@ -29,6 +29,8 @@ cargo watch -x 'run -- async_graphql_v4_with_diesel_v2'
 ```
 
 ## GraphQL Query for test
+
+open `http://localhost:4000`
 
 ```graphql
 query {

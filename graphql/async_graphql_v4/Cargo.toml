@@ -1,9 +1,0 @@
-[package]
-name = "async_graphql_v4"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-async-graphql = "4.0"
-async-graphql-actix-web = "4.0"
-actix-web = "4"

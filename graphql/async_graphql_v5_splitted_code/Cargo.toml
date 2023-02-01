@@ -1,12 +1,12 @@
 [package]
-name = "async_graphql_v40"
+name = "async_graphql_v4_splitted_code"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-async-graphql = "4.0"
-async-graphql-actix-web = "4.0"
-actix-web = "4"
+async-graphql = "5.0"
+async-graphql-actix-web = "5.0"
+actix-web = "4.3"
 
 diesel = { version = "2.0.3", features = ["postgres"] }
 
