@@ -1,5 +1,5 @@
-mod instances;
 mod example;
+mod instances;
 mod methods;
 
 fn main() {

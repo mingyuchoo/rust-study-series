@@ -1,6 +1,6 @@
-mod unrecoverable;
-mod recoverable;
 mod guess;
+mod recoverable;
+mod unrecoverable;
 
 fn main() {
     unrecoverable::call1();

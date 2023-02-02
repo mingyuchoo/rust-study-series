@@ -1,22 +1,11 @@
-// similar to data type in Haskell
+/// struct is similar to data type in Haskell
 struct Color(i32, i32, i32);
 struct Point(i32, i32, i32);
-
-// similar to data type using record syntax in Haskell
 struct User {
     username: String,
     email: String,
     sign_in_count: u64,
     active: bool,
-}
-
-fn build_user(email: String, username: String) -> User {
-    User {
-        email,    // == email: email,       // field init shorthand syntax
-        username, // == username: username, // field init shorthand syntax
-        active: true,
-        sign_in_count: 1,
-    }
 }
 
 pub fn create_instance() {
@@ -36,8 +25,18 @@ pub fn create_instance() {
         username: String::from("anotherusername567"),
         ..user1
     };
+
     user1.email = String::from("anotheremail@example.com");
 
     let black = Color(0, 0, 0);
     let origin = Point(0, 0, 0);
+}
+
+fn build_user(email: String, username: String) -> User {
+    User {
+        email,             // field init shorthand syntax
+        username,          // field init shorthand syntax
+        active: true,
+        sign_in_count: 1,
+    }
 }

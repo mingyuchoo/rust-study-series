@@ -15,8 +15,8 @@ pub fn call2() {
 
     match x {
         Some(50) => println!("50"),
-        Some(y)  => println!("match, y = {:?}", y),
-        _        => println!("not match, x = {:?}", x),
+        Some(y) => println!("match, y = {:?}", y),
+        _ => println!("not match, x = {:?}", x),
     }
     println!("result: x= {:?}, y = {:?}", x, y);
 }
@@ -35,18 +35,17 @@ pub fn call4() {
     let x = 5;
 
     match x {
-        1 ..= 5 => println!("one of 1 to 5"),
+        1..=5 => println!("one of 1 to 5"),
         _ => println!("others"),
     }
 }
-
 
 pub fn call5() {
     let x = 'c';
 
     match x {
-        'a' ..= 'j' => println!("the beginning of ASCII letters"),
-        'k' ..= 'z' => println!("the end of ASCII letters"),
+        'a'..='j' => println!("the beginning of ASCII letters"),
+        'k'..='z' => println!("the end of ASCII letters"),
         _ => println!("others"),
     }
 }
@@ -57,16 +56,16 @@ struct Point {
 }
 
 pub fn call6() {
-    let p = Point {x: 0, y: 7};
-    let Point {x: a, y: b} = p;
+    let p = Point { x: 0, y: 7 };
+    let Point { x: a, y: b } = p;
 
     assert_eq!(0, a);
     assert_eq!(7, b);
 }
 
 pub fn call7() {
-    let p = Point {x: 0, y: 7};
-    let Point {x, y} = p;
+    let p = Point { x: 0, y: 7 };
+    let Point { x, y } = p;
 
     assert_eq!(0, x);
     assert_eq!(7, y);
@@ -79,7 +78,7 @@ enum Color {
 
 enum Message {
     Quit,
-    Move {x: i32, y: i32},
+    Move { x: i32, y: i32 },
     Write(String),
     ChangeColor(Color),
 }
@@ -88,11 +87,11 @@ pub fn call8() {
     let msg = Message::ChangeColor(Color::Hsv(0, 160, 255));
     match msg {
         Message::ChangeColor(Color::Rgb(r, g, b)) => {
-            println!("ChangeColor: R={},G={},B={}", r,g,b);
-        },
+            println!("ChangeColor: R={},G={},B={}", r, g, b);
+        }
         Message::ChangeColor(Color::Hsv(h, s, v)) => {
-            println!("ChangeColor: H={},S={},V={}", h,s,v);
-        },
+            println!("ChangeColor: H={},S={},V={}", h, s, v);
+        }
         _ => {}
     }
 }

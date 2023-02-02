@@ -1,8 +1,8 @@
-mod variable_scope;
 mod complex_data_type;
 mod memory_allocation;
 mod reference_and_borrow;
 mod slice_type;
+mod variable_scope;
 
 fn main() {
     variable_scope::scope();

@@ -1,8 +1,8 @@
+mod as_keyword;
 mod mod_keyword;
 mod pub_keyword;
-mod use_keyword;
-mod as_keyword;
 mod pub_use_keyword;
+mod use_keyword;
 
 fn main() {
     mod_keyword::eat_at_restaurant();
@@ -16,5 +16,4 @@ fn main() {
     // as_keyword::call2();
 
     pub_use_keyword::eat_at_restaurant();
-
 }

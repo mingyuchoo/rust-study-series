@@ -46,7 +46,8 @@ impl Team {
 fn establish_connection() -> diesel::pg::PgConnection {
     dotenv::dotenv().ok();
     let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    diesel::pg::PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
+    diesel::pg::PgConnection::establish(&database_url)
+        .expect(&format!("Error connection to {}", database_url))
 }
 
 pub struct QueryRoot;
@@ -54,15 +55,16 @@ pub struct QueryRoot;
 #[async_graphql::Object]
 impl QueryRoot {
     async fn members(&self) -> Vec<Member> {
-        use diesel::RunQueryDsl;
         use diesel::query_dsl::methods::LimitDsl;
+        use diesel::RunQueryDsl;
 
         let connection = &mut establish_connection();
-        crate::diesel_schema::members::dsl::members.limit(100).load::<Member>(connection).expect("Error loading members")
+        crate::diesel_schema::members::dsl::members
+            .limit(100)
+            .load::<Member>(connection)
+            .expect("Error loading members")
     }
-
 }
-
 
 pub type Schema = async_graphql::Schema<
     QueryRoot,

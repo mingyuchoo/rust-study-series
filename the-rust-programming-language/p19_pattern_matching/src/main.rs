@@ -1,11 +1,11 @@
-mod if_let;
-mod while_let;
+mod at_binding;
 mod for_loop;
 mod func_param;
-mod pattern_grammer;
+mod if_let;
 mod ignore_pattern_value;
 mod match_guard;
-mod at_binding;
+mod pattern_grammer;
+mod while_let;
 
 fn main() {
     if_let::call();

@@ -18,7 +18,4 @@ diesel::table! {
 
 diesel::joinable!(members -> teams (team_id));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    members,
-    teams,
-);
+diesel::allow_tables_to_appear_in_same_query!(members, teams,);

@@ -1,7 +1,7 @@
-mod generic_functions;
 mod generic_data_types;
-mod traits;
+mod generic_functions;
 mod lifetime;
+mod traits;
 
 fn main() {
     generic_functions::call1();

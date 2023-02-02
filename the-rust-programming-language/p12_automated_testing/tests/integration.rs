@@ -4,6 +4,6 @@ mod common;
 // `$ cargo test --test integration`
 #[test]
 fn it_adds_two() {
-  common::setup();
-  assert_eq!(internal_fn::add_two(2), 4);
+    common::setup();
+    assert_eq!(internal_fn::add_two(2), 4);
 }

@@ -1,8 +1,8 @@
 mod basic;
-mod rectangle;
-mod equiv_negativ;
 mod custom_message;
-mod panic_situation;
-mod show_test_result;
+mod equiv_negativ;
 mod exec_based_name;
-pub mod internal_fn; // make `pub` for integration test
+pub mod internal_fn;
+mod panic_situation;
+mod rectangle;
+mod show_test_result; // make `pub` for integration test

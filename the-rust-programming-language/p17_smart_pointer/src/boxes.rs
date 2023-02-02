@@ -10,8 +10,5 @@ pub fn call1() {
 }
 
 pub fn call2() {
-    let list = Cons(1,
-                   Box::new(Cons(2,
-                       Box::new(Cons(3,
-                           Box::new(Nil))))));
+    let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))));
 }
