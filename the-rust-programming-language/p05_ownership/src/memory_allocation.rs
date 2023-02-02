@@ -4,8 +4,8 @@ pub fn move_scalar() {
   let x = 5;  // stack memory
   let y = x;
 
-  println!("{}", x);
-  println!("{}", y);
+  println!("{x}");
+  println!("{y}");
 }
 
 pub fn move_complex() {
@@ -14,9 +14,8 @@ pub fn move_complex() {
   let s1 = String::from("hello"); // heap memory
   let s2 = s1.clone();
 
-  println!("{}", s1);
-  println!("{}", s2);
-
+  println!("{s1}");
+  println!("{s2}");
 }
 
 pub fn relationship() {
@@ -32,14 +31,14 @@ pub fn relationship() {
   let s2 = String::from("hello");
   let s3 = takes_and_gives_back(s2);
 
-  println!("{}, {}", s1, s3);
+  println!("{s1}, {s3}");
 
   fn take_ownership(some_string: String) {
-    println!("{}", some_string);
+    println!("{some_string}");
   }
 
   fn makes_copy(some_integer: i32) {
-    println!("{}", some_integer);
+    println!("{some_integer}");
   }
 
   fn gives_ownership() -> String {
@@ -57,7 +56,7 @@ pub fn return_ownership() {
 
   let s1 = String::from("hello");
   let (s2, len) = calculate_length(s1);
-  println!("'{}'의 길이는 {}입니다.", s2, len);
+  println!("'{s2}'의 길이는 {len}입니다.");
 
   fn calculate_length(s: String) -> (String, usize) {
     let length = s.len();
