@@ -10,5 +10,6 @@ pub fn call1() {
     });
 
     let received = rx.recv().unwrap();
-    println!("수신: {}", received);
+
+    println!("수신: {received}");
 }

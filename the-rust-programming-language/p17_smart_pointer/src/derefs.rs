@@ -31,13 +31,16 @@ pub fn test2() {
 }
 
 struct MyBox<T>(T);
+
 impl<T> MyBox<T> {
     fn new(x: T) -> MyBox<T> {
         MyBox(x)
     }
 }
+
 impl<T> Deref for MyBox<T> {
     type Target = T;
+
     fn deref(&self) -> &T {
         &self.0
     }
@@ -56,8 +59,9 @@ pub fn test3() {
 }
 
 fn hello(name: &str) {
-    println!("안녕하세요 {}!", name);
+    println!("안녕하세요 {name}!");
 }
+
 pub fn call3() {
     let m = MyBox::new(String::from("Rust"));
     hello(&m);

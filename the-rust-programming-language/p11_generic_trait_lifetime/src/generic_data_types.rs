@@ -21,11 +21,11 @@ pub fn call1() {
 
     let number_list = vec![34, 50, 25, 100, 65];
     let result = largest_i32(&number_list);
-    println!("가장 큰 숫자: {}", result);
+    println!("가장 큰 숫자: {result}");
 
     let char_list = vec!['y', 'm', 'a', 'q'];
     let result = largest_char(&char_list);
-    println!("가장 큰 문자: {}", result);
+    println!("가장 큰 문자: {result}");
 }
 
 // pub fn call2() {
@@ -58,10 +58,7 @@ pub fn call3() {
     let integer = Point { x: 5, y: 10 };
     let float = Point { x: 1.0, y: 4.0 };
 
-    println!(
-        "integer: ({},{}), float: ({},{})",
-        integer.x, integer.y, float.x, float.y
-    );
+    println!("integer: ({},{}), float: ({},{})", integer.x, integer.y, float.x, float.y);
 }
 
 pub fn call4() {
@@ -76,10 +73,7 @@ pub fn call4() {
 
     print!("both_integer: ({},{}), ", both_integer.x, both_integer.y);
     print!("both_float: ({},{}), ", both_float.x, both_float.y);
-    println!(
-        "integer_and_float: ({},{})",
-        integer_and_float.y, integer_and_float.y
-    );
+    println!("integer_and_float: ({},{})", integer_and_float.y, integer_and_float.y);
 }
 
 pub fn call5() {
@@ -130,5 +124,6 @@ pub fn call6() {
     let p1 = Point { x: 5, y: 10.4 };
     let p2 = Point { x: "Hello", y: 'c' };
     let p3 = p1.mixup(p2);
+
     println!("p3.x = {}, p3.y = {}", p3.x, p3.y);
 }

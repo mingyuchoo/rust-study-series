@@ -1,12 +1,12 @@
 pub fn call1() {
     let v1 = vec![1, 2, 3];
     for val in v1.iter() {
-        println!("값: {}", val);
+        println!("값: {val}");
     }
 
     let v1_iter = v1.iter();
     for val in v1_iter {
-        println!("값: {}", val);
+        println!("값: {val}");
     }
 }
 
@@ -89,11 +89,13 @@ fn filters_by_size() {
 struct Counter {
     count: u32,
 }
+
 impl Counter {
     fn new() -> Counter {
         Counter { count: 0 }
     }
 }
+
 impl Iterator for Counter {
     type Item = u32;
     fn next(&mut self) -> Option<Self::Item> {

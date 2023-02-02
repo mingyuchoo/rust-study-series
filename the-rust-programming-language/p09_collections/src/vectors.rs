@@ -1,15 +1,17 @@
 pub fn call1() {
     let v1: Vec<i32> = Vec::new();
-
     let v2 = vec![1, 2, 3, 4, 5];
+
     for i in &v2 {
-        println!("{}", i);
+        println!("{i}");
     }
 
     let third: &i32 = &v2[2];
-    println!("세 번째 원소: {}", third);
+
+    println!("세 번째 원소: {third}");
 
     let mut v3 = Vec::new();
+
     v3.push(5);
     v3.push(6);
     v3.push(7);
@@ -20,7 +22,7 @@ pub fn call1() {
     }
 
     for i in &mut v3 {
-        println!("{}", i);
+        println!("{i}");
     }
 }
 

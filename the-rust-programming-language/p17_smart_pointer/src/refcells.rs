@@ -6,6 +6,7 @@ mod tests {
     struct MockMessenger {
         sent_messages: RefCell<Vec<String>>,
     }
+
     impl MockMessenger {
         fn new() -> MockMessenger {
             MockMessenger {
@@ -13,11 +14,13 @@ mod tests {
             }
         }
     }
+
     impl Messenger for MockMessenger {
         fn send(&self, message: &str) {
             self.sent_messages.borrow_mut().push(String::from(message));
         }
     }
+
     #[test]
     fn it_sends_an_over_75_percent_warning_message() {
         let mock_messenger = MockMessenger::new();
@@ -26,6 +29,7 @@ mod tests {
         assert_eq!(mock_messenger.sent_messages.borrow().len(), 1);
     }
 }
+
 pub trait Messenger {
     fn send(&self, msg: &str);
 }
@@ -80,7 +84,7 @@ pub fn call1() {
 
     *value.borrow_mut() += 10;
 
-    println!("a 수정 후 = {:?}", a);
-    println!("b 수정 후 = {:?}", b);
-    println!("c 수정 후 = {:?}", c);
+    println!("a 수정 후 = {a:?}");
+    println!("b 수정 후 = {b:?}");
+    println!("c 수정 후 = {c:?}");
 }

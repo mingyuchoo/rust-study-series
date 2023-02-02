@@ -7,6 +7,7 @@ enum List {
     Cons(i32, RefCell<Rc<List>>),
     Nil,
 }
+
 impl List {
     fn tail(&self) -> Option<&RefCell<Rc<List>>> {
         match *self {
@@ -18,10 +19,12 @@ impl List {
 
 pub fn call1() {
     let a = Rc::new(Cons(5, RefCell::new(Rc::new(Nil))));
+
     println!("a의 최초 rc 카운트 = {}", Rc::strong_count(&a));
     println!("a의 다음 아이템 = {:?}", a.tail());
 
     let b = Rc::new(Cons(5, RefCell::new(Rc::clone(&a))));
+
     println!("b를 생성한 뒤 a의 rc 카우트 = {}", Rc::strong_count(&a));
     println!("b의 최초 rc 카운트 = {}", Rc::strong_count(&b));
     println!("b의 다음 아이템 = {:?}", b.tail());
@@ -47,33 +50,22 @@ pub fn call2() {
         parent: RefCell::new(Weak::new()),
         children: RefCell::new(vec![]),
     });
-    println!(
-        "leaf strong= {}, weak = {}",
-        Rc::strong_count(&leaf),
-        Rc::weak_count(&leaf)
-    );
+
+    println!("leaf strong= {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
+
     {
         let branch = Rc::new(Node {
             value: 5,
             parent: RefCell::new(Weak::new()),
             children: RefCell::new(vec![Rc::clone(&leaf)]),
         });
+
         *leaf.parent.borrow_mut() = Rc::downgrade(&branch);
-        println!(
-            "branch strong = {}, weak = {}",
-            Rc::strong_count(&leaf),
-            Rc::weak_count(&leaf)
-        );
-        println!(
-            "leaf strong = {}, weak = {}",
-            Rc::strong_count(&leaf),
-            Rc::weak_count(&leaf)
-        );
+
+        println!("branch strong = {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
+        println!("leaf strong = {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
     }
+
     println!("leaf parent = {:?}", leaf.parent.borrow().upgrade());
-    println!(
-        "leaf strong = {}, weak = {}",
-        Rc::strong_count(&leaf),
-        Rc::weak_count(&leaf)
-    );
+    println!("leaf strong = {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
 }

@@ -13,6 +13,7 @@ pub mod kinds {
         Yellow,
         Blue,
     }
+
     /// RYB 색상 모델에 따른 보조 색상
     pub enum SecondaryColor {
         Orange,

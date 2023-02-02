@@ -4,5 +4,5 @@ pub fn call() {
 }
 
 fn print_coordinates(&(x, y): &(i32, i32)) {
-    println!("현재위치:({},{})", x, y);
+    println!("현재위치:({x},{y})");
 }

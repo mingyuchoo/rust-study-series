@@ -4,7 +4,7 @@ pub fn call1() {
     let string1 = String::from("abcd");
     let string2 = "xyz";
     let result = longest(string1.as_str(), string2);
-    println!("더 긴 문자열: {}", result);
+    println!("더 긴 문자열: {result}");
 
     /*  CAN NOT complile this funciton
     fn longest(x: &str, y: &str) -> &str {
@@ -60,7 +60,7 @@ pub fn call4() {
     where
         T: Display,
     {
-        println!("주목하세요: {}", ann);
+        println!("주목하세요: {ann}");
         if x.len() > y.len() {
             x
         } else {
@@ -70,5 +70,5 @@ pub fn call4() {
     let string1 = String::from("abcd");
     let string2 = "xyz";
     let result = longest_with_an_announcement(string1.as_str(), string2, "World");
-    println!("더 긴 문자열은 {} 입니다.", result);
+    println!("더 긴 문자열은 {result} 입니다.");
 }

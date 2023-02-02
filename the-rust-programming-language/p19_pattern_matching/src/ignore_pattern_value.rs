@@ -1,5 +1,5 @@
 fn foo(_: i32, y: i32) {
-    println!("이 함수 y 매개변수 사용한다:  {}", y);
+    println!("이 함수 y 매개변수 사용한다:  {y}");
 }
 
 pub fn call1() {
@@ -19,7 +19,7 @@ pub fn call2() {
         }
     }
 
-    println!("현재 설정: {:?}", setting_value);
+    println!("현재 설정: {setting_value:?}");
 }
 
 pub fn call3() {
@@ -27,7 +27,7 @@ pub fn call3() {
 
     match numbers {
         (first, _, third, _, fifth) => {
-            println!("일치하는 숫자: {}, {}, {}", first, third, fifth)
+            println!("일치하는 숫자: {first}, {third}, {fifth}")
         }
     }
 }
@@ -44,7 +44,8 @@ pub fn call5() {
     if let Some(_) = s {
         println!("I found the string.");
     }
-    println!("{:?}", s);
+
+    println!("{s:?}");
 }
 
 pub fn call6() {
@@ -53,18 +54,20 @@ pub fn call6() {
         y: i32,
         z: i32,
     }
+
     let origin = Point { x: 0, y: 0, z: 0 };
 
     match origin {
-        Point { x, .. } => println!("x={}", x),
+        Point { x, .. } => println!("x={x}"),
     }
 }
 
 pub fn call7() {
     let numbers = (2, 4, 8, 16, 32);
+
     match numbers {
         (first, .., last) => {
-            println!("first={}, last={}", first, last);
+            println!("first={first}, last={last}");
         }
     }
 }

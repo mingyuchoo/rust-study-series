@@ -2,11 +2,13 @@ enum List {
     Cons(i32, Box<List>),
     Nil,
 }
+
 use crate::boxes::List::{Cons, Nil};
 
 pub fn call1() {
     let b = Box::new(5);
-    println!("b = {}", b);
+
+    println!("b = {b}");
 }
 
 pub fn call2() {

@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use super::*;
+
     // `$ cargo test -- --ignored`
     #[test]
     #[ignore]

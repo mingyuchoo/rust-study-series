@@ -8,7 +8,7 @@ pub fn call1() {
         }
     }
 
-    println!("가장 큰 숫자: {}", largest);
+    println!("가장 큰 숫자: {largest}");
 
     let number_list = vec![102, 34, 6000, 89, 54, 2, 43, 8];
     let mut largest = number_list[0];
@@ -19,7 +19,7 @@ pub fn call1() {
         }
     }
 
-    println!("가장 큰 숫자: {}", largest);
+    println!("가장 큰 숫자: {largest}");
 }
 
 pub fn call2() {
@@ -36,9 +36,11 @@ pub fn call2() {
 
     let number_list = vec![34, 50, 25, 100, 65];
     let result = largest(&number_list);
-    println!("가장 큰 숫자: {}", result);
+
+    println!("가장 큰 숫자: {result}");
 
     let number_list = vec![102, 34, 6000, 89, 54, 2, 43, 8];
     let result = largest(&number_list);
-    println!("가장 큰 숫자: {}", result);
+
+    println!("가장 큰 숫자: {result}");
 }

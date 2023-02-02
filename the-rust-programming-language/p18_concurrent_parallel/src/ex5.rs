@@ -4,8 +4,8 @@ use std::time::Duration;
 
 pub fn call1() {
     let (tx, rx) = mpsc::channel();
-
     let tx1 = mpsc::Sender::clone(&tx);
+
     thread::spawn(move || {
         let vals = vec![
             String::from("자식 스레드가"),
@@ -32,7 +32,8 @@ pub fn call1() {
             thread::sleep(Duration::from_secs(1));
         }
     });
+
     for received in rx {
-        println!("수신: {}", received);
+        println!("수신: {received}");
     }
 }

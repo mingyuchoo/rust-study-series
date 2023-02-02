@@ -15,10 +15,11 @@ pub fn call2() {
 
     match x {
         Some(50) => println!("50"),
-        Some(y) => println!("match, y = {:?}", y),
-        _ => println!("not match, x = {:?}", x),
+        Some(y) => println!("match, y = {y:?}"),
+        _ => println!("not match, x = {x:?}"),
     }
-    println!("result: x= {:?}, y = {:?}", x, y);
+
+    println!("result: x= {x:?}, y = {y:?}");
 }
 
 pub fn call3() {
@@ -86,12 +87,8 @@ enum Message {
 pub fn call8() {
     let msg = Message::ChangeColor(Color::Hsv(0, 160, 255));
     match msg {
-        Message::ChangeColor(Color::Rgb(r, g, b)) => {
-            println!("ChangeColor: R={},G={},B={}", r, g, b);
-        }
-        Message::ChangeColor(Color::Hsv(h, s, v)) => {
-            println!("ChangeColor: H={},S={},V={}", h, s, v);
-        }
+        Message::ChangeColor(Color::Rgb(r, g, b)) => { println!("ChangeColor: R={r},G={g},B={b}"); }
+        Message::ChangeColor(Color::Hsv(h, s, v)) => { println!("ChangeColor: H={h},S={s},V={v}"); }
         _ => {}
     }
 }
