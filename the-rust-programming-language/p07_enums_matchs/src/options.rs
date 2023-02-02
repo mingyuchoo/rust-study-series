@@ -16,6 +16,7 @@ pub fn call2() {
         Quarter,
     }
 
+    // The Match Control Flow
     fn value_in_cents(coin: Coin) -> u32 {
         match coin {
             Coin::Penny => {
@@ -25,7 +26,7 @@ pub fn call2() {
             Coin::Nickel => 5,
             Coin::Dime => 10,
             Coin::Quarter => 25,
-        }
+        } // NO semicolon here to return
     }
 
     println!("{:#?}", Coin::Penny);
@@ -41,6 +42,7 @@ pub fn call3() {
         Alabama,
         Alaska,
     }
+
     enum Coin {
         Penny,
         Nickel,
@@ -54,10 +56,10 @@ pub fn call3() {
             Coin::Nickel => 5,
             Coin::Dime => 10,
             Coin::Quarter(state) => {
-                println!("State quarter from {:?}", state);
+                println!("State quarter from {state:?}");
                 25
             }
-        }
+        } // NO semicolon here to return
     }
     println!("{:#?}", value_in_cents(Coin::Penny));
     println!("{:#?}", value_in_cents(Coin::Nickel));
@@ -66,10 +68,12 @@ pub fn call3() {
 
     let mut count = 0;
     let coin = Coin::Dime;
+
     if let Coin::Quarter(state) = coin {
-        println!("{:?}주의  25센트 동전!", state);
+        println!("{state:?}주의  25센트 동전!");
     } else {
         count += 1;
     }
-    println!("count: {}", count);
+
+    println!("count: {count}");
 }
