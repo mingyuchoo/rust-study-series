@@ -6,16 +6,28 @@
 
 # rust-study-series
 
-## Prerequisite
+## For Nix
 
-### For Ubuntu
-
+```bash
+$ sh <(curl -L https://nixos.org/nix/install) --daemon
+# or
+$ sh <(curl -L https://nixos.org/nix/install) --no-daemon
 ```
+
+### How to run enter to nix-shell
+
+```bash
+$ nix-shell 
+```
+
+## For Ubuntu
+
+```bash
 $ sudo apt update
 $ sudo apt install -y musl-tools
 ```
 
-## How to install Rustup
+### How to install Rustup
 
 - <https://rustup.rs/>
 
@@ -24,30 +36,26 @@ $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 $ rustup default stable
 $ rustup update stable
 ```
-## How to code foramting and linting
-
 ### Install component
 
 ```bash
 $ rustup component add rustfmt
 $ rustup component add clippy
 ```
-### Run
+## Formatting & linting
 
 ```bash
 $ cargo fmt
 $ cargo clippy --fix
 ```
 
-## use Watch mode for Actix-web
-
-### Install
+## Install
 
 ```bash
 cargo install cargo-watch
 ```
 
-### Run
+## Run
 
 ```bash
 cargo watch -x 'run --bin app'
