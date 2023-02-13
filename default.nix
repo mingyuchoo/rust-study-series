@@ -4,10 +4,11 @@ in
   pkgs.stdenv.mkDerivation {
     name = "rust";
     buildInputs = [
-      pkgs.cargo
       pkgs.rustc
+      pkgs.cargo
+      pkgs.cargo-lambda
     ];
     shellHook = ''
-      Welcome to nix-shell for Rust!
+      echo Welcome to nix-shell for Rust!
     '';
   }
