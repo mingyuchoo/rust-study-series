@@ -52,13 +52,13 @@ $ cargo fmt
 $ cargo clippy --fix
 ```
 
-## Install
+## Install `cargo-watch` for watch mode
 
 ```bash
 cargo install cargo-watch
 ```
 
-## Run
+## Run as watch mode with `cargo-watch`
 
 ```bash
 cargo watch -x 'run --bin app'
