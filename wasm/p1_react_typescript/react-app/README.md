@@ -17,4 +17,3 @@ npm install ../wasm-lib/pkg
 ```bash
 npm start
 ```
-
