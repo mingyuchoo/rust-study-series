@@ -38,6 +38,7 @@ pub fn plus_one(a: i32) -> i32 {
     // It means this is an expression which equals to `return a + 1;`.
 }
 
+
 /// 02. With the return keyword.
 pub fn plus_two(a: i32) -> i32 {
     return a + 2;
@@ -48,4 +49,35 @@ pub fn plus_two(a: i32) -> i32 {
 /// Closures
 pub fn get_square_value(i: i32) -> i32 {
     i * i
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hello() {
+        assert_eq!(hello(), "Hello, world!");
+    }
+
+    #[test]
+    fn test_plus_one() {
+        assert_eq!(plus_one(-1), 0);
+        assert_eq!(plus_one(0), 1);
+        assert_eq!(plus_one(1), 2);
+    }
+
+    #[test]
+    fn test_plus_two() {
+        assert_eq!(plus_two(-1), 1);
+        assert_eq!(plus_two(0), 2);
+        assert_eq!(plus_two(1), 3);
+    }
+
+    #[test]
+    fn test_get_square_value() {
+        assert_eq!(get_square_value(0), 0);
+        assert_eq!(get_square_value(1), 1);
+        assert_eq!(get_square_value(2), 4);
+    }
 }
