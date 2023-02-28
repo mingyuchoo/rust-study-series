@@ -57,7 +57,7 @@ $ cargo clippy --fix
 ### Install `cargo-watch` for watch mode
 
 ```bash
-cargo install cargo-watch
+$ cargo install cargo-watch
 ```
 
 ### Run as watch mode with `cargo-watch`
