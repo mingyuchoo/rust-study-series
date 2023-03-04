@@ -17,10 +17,10 @@ nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
 nix-channel --update
 ```
 
-### How to run enter to nix-shell
+### How to make dev. environment
 
 ```bash
-$ nix-shell
+$ nix develop
 ```
 
 ## For Ubuntu
