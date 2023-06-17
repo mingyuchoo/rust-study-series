@@ -69,8 +69,11 @@ $ cargo watch -x test
 # Run check then tests
 $ cargo watch -x check -x test
 
+# Watch changes in on the `src` and clear the console and then run
+$ cargo watch -c -w src -x run
+
 # Run run current application
-cargo watch -x 'run --bin app'
+$ cargo watch -x 'run --bin app'
 
 # Run run with arguments
 $ cargo watch -x 'run -- --some-arg'
