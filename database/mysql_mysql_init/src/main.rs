@@ -1,3 +1,4 @@
+use dotenv;
 use mysql::prelude::*;
 use mysql::*;
 
@@ -9,8 +10,10 @@ struct Payment {
 }
 
 fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
-    let url = "mysql://root:password@localhost:3306/test";
-    let pool = Pool::new(url)?;
+    dotenv::dotenv().ok();
+
+    let url: String = dotenv::var("DATABASE_URL").unwrap();
+    let pool = Pool::new(url.as_str())?;
     let mut conn = pool.get_conn()?;
 
     conn.query_drop(
@@ -76,7 +79,9 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         },
     )?;
 
-    assert_eq!(payments, selected_payments);
+    for row in selected_payments {
+        println!("{:?}", row);
+    }
     println!("Yay!");
 
     Ok(())

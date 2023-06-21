@@ -1,17 +1,18 @@
+use dotenv;
 use postgres::{Client, Error, NoTls};
 use std::collections::HashMap;
 
 struct Author {
-    _id: i64,
+    _id: i32,
     name: String,
     country: String,
 }
 
 fn main() -> Result<(), Error> {
-    let mut client = Client::connect(
-        "postgresql://postgres:postgrespassword@localhost:5432/",
-        NoTls,
-    )?;
+    dotenv::dotenv().ok();
+
+    let url: String = dotenv::var("DATABASE_URL").unwrap();
+    let mut client = Client::connect(url.as_str(), NoTls)?;
 
     client.batch_execute(
         "
