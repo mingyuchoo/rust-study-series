@@ -1,4 +1,4 @@
-use diesel_demo::*;
+use diesel_postgres_init::*;
 use std::io::{stdin, Read};
 
 fn main() -> () {

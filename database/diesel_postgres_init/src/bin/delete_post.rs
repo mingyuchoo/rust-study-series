@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use diesel_demo::*;
+use diesel_postgres_init::*;
 use std::env::args;
 
 fn main() -> () {
