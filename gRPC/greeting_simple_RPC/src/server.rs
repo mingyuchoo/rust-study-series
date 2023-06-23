@@ -1,3 +1,4 @@
+use std::net::SocketAddr;
 use tonic::{transport::Server, Request, Response, Status};
 
 pub mod greeter_proto {
@@ -20,7 +21,7 @@ impl Greeter for MyGreeter {
     ) -> Result<Response<HelloResponse>, Status> {
         println!("Got a request from {:?}", request.remote_addr());
 
-        let response = HelloResponse {
+        let response: HelloResponse = HelloResponse {
             message: format!("Hello {}!", request.into_inner().name),
         };
 
@@ -30,10 +31,10 @@ impl Greeter for MyGreeter {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::1]:50051".parse().unwrap();
+    let addr: SocketAddr = "[::1]:50051".parse().unwrap();
 
     // Impl Proto Service
-    let greeter = MyGreeter::default();
+    let greeter: MyGreeter = MyGreeter::default();
 
     println!("GreeterServer listening on {}", addr);
 

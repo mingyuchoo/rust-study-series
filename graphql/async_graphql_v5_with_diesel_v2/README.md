@@ -34,7 +34,11 @@ open `http://localhost:4000`
 
 ```graphql
 query {
- add(a: 10, b: 20)
+  members {
+    id,
+    name,
+    teamId,
+  }
 }
 ```
 

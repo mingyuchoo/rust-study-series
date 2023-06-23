@@ -5,7 +5,7 @@ use diesel_mysql_init::*;
 fn main() {
     use self::schema::posts::dsl::*;
 
-    let connection = &mut establish_connection();
+    let connection: &mut MysqlConnection = &mut establish_connection();
     let results = posts
         .filter(published.eq(true))
         .limit(5)

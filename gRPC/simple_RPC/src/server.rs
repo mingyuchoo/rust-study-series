@@ -1,3 +1,5 @@
+use std::error::Error;
+use std::net::SocketAddr;
 use tonic::{transport::Server, Request, Response, Status};
 
 pub mod product_info_proto {
@@ -13,7 +15,7 @@ pub struct MyProductInfo {}
 #[tonic::async_trait]
 impl ProductInfo for MyProductInfo {
     async fn add_product(&self, request: Request<Product>) -> Result<Response<ProductId>, Status> {
-        let response = ProductId {
+        let response: ProductId = ProductId {
             id: request.into_inner().id,
         };
 
@@ -21,7 +23,7 @@ impl ProductInfo for MyProductInfo {
     }
 
     async fn get_product(&self, request: Request<ProductId>) -> Result<Response<Product>, Status> {
-        let response = Product {
+        let response: Product = Product {
             id: request.into_inner().id,
             name: String::from("MacBook Air 15"),
             description: String::from("Impressively big. Impossibly thin."),
@@ -33,10 +35,10 @@ impl ProductInfo for MyProductInfo {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = "[::1]:50051".parse().unwrap();
+async fn main() -> Result<(), Box<dyn Error>> {
+    let addr: SocketAddr = "[::1]:50051".parse().unwrap();
 
-    let product_info = MyProductInfo::default();
+    let product_info: MyProductInfo = MyProductInfo::default();
 
     println!("ProductInfoServer listening on {}", addr);
 

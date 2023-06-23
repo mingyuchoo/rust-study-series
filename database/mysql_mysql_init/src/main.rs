@@ -1,3 +1,6 @@
+use std::error::Error;
+use std::result::Result;
+
 use dotenv;
 use mysql::prelude::*;
 use mysql::*;
@@ -9,12 +12,12 @@ struct Payment {
     account_name: Option<String>,
 }
 
-fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     dotenv::dotenv().ok();
 
     let url: String = dotenv::var("DATABASE_URL").unwrap();
-    let pool = Pool::new(url.as_str())?;
-    let mut conn = pool.get_conn()?;
+    let pool: Pool = Pool::new(url.as_str())?;
+    let mut conn: PooledConn = pool.get_conn()?;
 
     conn.query_drop(
         r"
@@ -26,7 +29,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                     ",
     )?;
 
-    let payments = vec![
+    let payments: Vec<Payment> = vec![
         Payment {
             customer_id: 1,
             amount: 2,
@@ -59,7 +62,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
                     INSERT INTO payment (customer_id, amount, account_name)
                     VALUES (:customer_id, :amount, :account_name)
                     ",
-        payments.iter().map(|p| {
+        payments.iter().map(|p: &Payment| {
             params! {
                 "customer_id" => p.customer_id,
                 "amount" => p.amount,
@@ -68,7 +71,7 @@ fn main() -> std::result::Result<(), Box<dyn std::error::Error>> {
         }),
     )?;
 
-    let selected_payments = conn.query_map(
+    let selected_payments: Vec<Payment> = conn.query_map(
         r"
                                            SELECT customer_id, amount, account_name FROM payment
                                            ",

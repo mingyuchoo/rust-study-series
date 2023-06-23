@@ -20,10 +20,10 @@ async fn main() -> Result<(), Error> {
 /// - https://github.com/awslabs/aws-lambda-rust-runtime/tree/main/examples
 async fn function_handler(event: Request) -> Result<Response<Body>, Error> {
     // Extract some useful information from the request
-    let (event, _context) = event.into_parts();
+    let (_event, _context) = event.into_parts();
     // Return something that implements IntoResponse.
     // It will be serialized to the right response event automatically by the runtime
-    let resp = Response::builder()
+    let resp: Response<Body> = Response::builder()
         .status(200)
         .header("content-type", "text/html")
         .body("Hello AWS Lambda HTTP request".into())

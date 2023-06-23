@@ -12,7 +12,7 @@ fn main() -> Result<(), Error> {
     dotenv::dotenv().ok();
 
     let url: String = dotenv::var("DATABASE_URL").unwrap();
-    let mut client = Client::connect(url.as_str(), NoTls)?;
+    let mut client: Client = Client::connect(url.as_str(), NoTls)?;
 
     client.batch_execute(
         "
@@ -24,13 +24,13 @@ fn main() -> Result<(), Error> {
     ",
     )?;
 
-    let mut authors = HashMap::new();
+    let mut authors: HashMap<String, &str> = HashMap::new();
     authors.insert(String::from("Adam"), "France");
     authors.insert(String::from("Ben"), "German");
     authors.insert(String::from("Chris"), "UK");
 
     for (key, value) in &authors {
-        let author = Author {
+        let author: Author = Author {
             _id: 0,
             name: key.to_string(),
             country: value.to_string(),
@@ -43,7 +43,7 @@ fn main() -> Result<(), Error> {
     }
 
     for record in client.query("SELECT id, name, country FROM author", &[])? {
-        let author = Author {
+        let author: Author = Author {
             _id: record.get(0),
             name: record.get(1),
             country: record.get(2),

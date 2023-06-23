@@ -10,7 +10,7 @@ use self::models::{NewPost, Post};
 pub fn establish_connection() -> MysqlConnection {
     dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL").expect("DATBASE_URL mut be set");
+    let database_url: String = env::var("DATABASE_URL").expect("DATBASE_URL mut be set");
     MysqlConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connection to {}", database_url))
 }
@@ -18,9 +18,9 @@ pub fn establish_connection() -> MysqlConnection {
 pub fn create_post(conn: &mut MysqlConnection, title: &str, body: &str) -> Post {
     use crate::schema::posts;
 
-    let new_post = NewPost { title, body };
+    let new_post: NewPost<'_> = NewPost { title, body };
 
-    conn.transaction(|conn| {
+    conn.transaction(|conn: &mut MysqlConnection| {
         diesel::insert_into(posts::table)
             .values(&new_post)
             .execute(conn)?;

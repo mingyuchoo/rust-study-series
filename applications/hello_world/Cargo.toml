@@ -5,5 +5,5 @@ edition = "2021"
 
 
 [dependencies]
-time = "0.3.17"
-regex = "1.7.1"
+regex = "1.8.4"
+time = "0.3.22"

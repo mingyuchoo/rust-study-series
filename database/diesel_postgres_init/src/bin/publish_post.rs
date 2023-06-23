@@ -6,13 +6,13 @@ use std::env::args;
 fn main() -> () {
     use self::schema::posts::dsl::{posts, published};
 
-    let id = args()
+    let id: i32 = args()
         .nth(1)
         .expect("publish_post requires a post id")
         .parse::<i32>()
         .expect("Invalid ID");
 
-    let connection = &mut establish_connection();
+    let connection: &mut PgConnection = &mut establish_connection();
 
     let post = diesel::update(posts.find(id))
         .set(published.eq(true))
