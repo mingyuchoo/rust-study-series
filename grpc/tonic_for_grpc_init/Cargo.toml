@@ -1,0 +1,22 @@
+[package]
+name = "tonic-for-grpc-init"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "server"
+path = "src/server.rs"
+
+[[bin]]
+name = "client"
+path = "src/client.rs"
+
+[dependencies]
+prost = "0.11.9"
+prost-types = "0.11.9"
+tokio = { version = "1.28.2", features = ["macros", "rt-multi-thread"] }
+tonic = "0.9.2"
+
+[build-dependencies]
+tonic-build = "0.9.2"
+
