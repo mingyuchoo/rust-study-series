@@ -1,4 +1,4 @@
-# tonic-for-grpc-init
+# greeting_simple_RPC
 
 ## working process
 

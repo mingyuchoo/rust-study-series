@@ -1,5 +1,5 @@
 [package]
-name = "tonic-for-grpc-init"
+name = "greeting_simple_RPC"
 version = "0.1.0"
 edition = "2021"
 
