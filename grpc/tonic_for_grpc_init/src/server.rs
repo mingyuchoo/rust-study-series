@@ -1,26 +1,29 @@
 use tonic::{transport::Server, Request, Response, Status};
 
-use hello_world::greeter_server::{Greeter, GreeterServer};
-use hello_world::{HelloReply, HelloRequest};
-
-pub mod hello_world {
-    tonic::include_proto!("helloworld");
+pub mod greeter_proto {
+    tonic::include_proto!("greeter");
 }
+
+use greeter_proto::greeter_server::{Greeter, GreeterServer};
+use greeter_proto::{HelloRequest, HelloResponse};
 
 #[derive(Default)]
 pub struct MyGreeter {}
 
+// Proto Service
 #[tonic::async_trait]
 impl Greeter for MyGreeter {
+    // Proto Service rpc
     async fn say_hello(
         &self,
         request: Request<HelloRequest>,
-    ) -> Result<Response<HelloReply>, Status> {
+    ) -> Result<Response<HelloResponse>, Status> {
         println!("Got a request from {:?}", request.remote_addr());
 
-        let reply = hello_world::HelloReply {
+        let reply = HelloResponse {
             message: format!("Hello {}!", request.into_inner().name),
         };
+
         Ok(Response::new(reply))
     }
 }
@@ -28,6 +31,8 @@ impl Greeter for MyGreeter {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse().unwrap();
+
+    // Impl Proto Service
     let greeter = MyGreeter::default();
 
     println!("GreeterServer listening on {}", addr);
@@ -35,7 +40,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Server::builder()
         .add_service(GreeterServer::new(greeter))
         .serve(addr)
-        .await?;
+        .await
+        .unwrap();
 
     Ok(())
 }
