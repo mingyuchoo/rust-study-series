@@ -1,7 +1,7 @@
 use tonic::{transport::Server, Request, Response, Status};
 
 pub mod greeter_proto {
-    tonic::include_proto!("greeter");
+    tonic::include_proto!("communication"); // proto package
 }
 
 use greeter_proto::greeter_server::{Greeter, GreeterServer};
@@ -20,11 +20,11 @@ impl Greeter for MyGreeter {
     ) -> Result<Response<HelloResponse>, Status> {
         println!("Got a request from {:?}", request.remote_addr());
 
-        let reply = HelloResponse {
+        let response = HelloResponse {
             message: format!("Hello {}!", request.into_inner().name),
         };
 
-        Ok(Response::new(reply))
+        Ok(Response::new(response))
     }
 }
 

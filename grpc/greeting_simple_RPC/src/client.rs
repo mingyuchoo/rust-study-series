@@ -1,5 +1,5 @@
 pub mod greeter_proto {
-    tonic::include_proto!("greeter");
+    tonic::include_proto!("communication"); // proto package
 }
 
 use greeter_proto::greeter_client::GreeterClient;
