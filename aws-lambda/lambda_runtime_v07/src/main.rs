@@ -1,4 +1,4 @@
-use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
+use lambda_http::{run, service_fn, Body, Error, Request, Response};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -12,7 +12,6 @@ async fn main() -> Result<(), Error> {
 
     run(service_fn(function_handler)).await
 }
-
 
 /// This is the main body for the function.
 /// Write your code inside it.

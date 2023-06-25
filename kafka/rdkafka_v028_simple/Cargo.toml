@@ -5,7 +5,7 @@ edition = "2021"
 build   = "build.rs"
 
 [dependencies]
-rdkafka = { version = "0.28", features = ["cmake-build","ssl", "sasl"] }
+rdkafka = { version = "0.32.2", features = ["cmake-build","ssl", "sasl"] }
 
 [[bin]]
 name = "producer"
