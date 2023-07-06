@@ -61,6 +61,12 @@ mod tests {
     }
 
     #[test]
+    fn test_hello_2() {
+        let expected = "Hello, world!".to_owned();
+        assert_eq!(expected, hello(), "should be printed 'Hello, world!'");
+    }
+
+    #[test]
     fn test_plus_one() {
         assert_eq!(plus_one(-1), 0);
         assert_eq!(plus_one(0), 1);

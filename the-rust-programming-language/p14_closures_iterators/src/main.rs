@@ -2,7 +2,7 @@ use p14_closures_iterators::closures; // 모듈 경로를 현재 범위 안으�
 use p14_closures_iterators::iterators; // 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
-    // call_closures();
+    call_closures();
     call_iterators();
 }
 

@@ -2,28 +2,28 @@ use std::thread; // 모듈 경로를 현재 범위 안으로 가져오기
 use std::time::Duration; // 모듈 경로를 현재 범위 안으로 가져오기
 
 pub fn call1() {
-    let value = simulated_expensive_calculation(3);
+    let value: u32 = simulated_expensive_calculation(3);
 
     println!("{value}");
 }
 
 pub fn call2() {
-    let simulated_user_specified_value = 10;
-    let simulated_random_number = 7;
+    let simulated_user_specified_value: u32 = 10;
+    let simulated_random_number: u32 = 7;
 
     generate_workout_1(simulated_user_specified_value, simulated_random_number);
 }
 
 pub fn call3() {
-    let simulated_user_specified_value = 10;
-    let simulated_random_number = 7;
+    let simulated_user_specified_value: u32 = 10;
+    let simulated_random_number: u32 = 7;
 
     generate_workout_2(simulated_user_specified_value, simulated_random_number);
 }
 
 pub fn call4() {
-    let example_closure = |x| x;
-    let s = example_closure(String::from("Hello"));
+    let example_closure = |x: String| x;
+    let s: String = example_closure(String::from("Hello"));
 
     println!("{s}");
 
@@ -32,17 +32,17 @@ pub fn call4() {
 }
 
 pub fn call5() {
-    let simulated_user_specified_value = 10;
-    let simulated_random_number = 7;
+    let simulated_user_specified_value: u32 = 10;
+    let simulated_random_number: u32 = 7;
 
     generate_workout_3(simulated_user_specified_value, simulated_random_number);
 }
 
 pub fn call6() {
     fn right() {
-        let x = 4;
-        let equal_to_x = |z| z == x;
-        let y = 4;
+        let x: i32 = 4;
+        let equal_to_x = |z: i32| z == x;
+        let y: i32 = 4;
         assert!(equal_to_x(y));
     }
     //fn wrong_1() {
@@ -136,7 +136,7 @@ where
         match self.value {
             Some(v) => v,
             None => {
-                let v = (self.calculation)(arg);
+                let v: u32 = (self.calculation)(arg);
                 self.value = Some(v);
                 v
             }
@@ -174,9 +174,9 @@ fn generate_workout_3(intensity: u32, random_number: u32) {
 
 #[test]
 fn call_with_different_values() {
-    let mut c = Cacher::new(|a| a);
-    let v1 = c.value(1);
-    let v2 = c.value(2);
+    let mut c = Cacher::new(|a: u32| a);
+    let v1: u32 = c.value(1);
+    let v2: u32 = c.value(2);
 
     assert_eq!(v2, 2);
 }
