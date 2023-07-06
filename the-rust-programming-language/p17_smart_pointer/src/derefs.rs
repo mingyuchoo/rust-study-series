@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::ops::Deref; // 모듈 경로를 현재 범위 안으로 가져오기
 
 #[test]
 pub fn test1() {

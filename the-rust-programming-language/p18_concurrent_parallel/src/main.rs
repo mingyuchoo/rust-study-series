@@ -1,9 +1,9 @@
-mod ex1;
-mod ex2;
-mod ex3;
-mod ex4;
-mod ex5;
-mod ex6;
+mod ex1; // 모듈 경로를 현재 범위 안으로 가져오기
+mod ex2; // 모듈 경로를 현재 범위 안으로 가져오기
+mod ex3; // 모듈 경로를 현재 범위 안으로 가져오기
+mod ex4; // 모듈 경로를 현재 범위 안으로 가져오기
+mod ex5; // 모듈 경로를 현재 범위 안으로 가져오기
+mod ex6; // 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
     ex1::call1();

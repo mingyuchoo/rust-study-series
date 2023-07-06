@@ -1,6 +1,6 @@
-use std::cell::RefCell;
-use std::rc::{Rc, Weak};
-use List::{Cons, Nil};
+use std::cell::RefCell; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::rc::{Rc, Weak}; // 모듈 경로를 현재 범위 안으로 가져오기
+use List::{Cons, Nil}; // 모듈 경로를 현재 범위 안으로 가져오기
 
 #[derive(Debug)]
 enum List {
@@ -51,7 +51,11 @@ pub fn call2() {
         children: RefCell::new(vec![]),
     });
 
-    println!("leaf strong= {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
+    println!(
+        "leaf strong= {}, weak = {}",
+        Rc::strong_count(&leaf),
+        Rc::weak_count(&leaf)
+    );
 
     {
         let branch = Rc::new(Node {
@@ -62,10 +66,22 @@ pub fn call2() {
 
         *leaf.parent.borrow_mut() = Rc::downgrade(&branch);
 
-        println!("branch strong = {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
-        println!("leaf strong = {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
+        println!(
+            "branch strong = {}, weak = {}",
+            Rc::strong_count(&leaf),
+            Rc::weak_count(&leaf)
+        );
+        println!(
+            "leaf strong = {}, weak = {}",
+            Rc::strong_count(&leaf),
+            Rc::weak_count(&leaf)
+        );
     }
 
     println!("leaf parent = {:?}", leaf.parent.borrow().upgrade());
-    println!("leaf strong = {}, weak = {}", Rc::strong_count(&leaf), Rc::weak_count(&leaf));
+    println!(
+        "leaf strong = {}, weak = {}",
+        Rc::strong_count(&leaf),
+        Rc::weak_count(&leaf)
+    );
 }

@@ -1,8 +1,8 @@
-mod complex_data_type;
-mod memory_allocation;
-mod reference_and_borrow;
-mod slice_type;
-mod variable_scope;
+mod complex_data_type; // 모듈 경로를 현재 범위 안으로 가져오기
+mod memory_allocation; // 모듈 경로를 현재 범위 안으로 가져오기
+mod reference_and_borrow; // 모듈 경로를 현재 범위 안으로 가져오기
+mod slice_type; // 모듈 경로를 현재 범위 안으로 가져오기
+mod variable_scope; // 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
     variable_scope::scope();

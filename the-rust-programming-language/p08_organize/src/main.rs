@@ -1,8 +1,8 @@
-mod as_keyword;
-mod mod_keyword;
-mod pub_keyword;
-mod pub_use_keyword;
-mod use_keyword;
+mod as_keyword; // 모듈 경로를 현재 범위 안으로 가져오기
+mod mod_keyword; // 모듈 경로를 현재 범위 안으로 가져오기
+mod pub_keyword; // 모듈 경로를 현재 범위 안으로 가져오기
+mod pub_use_keyword; // 모듈 경로를 현재 범위 안으로 가져오기
+mod use_keyword; // 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
     mod_keyword::eat_at_restaurant();

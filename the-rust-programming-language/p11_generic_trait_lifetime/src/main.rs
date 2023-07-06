@@ -1,7 +1,7 @@
-mod generic_data_types;
-mod generic_functions;
-mod lifetime;
-mod traits;
+mod generic_data_types; // 모듈을 선언하고, 모듈 콘텐츠를 가져오기
+mod generic_functions; // 모듈을 선언하고, 모듈 콘텐츠를 가져오기
+mod lifetime; // 모듈을 선언하고, 모듈 콘텐츠를 가져오기
+mod traits; // 모듈을 선언하고, 모듈 콘텐츠를 가져오기
 
 fn main() {
     generic_functions::call1();

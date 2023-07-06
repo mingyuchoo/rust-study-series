@@ -1,6 +1,6 @@
-mod example;
-mod instances;
-mod methods;
+mod example; // 모듈 경로를 현재 범위 안으로 가져오기
+mod instances; // 모듈 경로를 현재 범위 안으로 가져오기
+mod methods; // 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
     instances::create_instance();

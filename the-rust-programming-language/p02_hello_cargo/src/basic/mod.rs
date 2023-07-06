@@ -1,2 +1,2 @@
-pub mod funs;
-pub mod vars;
+pub mod funs; // 외부에서 접근하도록 모듈을 선언하고 모듈 콘텐츠를 가져오기
+pub mod vars; // 외부에서 접근하도록 모듈을 선언하고 모듈 콘텐츠를 가져오기

@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod tests {
+    // `tests` 모듈을 선언하기
 
     #[test]
     fn it_works() {

@@ -1,7 +1,7 @@
-use p13_minigrep::run;
-use p13_minigrep::Config;
-use std::env;
-use std::process;
+use p13_minigrep::run; // 해당 모듈 경로를 현재 범위 안으로 가져오기
+use p13_minigrep::Config; // 해당 모듈 경로를 현재 범위 안으로 가져오기
+use std::env; // 해당 모듈 경로를 현재 범위 안으로 가져오기
+use std::process; // 해당 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
     let args: Vec<String> = env::args().collect();

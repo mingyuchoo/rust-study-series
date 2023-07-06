@@ -1,11 +1,12 @@
-use std::env;
-use std::error::Error;
-use std::fs::File;
-use std::io::Read;
+use std::env; // 해당 모듈 경로를 현재 범위 안으로 가져오기
+use std::error::Error; // 해당 모듈 경로를 현재 범위 안으로 가져오기
+use std::fs::File; // 해당 모듈 경로를 현재 범위 안으로 가져오기
+use std::io::Read; // 해당 모듈 경로를 현재 범위 안으로 가져오기
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // `tests` 모듈을 선언하기
+    use super::*; // 상대경로 `super`로 상위 모듈 경로를 현재 범위 안으로 가져오기
 
     #[test]
     fn one_result() {
@@ -18,7 +19,10 @@ mod tests {
     fn case_insensitive() {
         let query = "rUsT";
         let contents = "Rust:\nsafe, fast, productive.\nPick three.\nTrust me.";
-        assert_eq!(vec!["Rust:", "Trust me."], search_case_insensitive(query, contents));
+        assert_eq!(
+            vec!["Rust:", "Trust me."],
+            search_case_insensitive(query, contents)
+        );
     }
 }
 
@@ -36,7 +40,11 @@ impl Config {
         let query = args[1].clone();
         let filename = args[2].clone();
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
-        Ok(Config {query, filename, case_sensitive})
+        Ok(Config {
+            query,
+            filename,
+            case_sensitive,
+        })
     }
 }
 

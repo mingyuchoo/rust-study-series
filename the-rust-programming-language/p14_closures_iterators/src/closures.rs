@@ -1,5 +1,5 @@
-use std::thread;
-use std::time::Duration;
+use std::thread; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::time::Duration; // 모듈 경로를 현재 범위 안으로 가져오기
 
 pub fn call1() {
     let value = simulated_expensive_calculation(3);
