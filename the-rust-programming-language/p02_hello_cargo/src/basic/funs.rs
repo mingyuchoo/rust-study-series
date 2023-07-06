@@ -53,11 +53,17 @@ pub fn get_square_value(i: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::*; // or `use crate::basic::funs::*;`
 
     #[test]
     fn test_hello() {
         assert_eq!(hello(), "Hello, world!");
+    }
+
+    #[test]
+    fn test_hello_2() {
+        let expected = "Hello, world!".to_owned();
+        assert_eq!(expected, hello(), "should be printed 'Hello, world!'");
     }
 
     #[test]

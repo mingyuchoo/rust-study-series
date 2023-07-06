@@ -1,8 +1,8 @@
-use p14_closures_iterators::closures;
-use p14_closures_iterators::iterators;
+use p14_closures_iterators::closures;  // or `mod closures;`
+use p14_closures_iterators::iterators; // or `mod iterators;`
 
 fn main() {
-    // call_closures();
+    call_closures();
     call_iterators();
 }
 
