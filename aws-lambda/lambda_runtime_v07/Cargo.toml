@@ -1,6 +1,7 @@
 [package]
 name = "lambda_runtime_v07"
 version = "0.1.0"
+authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
 edition = "2021"
 
 # Starting in Rust 1.62 you can use `cargo add` to add dependencies

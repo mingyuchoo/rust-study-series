@@ -1,6 +1,7 @@
 [package]
 name = "async_graphql_v5_with_diesel_v2"
 version = "0.1.0"
+authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
 edition = "2021"
 
 [dependencies]

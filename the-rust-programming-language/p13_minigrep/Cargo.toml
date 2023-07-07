@@ -1,6 +1,7 @@
 [package]
 name = "p13_minigrep"
 version = "0.1.0"
+authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
 edition = "2021"
 
 
