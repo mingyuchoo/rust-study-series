@@ -64,9 +64,11 @@ cargo check
 
 ## How to use this application
 
+check `Cargo.toml` file.
+
 ```bash
-cargo run --bin show_posts
-cargo run --bin write_post
-cargo run --bin publish_post
-cargo run --bin delete_post
+cargo run --bin show
+cargo run --bin write
+cargo run --bin publish
+cargo run --bin delete
 ```

@@ -18,7 +18,7 @@ cd <project_name>
 ## Create a database environment file
 
 ```bash
-echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/diesel_postgres_init > .env
+echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres > .env
 
 # or change `.env.test` to `.env`
 ```
