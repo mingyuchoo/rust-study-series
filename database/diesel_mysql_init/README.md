@@ -47,3 +47,11 @@ diesel migration run
 ```bash
 cargo check
 ```
+## How to use this application
+
+```bash
+cargo run --bin show_posts
+cargo run --bin write_post
+cargo run --bin publish_post
+cargo run --bin delete_post
+```
