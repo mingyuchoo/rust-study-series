@@ -5,13 +5,13 @@
 install `diesel_cli` for use Diesel ORM
 
 ```bash
-cargo install diesel_cli
+cargo install diesel_cli --no-default-features --features mysql
 ```
 
 ## Create a new Rust project
 
 ```bash
-cargo new <project_name>
+cargo new <project_name> --lib
 cd <project_name>
 ```
 
@@ -40,4 +40,10 @@ diesel migration generate <migration_name>
 
 ```bash
 diesel migration run
+```
+
+## Check Cargo
+
+```bash
+cargo check
 ```
