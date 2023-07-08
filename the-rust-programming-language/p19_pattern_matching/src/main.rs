@@ -1,11 +1,11 @@
-mod at_binding;
-mod for_loop;
-mod func_param;
-mod if_let;
-mod ignore_pattern_value;
-mod match_guard;
-mod pattern_grammer;
-mod while_let;
+mod at_binding; // 모듈 경로를 현재 범위 안으로 가져오기
+mod for_loop; // 모듈 경로를 현재 범위 안으로 가져오기
+mod func_param; // 모듈 경로를 현재 범위 안으로 가져오기
+mod if_let; // 모듈 경로를 현재 범위 안으로 가져오기
+mod ignore_pattern_value; // 모듈 경로를 현재 범위 안으로 가져오기
+mod match_guard; // 모듈 경로를 현재 범위 안으로 가져오기
+mod pattern_grammer; // 모듈 경로를 현재 범위 안으로 가져오기
+mod while_let; // 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
     if_let::call();

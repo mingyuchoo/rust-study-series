@@ -1,6 +1,6 @@
-mod hash_maps;
-mod strings;
-mod vectors;
+mod hash_maps; // 모듈 경로를 현재 범위 안으로 가져오기
+mod strings; // 모듈 경로를 현재 범위 안으로 가져오기
+mod vectors; // 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
     vectors::call1();

@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::Display; // 모듈 경로를 현재 범위 안으로 가져오기
 
 pub fn call1() {
     pub trait Summary {
@@ -61,7 +61,9 @@ pub fn call2() {
         headline: String::from("대한민국, 러시아 월드컵 예선에서 독일을 이겼다."),
         location: String::from("카잔 아레나, 러시아"),
         author: String::from("위키백과"),
-        content: String::from("2018년 6월 27일 러시아 카잔의 카잔 아레나에서 열린 2018년 월드컵..."),
+        content: String::from(
+            "2018년 6월 27일 러시아 카잔의 카잔 아레나에서 열린 2018년 월드컵...",
+        ),
     };
 
     println!("새로운 기사: {}", article.summarize());

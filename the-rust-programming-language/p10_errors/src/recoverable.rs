@@ -1,7 +1,7 @@
-use std::error::Error;
-use std::fs::File;
-use std::io;
-use std::io::Read;
+use std::error::Error; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::fs::File; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::io; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::io::Read; // 모듈 경로를 현재 범위 안으로 가져오기
 
 pub fn call1() {
     let f1 = File::open("Hello.txt").unwrap();

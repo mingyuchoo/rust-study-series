@@ -1,5 +1,5 @@
-use p15_minigrep_refined::{run, Config};
-use std::{env, process};
+use p15_minigrep_refined::{run, Config}; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::{env, process}; // 모듈 경로를 현재 범위 안으로 가져오기
 
 fn main() {
     let config = Config::new(env::args()).unwrap_or_else(|err| {

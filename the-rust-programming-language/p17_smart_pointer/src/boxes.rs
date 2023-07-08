@@ -3,7 +3,7 @@ enum List {
     Nil,
 }
 
-use crate::boxes::List::{Cons, Nil};
+use crate::boxes::List::{Cons, Nil}; // 모듈 경로를 현재 범위 안으로 가져오기
 
 pub fn call1() {
     let b = Box::new(5);

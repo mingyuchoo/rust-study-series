@@ -38,7 +38,6 @@ pub fn plus_one(a: i32) -> i32 {
     // It means this is an expression which equals to `return a + 1;`.
 }
 
-
 /// 02. With the return keyword.
 pub fn plus_two(a: i32) -> i32 {
     return a + 2;
@@ -53,11 +52,18 @@ pub fn get_square_value(i: i32) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // `tests` 모듈을 선언하기
+    use super::*; //  상대경로(`super`)로 경로를 현재 범위 안으로 가져오기
 
     #[test]
     fn test_hello() {
         assert_eq!(hello(), "Hello, world!");
+    }
+
+    #[test]
+    fn test_hello_2() {
+        let expected = "Hello, world!".to_owned();
+        assert_eq!(expected, hello(), "should be printed 'Hello, world!'");
     }
 
     #[test]

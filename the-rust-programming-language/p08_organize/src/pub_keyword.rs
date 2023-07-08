@@ -1,4 +1,5 @@
 mod back_of_house {
+    // 모듈 `back_of_house` 를 선언하고, 모듈 콘텐츠를 가져오기
     pub struct Breakfast {
         pub toast: String,
         seasonal_fruit: String,

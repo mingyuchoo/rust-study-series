@@ -1,6 +1,7 @@
 [package]
 name = "lambda_runtime_v06"
 version = "0.1.0"
+authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
 edition = "2021"
 
 [dependencies]

@@ -11,9 +11,9 @@ use self::models::{NewPost, Post};
 pub fn establish_connection() -> PgConnection {
     dotenv().ok();
 
-    let database_url: String = env::var("DATABASE_URL").expect("DATBASE_URL mut be set");
+    let database_url: String = env::var("DATABASE_URL").expect("DATBASE_URL must be set");
     PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connection to {}", database_url))
+        .unwrap_or_else(|_| panic!("Error connection to {database_url}"))
 }
 
 pub fn create_post(conn: &mut PgConnection, title: &str, body: &str) -> Post {

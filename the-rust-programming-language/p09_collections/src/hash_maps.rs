@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::HashMap; // 모듈 경로를 현재 범위 안으로 가져오기
 
 pub fn call1() {
     let mut scores1 = HashMap::new();

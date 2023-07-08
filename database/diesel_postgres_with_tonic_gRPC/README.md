@@ -5,20 +5,20 @@
 install `diesel_cli` for use Diesel ORM
 
 ```bash
-cargo install diesel_cli
+cargo install diesel_cli --no-default-features --features postgres
 ```
 
 ## Create a new Rust project
 
 ```bash
-cargo new <project_name>
+cargo new <project_name> --lib
 cd <project_name>
 ```
 
 ## Create a database environment file
 
 ```bash
-echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/diesel_postgres_init > .env
+echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres > .env
 
 # or change `.env.test` to `.env`
 ```
@@ -40,4 +40,10 @@ diesel migration generate <migration_name>
 
 ```bash
 diesel migration run
+```
+
+## Check Cargo
+
+```bash
+cargo check
 ```
