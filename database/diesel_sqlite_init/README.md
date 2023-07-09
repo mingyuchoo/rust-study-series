@@ -37,10 +37,10 @@ In `up.sql`
 ```sql
 # write the SQL for migrations
 CREATE TABLE posts (
-  id INTEGER        NOT NULL PRIMARY KEY AUTOINCREMENT,
-  title TEXT        NOT NULL,
-  body  TEXT        NOT NULL,
-  published INTEGER NOT NULL
+  id INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,
+  title TEXT     NOT NULL,
+  body  TEXT     NOT NULL,
+  published BOOL NOT NULL DEFAULT FALSE
 );
 ```
 
