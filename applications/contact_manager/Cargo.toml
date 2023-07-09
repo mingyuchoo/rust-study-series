@@ -1,0 +1,13 @@
+[package]
+name = "contact_manager"
+version = "0.1.0"
+authors = ["Mingyu choo <mingyuchoo@gmail.com"]
+edition = "2021"
+
+[dependencies]
+structopt = "0.3.26"
+thiserror = "1.0.43"
+
+[[bin]]
+name = "contact_manager"
+path = "src/main.rs"
