@@ -1,23 +1,15 @@
-use diesel::prelude::*;
 use diesel_sqlite_init::*;
-use models::Post;
 use std::env::args;
 
 fn main() {
-    use self::schema::posts::dsl::{posts, published};
-
     let id = args()
         .nth(1)
-        .expect("publish_post requires a post ID")
+        .expect("publish a post requires ID")
         .parse::<i32>()
         .expect("Invalid ID");
     let connection = &mut establish_connection();
 
-    let post = diesel::update(posts.find(id))
-        .set(published.eq(true))
-        .returning(Post::as_returning())
-        .get_result(connection)
-        .unwrap();
+    let post = update_post(connection, id).expect("Error updating post");
 
-    println!("Published post: {}", post.title);
+    println!("Published post - id: {}, title: {}", post.id, post.title);
 }

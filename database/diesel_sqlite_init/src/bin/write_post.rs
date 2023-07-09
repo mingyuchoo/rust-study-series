@@ -14,7 +14,7 @@ fn main() {
     let mut body = String::new();
     stdin().read_to_string(&mut body).unwrap();
 
-    let post = create_post(connection, title, &body);
+    let post = create_post(connection, title, &body).expect("Error saving new post");
     println!("\nSaved draft {title} with ID: {}", post.id);
 }
 

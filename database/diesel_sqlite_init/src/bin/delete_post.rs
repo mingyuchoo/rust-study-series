@@ -1,17 +1,16 @@
-use diesel::prelude::*;
 use diesel_sqlite_init::*;
 use std::env::args;
 
 fn main() {
-    use self::schema::posts::dsl::*;
-
-    let target = args().nth(1).expect("Expected a target to match against");
-    let pattern = format!("%{target}%");
+    let id = args()
+        .nth(1)
+        .expect("Delete a post requires ID")
+        .parse::<i32>()
+        .expect("Invalid ID");
 
     let connection = &mut establish_connection();
-    let num_deleted = diesel::delete(posts.filter(title.like(pattern)))
-        .execute(connection)
-        .expect("Error deleting posts");
+
+    let num_deleted = delete_post(connection, id).expect("Error deleting a post.");
 
     println!("Deleted {num_deleted} posts");
 }
