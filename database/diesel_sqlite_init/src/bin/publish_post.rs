@@ -8,7 +8,7 @@ fn main() {
 
     let id = args()
         .nth(1)
-        .expect("publish_post requires a post id")
+        .expect("publish_post requires a post ID")
         .parse::<i32>()
         .expect("Invalid ID");
     let connection = &mut establish_connection();
@@ -19,5 +19,5 @@ fn main() {
         .get_result(connection)
         .unwrap();
 
-    println!("Published post {}", post.title);
+    println!("Published post: {}", post.title);
 }

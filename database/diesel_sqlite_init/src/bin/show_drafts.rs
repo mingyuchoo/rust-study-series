@@ -8,13 +8,13 @@ fn main() {
     let connection = &mut establish_connection();
 
     let results = posts
-        .filter(published.eq(true))
+        .filter(published.eq(false))
         .limit(5)
         .select(Post::as_select())
         .load(connection)
-        .expect("Error loading posts");
+        .expect("Error loading drafts");
 
-    println!("Displaying {} posts", results.len());
+    println!("Displaying {} drafts", results.len());
 
     results.iter().for_each(|post| {
         println!("----------------------------");

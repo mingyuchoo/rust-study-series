@@ -15,17 +15,21 @@ version = "0.29.0"
 features = ["bundled"]
 
 [[bin]]
-name = "show"
+name = "show_posts"
 path = "src/bin/show_posts.rs"
 
 [[bin]]
-name = "write"
+name = "show_drafts"
+path = "src/bin/show_drafts.rs"
+
+[[bin]]
+name = "write_post"
 path = "src/bin/write_post.rs"
 
 [[bin]]
-name = "publish"
+name = "publish_post"
 path = "src/bin/publish_post.rs"
 
 [[bin]]
-name = "delete"
+name = "delete_post"
 path = "src/bin/delete_post.rs"
