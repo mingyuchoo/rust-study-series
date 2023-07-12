@@ -84,3 +84,17 @@ $ cargo watch -- echo Hello world
 # Run with features passed to carg
 $ cargo watch --features "foo,bar"
 ```
+
+## How to see module structures
+
+### Install `cargo-module`
+
+```bash
+$ cargo install cargo-module
+```
+
+### Get structure of modules in your crate
+
+```bash
+$ cargo modules generate tree --with-types
+```
