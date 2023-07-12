@@ -90,7 +90,7 @@ $ cargo watch --features "foo,bar"
 ### Install `cargo-module`
 
 ```bash
-$ cargo install cargo-module
+$ cargo install cargo-modules
 ```
 
 ### Get structure of modules in your crate
