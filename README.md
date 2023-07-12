@@ -96,5 +96,5 @@ $ cargo install cargo-modules
 ### Get structure of modules in your crate
 
 ```bash
-$ cargo modules generate tree --with-types
+$ cargo modules generate tree --types
 ```
