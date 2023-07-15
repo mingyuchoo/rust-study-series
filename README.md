@@ -23,7 +23,7 @@ run following commands to install stable toolchain in user account
 
 ```bash
 rustup default stable
-rustup component add llvm
+rustup component add rls # or `llvm`
 rustup component add rust-analysis
 rustup component add rust-analyzer
 ```
