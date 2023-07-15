@@ -6,6 +6,28 @@
 
 # rust-study-series
 
+## For NixOS
+
+edit `/etc/nixos/configuration.nix` in root account
+
+```nix
+{ config, pkgs, ... }:
+{
+  users.users.<user_name> = {
+  rustup
+  }
+}
+```
+
+run following commands to install stable toolchain in user account
+
+```bash
+rustup default stable
+rustup component add llvm
+rustup component add rust-analysis
+rustup component add rust-analyzer
+```
+
 ## For Nix
 
 ```bash
