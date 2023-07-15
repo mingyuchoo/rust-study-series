@@ -28,6 +28,15 @@ rustup component add rust-analysis
 rustup component add rust-analyzer
 ```
 
+run following command to install cargo tools in user account
+
+```bash
+cargo install cargo-lambda
+cargo install cargo-modules
+cargo install cargo-tauri
+cargo install cargo-modules
+```
+
 ## For Nix
 
 ```bash
