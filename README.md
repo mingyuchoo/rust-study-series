@@ -34,7 +34,7 @@ run following command to install cargo tools in user account
 cargo install cargo-lambda
 cargo install cargo-modules
 cargo install cargo-tauri
-cargo install cargo-modules
+cargo install cargo-watch
 ```
 
 ## For Nix
