@@ -1,6 +1,41 @@
 # lambda_runtime_v08
 
-## How to create SAM project with `sam` CLI
+## References
+
+- <https://crates.io/crates/lambda_runtime>
+
+## Prerequsites
+
+### Install `cargo-lambda`
+
+- <https://www.cargo-lambda.info/guide/installation.html>
+
+
+If you are using NixOS, please follow this.
+
+add `cargo-lambda` to `/etc/nixos/configuration.nix`
+
+```nix
+{ config, pkgs, ... }:
+{
+    users.users.<username> = {
+        packages = with pkgs; [
+            cargo-lambda
+        ]
+    }
+}
+```
+
+
+If you are using Nix, please follow this.
+
+```bash
+nix-env -iA nixpkgs.cargo-lambda
+```
+
+
+
+## How to create Lambda project with `sam` CLI
 
 ```bash
 $ sam init
@@ -104,7 +139,7 @@ Commands you can use next
 [*] Test Function in the Cloud: cd rust-sam-app && sam sync --stack-name {stack-name} --watch
 ```
 
-## How to deploy SAM project to AWS
+## How to deploy Lambda project to AWS
 
 ```bash
 $ sam deploy --guided
@@ -128,4 +163,23 @@ Configuring SAM deploy
         HelloWorldFunction has no authentication. Is this okay? [y/N]: Y
         Save arguments to configuration file [Y/n]: N
 ...
+```
+
+## How to test Lambda project
+
+```bash
+$ aws lambda invoke
+  --cli-binary-format raw-in-base64-out \
+  --function-name HelloWorldFunction-XXXXXXXX \ # Replace with the actual function name
+  --payload '{"command": "Say Hi!"}' \
+  output.json
+$ cat output.json  # Prints: {"msg": "Command Say Hi! executed."}
+```
+
+## How to delete Lambda project
+
+```bash
+$ sam delete
+        Are you sure you want to delete the stack rust-sam-app in the region None ? [y/N]: y
+        Are you sure you want to delete the folder rust-sam-app in S3 which contains the artifacts? [y/N]: y
 ```
