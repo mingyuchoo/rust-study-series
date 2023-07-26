@@ -1,8 +1,9 @@
 use regex::Regex;
 
-fn main() {
+fn main() -> Result<(), std::io::Error> {
     let date: &str = "2023-07-05";
     println!("Did our date match? {}", check_date(date));
+    Ok(())
 }
 
 fn check_date(date: &str) -> bool {

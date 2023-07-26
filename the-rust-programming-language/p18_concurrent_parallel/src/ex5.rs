@@ -2,7 +2,7 @@ use std::sync::mpsc; // 모듈 경로를 현재 범위 안으로 가져오기
 use std::thread; // 모듈 경로를 현재 범위 안으로 가져오기
 use std::time::Duration; // 모듈 경로를 현재 범위 안으로 가져오기
 
-pub fn call1() {
+pub fn call1() -> Result<(), std::io::Error> {
     let (tx, rx) = mpsc::channel();
     let tx1 = mpsc::Sender::clone(&tx);
 
@@ -36,4 +36,6 @@ pub fn call1() {
     for received in rx {
         println!("수신: {received}");
     }
+
+    Ok(())
 }
