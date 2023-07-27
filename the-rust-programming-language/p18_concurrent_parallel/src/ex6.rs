@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex}; // 모듈 경로를 현재 범위 안으로 가져오기
 use std::thread; // 모듈 경로를 현재 범위 안으로 가져오기
 
-pub fn call1() {
+pub fn call1() -> Result<(), std::io::Error> {
     let counter = Arc::new(Mutex::new(0));
     let mut handles = vec![];
 
@@ -19,4 +19,6 @@ pub fn call1() {
     }
 
     println!("결과: {}", *counter.lock().unwrap());
+
+    Ok(())
 }
