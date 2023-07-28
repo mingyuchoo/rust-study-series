@@ -219,5 +219,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+.aws-sam/
+
 # End of https://www.toptal.com/developers/gitignore/api/rust,osx,linux,windows,pycharm,visualstudiocode
 

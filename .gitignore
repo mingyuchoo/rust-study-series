@@ -141,3 +141,6 @@ db_data/
 
 # IDEA
 .idea/
+
+# AWS
+.aws-sam/
