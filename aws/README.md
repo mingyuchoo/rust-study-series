@@ -143,6 +143,18 @@ $ sam local invoke
 $ sam local invoke --event events/event.json
 ```
 
+### How to test Lambda project with API Gateway locally
+
+```bash
+$ sam local start-api
+```
+
+and run command below in another terminal
+
+```bash
+$ curl http://localhost:3000/hello
+```
+
 
 ### How to deploy Lambda project to AWS
 
