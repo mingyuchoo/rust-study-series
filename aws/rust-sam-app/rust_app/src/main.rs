@@ -1,3 +1,14 @@
+#[tokio::main]
+async fn main() -> Result<(), lambda_http::Error> {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .with_target(false)
+        .without_time()
+        .init();
+
+    lambda_http::run(lambda_http::service_fn(function_handler)).await
+}
+
 async fn function_handler(
     event: lambda_http::Request,
 ) -> Result<lambda_http::Response<lambda_http::Body>, lambda_http::Error> {
@@ -14,16 +25,4 @@ async fn function_handler(
         .map_err(Box::new)?;
 
     Ok(response)
-}
-#[tokio::main]
-async fn main() -> Result<(), lambda_http::Error> {
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        // disable printing the name of the module in every log line.
-        .with_target(false)
-        // disabling time is handy because CloudWatch will add the ingestion time.
-        .without_time()
-        .init();
-
-    lambda_http::run(lambda_http::service_fn(function_handler)).await
 }
