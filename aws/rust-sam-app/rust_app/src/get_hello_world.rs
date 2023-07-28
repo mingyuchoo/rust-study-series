@@ -6,10 +6,10 @@ async fn main() -> Result<(), lambda_http::Error> {
         .without_time()
         .init();
 
-    lambda_http::run(lambda_http::service_fn(function_handler)).await
+    lambda_http::run(lambda_http::service_fn(handler)).await
 }
 
-async fn function_handler(
+async fn handler(
     event: lambda_http::Request,
 ) -> Result<lambda_http::Response<lambda_http::Body>, lambda_http::Error> {
     let who = lambda_http::RequestExt::query_string_parameters_ref(&event)
