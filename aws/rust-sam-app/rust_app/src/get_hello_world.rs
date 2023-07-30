@@ -16,7 +16,7 @@ async fn handler(
         .and_then(|params| params.first("name"))
         .unwrap_or("world");
 
-    let message = format!("Hello {who}, this is an AWS Lambda HTTP request");
+    let message = format!("Hello {who}, this is an AWS Lambda HTTP GET request");
 
     let response = lambda_http::Response::builder()
         .status(200)
