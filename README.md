@@ -73,7 +73,13 @@ $ rustup update stable
 ### Install component
 
 ```bash
-$ rustup component add rustfmt
+$ rustup component list
+$ rustup component add cargo
+$ rustup component add clippy
+$ rustup component add llvm
+$ rustup component add rls
+$ rustup component add rust-analysis
+$ rustup component add rust-analyzer
 $ rustup component add clippy
 ```
 ## Formatting & linting
