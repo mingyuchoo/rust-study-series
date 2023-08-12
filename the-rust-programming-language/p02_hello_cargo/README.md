@@ -9,10 +9,12 @@ rustup update stable
 cargo new 02_hello_cargo
 cd 02_hello_cargo
 cargo check
-cargo build
+cargo build --profile dev     # for development
+cargo build --profile release # for release
 cargo test
 cargo run
-cargo build -- release
+cargo build --profile dev     # for development
+cargo build --profile release # for release -- release
 ```
 
 ## How to use watch mode

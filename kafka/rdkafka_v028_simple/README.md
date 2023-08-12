@@ -17,7 +17,8 @@ sudo apt install -y libsasl2-dev
 ## How to build
 
 ```bash
-cargo build
+cargo build --profile dev     # for development
+cargo build --profile release # for release
 ```
 
 ## How to run

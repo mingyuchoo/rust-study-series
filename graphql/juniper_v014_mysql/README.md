@@ -22,7 +22,8 @@ Create `.env` file on the root directory of this project and set environment var
 
 ```bash
 cd juniper_v014_mysql
-cargo build
+cargo build --profile dev     # for development
+cargo build --profile release # for release
 ```
 
 ## How to run

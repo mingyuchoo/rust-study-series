@@ -7,7 +7,8 @@ rustup default stable
 rustup update stable
 
 cargo check
-cargo bulid
+cargo bulid --profile dev # for development
+cargo build --profile release # for release
 cargo test
 cargo run
 ```

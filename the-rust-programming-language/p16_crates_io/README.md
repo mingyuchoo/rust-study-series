@@ -51,8 +51,8 @@ cargo clean
 cargo fmt
 cargo test
 cargo doc  # cargo doc --open
-cargo build
-cargo build --release
+cargo build --profile dev     # for development
+cargo build --profile release # for release
 cargo run -p adder # or cargo run
 ```
 

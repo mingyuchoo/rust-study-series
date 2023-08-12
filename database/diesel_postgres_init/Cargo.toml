@@ -1,10 +1,17 @@
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+debug = false
+
 [package]
 name = "diesel_postgres_init"
 version = "0.1.0"
 authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 diesel = { version = "2.1.0", features = ["postgres"] }
