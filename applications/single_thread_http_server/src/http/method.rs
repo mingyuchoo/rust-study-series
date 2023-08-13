@@ -1,4 +1,4 @@
-
+#[allow(dead_code)]
 pub enum Method {
     GET,
     DELETE,
