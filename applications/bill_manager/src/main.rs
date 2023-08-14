@@ -14,6 +14,8 @@ struct Bills {
 }
 
 impl Bills {
+    /// Self is Bills.
+    /// and we can change Self to Bills in this code.
     fn new() -> Self {
         Self {
             items: HashMap::new(),
@@ -81,7 +83,8 @@ fn main_menu() {
             "2" => do_insert_bill(&mut bills),
             "3" => do_update_bill(&mut bills),
             "4" => do_delete_bill(&mut bills),
-            _ => break,
+            // "q" | "Q" | "quit" | "Quit" => break,
+            _ => continue,
         }
     }
 }
