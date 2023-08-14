@@ -23,7 +23,6 @@ impl Server {
                             println!("Received a request: {}", String::from_utf8_lossy(&buffer));
 
                             use crate::http::Request;
-                            use std::convert::TryFrom;
                             match Request::try_from(&buffer[..]) {
                                 Ok(request) => {}
                                 Err(e) => println!("Failed to parse a request: {}", e),
