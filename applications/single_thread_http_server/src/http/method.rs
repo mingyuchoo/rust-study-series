@@ -1,5 +1,4 @@
-use std::str::FromStr;
-
+#[derive(Debug)]
 pub enum Method {
     GET,
     DELETE,
@@ -12,6 +11,7 @@ pub enum Method {
     PATCH,
 }
 
+use std::str::FromStr;
 impl FromStr for Method {
     type Err = MethodError;
 
