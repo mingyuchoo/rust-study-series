@@ -8,7 +8,6 @@ pub struct Response {
 
 use std::io::Result as IoResult;
 use std::io::Write;
-use std::net::TcpStream;
 
 impl Response {
     pub fn new(status_code: StatusCode, body: Option<String>) -> Self {
