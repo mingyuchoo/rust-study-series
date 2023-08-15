@@ -23,14 +23,27 @@ impl Server {
                             println!("Received a request: {}", String::from_utf8_lossy(&buffer));
 
                             use crate::http::Request;
-                            match Request::try_from(&buffer[..]) {
+                            use crate::http::Response;
+                            use crate::http::StatusCode;
+
+                            let response = match Request::try_from(&buffer[..]) {
                                 Ok(request) => {
                                     dbg!(request);
+                                    Response::new(
+                                        StatusCode::Ok,
+                                        Some("<h1>IT WORKS!</h1>".to_owned()),
+                                    )
                                 }
-                                Err(e) => println!("Failed to parse a request: {}", e),
+                                Err(e) => {
+                                    println!("Failed to parse request: {}", e);
+                                    Response::new(StatusCode::BadRequest, None)
+                                }
+                            };
+                            if let Err(e) = response.send(&mut stream) {
+                                println!("Failed to read from connection: {}", e);
                             }
                         }
-                        Err(e) => println!("Failed to read from connection: {}", e),
+                        Err(e) => println!("Failed to establish a connection: {}", e),
                     }
                 }
                 Err(e) => println!("Failed to establish a connection: {}", e),
