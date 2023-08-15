@@ -14,7 +14,10 @@ impl Response {
     pub fn new(status_code: StatusCode, body: Option<String>) -> Self {
         Self { status_code, body }
     }
-    pub fn send(&self, stream: &mut TcpStream) -> IoResult<()> {
+
+    /// dyn: Dynamic Dispatch
+    /// impl: Static Dispatch
+    pub fn send(&self, stream: &mut impl Write) -> IoResult<()> {
         let body = match &self.body {
             Some(b) => b,
             None => "",
