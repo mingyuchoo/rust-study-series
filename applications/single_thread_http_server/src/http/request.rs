@@ -2,9 +2,22 @@ use super::method::Method;
 
 #[derive(Debug)]
 pub struct Request<'buf> {
+    method: Method,
     path: &'buf str,
     query_string: Option<QueryString<'buf>>,
-    method: Method,
+}
+
+impl<'buf> Request<'buf> {
+    pub fn method(&self) -> &Method {
+        &self.method
+    }
+
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+    pub fn query_string(&self) -> Option<&QueryString> {
+        self.query_string.as_ref()
+    }
 }
 
 use super::QueryString;
