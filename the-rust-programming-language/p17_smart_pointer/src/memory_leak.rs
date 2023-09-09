@@ -1,6 +1,6 @@
-use std::cell::RefCell; // 모듈 경로를 현재 범위 안으로 가져오기
-use std::rc::{Rc, Weak}; // 모듈 경로를 현재 범위 안으로 가져오기
-use List::{Cons, Nil}; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::cell::RefCell;
+use std::rc::{Rc, Weak};
+use List::{Cons, Nil};
 
 #[derive(Debug)]
 enum List {

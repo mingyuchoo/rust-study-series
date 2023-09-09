@@ -1,4 +1,4 @@
-use p12_automated_testing::internal_fn; // 모듈 경로를 현재 범위 안으로 가져오기
+use p12_automated_testing::internal_fn;
 mod common; // 모듈을 선언하고, 모듈 콘텐츠를 가져오기
 
 // `$ cargo test --test integration`

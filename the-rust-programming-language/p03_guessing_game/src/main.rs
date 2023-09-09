@@ -1,6 +1,6 @@
-use rand::Rng; // 모듈 경로를 현재 범위 안으로 가져오기
-use std::cmp::Ordering; // 모듈 경로를 현재 범위 안으로 가져오기
-use std::io; // 모듈 경로를 현재 범위 안으로 가져오기
+use rand::Rng;
+use std::cmp::Ordering;
+use std::io;
 
 fn main() {
     println!("숫자를 맞혀봅시다!");

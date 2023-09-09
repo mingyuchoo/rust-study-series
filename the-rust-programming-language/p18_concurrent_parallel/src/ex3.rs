@@ -1,4 +1,4 @@
-use std::thread; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::thread;
 
 pub fn call1() -> Result<(), std::io::Error> {
     let v = vec![1, 2, 3];

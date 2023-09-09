@@ -1,5 +1,5 @@
-use std::fs::File; // 모듈 경로를 현재 범위 안으로 가져오기
-use std::io::ErrorKind; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::fs::File;
+use std::io::ErrorKind;
 
 pub fn call1() {
     // panic!("crash and burn");

@@ -1,6 +1,6 @@
-mod enumerations; // 모듈 경로를 현재 범위 안으로 가져오기
-mod matches; // 모듈 경로를 현재 범위 안으로 가져오기
-mod options; // 모듈 경로를 현재 범위 안으로 가져오기
+mod enumerations;
+mod matches;
+mod options;
 
 fn main() {
     enumerations::call1();

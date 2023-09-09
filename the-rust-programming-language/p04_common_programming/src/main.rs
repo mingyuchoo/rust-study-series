@@ -1,7 +1,7 @@
-mod data_types; // 모듈 경로를 현재 범위 안으로 가져오기
-mod flow_control; // 모듈 경로를 현재 범위 안으로 가져오기
-mod functions; // 모듈 경로를 현재 범위 안으로 가져오기
-mod variables; // 모듈 경로를 현재 범위 안으로 가져오기
+mod data_types;
+mod flow_control;
+mod functions;
+mod variables;
 
 fn main() {
     variables::mutation();

@@ -2,7 +2,7 @@
 mod tests {
     // `tests` 모듈을 선언하기
     use super::*; // 상대경로 `super`로 상위 모듈 경로를 현재 범위 안으로 가져오기
-    use std::cell::RefCell; // 모듈 경로를 현재 범위 안으로 가져오기
+    use std::cell::RefCell;
 
     struct MockMessenger {
         sent_messages: RefCell<Vec<String>>,
@@ -73,9 +73,9 @@ enum List {
     Nil,
 }
 
-use std::cell::RefCell; // 모듈 경로를 현재 범위 안으로 가져오기
-use std::rc::Rc; // 모듈 경로를 현재 범위 안으로 가져오기
-use List::{Cons, Nil}; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::cell::RefCell;
+use std::rc::Rc;
+use List::{Cons, Nil};
 
 pub fn call1() {
     let value = Rc::new(RefCell::new(5));

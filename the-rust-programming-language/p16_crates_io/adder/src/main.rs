@@ -1,6 +1,6 @@
-use add_one; // 모듈 경로를 현재 범위 안으로 가져오기
-use art::mix; // 모듈 경로를 현재 범위 안으로 가져오기
-use art::PrimaryColor; // 모듈 경로를 현재 범위 안으로 가져오기
+use add_one;
+use art::mix;
+use art::PrimaryColor;
 
 fn main() {
     let num = 10;

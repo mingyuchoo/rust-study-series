@@ -3,8 +3,8 @@ enum List {
     Nil,
 }
 
-use std::rc::Rc; // 모듈 경로를 현재 범위 안으로 가져오기
-use List::{Cons, Nil}; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::rc::Rc;
+use List::{Cons, Nil};
 
 pub fn call1() {
     let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));

@@ -1,4 +1,4 @@
-use std::fmt::Display; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::fmt::Display;
 
 pub fn call1() {
     pub trait Summary {

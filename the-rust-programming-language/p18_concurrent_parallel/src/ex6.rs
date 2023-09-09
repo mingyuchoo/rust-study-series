@@ -1,5 +1,5 @@
-use std::sync::{Arc, Mutex}; // 모듈 경로를 현재 범위 안으로 가져오기
-use std::thread; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::sync::{Arc, Mutex};
+use std::thread;
 
 pub fn call1() -> Result<(), std::io::Error> {
     let counter = Arc::new(Mutex::new(0));

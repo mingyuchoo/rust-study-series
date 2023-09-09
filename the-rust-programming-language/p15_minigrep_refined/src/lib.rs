@@ -1,4 +1,4 @@
-use std::{env, error::Error, fs::File, io::Read}; // 모듈 경로를 현재 범위 안으로 가져오기
+use std::{env, error::Error, fs::File, io::Read};
 
 #[cfg(test)]
 mod tests {
