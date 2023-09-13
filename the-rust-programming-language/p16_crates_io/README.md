@@ -50,7 +50,7 @@ cargo new <library_crate_name> --lib
 cargo clean
 cargo fmt
 cargo test
-cargo doc  # cargo doc --open
+cargo doc --no-deps --open  # `target/doc/<package_name>/index.html`
 cargo build --profile dev     # for development
 cargo build --profile release # for release
 cargo run -p adder # or cargo run

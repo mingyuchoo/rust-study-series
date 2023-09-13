@@ -24,7 +24,7 @@ cargo update
 ### Create HTML document and Open it with Web browser
 
 ```bash
-cargo doc --open
+cargo doc --no-deps --open  # `target/doc/<package_name>/index.html`
 ```
 
 
