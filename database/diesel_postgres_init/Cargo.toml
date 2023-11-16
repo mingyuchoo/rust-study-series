@@ -10,7 +10,7 @@ debug = false
 name = "diesel_postgres_init"
 version = "0.2.0"
 authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2023"
+edition = "2021"
 
 
 [dependencies]
