@@ -1,14 +1,14 @@
-# diesel_postgres_init
+# hello-rocket
 
-## Prerequisite
+## Prerequisites
 
 If you use Fedora Linux
 
 ```bash
-sudo dnf install postgresql-devel
+sudo dnf install -y postgresql-devel
 ```
 
-install `diesel_cli` for use Diesel ORM
+Install `diesel_cli` for use Diesel ORM
 
 ```bash
 cargo install diesel_cli --no-default-features --features postgres
@@ -17,15 +17,14 @@ cargo install diesel_cli --no-default-features --features postgres
 ## Create a new Rust project
 
 ```bash
-cargo new <project_name> --lib
+cargo new <project_name> --bin
 cd <project_name>
 ```
 
 ## Create a database environment file
 
 ```bash
-echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres > .env
-
+echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres > .envrc
 # or
 
 change `.env.test` to `.env`
@@ -41,7 +40,7 @@ diesel migration generate <migration_name>
 ## Write the SQL for migration
 
 ```bash
-# write the SQL for migration
+# write the SQL for migrtions
 ```
 
 ## Migrate SQL

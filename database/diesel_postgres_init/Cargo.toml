@@ -1,3 +1,9 @@
+[package]
+name = "diesel_postgres_init"
+version = "0.2.0"
+authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+edition = "2021"
+
 [profile.dev]
 opt-level = 0
 debug = true
@@ -5,13 +11,6 @@ debug = true
 [profile.release]
 opt-level = 3
 debug = false
-
-[package]
-name = "diesel_postgres_init"
-version = "0.2.0"
-authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2021"
-
 
 [dependencies]
 diesel = { version = "2.1.4", features = ["postgres"] }

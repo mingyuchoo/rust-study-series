@@ -20,20 +20,22 @@ cd <project_name>
 ```bash
 echo DATABASE_URL=mysql://root:root@localhost:3306/root > .env
 
-# or change `.env.test` to `.env`
+# or
+
+change `.env.test` to `.env`
 ```
 
-## Generate initial migrations
+## Generate initial migration
 
 ```bash
 diesel setup
 diesel migration generate <migration_name>
 ```
 
-## Write the SQL for migrations
+## Write the SQL for migration
 
 ```bash
-# write the SQL for migrations
+# write the SQL for migration
 ```
 
 ## Migrate SQL

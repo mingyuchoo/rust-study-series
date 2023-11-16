@@ -20,22 +20,24 @@ cd <project_name>
 ```bash
 echo DATABASE_URL=mydb.sqlite3 > .env
 
-# or change `.env.test` to `.env`
+# or
+
+change `.env.test` to `.env`
 ```
 
-## Generate initial migrations
+## Generate initial migration
 
 ```bash
 diesel setup
 diesel migration generate <migration_name>
 ```
 
-## Write the SQL for migrations
+## Write the SQL for migration
 
 In `up.sql`
 
 ```sql
-# write the SQL for migrations
+# write the SQL for migration
 CREATE TABLE posts (
   id INTEGER     NOT NULL PRIMARY KEY AUTOINCREMENT,
   title TEXT     NOT NULL,
