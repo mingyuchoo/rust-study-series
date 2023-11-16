@@ -2,6 +2,12 @@
 
 ## Prerequisite
 
+If you use Fedora Linux
+
+```bash
+sudo dnf install postgresql-devel
+```
+
 install `diesel_cli` for use Diesel ORM
 
 ```bash
