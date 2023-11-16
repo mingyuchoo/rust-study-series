@@ -14,7 +14,7 @@ edition = "2021"
 
 
 [dependencies]
-diesel = { version = "2.1.0", features = ["mysql"] }
+diesel = { version = "2.1.4", features = ["mysql"] }
 dotenvy = "0.15.7"
 
 [[bin]]
