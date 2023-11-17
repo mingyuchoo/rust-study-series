@@ -1,39 +1,69 @@
-#[macro_use] extern crate rocket;
+extern crate diesel;
+extern crate rocket;
+extern crate rocket_contrib;
+use diesel::pg::PgConnection;
+use diesel::prelude::*;
+use dotenvy::dotenv;
+use rocket::response::{status::Created, Debug};
+use rocket::serde::{json::Json, Deserialize, Serialize};
+use rocket::{get, launch, post, routes};
 
-use std::io;
-use rocket::tokio::time::{sleep, Duration};
-use rocket::tokio::task::spawn_blocking;
+mod models;
+pub mod schema;
 
-#[get("/")]
-fn index() -> &'static str {
-    "Index"
+use rocket_dyn_templates::{context, Template};
+use std::env;
+pub fn establish_connection_pg() -> PgConnection {
+    dotenv().ok();
+
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    PgConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-#[get("/hello/<name>")]
-fn hello(name: &str) -> String {
-    format!("Hello, {}", name)
+#[derive(Serialize, Deserialize)]
+struct NewPost {
+    title: String,
+    body: String,
 }
 
-#[get("/delay/<seconds>")]
-async fn delay(seconds: u64) -> String {
-    sleep(Duration::from_secs(seconds)).await;
-    format!("Waited for {} seconds", seconds)
+type Result<T, E = Debug<diesel::result::Error>> = std::result::Result<T, E>;
+
+#[post("/posts", format = "json", data = "<post>")]
+fn create_post(post: Json<NewPost>) -> Result<Created<Json<NewPost>>> {
+    use self::schema::posts::dsl::*;
+    use models::Post;
+    let mut connection = establish_connection_pg();
+
+    let new_post = Post {
+        id: 1,
+        title: post.title.to_string(),
+        body: post.body.to_string(),
+        published: true,
+    };
+
+    diesel::insert_into(posts)
+        .values(&new_post)
+        .execute(&mut connection)
+        .expect("Error saving new post");
+
+    Ok(Created::new("/").body(post))
 }
 
-#[get("/blocking_task")]
-async fn blocking_task() -> io::Result<Vec<u8>> {
-    let vec = spawn_blocking(|| std::fs::read("data.txt")).await
-        .map_err(|e| io::Error::new(io::ErrorKind::Interrupted, e))??;
-    Ok(vec)
+#[get("/posts")]
+fn index() -> Template {
+    use self::models::Post;
+
+    let connection = &mut establish_connection_pg();
+    let results = self::schema::posts::dsl::posts
+        .load::<Post>(connection)
+        .expect("Error loading posts");
+    Template::render("posts", context! {posts: &results, count: results.len()})
 }
 
 #[launch]
 fn rocket() -> _ {
     rocket::build()
-        .mount("/", routes![
-               index,
-               hello,
-               delay,
-               blocking_task
-        ])
+        .mount("/", routes![create_post, index])
+        .attach(Template::fairing())
 }
