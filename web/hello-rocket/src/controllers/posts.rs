@@ -1,30 +1,21 @@
-use rocket::response::{status::Created, Debug};
+use rocket::response::{status::Accepted, status::Created, Debug};
 use rocket::serde::json::Json;
 use rocket::{get, post};
 
-use rocket_dyn_templates::{context, Template};
-
 use diesel::prelude::*;
 
-/*
-crate(main)
-  |- schema
-  |- database
-  |- models
-  |- controllers
-*/
 use crate::database;
-use crate::models;
+use crate::models::{NewPost, Post};
 use crate::schema;
 
-type Result<T, E = Debug<diesel::result::Error>> = std::result::Result<T, E>;
+type DieselResult<T, E = Debug<diesel::result::Error>> = std::result::Result<T, E>;
 
-#[post("/", format = "json", data = "<post>")]
-pub fn post(post: Json<models::NewPost>) -> Result<Created<Json<models::NewPost>>> {
-    use self::schema::posts::dsl::*;
+#[post("/posts", format = "json", data = "<post>")]
+pub fn post(post: Json<NewPost>) -> DieselResult<Created<Json<NewPost>>> {
+    use self::schema::posts::dsl::posts;
     let mut connection = self::database::establish_connection_pg();
 
-    let new_post = models::NewPost {
+    let new_post = NewPost {
         title: post.title.to_string(),
         body: post.body.to_string(),
     };
@@ -37,11 +28,17 @@ pub fn post(post: Json<models::NewPost>) -> Result<Created<Json<models::NewPost>
     Ok(Created::new("/").body(post))
 }
 
-#[get("/")]
-pub fn get() -> Template {
+#[get("/posts?<page>&<limit>")]
+pub fn get(page: Option<i64>, limit: Option<i64>) -> DieselResult<Accepted<Json<Vec<Post>>>> {
+    let limit = limit.unwrap_or(10);
+    let offset = (page.unwrap_or(1) -1) * limit;
+
     let connection = &mut self::database::establish_connection_pg();
     let results = self::schema::posts::dsl::posts
-        .load::<models::Post>(connection)
+        .limit(limit)
+        .offset(offset)
+        .load::<Post>(connection)
         .expect("Error loading posts");
-    Template::render("posts", context! {posts: &results, count: results.len()})
+
+    Ok(Accepted(Json(results)))
 }

@@ -21,6 +21,3 @@ serde = "1.0.152"
 version = "0.4.4"
 default-features = false
 features = ["json"]
-
-[dependencies.rocket_dyn_templates]
-features = ["handlebars"]
