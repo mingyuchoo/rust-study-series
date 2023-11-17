@@ -1,19 +1,20 @@
-use rocket::{launch, routes};
-use rocket_dyn_templates::Template;
-
 /*
 crate(main)
   |- schema
+  |- database
   |- models
-  |- services
+  |- controllers
+        |- posts
 */
+mod controllers;
+mod database;
 mod models;
+mod routes;
 mod schema;
-mod services;
 
-#[launch]
-fn rocket() -> _ {
-    rocket::build()
-        .attach(Template::fairing())
-        .mount("/", routes![services::create_post, services::index])
+#[rocket::main]
+async fn main() -> Result<(), rocket::Error> {
+    routes::build().launch().await?;
+
+    Ok(())
 }
