@@ -1,5 +1,4 @@
-# p05_owership
-
+# README
 ## How to build and run
 
 ```bash

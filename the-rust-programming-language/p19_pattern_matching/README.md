@@ -1,5 +1,4 @@
-# p19_pattern_matching
-
+# README
 ## How to build and run
 
 ```bash

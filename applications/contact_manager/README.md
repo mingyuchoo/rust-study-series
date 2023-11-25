@@ -1,5 +1,4 @@
-# contat_manager
-
+# README
 ## How to build
 
 ```bash

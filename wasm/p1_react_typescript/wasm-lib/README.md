@@ -1,5 +1,4 @@
-# wasm-lib
-
+# README
 ## How to create WASM project
 
 ```bash

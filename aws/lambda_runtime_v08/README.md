@@ -1,5 +1,4 @@
-# lambda_runtime_v08
-
+# README
 ## References
 
 - <https://crates.io/crates/lambda_runtime>

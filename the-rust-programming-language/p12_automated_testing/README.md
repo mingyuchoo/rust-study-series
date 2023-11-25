@@ -1,5 +1,4 @@
-# p12_automated_testing
-
+# README
 ## How to build and run
 
 ```bash

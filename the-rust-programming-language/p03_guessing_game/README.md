@@ -1,5 +1,4 @@
-# p03_guessing_game
-
+# README
 ## How to build and run
 
 ```bash

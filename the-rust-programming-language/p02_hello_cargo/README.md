@@ -1,5 +1,4 @@
-# p02_hello_cargo
-
+# README
 ## How to build and run
 
 ```bash

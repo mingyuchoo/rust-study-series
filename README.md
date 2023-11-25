@@ -4,8 +4,7 @@
   <a href="https://github.com/mingyuchoo/rust-study-series/pulls"><img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/mingyuchoo/rust-study-series?color=appveyor" /></a>
 </p>
 
-# rust-study-series
-
+# README
 ## For NixOS
 
 edit `/etc/nixos/configuration.nix` in root account

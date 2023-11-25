@@ -1,5 +1,4 @@
-# p14_closures_iterators
-
+# README
 ## How to build and run
 
 ```bash

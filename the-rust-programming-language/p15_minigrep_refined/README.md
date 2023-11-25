@@ -1,5 +1,4 @@
-# p15_minigrep_refined
-
+# README
 ## Why did I make this?
 
 ## For learn thow to build an application

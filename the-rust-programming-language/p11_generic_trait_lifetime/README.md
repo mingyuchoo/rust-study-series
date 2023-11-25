@@ -1,5 +1,4 @@
-# p11_generic_trait_lifetime
-
+# README
 ## How to build and run
 
 ```bash

@@ -1,11 +1,10 @@
-# Rust for AWS
-
+# README
 ## SAM
 
 ### Prerequsites
 
 - `rustup`
-- AWS accout 
+- AWS accout
 - `aws` CLI
 - `sam` CLI
 
@@ -89,8 +88,8 @@ Would you like to enable monitoring using CloudWatch Application Insights?
 For more info, please view https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch-application-insights.html [y/N]: N
 
 Project name [sam-app]: rust-sam-app
-                                                                                                                                                               
-Cloning from https://github.com/aws/aws-sam-cli-app-templates (process may take a moment)                                                                      
+
+Cloning from https://github.com/aws/aws-sam-cli-app-templates (process may take a moment)
 
     -----------------------
     Generating application:
@@ -102,9 +101,9 @@ Cloning from https://github.com/aws/aws-sam-cli-app-templates (process may take 
     Application Template: hello-world
     Output Directory: .
     Configuration file: rust-sam-app/samconfig.toml
-    
+
     Next steps can be found in the README file at rust-sam-app/README.md
-        
+
 
 Commands you can use next
 =========================
@@ -137,9 +136,7 @@ $ sam validate
 
 ```bash
 $ sam local invoke
-
 # or
-
 $ sam local invoke --event events/event.json
 ```
 
@@ -159,14 +156,10 @@ $ curl http://localhost:3000/hello
 ### How to deploy Lambda project to AWS
 
 ```bash
-$ sam sync --stack-name rust-sam-app --watch # for sync 
-
-# or 
-
-$ sam deploy 
-
+$ sam sync --stack-name rust-sam-app --watch # for sync
 # or
-
+$ sam deploy
+# or
 $ sam deploy --guided
 
 Configuring SAM deploy
@@ -177,14 +170,14 @@ Configuring SAM deploy
 
         Setting default arguments for 'sam deploy'
         =========================================
-        Stack Name [rust-sam-app]: 
-        AWS Region [ap-northeast-2]: 
+        Stack Name [rust-sam-app]:
+        AWS Region [ap-northeast-2]:
         #Shows you resources changes to be deployed and require a 'Y' to initiate deploy
         Confirm changes before deploy [Y/n]: N
         #SAM needs permission to be able to create roles to connect to the resources in your template
-        Allow SAM CLI IAM role creation [Y/n]: 
+        Allow SAM CLI IAM role creation [Y/n]:
         #Preserves the state of previously provisioned resources when an operation fails
-        Disable rollback [y/N]: 
+        Disable rollback [y/N]:
         HelloWorldFunction has no authentication. Is this okay? [y/N]: Y
         Save arguments to configuration file [Y/n]: N
 ...

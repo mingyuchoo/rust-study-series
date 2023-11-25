@@ -1,5 +1,4 @@
-# p01_hello_world
-
+# README
 ## How to build and run
 
 ```bash

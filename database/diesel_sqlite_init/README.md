@@ -1,5 +1,4 @@
-# diesel_sqlite_init
-
+# README
 ## Prerequisite
 
 install `diesel_cli` for use Diesel ORM
@@ -19,9 +18,7 @@ cd <project_name>
 
 ```bash
 echo DATABASE_URL=mydb.sqlite3 > .env
-
 # or
-
 change `.env.test` to `.env`
 ```
 

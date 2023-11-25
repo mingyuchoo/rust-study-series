@@ -1,5 +1,4 @@
-# async_graphql_v4
-
+# README
 ## How to code format & lint
 
 ```bash

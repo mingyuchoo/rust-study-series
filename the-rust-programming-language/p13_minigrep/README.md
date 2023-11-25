@@ -1,5 +1,4 @@
-# p13_minigrep
-
+# README
 ## Why did I make this?
 
 ## For learn thow to build an application

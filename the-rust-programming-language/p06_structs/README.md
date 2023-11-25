@@ -1,5 +1,4 @@
-# p06_structs
-
+# README
 ## How to build and run
 
 ```bash

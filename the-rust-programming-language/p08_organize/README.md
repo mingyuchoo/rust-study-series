@@ -1,5 +1,4 @@
-# p08_organize
-
+# README
 ## How to build and run
 
 ```bash

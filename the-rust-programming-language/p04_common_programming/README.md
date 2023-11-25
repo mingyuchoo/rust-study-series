@@ -1,5 +1,4 @@
-# p04_common_programming
-
+# README
 ## How to build and run
 
 ```bash

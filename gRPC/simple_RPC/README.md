@@ -1,5 +1,4 @@
-# simple_RPC
-
+# README
 ```bash
 $ cargo new <project-name>
 $ cd <project-name>

@@ -1,5 +1,4 @@
-# actix_sqlx_mysql
-
+# README
 ## How to create project
 
 ```bash
@@ -8,8 +7,7 @@ cd <project-name>
 ```
 
 ```toml
-# Cargo.toml
-
+# README
 [dependencies]
 actix-web = "4"
 sqlx = { version = "0.6", features = [ "runtime-actix-native-tls" , "mysql" ] }

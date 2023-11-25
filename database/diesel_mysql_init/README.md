@@ -1,5 +1,4 @@
-# diesel_mysql_init
-
+# README
 ## Prerequisite
 
 install `diesel_cli` for use Diesel ORM
@@ -19,9 +18,7 @@ cd <project_name>
 
 ```bash
 echo DATABASE_URL=mysql://root:root@localhost:3306/root > .env
-
 # or
-
 change `.env.test` to `.env`
 ```
 

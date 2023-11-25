@@ -1,5 +1,4 @@
-# greeting_simple_RPC
-
+# README
 ## working process
 
 ```bash

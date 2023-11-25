@@ -1,5 +1,4 @@
-# react-app
-
+# README
 ## How to create project
 
 ```bash

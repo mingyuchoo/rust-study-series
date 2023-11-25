@@ -1,5 +1,4 @@
-# async_graphql_v4_splitted_code
-
+# README
 ## How to use Diesel
 
 ```bash

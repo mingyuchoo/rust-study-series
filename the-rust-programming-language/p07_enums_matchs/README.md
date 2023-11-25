@@ -1,5 +1,4 @@
-# p07_enums_matchs
-
+# README
 ## How to build and run
 
 ```bash

@@ -1,5 +1,4 @@
-# wasm-pack-template
-
+# README
 ## About
 
 [**📚 Read this template tutorial! 📚**][template-docs]

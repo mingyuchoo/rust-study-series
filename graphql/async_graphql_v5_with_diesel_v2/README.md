@@ -1,5 +1,4 @@
-# async_graphql_v5_with_diesel_v2
-
+# README
 ## How to use Diesel
 
 ```bash

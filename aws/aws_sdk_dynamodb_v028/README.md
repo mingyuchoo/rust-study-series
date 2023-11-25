@@ -1,5 +1,4 @@
-# aws_sdk_dynamodb_v028
-
+# README
 ## What does this program
 
 - this tables of DynamoDB in your AWS account

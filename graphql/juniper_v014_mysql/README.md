@@ -1,5 +1,4 @@
-# juniper_v014_mysql
-
+# README
 GraphQL Implementation in Rust using Actix, Juniper, and Mysql as Database
 
 ## Prerequites

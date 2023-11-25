@@ -1,5 +1,4 @@
-# hello-rocket
-
+# README
 ## Prerequisites
 
 If you use Fedora Linux
@@ -26,7 +25,6 @@ cd <project_name>
 ```bash
 echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres > .envrc
 # or
-
 change `.env.test` to `.env`
 ```
 

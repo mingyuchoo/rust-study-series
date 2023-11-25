@@ -1,5 +1,4 @@
-# p20_custom_error_types
-
+# README
 ## How to build and run
 
 ```bash

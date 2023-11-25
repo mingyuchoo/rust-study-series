@@ -1,5 +1,4 @@
-# p18_concurrent_parallel
-
+# README
 ## How to build and run
 
 ```bash

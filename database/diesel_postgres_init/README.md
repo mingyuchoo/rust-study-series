@@ -1,5 +1,4 @@
-# diesel_postgres_init
-
+# README
 ## Prerequisite
 
 If you use Fedora Linux
@@ -25,9 +24,7 @@ cd <project_name>
 
 ```bash
 echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres > .env
-
 # or
-
 change `.env.test` to `.env`
 ```
 

@@ -1,5 +1,4 @@
-# p10_errors
-
+# README
 ## How to build and run
 
 ```bash

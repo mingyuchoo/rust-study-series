@@ -1,5 +1,4 @@
-# p17_smart_pointer
-
+# README
 ## How to build and run
 
 ```bash

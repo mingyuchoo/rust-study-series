@@ -1,5 +1,4 @@
-# postgres for PostgreSQL
-
+# README
 ## Prerequsites
 
 If you use Fedora Linux

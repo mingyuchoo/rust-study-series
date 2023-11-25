@@ -1,5 +1,4 @@
-# p0_init
-
+# README
 ## Prerequsite
 
 1. Install `rustup`
