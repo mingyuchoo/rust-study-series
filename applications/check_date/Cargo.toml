@@ -7,7 +7,7 @@ opt-level = 3
 debug = false
 
 [package]
-name = "hello_world"
+name = "check_date"
 version = "1.0.0"
 edition = "2021"
 
