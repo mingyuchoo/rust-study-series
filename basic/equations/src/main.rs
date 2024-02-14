@@ -1,11 +1,8 @@
-fn left(s: i32) -> i32 {
-    2 * s + 10
+fn main() {
+    what_value_of_s_balances_the_scale();
 }
 
-fn right(s: i32) -> i32 {
-    s + 15
-}
-
+/// 2s + 10 = s + 15
 fn what_value_of_s_balances_the_scale() -> () {
 
     let max: i32 = 100;
@@ -17,6 +14,10 @@ fn what_value_of_s_balances_the_scale() -> () {
     }
 }
 
-fn main() {
-    what_value_of_s_balances_the_scale();
+fn left(s: i32) -> i32 {
+    2 * s + 10
+}
+
+fn right(s: i32) -> i32 {
+    s + 15
 }
