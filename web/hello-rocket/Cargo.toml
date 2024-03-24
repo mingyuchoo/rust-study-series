@@ -14,7 +14,7 @@ debug = false
 [dependencies]
 dotenvy = "0.15.7"
 diesel = { version = "2.1.4", features = ["postgres", "r2d2"] }
-rocket = { version = "0.5.0-rc.4", features = ["json"] }
+rocket = { version = "0.5.0", features = ["json"] }
 serde = "1.0.152"
 
 [dependencies.rocket_contrib]
