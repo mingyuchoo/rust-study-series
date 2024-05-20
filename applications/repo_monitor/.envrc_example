@@ -1,0 +1,2 @@
+export REPO_DIR="."
+export BUILD_COMMAND="cargo run"
