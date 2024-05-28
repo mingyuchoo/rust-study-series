@@ -2,6 +2,19 @@
 
 ## Prerequisites
 
+### Install Rust
+
+Install rust with rustup
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Change default rust compiler to nightly
+
+```bash
+rustup default nightly
+```
 
 ### Install Linux Libraris 
 
@@ -37,7 +50,7 @@ cd <project_name>
 ## Create a database environment file
 
 ```bash
-echo DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres > .envrc
+echo "export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres" > .envrc
 # or
 change `.env.test` to `.env`
 ```
@@ -65,4 +78,25 @@ diesel migration run
 
 ```bash
 cargo check
+```
+
+## Run and access to the endpoint
+
+```bash
+cargo run
+```
+
+Access to the endpoint with Web browsers or other tools
+
+```
+- GET  /api/health
+- POST /api/posts
+- GET  /api/posts?<page>&<list>
+```
+## Tips
+
+### How to add dependencies
+
+```bash
+cargo add <dependency_name> --features <feature_name> <feature_name>
 ```
