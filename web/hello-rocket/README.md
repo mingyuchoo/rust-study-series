@@ -1,13 +1,27 @@
 # README
+
 ## Prerequisites
 
-If you use Fedora Linux
+
+### Install Linux Libraris 
+
+If you are using Ubuntu Linux
+
+```bash
+sudo apt install -y libpq-dev          # for the PostgreSQL
+sudo apt install -y libmysqlclient-dev # for the MySQL
+sudo apt install -y libsqlite3-dev     # for the SQLite
+```
+
+If you are using Fedora Linux
 
 ```bash
 sudo dnf install -y postgresql-devel
 ```
 
 Install `diesel_cli` for use Diesel ORM
+
+### Install Diesel CLI for PostgreSQL
 
 ```bash
 cargo install diesel_cli --no-default-features --features postgres
