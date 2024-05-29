@@ -1,5 +1,5 @@
-mod controllers;
-mod database;
-mod models;
 mod schema;
+mod database;
+mod services;
+mod controllers;
 pub mod routes;

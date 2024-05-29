@@ -1,0 +1,24 @@
+[default]
+address = "127.0.0.1"
+port = 8000
+limits = { form = "64kB", json = "10MiB", msgpack = "2MiB", "file/jpg" = "5MiB" }
+workers = 16
+max_blocking = 512
+keep_alive = 5
+ident = "Rocket"
+ip_header = "X-Real-IP" # set to `false` to disable
+log_level = "normal"
+temp_dir = "/tmp"
+cli_colors = true
+secret_key = "hPrYyЭRiMyµ5sBB1π+CMæ1køFsåqKvBiQJxBVHQk="
+
+[debug]
+address = "0.0.0.0"
+port = 8000
+limits = { json = "10MiB" }
+
+[release]
+address = "0.0.0.0"
+port = 8000
+ip_header = false
+secret_key = "zNhtNYqIZuFkcq+QTdxJno7SLDYf+gTpWq9Ytb0Jhdo="

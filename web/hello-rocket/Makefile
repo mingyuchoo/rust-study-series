@@ -1,6 +1,6 @@
-dev: clean install build run
+dev: clean build run
 
-prod: clean install build pack
+prod: clean build pack
 
 clean:
 	cargo clean
