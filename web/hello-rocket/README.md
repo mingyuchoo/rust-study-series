@@ -19,9 +19,15 @@ If you are using Fedora Linux
 sudo dnf install -y postgresql-devel
 ```
 
-Install `diesel_cli` for use Diesel ORM
+If you are using macOS
 
-### Install Diesel CLI for PostgreSQL
+```bash
+brew install libpq
+```
+
+## Install Diesel CLI for PostgreSQL
+
+Install `diesel_cli` for use Diesel ORM
 
 ```bash
 cargo install diesel_cli --no-default-features --features postgres

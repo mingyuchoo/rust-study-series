@@ -13,11 +13,8 @@ debug = false
 
 [dependencies]
 dotenvy = "0.15.7"
-diesel = { version = "2.1.4", features = ["postgres", "r2d2"] }
-rocket = { version = "0.5.0", features = ["json"] }
-serde = "1.0.152"
+diesel               = { version = "2.1.4",   features = ["postgres", "r2d2"] }
+rocket               = { version = "0.5.0",   features = ["json"] }
+serde                = { version = "1.0.203", features = ["derive"] }
+rocket_dyn_templates = { version = "0.2.0",   features = ["handlebars", "tera"]}
 
-[dependencies.rocket_contrib]
-version = "0.4.4"
-default-features = false
-features = ["json"]
