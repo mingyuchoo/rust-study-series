@@ -2,8 +2,7 @@
 
 ## Prerequisites
 
-
-### Install Linux Libraris 
+### Install Linux Libraris
 
 If you are using Ubuntu Linux
 
@@ -71,4 +70,11 @@ diesel migration run
 
 ```bash
 cargo check
+```
+
+### Run as watch mode
+
+```bash
+cargo install cargo-watch
+cargo watch -x run
 ```

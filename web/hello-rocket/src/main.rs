@@ -14,7 +14,8 @@ mod schema;
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
-    routes::build().launch().await?;
+    routes::build()
+        .launch().await?;
 
     Ok(())
 }
