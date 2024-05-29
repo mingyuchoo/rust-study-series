@@ -1,11 +1,3 @@
-/*
-crate(main)
-  |- schema
-  |- database
-  |- models
-  |- controllers
-        |- posts
-*/
 mod schema;
 mod database;
 mod services;

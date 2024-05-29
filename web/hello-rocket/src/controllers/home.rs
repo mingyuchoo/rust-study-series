@@ -1,7 +1,19 @@
 use rocket::get; 
-use rocket_dyn_templates::{Template, context};
+use askama::Template;
+
+#[derive(Template)]
+#[template(path = "index.html")]
+pub struct Index {
+    pub title: String,
+    pub first_name: String,
+    pub last_name: String
+}
 
 #[get("/")]
-pub fn index() -> Template {
-  Template::render("home/index", context! { first_name: "John", last_name: "Doe" })
+pub fn index() -> Index {
+  Index {
+    title: "Index".to_string(),
+    first_name: "John".to_string(),
+    last_name: "Doe".to_string()
+  }
 }

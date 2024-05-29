@@ -71,7 +71,7 @@ cargo new <project_name> --bin
 cd <project_name>
 ```
 
-## Create a database environment file
+### Create a database environment file
 
 ```bash
 echo "export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres" > .envrc
@@ -79,26 +79,26 @@ echo "export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres
 change `.env.test` to `.env`
 ```
 
-## Generate initial migration
+### Generate initial migration
 
 ```bash
 diesel setup
 diesel migration generate <migration_name>
 ```
 
-## Write the SQL for migration
+### Write the SQL for migration
 
 ```bash
 # write the SQL for migrtions
 ```
 
-## Migrate SQL
+### Migrate SQL
 
 ```bash
 diesel migration run
 ```
 
-## Run and access to the endpoint
+### Run and access to the endpoint
 
 ```bash
 cargo check
@@ -112,19 +112,24 @@ Access to the endpoint with Web browsers or other tools
 - POST /api/posts
 - GET  /api/posts?<page>&<list>
 ```
+
 ## Tips
 
 ### How to add dependencies
 
-```bash
+````bash
 cargo add <dependency_name> --features <feature_name> <feature_name>
 ### Run as watch mode
 
 ```bash
 cargo install cargo-watch
 cargo watch -x run
-```
+````
 
 ```bash
 curl -X GET http://localhost:8000/api/posts?page=1&limit=10
 ```
+
+## References
+
+- [rocket-template](https://github.com/UpsettingBoy/rocket-template)
