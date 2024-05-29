@@ -1,24 +1,20 @@
 [default]
-address = "127.0.0.1"
 port = 8000
-# limits = { form = "64kB", json = "10MiB", msgpack = "2MiB", "file/jpg" = "5MiB" }
-workers = 16
-max_blocking = 512
-keep_alive = 5
-ident = "Rocket"
-ip_header = "X-Real-IP" # set to `false` to disable
-log_level = "normal"
-temp_dir = "/tmp"
+address = "127.0.0.1"
+log_level = "debug"
 cli_colors = true
 secret_key = "zNhtNYqIZuFkcq+QTdxJno7SLDYf+gTpWq9Ytb0Jhdo="
 
-[debug]
-address = "0.0.0.0"
+[staging]
 port = 8000
-# limits = { json = "10MiB" }
+address = "0.0.0.0"
+log_level = "normal"
+cli_colors = true
+secret_key = "zNhtNYqIZuFkcq+QTdxJno7SLDYf+gTpWq9Ytb0Jhdo="
 
 [release]
-address = "0.0.0.0"
 port = 8000
+address = "0.0.0.0"
+log_level = "critical"
 ip_header = false
 secret_key = "zNhtNYqIZuFkcq+QTdxJno7SLDYf+gTpWq9Ytb0Jhdo="

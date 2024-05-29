@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+	purge: ['./html/**/*.html'],
   content: [],
   theme: {
     colors: {
@@ -25,6 +26,11 @@ module.exports = {
       borderRadius: {
         "4xl": "2rem",
       },
+    },
+  },
+  variants: {
+    extend: {
+      animation: ['group-hover']
     },
   },
   plugins: [

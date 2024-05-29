@@ -18,7 +18,6 @@ askama               = { version = "0.12.1", features = ["config", "with-rocket"
 diesel               = { version = "2.1.4",   features = ["postgres", "r2d2"] }
 rocket               = { version = "0.5.0",   features = ["json", "secrets"] }
 serde                = { version = "1.0.203", features = ["derive"] }
-# rocket_dyn_templates = { version = "0.2.0",   features = ["tera"]}
 
 [build-dependencies]
 npm_rs = "1.0.0"

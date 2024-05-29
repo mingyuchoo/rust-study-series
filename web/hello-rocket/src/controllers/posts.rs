@@ -2,7 +2,7 @@ use rocket::response::{status::Accepted, status::Created};
 use rocket::serde::json::Json;
 use rocket::{get, post};
 
-use crate::services::{posts};
+use crate::services::posts;
 
 type PostsResult<T, E = posts::ServiceError> = Result<T, E>;
 
@@ -14,6 +14,6 @@ pub fn post(post: Json<posts::NewPost>) -> PostsResult<Created<Json<posts::NewPo
 #[get("/posts?<page>&<limit>")]
 pub fn get(page: Option<i64>, limit: Option<i64>) -> PostsResult<Accepted<Json<Vec<posts::Post>>>> {
     let limit = limit.unwrap_or(10);
-    let offset = (page.unwrap_or(1) -1) * limit;
+    let offset = (page.unwrap_or(1) - 1) * limit;
     Ok(Accepted(Json(posts::list_posts(offset, limit))))
 }

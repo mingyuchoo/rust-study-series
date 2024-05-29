@@ -1,4 +1,4 @@
-use rocket::fs::{FileServer};
+use rocket::fs::FileServer;
 use rocket::{routes, Build, Rocket};
 
 pub fn build() -> Rocket<Build> {
@@ -6,9 +6,7 @@ pub fn build() -> Rocket<Build> {
 
     rocket::build()
         .mount("/public", FileServer::from("public"))
-        .mount("/", routes![
-            controllers::home::index
-        ])
+        .mount("/", routes![controllers::home::index])
         .mount(
             "/api",
             routes![
