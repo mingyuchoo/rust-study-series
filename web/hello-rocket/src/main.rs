@@ -6,15 +6,18 @@ crate(main)
   |- controllers
         |- posts
 */
-mod controllers;
-mod database;
-mod models;
-mod routes;
 mod schema;
+mod database;
+mod services;
+mod controllers;
+pub mod routes;
+
 
 #[rocket::main]
 async fn main() -> Result<(), rocket::Error> {
-    routes::build().launch().await?;
+    routes::build()
+        .launch().await?;
 
     Ok(())
 }
+

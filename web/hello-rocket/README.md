@@ -16,7 +16,7 @@ Change default rust compiler to nightly
 rustup default nightly
 ```
 
-### Install Linux Libraris 
+### Install Linux Libraris
 
 If you are using Ubuntu Linux
 
@@ -32,9 +32,33 @@ If you are using Fedora Linux
 sudo dnf install -y postgresql-devel
 ```
 
-Install `diesel_cli` for use Diesel ORM
+If you are using macOS
 
-### Install Diesel CLI for PostgreSQL
+```bash
+brew install postgresql
+cd $HOME/.cargo
+touch config.toml
+```
+
+Add these content to `config.toml`
+
+```toml
+[target.x86_64-apple-darwin]
+rustflags = [
+  "-C", "link-arg=-undefined",
+  "-C", "link-arg=dynamic_lookup",
+]
+
+[target.aarch64-apple-darwin]
+rustflags = [
+  "-C", "link-arg=-undefined",
+  "-C", "link-arg=dynamic_lookup",
+]
+```
+
+## Install Diesel CLI for PostgreSQL
+
+Install `diesel_cli` for use Diesel ORM
 
 ```bash
 cargo install diesel_cli --no-default-features --features postgres
@@ -74,15 +98,10 @@ diesel migration generate <migration_name>
 diesel migration run
 ```
 
-## Check Cargo
-
-```bash
-cargo check
-```
-
 ## Run and access to the endpoint
 
 ```bash
+cargo check
 cargo run
 ```
 
@@ -99,4 +118,13 @@ Access to the endpoint with Web browsers or other tools
 
 ```bash
 cargo add <dependency_name> --features <feature_name> <feature_name>
+### Run as watch mode
+
+```bash
+cargo install cargo-watch
+cargo watch -x run
+```
+
+```bash
+curl -X GET http://localhost:8000/api/posts?page=1&limit=10
 ```
