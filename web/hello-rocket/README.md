@@ -25,6 +25,7 @@ brew install postgresql
 cd $HOME/.cargo
 touch config.toml
 ```
+
 Add these content to `config.toml`
 
 ```toml
@@ -94,4 +95,8 @@ cargo check
 ```bash
 cargo install cargo-watch
 cargo watch -x run
+```
+
+```bash
+curl -X GET http://localhost:8000/api/posts?page=1&limit=10
 ```
