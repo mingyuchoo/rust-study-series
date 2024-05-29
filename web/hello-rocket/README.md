@@ -21,7 +21,24 @@ sudo dnf install -y postgresql-devel
 If you are using macOS
 
 ```bash
-brew install libpq
+brew install postgresql
+cd $HOME/.cargo
+touch config.toml
+```
+Add these content to `config.toml`
+
+```toml
+[target.x86_64-apple-darwin]
+rustflags = [
+  "-C", "link-arg=-undefined",
+  "-C", "link-arg=dynamic_lookup",
+]
+
+[target.aarch64-apple-darwin]
+rustflags = [
+  "-C", "link-arg=-undefined",
+  "-C", "link-arg=dynamic_lookup",
+]
 ```
 
 ## Install Diesel CLI for PostgreSQL
