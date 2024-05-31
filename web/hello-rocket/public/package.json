@@ -8,7 +8,8 @@
   "scripts": {
     "css": "postcss ./css/tailwind.css -o ./css/style.css",
     "format": "prettier --write html/**/*.html",
-    "lint": "eslint --config eslint.config.js --fix"
+    "lint": "eslint --config eslint.config.js --fix",
+    "watch": "browser-sync start --config bs-config.js"
   },
   "dependencies": {
     "@tailwindcss/aspect-ratio": "^0.4.2",
@@ -25,7 +26,6 @@
     "eslint": "^9.3.0",
     "eslint-plugin-html": "^8.1.1",
     "eslint-plugin-tailwindcss": "^3.17.0",
-    "live-server": "^1.2.2",
     "prettier": "^3.2.5",
     "prettier-plugin-organize-attributes": "^1.0.0",
     "prettier-plugin-organize-imports": "^3.2.4",

@@ -1,6 +1,13 @@
-{% extends "components/base.html" %} {% block content %}
-<div>
-  <h1>This web app was built with RUST</h1>
-  <p>Hello, {{first_name}} {{last_name}} 😊</p>
-</div>
+{% extends "components/base.html" %} {% block main %}
+<main>
+  <div class="flex items-center justify-center">
+    <article>
+      <div class="prose">
+        <h1>This web app was built with RUST</h1>
+        <h2>Greetings</h2>
+        <p>Hello, {{first_name}} {{last_name}} 😊</p>
+      </div>
+    </article>
+  </div>
+</main>
 {% endblock %}

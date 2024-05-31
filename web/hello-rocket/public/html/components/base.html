@@ -9,10 +9,8 @@
   </head>
 
   <body>
-    <div class="container mx-auto">
-      {% include "components/header.html" %}
-      <main>{% block content %}{% endblock %}</main>
-      {% include "components/footer.html" %}
+    <div class="container mx-auto flex flex-col">
+      {% include "components/header.html" %} {% block main %}{% endblock %} {% include "components/footer.html" %}
     </div>
   </body>
 </html>
