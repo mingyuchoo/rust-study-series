@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="en">
-
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,9 +9,10 @@
   </head>
 
   <body>
-    {% include "components/header.html" %}
-    <main id="content">{% block content %}{% endblock %}</main>
-    {% include "components/footer.html" %}
+    <div>
+      {% include "components/header.html" %}
+      <main>{% block content %}{% endblock %}</main>
+      {% include "components/footer.html" %}
+    </div>
   </body>
-
 </html>
