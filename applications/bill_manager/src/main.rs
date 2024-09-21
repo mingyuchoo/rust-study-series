@@ -51,8 +51,10 @@ impl Bills {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     main_menu();
+
+    Ok(())
 }
 
 fn main_menu() {

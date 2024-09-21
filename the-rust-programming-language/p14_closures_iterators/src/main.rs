@@ -1,7 +1,7 @@
 use p14_closures_iterators::closures;
 use p14_closures_iterators::iterators;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     call_closures();
     call_iterators();
 }
@@ -24,6 +24,8 @@ fn call_closures() {
 
     println!("-- call6()");
     closures::call6();
+
+    Ok(())
 }
 
 fn call_iterators() {

@@ -6,7 +6,7 @@ use std::path::Path;
 use std::sync::mpsc::channel;
 use std::thread;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let repo_dir = std::env::var("REPO_DIR").unwrap_or_else(|_| ".".to_owned());
     let repo_path = Path::new(&repo_dir);
 
@@ -25,4 +25,6 @@ fn main() {
 
     handle1.join().unwrap();
     handle2.join().unwrap();
+
+    Ok(())
 }

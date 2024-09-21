@@ -1,8 +1,10 @@
-pub fn main() {
+pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     variables();
     consts();
     statics();
     shadowing();
+
+    Ok(())
 }
 
 /// This function is an example for variable bindings

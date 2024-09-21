@@ -114,11 +114,13 @@ enum Command {
     },
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Opt::from_args();
     if let Err(e) = run(opt) {
         println!("an error occurred: {}", e);
     }
+    
+    Ok(())
 }
 
 fn run(opt: Opt) -> Result<(), std::io::Error> {

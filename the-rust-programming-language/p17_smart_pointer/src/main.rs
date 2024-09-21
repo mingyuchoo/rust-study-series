@@ -5,7 +5,7 @@ mod memory_leak;
 mod rcs;
 mod refcells;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     boxes::call1();
     boxes::call2();
 
@@ -20,4 +20,6 @@ fn main() {
 
     memory_leak::call1();
     memory_leak::call2();
+
+    Ok(())
 }

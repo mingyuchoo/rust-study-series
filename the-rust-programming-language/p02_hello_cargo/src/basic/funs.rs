@@ -1,4 +1,4 @@
-pub fn main() {
+pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     hello();
 
     // 01. Without type declarations.
@@ -23,6 +23,8 @@ pub fn main() {
     // Input parameters are passed inside | | and expression body is wrapped within { }
     let square = |i: i32| -> i32 { i * i };
     println!("{}", square(x)); // 4
+
+    Ok(())
 }
 
 /// This function returns the greeting; Hello, world!

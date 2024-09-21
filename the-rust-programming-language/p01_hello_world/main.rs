@@ -1,4 +1,4 @@
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
   println!("Hello, world!");               // Hello, world!
 
   print!("Hello, world!");                 // Without new line
@@ -23,4 +23,6 @@ fn main() {
       3
   ]
   */
+
+  Ok(())
 }

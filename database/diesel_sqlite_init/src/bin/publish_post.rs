@@ -1,7 +1,7 @@
 use diesel_sqlite_init::*;
 use std::env::args;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let id = args()
         .nth(1)
         .expect("publish a post requires ID")
@@ -12,4 +12,6 @@ fn main() {
     let post = update_post(connection, id).expect("Error updating post");
 
     println!("Published post - id: {}, title: {}", post.id, post.title);
+
+    Ok(())
 }

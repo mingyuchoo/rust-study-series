@@ -1,7 +1,7 @@
 use diesel_sqlite_init::*;
 use std::io::{stdin, Read};
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection = &mut establish_connection();
 
     println!("What would you like your title to be?");
@@ -16,6 +16,8 @@ fn main() {
 
     let post = create_post(connection, title, &body).expect("Error saving new post");
     println!("\nSaved draft {title} with ID: {}", post.id);
+
+    Ok(())
 }
 
 #[cfg(not(windows))]

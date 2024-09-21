@@ -119,9 +119,11 @@ fn run(choice: i32) -> Result<(), ProgramError> {
     Ok(())
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{:?}", run(1));
     println!("{:?}", run(2));
     println!("{:?}", run(3));
     println!("{:?}", run(4));
+
+    Ok(())
 }

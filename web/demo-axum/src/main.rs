@@ -4,7 +4,7 @@ use axum::{
 };
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .route("/echo", post(|body: String| async { body }))
@@ -12,4 +12,6 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+
+    Ok(())
 }

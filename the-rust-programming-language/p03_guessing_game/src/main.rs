@@ -2,7 +2,7 @@ use rand::Rng;
 use std::cmp::Ordering;
 use std::io;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("숫자를 맞혀봅시다!");
     let secret_number: u32 = rand::thread_rng().gen_range(1, 101);
 
@@ -33,4 +33,6 @@ fn main() {
             }
         }
     }
+
+    Ok(())
 }

@@ -1,5 +1,7 @@
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     what_value_of_s_balances_the_scale();
+
+    Ok(())
 }
 
 /// 2s + 10 = s + 15

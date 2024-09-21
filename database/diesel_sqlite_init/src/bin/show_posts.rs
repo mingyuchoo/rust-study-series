@@ -1,6 +1,6 @@
 use diesel_sqlite_init::*;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection = &mut establish_connection();
 
     let results = select_post(connection, true).expect("Error loading posts.");
@@ -13,4 +13,6 @@ fn main() {
         println!("============================");
         println!("{}", post.body);
     });
+
+    Ok(())
 }

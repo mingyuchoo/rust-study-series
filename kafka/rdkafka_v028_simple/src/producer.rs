@@ -5,7 +5,7 @@ use rdkafka::{
     ClientConfig,
 };
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let producer: BaseProducer = ClientConfig::new()
         .set("bootstrap.servers", "localhost:9092")
         .create()
@@ -24,4 +24,6 @@ fn main() {
 
         thread::sleep(Duration::from_secs(3));
     }
+
+    Ok(())
 }

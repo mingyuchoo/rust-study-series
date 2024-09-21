@@ -2,7 +2,7 @@ use self::models::*;
 use diesel::prelude::*;
 use diesel_postgres_init::*;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     use self::schema::posts::dsl::*;
 
     let connection: &mut PgConnection = &mut establish_connection();
@@ -19,4 +19,6 @@ fn main() {
         println!("-----------\n");
         println!("{}", post.body);
     }
+
+    Ok(())
 }

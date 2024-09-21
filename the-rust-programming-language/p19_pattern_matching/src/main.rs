@@ -7,7 +7,7 @@ mod match_guard;
 mod pattern_grammer;
 mod while_let;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     if_let::call();
     while_let::call();
     for_loop::call();
@@ -34,4 +34,6 @@ fn main() {
     match_guard::call3();
 
     at_binding::call1();
+
+    Ok(())
 }
