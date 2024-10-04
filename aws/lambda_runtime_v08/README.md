@@ -9,6 +9,18 @@
 
 - <https://www.cargo-lambda.info/guide/installation.html>
 
+### How to run Lambda
+
+```bash
+$ cargo lambda new <function-name>
+$ cargo lambda watch
+  $ # open another terminal and then run below
+  $ cargo lambda invoke --data-ascii '{"name":"World"}' <function-name>
+$ cargo lambda build --release --output-format zip
+```
+
+
+### For NixOS
 
 If you are using NixOS, please follow this.
 
