@@ -8,10 +8,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn what_value_of_s_balances_the_scale() -> () {
     let max = 100;
 
-    for s in 1..max {
-        if left(s) == right(s) {
-            println!("I found the number s: {}", s);
-        }
+    // FIXED: NOT idiomatic code
+    //
+    //for s in 1..max {
+    //    if left(s) == right(s) {
+    //        println!("I found the number s: {}", s);
+    //}
+
+    match (1..max).find(|&x| left(x) == right(x)) {
+        Some(x) => println!("I found the number x: {}", x),
+        None => println!("No number found that balances the scale."),
     }
 }
 
