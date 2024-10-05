@@ -6,8 +6,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// 2s + 10 = s + 15
 fn what_value_of_s_balances_the_scale() -> () {
-
-    let max: i32 = 100;
+    let max = 100;
 
     for s in 1..max {
         if left(s) == right(s) {
@@ -22,4 +21,23 @@ fn left(s: i32) -> i32 {
 
 fn right(s: i32) -> i32 {
     s + 15
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_left() {
+        assert_eq!(left(-1), 8);
+        assert_eq!(left(0), 10);
+        assert_eq!(left(1), 12);
+    }
+
+    #[test]
+    fn test_right() {
+        assert_eq!(right(-1), 14);
+        assert_eq!(right(0), 15);
+        assert_eq!(right(1), 16);
+    }
 }
