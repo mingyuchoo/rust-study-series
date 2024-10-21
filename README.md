@@ -21,19 +21,19 @@ edit `/etc/nixos/configuration.nix` in root account
 run following commands to install stable toolchain in user account
 
 ```bash
-rustup default stable
-rustup component add rls # or `llvm`
-rustup component add rust-analysis
-rustup component add rust-analyzer
+$ rustup default stable
+$ rustup component add rls # or `llvm`
+$ rustup component add rust-analysis
+$ rustup component add rust-analyzer
 ```
 
 run following command to install cargo tools in user account
 
 ```bash
-cargo install cargo-lambda
-cargo install cargo-modules
-cargo install cargo-tauri
-cargo install cargo-watch
+$ cargo install cargo-lambda
+$ cargo install cargo-modules
+$ cargo install cargo-tauri
+$ cargo install cargo-watch
 ```
 
 ## For Nix
@@ -79,7 +79,6 @@ $ rustup component add llvm-tools
 $ rustup component add rls
 $ rustup component add rust-analysis
 $ rustup component add rust-analyzer
-$ rustup component add clippy
 ```
 ## Formatting & linting
 
