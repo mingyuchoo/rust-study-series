@@ -1,4 +1,5 @@
-pub fn call1() {
+pub fn call1()
+{
     let number_list = vec![34, 50, 25, 100, 65];
     let mut largest = number_list[0];
 
@@ -22,8 +23,10 @@ pub fn call1() {
     println!("가장 큰 숫자: {largest}");
 }
 
-pub fn call2() {
-    fn largest(list: &[i32]) -> i32 {
+pub fn call2()
+{
+    fn largest(list: &[i32]) -> i32
+    {
         let mut largest = list[0];
 
         for &item in list.iter() {

@@ -3,7 +3,8 @@ mod generic_functions; // 모듈을 선언하고, 모듈 콘텐츠를 가져오�
 mod lifetime; // 모듈을 선언하고, 모듈 콘텐츠를 가져오기
 mod traits; // 모듈을 선언하고, 모듈 콘텐츠를 가져오기
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     generic_functions::call1();
     generic_functions::call2();
 

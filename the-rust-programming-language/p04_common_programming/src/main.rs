@@ -3,7 +3,8 @@ mod flow_control;
 mod functions;
 mod variables;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     variables::mutation();
     variables::shadowing();
 

@@ -9,7 +9,8 @@ use std::env;
 use self::models::{NewPost,
                    Post};
 
-pub fn establish_connection() -> PgConnection {
+pub fn establish_connection() -> PgConnection
+{
     dotenv().ok();
 
     let database_url: String = env::var("DATABASE_URL").expect("DATBASE_URL must be set");
@@ -21,7 +22,8 @@ pub fn establish_connection() -> PgConnection {
 pub fn create_post(conn: &mut PgConnection,
                    title: &str,
                    body: &str)
-                   -> Post {
+                   -> Post
+{
     use self::schema::posts;
 
     let new_post: NewPost<'_> = NewPost { title, body };

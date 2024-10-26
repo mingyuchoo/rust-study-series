@@ -9,7 +9,8 @@ use std::{path::Path,
           sync::mpsc::channel,
           thread};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     let repo_dir = std::env::var("REPO_DIR").unwrap_or_else(|_| ".".to_owned());
     let repo_path = Path::new(&repo_dir);
 

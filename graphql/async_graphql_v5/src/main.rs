@@ -1,16 +1,19 @@
 struct QueryRoot;
 
 #[async_graphql::Object]
-impl QueryRoot {
+impl QueryRoot
+{
     async fn add(&self,
                  a: i32,
                  b: i32)
-                 -> i32 {
+                 -> i32
+    {
         a + b
     }
 }
 
-async fn graphiql() -> actix_web::HttpResponse {
+async fn graphiql() -> actix_web::HttpResponse
+{
     actix_web::HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(
@@ -29,14 +32,16 @@ async fn graphql(schema: actix_web::web::Data<
         >,
     >,
                  req: async_graphql_actix_web::GraphQLRequest)
-                 -> async_graphql_actix_web::GraphQLResponse {
+                 -> async_graphql_actix_web::GraphQLResponse
+{
     schema.execute(req.into_inner())
           .await
           .into()
 }
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> std::io::Result<()>
+{
     actix_web::HttpServer::new(move || {
         actix_web::App::new()
             .app_data(actix_web::web::Data::new(async_graphql::Schema::new(

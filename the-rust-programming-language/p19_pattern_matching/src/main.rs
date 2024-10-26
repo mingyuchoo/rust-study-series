@@ -7,7 +7,8 @@ mod match_guard;
 mod pattern_grammer;
 mod while_let;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     if_let::call();
     while_let::call();
     for_loop::call();

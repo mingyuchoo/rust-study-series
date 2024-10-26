@@ -1,4 +1,5 @@
-pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+pub fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     hello();
 
     // 01. Without type declarations.
@@ -29,62 +30,72 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// This function returns the greeting; Hello, world!
-pub fn hello() -> String {
+pub fn hello() -> String
+{
     println!("{}", "Hello, world!");
     ("Hello, world!").to_string()
 }
 
 /// 01. Without the return keyword. Only the last expression returns
-pub fn plus_one(a: i32) -> i32 {
+pub fn plus_one(a: i32) -> i32
+{
     a + 1
     // There is no ending ; in the above line.
     // It means this is an expression which equals to `return a + 1;`.
 }
 
 /// 02. With the return keyword.
-pub fn plus_two(a: i32) -> i32 {
+pub fn plus_two(a: i32) -> i32
+{
     return a + 2;
     // Should use return keyword only on conditional / early returns.
     // Using return keyword in the last expression is a bad practice.
 }
 
 /// Closures
-pub fn get_square_value(i: i32) -> i32 {
+pub fn get_square_value(i: i32) -> i32
+{
     i * i
 }
 
 #[cfg(test)]
-mod tests {
+mod tests
+{
     // `tests` 모듈을 선언하기
     use super::*; //  상대경로(`super`)로 경로를 현재 범위 안으로 가져오기
 
     #[test]
-    fn test_hello() {
+    fn test_hello()
+    {
         assert_eq!(hello(), "Hello, world!");
     }
 
     #[test]
-    fn test_hello_2() {
+    fn test_hello_2()
+    {
         let expected = "Hello, world!".to_owned();
         assert_eq!(expected, hello(), "should be printed 'Hello, world!'");
     }
 
     #[test]
-    fn test_plus_one() {
+    fn test_plus_one()
+    {
         assert_eq!(plus_one(-1), 0);
         assert_eq!(plus_one(0), 1);
         assert_eq!(plus_one(1), 2);
     }
 
     #[test]
-    fn test_plus_two() {
+    fn test_plus_two()
+    {
         assert_eq!(plus_two(-1), 1);
         assert_eq!(plus_two(0), 2);
         assert_eq!(plus_two(1), 3);
     }
 
     #[test]
-    fn test_get_square_value() {
+    fn test_get_square_value()
+    {
         assert_eq!(get_square_value(0), 0);
         assert_eq!(get_square_value(1), 1);
         assert_eq!(get_square_value(2), 4);

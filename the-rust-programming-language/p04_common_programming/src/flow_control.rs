@@ -1,5 +1,6 @@
 /// if conditions
-pub fn if_conditions() {
+pub fn if_conditions()
+{
     let number = 3;
 
     if number < 5 {
@@ -25,7 +26,8 @@ pub fn if_conditions() {
 }
 
 /// Using if in a let statement
-pub fn let_and_if() {
+pub fn let_and_if()
+{
     let condition = true;
     let number = if condition { 5 } else { 6 };
 
@@ -33,7 +35,8 @@ pub fn let_and_if() {
 }
 
 /// Returning valus from loops
-pub fn loops() {
+pub fn loops()
+{
     let mut counter = 0;
     let result = loop {
         counter += 1;
@@ -46,7 +49,8 @@ pub fn loops() {
 }
 
 /// Loop labels to disambiguate between multiple loops
-pub fn labeled_loops() {
+pub fn labeled_loops()
+{
     let mut count = 0;
     'counting_up: loop {
         println!("count = {count}");
@@ -67,7 +71,8 @@ pub fn labeled_loops() {
 }
 
 /// Conditional loops with while
-pub fn whiles() {
+pub fn whiles()
+{
     let mut number = 3;
     while number != 0 {
         println!("{number}!");
@@ -84,7 +89,8 @@ pub fn whiles() {
 }
 
 /// for element
-pub fn for_element() {
+pub fn for_element()
+{
     let a = [10, 20, 30, 40, 50];
     for element in a.iter() {
         println!("the value is: {element}");
@@ -92,7 +98,8 @@ pub fn for_element() {
 }
 
 /// for reverse
-pub fn for_rev() {
+pub fn for_rev()
+{
     for number in (1 .. 4).rev() {
         println!("{}!", number);
     }

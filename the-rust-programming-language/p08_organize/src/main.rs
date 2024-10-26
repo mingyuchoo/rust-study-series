@@ -4,7 +4,8 @@ mod pub_keyword;
 mod pub_use_keyword;
 mod use_keyword;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     mod_keyword::eat_at_restaurant();
 
     pub_keyword::eat_at_restaurant();

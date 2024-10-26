@@ -12,7 +12,8 @@ use crate::{db::DBPool,
 pub async fn graphql(pool: web::Data<DBPool>,
                      schema: web::Data<Schema>,
                      data: web::Json<GraphQLRequest>)
-                     -> Result<HttpResponse, Error> {
+                     -> Result<HttpResponse, Error>
+{
     let ctx = Context { dbpool: pool.get_ref()
                                     .to_owned(), };
     let res = web::block(move || {
@@ -25,12 +26,14 @@ pub async fn graphql(pool: web::Data<DBPool>,
                          .body(res))
 }
 
-pub async fn graphql_playground() -> HttpResponse {
+pub async fn graphql_playground() -> HttpResponse
+{
     HttpResponse::Ok().content_type("text/html; charset=utf-8")
                       .body(playground_source("/graphql"))
 }
 
-pub fn register(config: &mut web::ServiceConfig) {
+pub fn register(config: &mut web::ServiceConfig)
+{
     config.data(create_schema())
           .route("/graphql", web::post().to(graphql))
           .route("/graphql", web::get().to(graphql_playground));

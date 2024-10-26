@@ -1,15 +1,18 @@
 #[cfg(test)]
-mod tests {
+mod tests
+{
     // `tests` 모듈을 선언하기
     use super::*; // 상대경로 `super`로 상위 모듈 경로를 현재 범위 안으로 가져오기
 
     #[test]
-    fn it_adds_two() {
+    fn it_adds_two()
+    {
         assert_eq!(4, add_two(2));
         assert_ne!(2, add_two(2));
     }
 }
 
-pub fn add_two(a: i32) -> i32 {
+pub fn add_two(a: i32) -> i32
+{
     a + 2
 }

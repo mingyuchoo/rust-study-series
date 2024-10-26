@@ -1,4 +1,5 @@
-pub fn string_type() {
+pub fn string_type()
+{
     println!("-- string_type()");
 
     let s = String::from("hello");

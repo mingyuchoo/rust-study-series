@@ -3,7 +3,8 @@ use axum::{routing::{get,
            Router};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     let app = Router::new().route("/", get(|| async { "Hello, World!" }))
                            .route("/echo", post(|body: String| async { body }))
                            .route("/hey", get(|| async { "Hey there!" }));

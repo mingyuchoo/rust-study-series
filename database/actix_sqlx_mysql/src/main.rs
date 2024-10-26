@@ -6,7 +6,8 @@ use actix_web::{get,
 use sqlx::MySqlPool;
 
 #[get("/")]
-async fn index() -> impl Responder {
+async fn index() -> impl Responder
+{
     let connection =
         MySqlPool::connect("mysql://postgres:postgres@localhost:3306/postgres?prefer_socket=false")
             .await
@@ -26,7 +27,8 @@ async fn index() -> impl Responder {
 }
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn main() -> std::io::Result<()>
+{
     HttpServer::new(|| App::new().service(index)).bind(("127.0.0.1", 9090))?
                                                  .run()
                                                  .await

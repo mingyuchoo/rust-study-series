@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-pub fn call1() {
+pub fn call1()
+{
     let mut scores1 = HashMap::new();
 
     scores1.insert(String::from("블루"), 10);
@@ -21,7 +22,8 @@ pub fn call1() {
     }
 }
 
-pub fn call2() {
+pub fn call2()
+{
     let field_name = String::from("Favorite color");
     let field_value = String::from("블루");
     let mut map = HashMap::new();
@@ -31,7 +33,8 @@ pub fn call2() {
     // 이 값들을 사용하려고 하면 컴파일러가 에러를 발생한다.
 }
 
-pub fn call3() {
+pub fn call3()
+{
     let mut scores = HashMap::new();
 
     scores.insert(String::from("블루"), 10);
@@ -47,7 +50,8 @@ pub fn call3() {
     println!("{team_name}: {score:?}");
 }
 
-pub fn call4() {
+pub fn call4()
+{
     let mut scores = HashMap::new();
 
     scores.insert(String::from("블루"), 10);
@@ -59,7 +63,8 @@ pub fn call4() {
     println!("{scores:?}");
 }
 
-pub fn call5() {
+pub fn call5()
+{
     let text = "hello world wonderful world";
     let mut map = HashMap::new();
 

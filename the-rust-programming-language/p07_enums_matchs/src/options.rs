@@ -1,4 +1,5 @@
-pub fn call1() {
+pub fn call1()
+{
     let some_number = Some(5);
     let some_string = Some("a string");
     let absent_number: Option<i32> = None;
@@ -7,9 +8,11 @@ pub fn call1() {
     println!("{}", some_string.unwrap());
 }
 
-pub fn call2() {
+pub fn call2()
+{
     #[derive(Debug)]
-    enum Coin {
+    enum Coin
+    {
         Penny,
         Nickel,
         Dime,
@@ -17,7 +20,8 @@ pub fn call2() {
     }
 
     // The Match Control Flow
-    fn value_in_cents(coin: Coin) -> u32 {
+    fn value_in_cents(coin: Coin) -> u32
+    {
         match coin {
             | Coin::Penny => {
                 println!("행운의 페니!");
@@ -36,21 +40,25 @@ pub fn call2() {
     println!("{:#?}", value_in_cents(Coin::Quarter));
 }
 
-pub fn call3() {
+pub fn call3()
+{
     #[derive(Debug)]
-    enum UsState {
+    enum UsState
+    {
         Alabama,
         Alaska,
     }
 
-    enum Coin {
+    enum Coin
+    {
         Penny,
         Nickel,
         Dime,
         Quarter(UsState),
     }
 
-    fn value_in_cents(coin: Coin) -> u32 {
+    fn value_in_cents(coin: Coin) -> u32
+    {
         match coin {
             | Coin::Penny => 1,
             | Coin::Nickel => 5,

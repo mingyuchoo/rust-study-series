@@ -1,7 +1,8 @@
 use std::ops::Deref;
 
 #[test]
-pub fn test1() {
+pub fn test1()
+{
     let x = 5;
     let y = &x;
 
@@ -19,7 +20,8 @@ pub fn test1() {
 }
 
 #[test]
-pub fn test2() {
+pub fn test2()
+{
     let x = 5;
     let y = Box::new(x);
 
@@ -32,22 +34,27 @@ pub fn test2() {
 
 struct MyBox<T>(T);
 
-impl<T> MyBox<T> {
-    fn new(x: T) -> MyBox<T> {
+impl<T> MyBox<T>
+{
+    fn new(x: T) -> MyBox<T>
+    {
         MyBox(x)
     }
 }
 
-impl<T> Deref for MyBox<T> {
+impl<T> Deref for MyBox<T>
+{
     type Target = T;
 
-    fn deref(&self) -> &T {
+    fn deref(&self) -> &T
+    {
         &self.0
     }
 }
 
 #[test]
-pub fn test3() {
+pub fn test3()
+{
     let x = 5;
     let y = MyBox::new(x);
 
@@ -58,11 +65,13 @@ pub fn test3() {
     assert_eq!(5, *y);
 }
 
-fn hello(name: &str) {
+fn hello(name: &str)
+{
     println!("안녕하세요 {name}!");
 }
 
-pub fn call3() {
+pub fn call3()
+{
     let m = MyBox::new(String::from("Rust"));
     hello(&m);
 }

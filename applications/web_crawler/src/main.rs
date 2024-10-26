@@ -3,7 +3,8 @@ use select::{document::Document,
              predicate::Name};
 use std::error::Error;
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), Box<dyn Error>>
+{
     let url = "http://jsonplaceholder.typicode.com";
     let client = Client::new();
     let res = client.get(url)

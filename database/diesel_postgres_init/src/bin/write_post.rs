@@ -4,7 +4,8 @@ use std::io::{stdin,
 
 use crate::models::Post;
 
-fn main() -> () {
+fn main() -> ()
+{
     let connection: &mut diesel::PgConnection = &mut establish_connection();
 
     let mut title: String = String::new();

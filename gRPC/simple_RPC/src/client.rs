@@ -2,7 +2,8 @@ use std::error::Error;
 use tonic::{transport::Channel,
             Request,
             Response};
-pub mod product_info_proto {
+pub mod product_info_proto
+{
     tonic::include_proto!("ecommerce");
 }
 
@@ -11,7 +12,8 @@ use product_info_proto::{product_info_client::ProductInfoClient,
                          ProductId};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<(), Box<dyn Error>>
+{
     let mut client: ProductInfoClient<Channel> =
         ProductInfoClient::connect("http://[::1]:50051").await
                                                         .unwrap();

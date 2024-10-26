@@ -1,27 +1,31 @@
 use std::{thread,
           time::Duration};
 
-pub fn call1() {
+pub fn call1()
+{
     let value: u32 = simulated_expensive_calculation(3);
 
     println!("{value}");
 }
 
-pub fn call2() {
+pub fn call2()
+{
     let simulated_user_specified_value: u32 = 10;
     let simulated_random_number: u32 = 7;
 
     generate_workout_1(simulated_user_specified_value, simulated_random_number);
 }
 
-pub fn call3() {
+pub fn call3()
+{
     let simulated_user_specified_value: u32 = 10;
     let simulated_random_number: u32 = 7;
 
     generate_workout_2(simulated_user_specified_value, simulated_random_number);
 }
 
-pub fn call4() {
+pub fn call4()
+{
     let example_closure = |x: String| x;
     let s: String = example_closure(String::from("Hello"));
 
@@ -31,15 +35,18 @@ pub fn call4() {
     // println!("{}", n);
 }
 
-pub fn call5() {
+pub fn call5()
+{
     let simulated_user_specified_value: u32 = 10;
     let simulated_random_number: u32 = 7;
 
     generate_workout_3(simulated_user_specified_value, simulated_random_number);
 }
 
-pub fn call6() {
-    fn right() {
+pub fn call6()
+{
+    fn right()
+    {
         let x: i32 = 4;
         let equal_to_x = |z: i32| z == x;
         let y: i32 = 4;
@@ -65,14 +72,16 @@ pub fn call6() {
 
 pub fn call7() {}
 
-fn simulated_expensive_calculation(intensity: u32) -> u32 {
+fn simulated_expensive_calculation(intensity: u32) -> u32
+{
     println!("시간이 오래 걸리는 계산을 수행 중...");
     thread::sleep(Duration::from_secs(2));
     intensity
 }
 
 fn generate_workout_1(intensity: u32,
-                      random_number: u32) {
+                      random_number: u32)
+{
     let expensive_result = simulated_expensive_calculation(intensity);
 
     if intensity < 25 {
@@ -88,7 +97,8 @@ fn generate_workout_1(intensity: u32,
 }
 
 fn generate_workout_2(intensity: u32,
-                      random_number: u32) {
+                      random_number: u32)
+{
     let expensive_closure = |num: u32| -> u32 {
         println!("시간이 오래 걸리는 계산을 수행 중...");
         thread::sleep(Duration::from_secs(2));
@@ -119,14 +129,16 @@ struct Cacher<T>
 
 impl<T> Cacher<T> where T: Fn(u32) -> u32,
 {
-    fn new(calculation: T) -> Cacher<T> {
+    fn new(calculation: T) -> Cacher<T>
+    {
         Cacher { calculation,
                  value: None }
     }
 
     fn value(&mut self,
              arg: u32)
-             -> u32 {
+             -> u32
+    {
         match self.value {
             | Some(v) => v,
             | None => {
@@ -139,7 +151,8 @@ impl<T> Cacher<T> where T: Fn(u32) -> u32,
 }
 
 fn generate_workout_3(intensity: u32,
-                      random_number: u32) {
+                      random_number: u32)
+{
     let mut expensive_result = Cacher::new(|num: u32| -> u32 {
         println!("시간이 오래 걸리는 계산을 수행 중...");
         thread::sleep(Duration::from_secs(2));
@@ -162,7 +175,8 @@ fn generate_workout_3(intensity: u32,
 }
 
 #[test]
-fn call_with_different_values() {
+fn call_with_different_values()
+{
     let mut c = Cacher::new(|a: u32| a);
     let v1: u32 = c.value(1);
     let v2: u32 = c.value(2);

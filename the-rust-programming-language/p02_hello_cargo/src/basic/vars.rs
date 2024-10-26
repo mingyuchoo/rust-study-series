@@ -1,4 +1,5 @@
-pub fn main() -> Result<(), Box<dyn std::error::Error>> {
+pub fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     variables();
     consts();
     statics();
@@ -8,7 +9,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// This function is an example for variable bindings
-pub fn variables() {
+pub fn variables()
+{
     let a; // Declaration; without data type
     a = 1; // Assignment
     println!("{0}", a);
@@ -46,19 +48,22 @@ pub fn variables() {
 }
 
 /// This function is an example for consts
-pub fn consts() {
+pub fn consts()
+{
     const N: i32 = 5;
     println!("{}", N);
 }
 
 /// This function is an example for statics
-pub fn statics() {
+pub fn statics()
+{
     static N: i32 = 5;
     println!("{}", N);
 }
 
 /// This function is an example for variable shadowing
-pub fn shadowing() {
+pub fn shadowing()
+{
     let x: f64 = -20.48; // float
     let x: i64 = x.floor() as i64; // int
     println!("{}", x); // -21

@@ -5,7 +5,8 @@ mod schema;
 mod services;
 
 #[rocket::main]
-async fn main() -> Result<(), rocket::Error> {
+async fn main() -> Result<(), rocket::Error>
+{
     routes::build().launch()
                    .await?;
 

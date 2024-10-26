@@ -3,7 +3,8 @@ use rocket::{fs::FileServer,
              Build,
              Rocket};
 
-pub fn build() -> Rocket<Build> {
+pub fn build() -> Rocket<Build>
+{
     use crate::controllers;
 
     rocket::build().mount("/public", FileServer::from("public"))

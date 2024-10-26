@@ -3,15 +3,18 @@ use std::{error::Error,
           io,
           io::Read};
 
-pub fn call1() {
+pub fn call1()
+{
     let f1 = File::open("Hello.txt").unwrap();
     let f2 = File::open("Hello.txt").expect("파일을 열 수 없습니다.");
 }
 
-pub fn call2() {
+pub fn call2()
+{
     let f1 = read_username_from_file_1();
 
-    fn read_username_from_file_1() -> Result<String, io::Error> {
+    fn read_username_from_file_1() -> Result<String, io::Error>
+    {
         let f = File::open("hello.txt");
         let mut f = match f {
             | Ok(file) => file,
@@ -44,7 +47,8 @@ pub fn call2() {
     // }
 }
 
-pub fn call3() -> Result<(), Box<dyn Error>> {
+pub fn call3() -> Result<(), Box<dyn Error>>
+{
     let f = File::open("hello.txt")?;
     Ok(())
 }

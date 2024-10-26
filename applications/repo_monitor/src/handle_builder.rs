@@ -3,7 +3,8 @@ use std::{process::{Command,
           thread,
           time::Duration};
 
-pub fn run(repo_dir: String) {
+pub fn run(repo_dir: String)
+{
     let build_command = std::env::var("BUILD_COMMAND").unwrap_or_else(|_| "make build".to_owned());
 
     loop {

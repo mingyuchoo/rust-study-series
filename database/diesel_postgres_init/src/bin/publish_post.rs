@@ -3,7 +3,8 @@ use diesel::prelude::*;
 use diesel_postgres_init::*;
 use std::env::args;
 
-fn main() -> () {
+fn main() -> ()
+{
     use self::schema::posts::dsl::{posts,
                                    published};
 

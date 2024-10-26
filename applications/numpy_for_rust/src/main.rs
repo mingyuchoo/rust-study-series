@@ -7,7 +7,8 @@ use ndarray::{prelude::{array,
               ShapeError};
 use std::f64::consts::PI;
 
-fn main() -> Result<(), ShapeError> {
+fn main() -> Result<(), ShapeError>
+{
     let a: Array1<f64> = array![0., 30., 45., 60., 90.];
 
     println!("angles {}", a);

@@ -3,7 +3,8 @@ use p13_minigrep::Config; // 해당 모듈 경로를 현재 범위 안으로 가
 use std::env; // 해당 모듈 경로를 현재 범위 안으로 가져오기
 use std::process; // 해당 모듈 경로를 현재 범위 안으로 가져오기
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn std::error::Error>>
+{
     let args: Vec<String> = env::args().collect();
     let config =
         Config::new(&args).unwrap_or_else(|err| {

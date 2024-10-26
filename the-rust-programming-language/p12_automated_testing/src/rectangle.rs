@@ -1,10 +1,12 @@
 #[cfg(test)]
-mod tests {
+mod tests
+{
     // `tests` 모듈을 선언하기
     use super::*; // 상대경로 `super`로 상위 모듈 경로를 현재 범위 안으로 가져오기
 
     #[test]
-    fn larger_can_hold_smaller() {
+    fn larger_can_hold_smaller()
+    {
         let larger = Rectangle { length: 8,
                                  width:  7, };
         let smaller = Rectangle { length: 5,
@@ -13,7 +15,8 @@ mod tests {
     }
 
     #[test]
-    fn smaller_cannot_hold_larger() {
+    fn smaller_cannot_hold_larger()
+    {
         let larger = Rectangle { length: 8,
                                  width:  7, };
         let smaller = Rectangle { length: 5,
@@ -23,15 +26,18 @@ mod tests {
 }
 
 #[derive(Debug)]
-pub struct Rectangle {
+pub struct Rectangle
+{
     length: u32,
     width:  u32,
 }
 
-impl Rectangle {
+impl Rectangle
+{
     fn can_hold(&self,
                 other: &Rectangle)
-                -> bool {
+                -> bool
+    {
         self.length > other.length && self.width > other.width
     }
 }

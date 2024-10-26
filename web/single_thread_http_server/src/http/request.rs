@@ -1,22 +1,27 @@
 use super::method::Method;
 
 #[derive(Debug)]
-pub struct Request<'buf> {
+pub struct Request<'buf>
+{
     method:       Method,
     path:         &'buf str,
     query_string: Option<QueryString<'buf>>,
 }
 
-impl<'buf> Request<'buf> {
-    pub fn method(&self) -> &Method {
+impl<'buf> Request<'buf>
+{
+    pub fn method(&self) -> &Method
+    {
         &self.method
     }
 
-    pub fn path(&self) -> &str {
+    pub fn path(&self) -> &str
+    {
         &self.path
     }
 
-    pub fn query_string(&self) -> Option<&QueryString> {
+    pub fn query_string(&self) -> Option<&QueryString>
+    {
         self.query_string
             .as_ref()
     }
@@ -24,11 +29,13 @@ impl<'buf> Request<'buf> {
 
 use super::QueryString;
 use std::convert::TryFrom;
-impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
+impl<'buf> TryFrom<&'buf [u8]> for Request<'buf>
+{
     type Error = ParseError;
 
     // GET /search?name=abc&sort=1 HTTP/1.1\r\n
-    fn try_from(buf: &'buf [u8]) -> Result<Self, Self::Error> {
+    fn try_from(buf: &'buf [u8]) -> Result<Self, Self::Error>
+    {
         use std::str;
         let request = str::from_utf8(buf)?;
 
@@ -55,7 +62,8 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
     }
 }
 
-fn get_next_word(request: &str) -> Option<(&str, &str)> {
+fn get_next_word(request: &str) -> Option<(&str, &str)>
+{
     for (i, c) in request.chars()
                          .enumerate()
     {
@@ -67,15 +75,18 @@ fn get_next_word(request: &str) -> Option<(&str, &str)> {
 }
 
 #[allow(dead_code)]
-pub enum ParseError {
+pub enum ParseError
+{
     InvalidRequest,
     InvalidEncoding,
     InvalidProtocal,
     InvalidMethod,
 }
 
-impl ParseError {
-    fn message(&self) -> &str {
+impl ParseError
+{
+    fn message(&self) -> &str
+    {
         match self {
             | Self::InvalidRequest => "Invalid Request",
             | Self::InvalidEncoding => "Invalid Encoding",
@@ -89,19 +100,23 @@ use std::fmt::{Formatter,
                Result as FmtResult};
 
 use std::fmt::Debug;
-impl Debug for ParseError {
+impl Debug for ParseError
+{
     fn fmt(&self,
            f: &mut Formatter)
-           -> FmtResult {
+           -> FmtResult
+    {
         write!(f, "{}", self.message())
     }
 }
 
 use std::fmt::Display;
-impl Display for ParseError {
+impl Display for ParseError
+{
     fn fmt(&self,
            f: &mut Formatter)
-           -> FmtResult {
+           -> FmtResult
+    {
         write!(f, "{}", self.message())
     }
 }
@@ -109,15 +124,19 @@ impl Display for ParseError {
 use std::convert::From;
 
 use super::method::MethodError;
-impl From<MethodError> for ParseError {
-    fn from(_: MethodError) -> Self {
+impl From<MethodError> for ParseError
+{
+    fn from(_: MethodError) -> Self
+    {
         Self::InvalidEncoding
     }
 }
 
 use std::str::Utf8Error;
-impl From<Utf8Error> for ParseError {
-    fn from(_: Utf8Error) -> Self {
+impl From<Utf8Error> for ParseError
+{
+    fn from(_: Utf8Error) -> Self
+    {
         Self::InvalidEncoding
     }
 }

@@ -1,12 +1,14 @@
 /// floating
-pub fn floating() {
+pub fn floating()
+{
     let x = 2.0; // f64
     let y: f32 = 3.0; // f32
 
     println!("x: {x}, y: {y}");
 }
 
-pub fn binary_operations() {
+pub fn binary_operations()
+{
     // addition
     let sum = 5 + 10;
 
@@ -32,7 +34,8 @@ pub fn binary_operations() {
 }
 
 /// boolean
-pub fn boolean() {
+pub fn boolean()
+{
     let t = true;
     let f: bool = false;
 
@@ -48,7 +51,8 @@ pub fn boolean() {
 }
 
 /// characters
-pub fn characters() {
+pub fn characters()
+{
     let c = 'z';
     let z = 'Z';
     let apple = '🍎';
@@ -59,7 +63,8 @@ pub fn characters() {
 }
 
 /// tuples
-pub fn tuples() {
+pub fn tuples()
+{
     let tup: (i32, f64, u8) = (500, 6.4, 1);
     let (x, y, z) = tup;
 
@@ -73,7 +78,8 @@ pub fn tuples() {
 }
 
 /// arrays
-pub fn arrays() {
+pub fn arrays()
+{
     let a = [1, 2, 3, 4, 5];
     let b: [i32; 5] = [1, 2, 3, 4, 5];
     let c = [3; 5];
