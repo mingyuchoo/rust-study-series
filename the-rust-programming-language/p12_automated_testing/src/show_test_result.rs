@@ -1,7 +1,5 @@
-/**
- * `$ cargo test -- --nocapture`
- * `$ cargo test -- --nocapture --test-threads=1`
- */
+/// `$ cargo test -- --nocapture`
+/// `$ cargo test -- --nocapture --test-threads=1`
 #[cfg(test)]
 mod tests {
     // `tests` 모듈을 선언하기

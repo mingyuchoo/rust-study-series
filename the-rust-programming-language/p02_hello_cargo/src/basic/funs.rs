@@ -20,7 +20,8 @@ pub fn main() -> Result<(), Box<dyn std::error::Error>> {
     let x = 2;
     println!("{}", get_square_value(x));
 
-    // Input parameters are passed inside | | and expression body is wrapped within { }
+    // Input parameters are passed inside | | and expression body is wrapped within
+    // { }
     let square = |i: i32| -> i32 { i * i };
     println!("{}", square(x)); // 4
 

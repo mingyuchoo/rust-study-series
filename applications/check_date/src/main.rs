@@ -1,5 +1,4 @@
 //! This is an example application for starter
-//!
 use regex::Regex;
 
 /// check date format and print out stdout
@@ -9,7 +8,6 @@ use regex::Regex;
 /// * No argument
 ///
 /// # Examples
-///
 fn main() -> Result<(), std::io::Error> {
     // "2023-07-05" is stored in code section
     // data is stored in stack frame
@@ -37,7 +35,6 @@ fn main() -> Result<(), std::io::Error> {
 ///
 /// `date` parameter variable is stored in stack frame in memory
 /// `r#^\d{4}-d{2}-\d{2}$"` is stored in code section (a.k.a text section)
-///
 fn check_date(date: &str) -> Result<bool, regex::Error> {
     match Regex::new(r"^\d{4}-\d{2}-\d{2}$") {
         | Ok(re) => Ok(re.is_match(date)),
@@ -55,20 +52,16 @@ mod tests_check_date {
         // "2023-07-05" is stored in code section (a.k.a. text section)
         let date: &str = "2023-07-05";
 
-        assert_eq!(
-            true,
-            check_date(date).expect("Error!"),
-            "should be match YYYY-MM-DD"
-        );
+        assert_eq!(true,
+                   check_date(date).expect("Error!"),
+                   "should be match YYYY-MM-DD");
     }
 
     #[test]
     fn unhappy_path_1() {
         let date: &str = "20230705";
-        assert_eq!(
-            false,
-            check_date(date).expect("Error!"),
-            "should NOT be match YYYYMMDD"
-        );
+        assert_eq!(false,
+                   check_date(date).expect("Error!"),
+                   "should NOT be match YYYYMMDD");
     }
 }

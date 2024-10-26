@@ -55,10 +55,11 @@ pub fn call3() {
         y: T,
     }
 
-    let integer = Point { x: 5, y: 10 };
-    let float = Point { x: 1.0, y: 4.0 };
+    let integer = Point { x: 5, y: 10, };
+    let float = Point { x: 1.0, y: 4.0, };
 
-    println!("integer: ({},{}), float: ({},{})", integer.x, integer.y, float.x, float.y);
+    println!("integer: ({},{}), float: ({},{})",
+             integer.x, integer.y, float.x, float.y);
 }
 
 pub fn call4() {
@@ -67,13 +68,14 @@ pub fn call4() {
         y: U,
     }
 
-    let both_integer = Point { x: 5, y: 10 };
-    let both_float = Point { x: 1.0, y: 4.0 };
-    let integer_and_float = Point { x: 5, y: 4.0 };
+    let both_integer = Point { x: 5, y: 10, };
+    let both_float = Point { x: 1.0, y: 4.0, };
+    let integer_and_float = Point { x: 5, y: 4.0, };
 
     print!("both_integer: ({},{}), ", both_integer.x, both_integer.y);
     print!("both_float: ({},{}), ", both_float.x, both_float.y);
-    println!("integer_and_float: ({},{})", integer_and_float.y, integer_and_float.y);
+    println!("integer_and_float: ({},{})",
+             integer_and_float.y, integer_and_float.y);
 }
 
 pub fn call5() {
@@ -85,6 +87,7 @@ pub fn call5() {
         fn x(&self) -> &T {
             &self.x
         }
+
         fn y(&self) -> &T {
             &self.y
         }
@@ -92,15 +95,19 @@ pub fn call5() {
 
     impl Point<f32> {
         fn distance_from_origin(&self) -> f32 {
-            (self.x.powi(2) + self.y.powi(2)).sqrt()
+            (self.x
+                 .powi(2)
+             + self.y
+                   .powi(2)).sqrt()
         }
     }
 
-    let p = Point { x: 5, y: 10 };
-    let r = Point { x: 5.0, y: 10.0 };
+    let p = Point { x: 5, y: 10, };
+    let r = Point { x: 5.0, y: 10.0, };
 
     println!("p.x = {}, p.y = {}", p.x(), p.y());
-    // println!("p.distance_from_origin = {}", p.distance_from_origin()); // CAN NOT use this method for i32
+    // println!("p.distance_from_origin = {}", p.distance_from_origin()); // CAN NOT
+    // use this method for i32
 
     println!("r.x = {}, r.y = {}", r.x(), r.y());
     println!("r.distance_from_origin = {}", r.distance_from_origin());
@@ -113,16 +120,16 @@ pub fn call6() {
     }
 
     impl<T, U> Point<T, U> {
-        fn mixup<V, W>(self, other: Point<V, W>) -> Point<T, W> {
-            Point {
-                x: self.x,
-                y: other.y,
-            }
+        fn mixup<V, W>(self,
+                       other: Point<V, W>)
+                       -> Point<T, W> {
+            Point { x: self.x,
+                    y: other.y, }
         }
     }
 
-    let p1 = Point { x: 5, y: 10.4 };
-    let p2 = Point { x: "Hello", y: 'c' };
+    let p1 = Point { x: 5, y: 10.4, };
+    let p2 = Point { x: "Hello", y: 'c', };
     let p3 = p1.mixup(p2);
 
     println!("p3.x = {}, p3.y = {}", p3.x, p3.y);

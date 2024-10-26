@@ -4,13 +4,15 @@ pub fn other_function() {
     print_labeled_measurement(5, 'h');
 }
 
-fn another_function(x: i32, y: i32) {
+fn another_function(x: i32,
+                    y: i32) {
     println!("또 다른 함수");
     println!("x의 값: {x}");
     println!("y의 값: {y}");
 }
 
-fn print_labeled_measurement(value: i32, unit_label: char) {
+fn print_labeled_measurement(value: i32,
+                             unit_label: char) {
     println!("The measurement is: {value}{unit_label}");
 }
 

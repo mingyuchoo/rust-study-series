@@ -93,7 +93,7 @@ pub fn for_element() {
 
 /// for reverse
 pub fn for_rev() {
-    for number in (1..4).rev() {
+    for number in (1 .. 4).rev() {
         println!("{}!", number);
     }
     println!("발사!");

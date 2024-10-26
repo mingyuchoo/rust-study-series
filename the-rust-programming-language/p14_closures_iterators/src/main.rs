@@ -1,5 +1,5 @@
-use p14_closures_iterators::closures;
-use p14_closures_iterators::iterators;
+use p14_closures_iterators::{closures,
+                             iterators};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     call_closures();

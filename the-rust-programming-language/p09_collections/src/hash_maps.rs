@@ -12,7 +12,9 @@ pub fn call1() {
 
     let teams = vec![String::from("블루"), String::from("옐로")];
     let initial_scores = vec![10, 50];
-    let scores2: HashMap<_, _> = teams.iter().zip(initial_scores.iter()).collect();
+    let scores2: HashMap<_, _> = teams.iter()
+                                      .zip(initial_scores.iter())
+                                      .collect();
 
     for (key, value) in &scores2 {
         println!("{key}: {value}");
@@ -49,8 +51,10 @@ pub fn call4() {
     let mut scores = HashMap::new();
 
     scores.insert(String::from("블루"), 10);
-    scores.entry(String::from("옐로")).or_insert(50);
-    scores.entry(String::from("블루")).or_insert(50);
+    scores.entry(String::from("옐로"))
+          .or_insert(50);
+    scores.entry(String::from("블루"))
+          .or_insert(50);
 
     println!("{scores:?}");
 }
@@ -60,7 +64,8 @@ pub fn call5() {
     let mut map = HashMap::new();
 
     for word in text.split_whitespace() {
-        let count = map.entry(word).or_insert(0);
+        let count = map.entry(word)
+                       .or_insert(0);
         *count += 1;
     }
 

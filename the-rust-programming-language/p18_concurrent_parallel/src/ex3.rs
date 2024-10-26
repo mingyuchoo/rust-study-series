@@ -9,7 +9,8 @@ pub fn call1() -> Result<(), std::io::Error> {
 
     // drop(v); // ERROR
 
-    handle.join().unwrap();
+    handle.join()
+          .unwrap();
 
     Ok(())
 }

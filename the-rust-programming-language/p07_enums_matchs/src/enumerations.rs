@@ -5,7 +5,7 @@ pub fn call1() {
         V6,
     }
     struct IpAddr1 {
-        kind: IpAddrKind,
+        kind:    IpAddrKind,
         address: String,
     }
 
@@ -40,15 +40,11 @@ pub fn call1() {
 
     let six = IpAddrKind::V6;
 
-    let home1 = IpAddr1 {
-        kind: IpAddrKind::V4,
-        address: String::from("127.0.0.1"),
-    };
+    let home1 = IpAddr1 { kind:    IpAddrKind::V4,
+                          address: String::from("127.0.0.1"), };
 
-    let loopback1 = IpAddr1 {
-        kind: IpAddrKind::V6,
-        address: String::from("::1"),
-    };
+    let loopback1 = IpAddr1 { kind:    IpAddrKind::V6,
+                              address: String::from("::1"), };
 
     println!("home address: {}", home1.address);
     println!("loopback address: {}", loopback1.address);
@@ -65,13 +61,9 @@ pub fn call1() {
     println!("home address: {home3:#?}");
     println!("loopback address: {loopback3:#?}");
 
-    let home_v4 = Ipv4Addr {
-        address: String::from("127.0.0.1"),
-    };
+    let home_v4 = Ipv4Addr { address: String::from("127.0.0.1"), };
 
-    let loopback_v6 = Ipv6Addr {
-        address: String::from("::1"),
-    };
+    let loopback_v6 = Ipv6Addr { address: String::from("::1"), };
 
     let home4 = IpAddr4::V4(home_v4);
     let loopback4 = IpAddr4::V6(loopback_v6);
@@ -83,7 +75,7 @@ pub fn call1() {
 pub fn call2() {
     enum Message {
         Quit,
-        Move { x: i32, y: i32 },
+        Move { x: i32, y: i32, },
         Write(String),
         ChangeColor(i32, i32, i32),
     }

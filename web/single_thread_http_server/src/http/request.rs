@@ -2,8 +2,8 @@ use super::method::Method;
 
 #[derive(Debug)]
 pub struct Request<'buf> {
-    method: Method,
-    path: &'buf str,
+    method:       Method,
+    path:         &'buf str,
     query_string: Option<QueryString<'buf>>,
 }
 
@@ -15,6 +15,7 @@ impl<'buf> Request<'buf> {
     pub fn path(&self) -> &str {
         &self.path
     }
+
     pub fn query_string(&self) -> Option<&QueryString> {
         self.query_string
             .as_ref()
@@ -44,25 +45,22 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
         let mut query_string = None;
 
         if let Some(i) = path.find('?') {
-            query_string = Some(QueryString::from(&path[i + 1..]));
-            path = &path[..i];
+            query_string = Some(QueryString::from(&path[i + 1 ..]));
+            path = &path[.. i];
         }
 
-        Ok(Self {
-            path,
-            query_string,
-            method,
-        })
+        Ok(Self { path,
+                  query_string,
+                  method })
     }
 }
 
 fn get_next_word(request: &str) -> Option<(&str, &str)> {
-    for (i, c) in request
-        .chars()
-        .enumerate()
+    for (i, c) in request.chars()
+                         .enumerate()
     {
         if c == ' ' || c == '\r' {
-            return Some((&request[..i], &&request[i + 1..]));
+            return Some((&request[.. i], &&request[i + 1 ..]));
         }
     }
     None
@@ -87,25 +85,23 @@ impl ParseError {
     }
 }
 
-use std::fmt::Formatter;
-use std::fmt::Result as FmtResult;
+use std::fmt::{Formatter,
+               Result as FmtResult};
 
 use std::fmt::Debug;
 impl Debug for ParseError {
-    fn fmt(
-        &self,
-        f: &mut Formatter,
-    ) -> FmtResult {
+    fn fmt(&self,
+           f: &mut Formatter)
+           -> FmtResult {
         write!(f, "{}", self.message())
     }
 }
 
 use std::fmt::Display;
 impl Display for ParseError {
-    fn fmt(
-        &self,
-        f: &mut Formatter,
-    ) -> FmtResult {
+    fn fmt(&self,
+           f: &mut Formatter)
+           -> FmtResult {
         write!(f, "{}", self.message())
     }
 }

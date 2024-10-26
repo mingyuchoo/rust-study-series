@@ -47,7 +47,7 @@ pub fn call4() {
     let s4 = s1 + "-" + &s2 + "-" + &s3;
 
     // 이렇게 하면 변수 s1은 메모리가 해제되어 더 이상 사용할 수 없다.
-    //println!("{}", s1);
+    // println!("{}", s1);
     println!("{s2}");
     println!("{s3}");
     println!("{s4}");
@@ -71,7 +71,7 @@ pub fn call5() {
     println!("len1: {len1}, len2: {len2}");
 
     let hello = "안녕하세요";
-    let s2 = &hello[0..3];
+    let s2 = &hello[0 .. 3];
 
     println!("s2: {s2}");
 }

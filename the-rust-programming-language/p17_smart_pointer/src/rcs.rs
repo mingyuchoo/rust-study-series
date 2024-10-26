@@ -4,7 +4,8 @@ enum List {
 }
 
 use std::rc::Rc;
-use List::{Cons, Nil};
+use List::{Cons,
+           Nil};
 
 pub fn call1() {
     let a = Rc::new(Cons(5, Rc::new(Cons(10, Rc::new(Nil)))));

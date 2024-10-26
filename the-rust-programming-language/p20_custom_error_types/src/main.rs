@@ -35,8 +35,8 @@ enum SignUpError {
 
 fn do_signup(name: &str) -> Result<(), SignUpError> {
     match name {
-        "david" => Ok(()),
-        _ => Err(SignUpError::InvalidInformation),
+        | "david" => Ok(()),
+        | _ => Err(SignUpError::InvalidInformation),
     }
 }
 
@@ -48,13 +48,15 @@ enum LoginError {
     #[error("invalid password")]
     InvalidPassword,
 }
-fn do_login(email: &str, password: &str) -> Result<(), LoginError> {
+fn do_login(email: &str,
+            password: &str)
+            -> Result<(), LoginError> {
     match email {
-        "david@email.com" => match password {
-            "password" => Ok(()),
-            _ => Err(LoginError::InvalidPassword),
+        | "david@email.com" => match password {
+            | "password" => Ok(()),
+            | _ => Err(LoginError::InvalidPassword),
         },
-        _ => Err(LoginError::InvalidId),
+        | _ => Err(LoginError::InvalidId),
     }
 }
 
@@ -68,8 +70,8 @@ enum AuthError {
 }
 fn check_auth(auth: &str) -> Result<(), AuthError> {
     match auth {
-        "admin" => Ok(()),
-        _ => Err(AuthError::Unauthorized),
+        | "admin" => Ok(()),
+        | _ => Err(AuthError::Unauthorized),
     }
 }
 
@@ -110,11 +112,11 @@ enum MathError {
 
 fn run(choice: i32) -> Result<(), ProgramError> {
     match choice {
-        1 => do_signup("john")?,
-        2 => do_login("john@email.com", "root")?,
-        3 => do_login("david@email.com", "root")?,
-        4 => check_auth("user")?,
-        _ => (),
+        | 1 => do_signup("john")?,
+        | 2 => do_login("john@email.com", "root")?,
+        | 3 => do_login("david@email.com", "root")?,
+        | 4 => check_auth("user")?,
+        | _ => (),
     };
     Ok(())
 }

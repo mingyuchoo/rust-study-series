@@ -1,5 +1,10 @@
-use ndarray::prelude::{array, Array, Array1, ArrayBase, Dim};
-use ndarray::{OwnedRepr, ShapeError};
+use ndarray::{prelude::{array,
+                        Array,
+                        Array1,
+                        ArrayBase,
+                        Dim},
+              OwnedRepr,
+              ShapeError};
 use std::f64::consts::PI;
 
 fn main() -> Result<(), ShapeError> {
@@ -18,10 +23,8 @@ fn main() -> Result<(), ShapeError> {
     println!("a + b {}", &a + &b);
     println!("a * b {}", &a * &b);
     println!("average(a) {}", a.sum() / a.len() as f64);
-    println!(
-        "mean(b) {}",
-        b.mean()
-            .unwrap()
-    );
+    println!("mean(b) {}",
+             b.mean()
+              .unwrap());
     Ok(())
 }

@@ -10,10 +10,9 @@ pub struct QueryString<'buf> {
 }
 
 impl<'buf> QueryString<'buf> {
-    pub fn get(
-        &self,
-        key: &str,
-    ) -> Option<&Value> {
+    pub fn get(&self,
+               key: &str)
+               -> Option<&Value> {
         self.data
             .get(key)
     }
@@ -29,8 +28,8 @@ impl<'buf> From<&'buf str> for QueryString<'buf> {
             let mut val = "";
 
             if let Some(i) = sub_str.find('=') {
-                key = &sub_str[..i];
-                val = &sub_str[i + 1..];
+                key = &sub_str[.. i];
+                val = &sub_str[i + 1 ..];
             }
 
             data.entry(key)

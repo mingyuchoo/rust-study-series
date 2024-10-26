@@ -1,6 +1,6 @@
 use rand::Rng;
-use std::cmp::Ordering;
-use std::io;
+use std::{cmp::Ordering,
+          io};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("숫자를 맞혀봅시다!");
@@ -12,25 +12,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("정답이라고 생각하는 숫자를 입력하세요.");
         let mut guess: String = String::new();
 
-        io::stdin()
-            .read_line(&mut guess)
-            .expect("입력한 값을 읽지 못했습니다.");
+        io::stdin().read_line(&mut guess)
+                   .expect("입력한 값을 읽지 못했습니다.");
 
-        let guess: u32 = match guess.trim().parse() {
-            Ok(num) => num,
-            Err(_) => continue,
+        let guess: u32 = match guess.trim()
+                                    .parse()
+        {
+            | Ok(num) => num,
+            | Err(_) => continue,
         };
 
         println!("입력한 값: {}", guess);
 
         // match expression
         match guess.cmp(&secret_number) {
-            Ordering::Less => println!("입력한 숫자가 작습니다!"),
-            Ordering::Greater => println!("입력한 숫자가 큽니다!"),
-            Ordering::Equal => {
+            | Ordering::Less => println!("입력한 숫자가 작습니다!"),
+            | Ordering::Greater => println!("입력한 숫자가 큽니다!"),
+            | Ordering::Equal => {
                 println!("정답!");
                 break;
-            }
+            },
         }
     }
 

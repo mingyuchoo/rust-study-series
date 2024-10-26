@@ -1,6 +1,6 @@
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::fmt::Result as FmtResult;
+use std::fmt::{Display,
+               Formatter,
+               Result as FmtResult};
 
 #[derive(Copy, Clone, Debug)]
 pub enum StatusCode {
@@ -20,10 +20,9 @@ impl StatusCode {
 }
 
 impl Display for StatusCode {
-    fn fmt(
-        &self,
-        f: &mut Formatter,
-    ) -> FmtResult {
+    fn fmt(&self,
+           f: &mut Formatter)
+           -> FmtResult {
         write!(f, "{}", *self as u16)
     }
 }

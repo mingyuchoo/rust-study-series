@@ -1,7 +1,5 @@
-/**
- * `$ cargo test one_hundred`
- * `$ cargo test add`
- */
+/// `$ cargo test one_hundred`
+/// `$ cargo test add`
 #[cfg(test)]
 mod tests {
     // `tests` 모듈을 선언하기

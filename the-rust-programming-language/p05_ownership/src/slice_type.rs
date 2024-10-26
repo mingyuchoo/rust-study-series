@@ -10,7 +10,9 @@ pub fn get_first_word() {
 
     fn first_word(s: &String) -> usize {
         let bytes: &[u8] = s.as_bytes();
-        for (i, &item) in bytes.iter().enumerate() {
+        for (i, &item) in bytes.iter()
+                               .enumerate()
+        {
             if item == b' ' {
                 return i;
             }
@@ -22,9 +24,11 @@ pub fn get_first_word() {
         // &String == &str
         let bytes = s.as_bytes();
 
-        for (i, &item) in bytes.iter().enumerate() {
+        for (i, &item) in bytes.iter()
+                               .enumerate()
+        {
             if item == b' ' {
-                return &s[0..i];
+                return &s[0 .. i];
             }
         }
         &s[..]
@@ -40,13 +44,15 @@ pub fn get_element_of_array() {
         println!("item: {item}");
     }
 
-    let slice = &a[1..3];
+    let slice = &a[1 .. 3];
 
     for item in slice.iter() {
         println!("item: {item}");
     }
 
-    for (i, &item) in slice.iter().enumerate() {
+    for (i, &item) in slice.iter()
+                           .enumerate()
+    {
         println!("index: {i}, item: {item}");
     }
 }

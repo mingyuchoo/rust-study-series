@@ -1,16 +1,14 @@
 mod back_of_house {
     // 모듈 `back_of_house` 를 선언하고, 모듈 콘텐츠를 가져오기
     pub struct Breakfast {
-        pub toast: String,
+        pub toast:      String,
         seasonal_fruit: String,
     }
 
     impl Breakfast {
         pub fn summer(toast: &str) -> Breakfast {
-            Breakfast {
-                toast: String::from(toast),
-                seasonal_fruit: String::from("복숭아"),
-            }
+            Breakfast { toast:          String::from(toast),
+                        seasonal_fruit: String::from("복숭아"), }
         }
     }
 

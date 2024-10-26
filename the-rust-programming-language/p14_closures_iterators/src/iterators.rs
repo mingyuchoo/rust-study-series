@@ -37,53 +37,43 @@ fn iterator_sum() {
 #[test]
 pub fn call2() {
     let v1: Vec<i32> = vec![1, 2, 3];
-    let v2: Vec<_> = v1.iter().map(|x: &i32| x + 1).collect();
+    let v2: Vec<_> = v1.iter()
+                       .map(|x: &i32| x + 1)
+                       .collect();
 
     assert_eq!(v2, vec![2, 3, 4]);
 }
 
 #[derive(PartialEq, Debug)]
 struct Shoe {
-    size: u32,
+    size:  u32,
     style: String,
 }
 
-fn shoes_in_my_size(shoes: Vec<Shoe>, shoe_size: u32) -> Vec<Shoe> {
-    shoes.into_iter().filter(|s: &Shoe| s.size == shoe_size).collect()
+fn shoes_in_my_size(shoes: Vec<Shoe>,
+                    shoe_size: u32)
+                    -> Vec<Shoe> {
+    shoes.into_iter()
+         .filter(|s: &Shoe| s.size == shoe_size)
+         .collect()
 }
 
 #[test]
 fn filters_by_size() {
-    let shoes: Vec<Shoe> = vec![
-        Shoe {
-            size: 10,
-            style: String::from("스니커즈"),
-        },
-        Shoe {
-            size: 13,
-            style: String::from("샌달"),
-        },
-        Shoe {
-            size: 10,
-            style: String::from("부츠"),
-        },
-    ];
+    let shoes: Vec<Shoe> = vec![Shoe { size:  10,
+                                       style: String::from("스니커즈"), },
+                                Shoe { size:  13,
+                                       style: String::from("샌달"), },
+                                Shoe { size:  10,
+                                       style: String::from("부츠"), },];
 
     let in_my_size: Vec<Shoe> = shoes_in_my_size(shoes, 10);
 
-    assert_eq!(
-        in_my_size,
-        vec![
-            Shoe {
-                size: 10,
-                style: String::from("스니커즈")
-            },
-            Shoe {
-                size: 10,
-                style: String::from("부츠")
-            },
-        ]
-    );
+    assert_eq!(in_my_size,
+               vec![Shoe { size:  10,
+                           style: String::from("스니커즈"), },
+                    Shoe { size:  10,
+                           style: String::from("부츠"), },]);
 }
 
 struct Counter {
@@ -92,12 +82,13 @@ struct Counter {
 
 impl Counter {
     fn new() -> Counter {
-        Counter { count: 0 }
+        Counter { count: 0, }
     }
 }
 
 impl Iterator for Counter {
     type Item = u32;
+
     fn next(&mut self) -> Option<Self::Item> {
         self.count += 1;
         if self.count < 6 {
@@ -121,10 +112,9 @@ fn calling_next_directly() {
 
 #[test]
 fn using_other_iterator_trait_methods() {
-    let sum: u32 = Counter::new()
-        .zip(Counter::new().skip(1))
-        .map(|(a, b)| a * b)
-        .filter(|x: &u32| x % 3 == 0)
-        .sum();
+    let sum: u32 = Counter::new().zip(Counter::new().skip(1))
+                                 .map(|(a, b)| a * b)
+                                 .filter(|x: &u32| x % 3 == 0)
+                                 .sum();
     assert_eq!(18, sum);
 }

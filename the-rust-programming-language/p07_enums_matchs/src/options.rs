@@ -19,13 +19,13 @@ pub fn call2() {
     // The Match Control Flow
     fn value_in_cents(coin: Coin) -> u32 {
         match coin {
-            Coin::Penny => {
+            | Coin::Penny => {
                 println!("행운의 페니!");
                 1
-            }
-            Coin::Nickel => 5,
-            Coin::Dime => 10,
-            Coin::Quarter => 25,
+            },
+            | Coin::Nickel => 5,
+            | Coin::Dime => 10,
+            | Coin::Quarter => 25,
         } // NO semicolon here to return
     }
 
@@ -52,13 +52,13 @@ pub fn call3() {
 
     fn value_in_cents(coin: Coin) -> u32 {
         match coin {
-            Coin::Penny => 1,
-            Coin::Nickel => 5,
-            Coin::Dime => 10,
-            Coin::Quarter(state) => {
+            | Coin::Penny => 1,
+            | Coin::Nickel => 5,
+            | Coin::Dime => 10,
+            | Coin::Quarter(state) => {
                 println!("State quarter from {state:?}");
                 25
-            }
+            },
         } // NO semicolon here to return
     }
     println!("{:#?}", value_in_cents(Coin::Penny));

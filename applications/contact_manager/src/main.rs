@@ -1,14 +1,16 @@
-use std::collections::HashMap;
-use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::{collections::HashMap,
+          fs::{File,
+               OpenOptions},
+          io::{Read,
+               Write},
+          path::PathBuf};
 use structopt::StructOpt;
 use thiserror::Error;
 
 #[derive(Debug)]
 struct Record {
-    id: i64,
-    name: String,
+    id:    i64,
+    name:  String,
     email: Option<String>,
 }
 
@@ -18,42 +20,31 @@ struct Records {
 
 impl Records {
     fn new() -> Self {
-        Self {
-            inner: HashMap::new(),
-        }
+        Self { inner: HashMap::new(), }
     }
 
-    fn add(
-        &mut self,
-        record: Record,
-    ) {
+    fn add(&mut self,
+           record: Record) {
         self.inner
             .insert(record.id, record);
     }
 
-    fn edit(
-        &mut self,
-        id: i64,
-        name: &str,
-        email: Option<String>,
-    ) {
+    fn edit(&mut self,
+            id: i64,
+            name: &str,
+            email: Option<String>) {
         self.inner
-            .insert(
-                id,
-                Record {
-                    id,
-                    name: name.to_string(),
-                    email,
-                },
-            );
+            .insert(id,
+                    Record { id,
+                             name: name.to_string(),
+                             email });
     }
 
     fn into_vec(mut self) -> Vec<Record> {
-        let mut records: Vec<_> = self
-            .inner
-            .drain()
-            .map(|kv| kv.1)
-            .collect();
+        let mut records: Vec<_> = self.inner
+                                      .drain()
+                                      .map(|kv| kv.1)
+                                      .collect();
 
         records.sort_by_key(|record| record.id);
 
@@ -61,10 +52,9 @@ impl Records {
     }
 
     fn next_id(&self) -> i64 {
-        let mut ids: Vec<_> = self
-            .inner
-            .keys()
-            .collect();
+        let mut ids: Vec<_> = self.inner
+                                  .keys()
+                                  .collect();
 
         ids.sort();
 
@@ -73,24 +63,23 @@ impl Records {
             | None => 1,
         }
     }
-    fn search(
-        &self,
-        name: &str,
-    ) -> Vec<&Record> {
+
+    fn search(&self,
+              name: &str)
+              -> Vec<&Record> {
         self.inner
             .values()
             .filter(|record| {
-                record
-                    .name
-                    .to_lowercase()
-                    .contains(&name.to_lowercase())
+                record.name
+                      .to_lowercase()
+                      .contains(&name.to_lowercase())
             })
             .collect()
     }
-    fn remove(
-        &mut self,
-        id: i64,
-    ) -> Option<Record> {
+
+    fn remove(&mut self,
+              id: i64)
+              -> Option<Record> {
         self.inner
             .remove(&id)
     }
@@ -124,13 +113,13 @@ struct Opt {
 #[derive(Debug, StructOpt)]
 enum Command {
     Add {
-        name: String,
+        name:  String,
         #[structopt(short)]
         email: Option<String>,
     },
     Edit {
-        id: i64,
-        name: String,
+        id:    i64,
+        name:  String,
         #[structopt(short)]
         email: Option<String>,
     },
@@ -154,46 +143,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn run(opt: Opt) -> Result<(), std::io::Error> {
     match opt.cmd {
-        | Command::Add { name, email } => {
-            let mut records = load_records(
-                opt.data_file
-                    .clone(),
-                opt.verbose,
-            )?;
+        | Command::Add { name, email, } => {
+            let mut records = load_records(opt.data_file
+                                              .clone(),
+                                           opt.verbose)?;
             let next_id = records.next_id();
-            records.add(Record {
-                id: next_id,
-                name,
-                email,
-            });
+            records.add(Record { id: next_id,
+                                 name,
+                                 email });
             save_records(opt.data_file, records)?;
         },
-        | Command::Edit { id, name, email } => {
-            let mut records = load_records(
-                opt.data_file
-                    .clone(),
-                opt.verbose,
-            )?;
+        | Command::Edit { id, name, email, } => {
+            let mut records = load_records(opt.data_file
+                                              .clone(),
+                                           opt.verbose)?;
             records.edit(id, &name, email);
             save_records(opt.data_file, records)?;
         },
         | Command::List { .. } => {
             let records = load_records(opt.data_file, opt.verbose)?;
 
-            records
-                .into_vec()
-                .iter()
-                .for_each(|record| println!("{:?}", record));
+            records.into_vec()
+                   .iter()
+                   .for_each(|record| println!("{:?}", record));
         },
-        | Command::Remove { id } => {
-            let mut records = load_records(
-                opt.data_file
-                    .clone(),
-                opt.verbose,
-            )?;
-            if records
-                .remove(id)
-                .is_some()
+        | Command::Remove { id, } => {
+            let mut records = load_records(opt.data_file
+                                              .clone(),
+                                           opt.verbose)?;
+            if records.remove(id)
+                      .is_some()
             {
                 save_records(opt.data_file, records)?;
                 println!("record deleted");
@@ -201,25 +180,23 @@ fn run(opt: Opt) -> Result<(), std::io::Error> {
                 println!("record not found");
             }
         },
-        | Command::Search { query } => {
+        | Command::Search { query, } => {
             let records = load_records(opt.data_file, opt.verbose)?;
             let results = records.search(&query);
             if results.is_empty() {
                 println!("no records found");
             } else {
-                results
-                    .iter()
-                    .for_each(|record| println!("{:?}", record));
+                results.iter()
+                       .for_each(|record| println!("{:?}", record));
             }
         },
     }
     Ok(())
 }
 
-fn load_records(
-    file_name: PathBuf,
-    verbose: bool,
-) -> std::io::Result<Records> {
+fn load_records(file_name: PathBuf,
+                verbose: bool)
+                -> std::io::Result<Records> {
     let mut file = File::open(file_name)?;
     let mut buffer = String::new();
 
@@ -228,27 +205,23 @@ fn load_records(
     Ok(parse_records(buffer, verbose))
 }
 
-fn parse_records(
-    records: String,
-    verbose: bool,
-) -> Records {
+fn parse_records(records: String,
+                 verbose: bool)
+                 -> Records {
     let mut new_records = Records::new();
 
-    for (num, record) in records
-        .split('\n')
-        .enumerate()
+    for (num, record) in records.split('\n')
+                                .enumerate()
     {
         if record != "" {
             match parse_record(record) {
                 | Ok(record) => new_records.add(record),
                 | Err(e) => {
                     if verbose {
-                        println!(
-                            "error on line number {}: {}\n > \"{}\"\n",
-                            num + 1,
-                            e,
-                            record
-                        );
+                        println!("error on line number {}: {}\n > \"{}\"\n",
+                                 num + 1,
+                                 e,
+                                 record);
                     }
                 },
             }
@@ -258,45 +231,39 @@ fn parse_records(
 }
 
 fn parse_record(record: &str) -> Result<Record, ParseError> {
-    let fields: Vec<&str> = record
-        .split(',')
-        .collect();
+    let fields: Vec<&str> = record.split(',')
+                                  .collect();
 
     let id = match fields.get(0) {
         | Some(id) => i64::from_str_radix(id, 10)?,
         | None => return Err(ParseError::EmptyRecord),
     };
 
-    let name = match fields
-        .get(1)
-        .filter(|name| **name != "")
+    let name = match fields.get(1)
+                           .filter(|name| **name != "")
     {
         | Some(name) => name.to_string(),
         | None => return Err(ParseError::MissingField("name".to_owned())),
     };
 
-    let email = fields
-        .get(2)
-        .map(|email| email.to_string())
-        .filter(|email| email != "");
+    let email = fields.get(2)
+                      .map(|email| email.to_string())
+                      .filter(|email| email != "");
 
     Ok(Record { id, name, email })
 }
 
-fn save_records(
-    file_name: PathBuf,
-    records: Records,
-) -> std::io::Result<()> {
-    let mut file = OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(file_name)?;
+fn save_records(file_name: PathBuf,
+                records: Records)
+                -> std::io::Result<()> {
+    let mut file = OpenOptions::new().write(true)
+                                     .truncate(true)
+                                     .open(file_name)?;
 
     file.write(b"id,name,email\n")?;
 
-    for record in records
-        .into_vec()
-        .into_iter()
+    for record in records.into_vec()
+                         .into_iter()
     {
         let email = match record.email {
             | Some(email) => email,

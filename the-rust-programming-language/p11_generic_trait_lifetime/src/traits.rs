@@ -8,8 +8,8 @@ pub fn call1() {
     pub struct NewsArticle {
         pub headline: String,
         pub location: String,
-        pub author: String,
-        pub content: String,
+        pub author:   String,
+        pub content:  String,
     }
 
     impl Summary for NewsArticle {
@@ -20,9 +20,9 @@ pub fn call1() {
 
     pub struct Tweet {
         pub username: String,
-        pub content: String,
-        pub reply: bool,
-        pub retweet: bool,
+        pub content:  String,
+        pub reply:    bool,
+        pub retweet:  bool,
     }
 
     impl Summary for Tweet {
@@ -31,12 +31,10 @@ pub fn call1() {
         }
     }
 
-    let tweet = Tweet {
-        username: String::from("horse_ebooks"),
-        content: String::from("러스트 언어 공부를 시작했습니다."),
-        reply: false,
-        retweet: false,
-    };
+    let tweet = Tweet { username: String::from("horse_ebooks"),
+                        content:  String::from("러스트 언어 공부를 시작했습니다."),
+                        reply:    false,
+                        retweet:  false, };
 
     println!("새 트윗 1개: {}", tweet.summarize());
 }
@@ -51,8 +49,8 @@ pub fn call2() {
     pub struct NewsArticle {
         pub headline: String,
         pub location: String,
-        pub author: String,
-        pub content: String,
+        pub author:   String,
+        pub content:  String,
     }
 
     impl Summary for NewsArticle {}
@@ -79,9 +77,9 @@ pub fn call3() {
 
     pub struct Tweet {
         pub username: String,
-        pub content: String,
-        pub reply: bool,
-        pub retweet: bool,
+        pub content:  String,
+        pub reply:    bool,
+        pub retweet:  bool,
     }
 
     impl Summary for Tweet {
@@ -90,12 +88,10 @@ pub fn call3() {
         }
     }
 
-    let tweet = Tweet {
-        username: String::from("hourse_ebook"),
-        content: String::from("러스트 언어 공부를 시작했습니다."),
-        reply: false,
-        retweet: false,
-    };
+    let tweet = Tweet { username: String::from("hourse_ebook"),
+                        content:  String::from("러스트 언어 공부를 시작했습니다."),
+                        reply:    false,
+                        retweet:  false, };
 
     println!("새 트윗 1개: {}", tweet.summarize());
 }
@@ -114,12 +110,14 @@ pub fn call4() {
         println!("속보! {}", item.summarize());
     }
 
-    pub fn notify3(item1: impl Summary, item2: impl Summary) {
+    pub fn notify3(item1: impl Summary,
+                   item2: impl Summary) {
         println!("속보! {}", item1.summarize());
         println!("속보! {}", item2.summarize());
     }
 
-    pub fn notify4<T: Summary>(item1: T, item2: T) {
+    pub fn notify4<T: Summary>(item1: T,
+                               item2: T) {
         // Trait Bounds
         println!("속보! {}", item1.summarize());
         println!("속보! {}", item2.summarize());
@@ -143,10 +141,11 @@ pub fn call5() {
         // need to implement
     }
 
-    pub fn some_function<T, U>(t: T, u: U) -> i32
-    where
-        T: Display + Clone,
-        U: Summary + Clone,
+    pub fn some_function<T, U>(t: T,
+                               u: U)
+                               -> i32
+        where T: Display + Clone,
+              U: Summary + Clone,
     {
         // need to implement
         1
@@ -163,38 +162,36 @@ pub fn call6() {
     pub struct NewsArticle {
         pub headline: String,
         pub location: String,
-        pub author: String,
-        pub content: String,
+        pub author:   String,
+        pub content:  String,
     }
 
     impl Summary for NewsArticle {}
 
     pub struct Tweet {
         pub username: String,
-        pub content: String,
-        pub reply: bool,
-        pub retweet: bool,
+        pub content:  String,
+        pub reply:    bool,
+        pub retweet:  bool,
     }
 
     impl Summary for Tweet {}
 
     pub fn returns_summarizable1() -> impl Summary {
-        Tweet {
-            username: String::from("hourse_ebooks"),
-            content: String::from("러스트 공부를 시작했습니다."),
-            reply: false,
-            retweet: false,
-        }
+        Tweet { username: String::from("hourse_ebooks"),
+                content:  String::from("러스트 공부를 시작했습니다."),
+                reply:    false,
+                retweet:  false, }
     }
 
     // pub fn returns_summarizable2(switch: bool) -> impl Summary {
     //   if switch {
     //     NewsArticle {
-    //       headline: String::from("대한민국, 러시아 월드컵 예선에서 독일을 이겼다."),
-    //       location: String::from("카잔 아레나, 러시아"),
+    //       headline: String::from("대한민국, 러시아 월드컵 예선에서 독일을
+    // 이겼다."),       location: String::from("카잔 아레나, 러시아"),
     //       author: String::from("위키백과"),
-    //       content: String::from("2018년 6월 27일 러시아 카잔의 카잔 아레나에서 열린 2018년 월드컵..."),
-    //     }
+    //       content: String::from("2018년 6월 27일 러시아 카잔의 카잔
+    // 아레나에서 열린 2018년 월드컵..."),     }
     //   } else {
     //     Tweet {
     //       username: String::from("hourse_ebook"),
@@ -213,7 +210,9 @@ pub fn call7() {
     }
 
     impl<T> Pair<T> {
-        fn new(x: T, y: T) -> Self {
+        fn new(x: T,
+               y: T)
+               -> Self {
             Self { x, y }
         }
     }

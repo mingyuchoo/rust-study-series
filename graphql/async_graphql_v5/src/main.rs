@@ -2,11 +2,10 @@ struct QueryRoot;
 
 #[async_graphql::Object]
 impl QueryRoot {
-    async fn add(
-        &self,
-        a: i32,
-        b: i32,
-    ) -> i32 {
+    async fn add(&self,
+                 a: i32,
+                 b: i32)
+                 -> i32 {
         a + b
     }
 }
@@ -22,20 +21,18 @@ async fn graphiql() -> actix_web::HttpResponse {
         )
 }
 
-async fn graphql(
-    schema: actix_web::web::Data<
+async fn graphql(schema: actix_web::web::Data<
         async_graphql::Schema<
             QueryRoot,
             async_graphql::EmptyMutation,
             async_graphql::EmptySubscription,
         >,
     >,
-    req: async_graphql_actix_web::GraphQLRequest,
-) -> async_graphql_actix_web::GraphQLResponse {
-    schema
-        .execute(req.into_inner())
-        .await
-        .into()
+                 req: async_graphql_actix_web::GraphQLRequest)
+                 -> async_graphql_actix_web::GraphQLResponse {
+    schema.execute(req.into_inner())
+          .await
+          .into()
 }
 
 #[actix_web::main]
@@ -49,8 +46,7 @@ async fn main() -> std::io::Result<()> {
             )))
             .route("/", actix_web::web::get().to(graphiql))
             .route("/", actix_web::web::post().to(graphql))
-    })
-    .bind("127.0.0.1:4000")?
-    .run()
-    .await
+    }).bind("127.0.0.1:4000")?
+      .run()
+      .await
 }
