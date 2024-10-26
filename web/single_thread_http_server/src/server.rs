@@ -4,9 +4,15 @@ use crate::http::Response;
 use crate::http::StatusCode;
 
 pub trait Handler {
-    fn handle_request(&mut self, request: &Request) -> Response;
+    fn handle_request(
+        &mut self,
+        request: &Request,
+    ) -> Response;
 
-    fn handle_bad_request(&mut self, e: &ParseError) -> Response {
+    fn handle_bad_request(
+        &mut self,
+        e: &ParseError,
+    ) -> Response {
         println!("Failed to parse request: {}", e);
         Response::new(StatusCode::BadRequest, None)
     }
@@ -21,7 +27,10 @@ impl Server {
         Self { addr }
     }
 
-    pub fn run(self, mut handler: impl Handler) {
+    pub fn run(
+        self,
+        mut handler: impl Handler,
+    ) {
         println!("Listening on {}", self.addr);
 
         use std::net::TcpListener;
@@ -29,25 +38,25 @@ impl Server {
 
         loop {
             match listener.accept() {
-                Ok((mut stream, _addr)) => {
+                | Ok((mut stream, _addr)) => {
                     let mut buffer = [0; 1024];
                     use std::io::Read;
                     match stream.read(&mut buffer) {
-                        Ok(_) => {
+                        | Ok(_) => {
                             println!("Received a request: {}", String::from_utf8_lossy(&buffer));
 
                             let response = match Request::try_from(&buffer[..]) {
-                                Ok(request) => handler.handle_request(&request),
-                                Err(e) => handler.handle_bad_request(&e),
+                                | Ok(request) => handler.handle_request(&request),
+                                | Err(e) => handler.handle_bad_request(&e),
                             };
                             if let Err(e) = response.send(&mut stream) {
                                 println!("Failed to read from connection: {}", e);
                             }
-                        }
-                        Err(e) => println!("Failed to establish a connection: {}", e),
+                        },
+                        | Err(e) => println!("Failed to establish a connection: {}", e),
                     }
-                }
-                Err(e) => println!("Failed to establish a connection: {}", e),
+                },
+                | Err(e) => println!("Failed to establish a connection: {}", e),
             }
         }
     }

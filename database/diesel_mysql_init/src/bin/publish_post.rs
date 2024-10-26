@@ -13,9 +13,12 @@ fn main() -> () {
         .expect("Invalid ID");
     let connection: &mut MysqlConnection = &mut establish_connection();
 
-    let post= connection
+    let post = connection
         .transaction(|connection: &mut MysqlConnection| {
-            let post = posts.find(id).select(Post::as_select()).first(connection)?;
+            let post = posts
+                .find(id)
+                .select(Post::as_select())
+                .first(connection)?;
 
             diesel::update(posts.find(id))
                 .set(published.eq(true))

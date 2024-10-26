@@ -7,12 +7,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Displaying {} posts", results.len());
 
-    results.iter().for_each(|post| {
-        println!("----------------------------");
-        println!("ID: {:<5}Title: {:<10}", post.id, post.title);
-        println!("============================");
-        println!("{}", post.body);
-    });
+    results
+        .iter()
+        .for_each(|post| {
+            println!("----------------------------");
+            println!("ID: {:<5}Title: {:<10}", post.id, post.title);
+            println!("============================");
+            println!("{}", post.body);
+        });
 
     Ok(())
 }

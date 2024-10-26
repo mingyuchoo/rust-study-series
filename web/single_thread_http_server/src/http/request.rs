@@ -16,7 +16,8 @@ impl<'buf> Request<'buf> {
         &self.path
     }
     pub fn query_string(&self) -> Option<&QueryString> {
-        self.query_string.as_ref()
+        self.query_string
+            .as_ref()
     }
 }
 
@@ -56,7 +57,10 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
 }
 
 fn get_next_word(request: &str) -> Option<(&str, &str)> {
-    for (i, c) in request.chars().enumerate() {
+    for (i, c) in request
+        .chars()
+        .enumerate()
+    {
         if c == ' ' || c == '\r' {
             return Some((&request[..i], &&request[i + 1..]));
         }
@@ -75,10 +79,10 @@ pub enum ParseError {
 impl ParseError {
     fn message(&self) -> &str {
         match self {
-            Self::InvalidRequest => "Invalid Request",
-            Self::InvalidEncoding => "Invalid Encoding",
-            Self::InvalidProtocal => "Invalid Protocol",
-            Self::InvalidMethod => "Invalid Method",
+            | Self::InvalidRequest => "Invalid Request",
+            | Self::InvalidEncoding => "Invalid Encoding",
+            | Self::InvalidProtocal => "Invalid Protocol",
+            | Self::InvalidMethod => "Invalid Method",
         }
     }
 }
@@ -88,14 +92,20 @@ use std::fmt::Result as FmtResult;
 
 use std::fmt::Debug;
 impl Debug for ParseError {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+    fn fmt(
+        &self,
+        f: &mut Formatter,
+    ) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }
 
 use std::fmt::Display;
 impl Display for ParseError {
-    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+    fn fmt(
+        &self,
+        f: &mut Formatter,
+    ) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }

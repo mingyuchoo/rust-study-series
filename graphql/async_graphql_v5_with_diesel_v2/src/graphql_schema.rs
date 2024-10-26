@@ -14,7 +14,8 @@ impl Member {
         self.id
     }
     pub async fn name(&self) -> &str {
-        self.name.as_str()
+        self.name
+            .as_str()
     }
     pub async fn knockouts(&self) -> i32 {
         self.knockouts
@@ -36,7 +37,8 @@ impl Team {
         self.id
     }
     pub async fn name(&self) -> &str {
-        self.name.as_str()
+        self.name
+            .as_str()
     }
     pub async fn members(&self) -> Vec<Member> {
         vec![]

@@ -13,18 +13,18 @@ pub mod posts;
 
 #[derive(Serialize)]
 pub struct GenericResponse {
-    pub status: String,
+    pub status:  String,
     pub message: String,
 }
 
 #[derive(Serialize, Debug)]
 pub struct SingleDataResponse<T> {
     pub status: String,
-    pub data: T,
+    pub data:   T,
 }
 
 #[derive(Serialize, Debug)]
 pub struct MultiDataResponse<T> {
     pub status: String,
-    pub data: Vec<T>,
+    pub data:   Vec<T>,
 }

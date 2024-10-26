@@ -40,8 +40,8 @@ fn main() -> Result<(), std::io::Error> {
 ///
 fn check_date(date: &str) -> Result<bool, regex::Error> {
     match Regex::new(r"^\d{4}-\d{2}-\d{2}$") {
-        Ok(re) => Ok(re.is_match(date)),
-        Err(e) => Err(e),
+        | Ok(re) => Ok(re.is_match(date)),
+        | Err(e) => Err(e),
     }
 }
 

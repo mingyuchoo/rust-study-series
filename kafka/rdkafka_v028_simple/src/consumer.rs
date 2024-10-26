@@ -17,8 +17,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         for msg_result in consumer.iter() {
             let msg = msg_result.unwrap();
-            let key: &str = msg.key_view().unwrap().unwrap();
-            let value = msg.payload().unwrap();
+            let key: &str = msg
+                .key_view()
+                .unwrap()
+                .unwrap();
+            let value = msg
+                .payload()
+                .unwrap();
             println!(
                 "received key {} with value {:?} in offset {:?} from partition {}",
                 key,
@@ -27,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 msg.partition()
             )
         }
-    };
+    }
 
     Ok(())
 }

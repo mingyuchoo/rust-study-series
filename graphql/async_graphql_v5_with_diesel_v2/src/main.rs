@@ -18,7 +18,10 @@ async fn graphql(
     schema: actix_web::web::Data<Schema>,
     req: async_graphql_actix_web::GraphQLRequest,
 ) -> async_graphql_actix_web::GraphQLResponse {
-    schema.execute(req.into_inner()).await.into()
+    schema
+        .execute(req.into_inner())
+        .await
+        .into()
 }
 
 #[actix_web::main]

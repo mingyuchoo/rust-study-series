@@ -31,8 +31,14 @@ impl User {
         &self.email
     }
 
-    fn products(&self, context: &Context) -> Vec<Product> {
-        let mut conn = context.dbpool.get_conn().unwrap();
+    fn products(
+        &self,
+        context: &Context,
+    ) -> Vec<Product> {
+        let mut conn = context
+            .dbpool
+            .get_conn()
+            .unwrap();
         conn.exec_map(
             "SELECT * FROM product WHERE user_id=:user_id",
             params! { "user_id" => &self.id},

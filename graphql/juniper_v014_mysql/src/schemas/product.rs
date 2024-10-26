@@ -28,8 +28,14 @@ impl Product {
         self.price
     }
 
-    fn user(&self, context: &Context) -> Option<User> {
-        let mut conn = context.dbpool.get_conn().unwrap();
+    fn user(
+        &self,
+        context: &Context,
+    ) -> Option<User> {
+        let mut conn = context
+            .dbpool
+            .get_conn()
+            .unwrap();
         let user = conn.exec_first(
             "SELECT * FROM user WHERE id=:id",
             params! {"id" => &self.user_id},
@@ -37,7 +43,10 @@ impl Product {
         if let Err(err) = user {
             None
         } else {
-            let (id, name, email) = from_row(user.unwrap().unwrap());
+            let (id, name, email) = from_row(
+                user.unwrap()
+                    .unwrap(),
+            );
             Some(User { id, name, email })
         }
     }

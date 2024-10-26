@@ -9,7 +9,9 @@ pub fn run(repo_dir: String) {
         println!("Running build command ...");
 
         let mut command_parts = build_command.split_whitespace();
-        let command = command_parts.next().unwrap();
+        let command = command_parts
+            .next()
+            .unwrap();
         let args: Vec<&str> = command_parts.collect();
 
         let output = Command::new(command)

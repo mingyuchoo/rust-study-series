@@ -22,7 +22,12 @@ impl Greeter for MyGreeter {
         println!("Got a request from {:?}", request.remote_addr());
 
         let response: HelloResponse = HelloResponse {
-            message: format!("Hello {}!", request.into_inner().name),
+            message: format!(
+                "Hello {}!",
+                request
+                    .into_inner()
+                    .name
+            ),
         };
 
         Ok(Response::new(response))
@@ -31,7 +36,9 @@ impl Greeter for MyGreeter {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr: SocketAddr = "[::1]:50051".parse().unwrap();
+    let addr: SocketAddr = "[::1]:50051"
+        .parse()
+        .unwrap();
 
     // Impl Proto Service
     let greeter: MyGreeter = MyGreeter::default();

@@ -5,7 +5,9 @@ use std::env::args;
 fn main() -> () {
     use self::schema::posts::dsl::*;
 
-    let target: String = args().nth(1).expect("Expected a target to match against");
+    let target: String = args()
+        .nth(1)
+        .expect("Expected a target to match against");
     let pattern: String = format!("%{}%", target);
 
     let connection: &mut PgConnection = &mut establish_connection();

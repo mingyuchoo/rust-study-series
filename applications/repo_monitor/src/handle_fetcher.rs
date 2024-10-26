@@ -2,16 +2,25 @@ use notify::{Error, Event};
 use std::process::Command;
 use std::sync::mpsc::Receiver;
 
-pub fn run(rx: Receiver<Result<Event, Error>>, repo_dir: String) {
+pub fn run(
+    rx: Receiver<Result<Event, Error>>,
+    repo_dir: String,
+) {
     loop {
         match rx.recv() {
-            Ok(Ok(event)) => {
-                let is_in_target_dir = event.paths.iter().any(|path| {
-                    path.strip_prefix(&repo_dir)
-                        .ok()
-                        .and_then(|p| p.components().next())
-                        == Some(std::path::Component::Normal(std::ffi::OsStr::new("target")))
-                });
+            | Ok(Ok(event)) => {
+                let is_in_target_dir = event
+                    .paths
+                    .iter()
+                    .any(|path| {
+                        path.strip_prefix(&repo_dir)
+                            .ok()
+                            .and_then(|p| {
+                                p.components()
+                                    .next()
+                            })
+                            == Some(std::path::Component::Normal(std::ffi::OsStr::new("target")))
+                    });
 
                 if is_in_target_dir {
                     continue; // Ignore events in the 'target' directory
@@ -24,9 +33,9 @@ pub fn run(rx: Receiver<Result<Event, Error>>, repo_dir: String) {
                     .output()
                     .expect("Failed to execute git pull");
                 println!("{}", String::from_utf8_lossy(&output.stdout));
-            }
-            Ok(Err(e)) => println!("watch error: {:?}", e),
-            Err(e) => println!("watch error: {:?}", e),
+            },
+            | Ok(Err(e)) => println!("watch error: {:?}", e),
+            | Err(e) => println!("watch error: {:?}", e),
         }
     }
 }

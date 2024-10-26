@@ -16,8 +16,8 @@ fn what_value_of_s_balances_the_scale() -> () {
     //}
 
     match (1..max).find(|&x| left(x) == right(x)) {
-        Some(x) => println!("I found the number x: {}", x),
-        None => println!("No number found that balances the scale."),
+        | Some(x) => println!("I found the number x: {}", x),
+        | None => println!("No number found that balances the scale."),
     }
 }
 

@@ -62,13 +62,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                     INSERT INTO payment (customer_id, amount, account_name)
                     VALUES (:customer_id, :amount, :account_name)
                     ",
-        payments.iter().map(|p: &Payment| {
-            params! {
-                "customer_id" => p.customer_id,
-                "amount" => p.amount,
-                "account_name" => &p.account_name,
-            }
-        }),
+        payments
+            .iter()
+            .map(|p: &Payment| {
+                params! {
+                    "customer_id" => p.customer_id,
+                    "amount" => p.amount,
+                    "account_name" => &p.account_name,
+                }
+            }),
     )?;
 
     let selected_payments: Vec<Payment> = conn.query_map(
