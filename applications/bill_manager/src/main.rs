@@ -22,8 +22,16 @@ impl Bills {
         }
     }
 
-    fn insert(&mut self, bill: Bill) {
-        self.items.insert(bill.name.clone(), bill);
+    fn insert(
+        &mut self,
+        bill: Bill,
+    ) {
+        self.items
+            .insert(
+                bill.name
+                    .clone(),
+                bill,
+            );
     }
 
     fn select_all(&self) -> Vec<Bill> {
@@ -36,18 +44,30 @@ impl Bills {
         bills
     }
 
-    fn update(&mut self, name: &str, amount: f64) -> bool {
-        match self.items.get_mut(name) {
-            Some(bill) => {
+    fn update(
+        &mut self,
+        name: &str,
+        amount: f64,
+    ) -> bool {
+        match self
+            .items
+            .get_mut(name)
+        {
+            | Some(bill) => {
                 bill.amount = amount;
                 true
-            }
-            None => false,
+            },
+            | None => false,
         }
     }
 
-    fn delete(&mut self, name: &str) -> bool {
-        self.items.remove(name).is_some()
+    fn delete(
+        &mut self,
+        name: &str,
+    ) -> bool {
+        self.items
+            .remove(name)
+            .is_some()
     }
 }
 
@@ -76,17 +96,17 @@ fn main_menu() {
         show();
 
         let input = match get_input() {
-            Some(input) => input,
-            None => return,
+            | Some(input) => input,
+            | None => return,
         };
 
         match input.as_str() {
-            "1" => do_select_bills(&bills),
-            "2" => do_insert_bill(&mut bills),
-            "3" => do_update_bill(&mut bills),
-            "4" => do_delete_bill(&mut bills),
+            | "1" => do_select_bills(&bills),
+            | "2" => do_insert_bill(&mut bills),
+            | "3" => do_update_bill(&mut bills),
+            | "4" => do_delete_bill(&mut bills),
             // "q" | "Q" | "quit" | "Quit" => break,
-            _ => continue,
+            | _ => continue,
         }
     }
 }
@@ -105,12 +125,12 @@ fn do_insert_bill(bills: &mut Bills) {
     let _ = io::stdout().flush();
 
     let name = match get_input() {
-        Some(input) => input,
-        None => return,
+        | Some(input) => input,
+        | None => return,
     };
     let amount = match get_bill_amount() {
-        Some(amount) => amount,
-        None => return,
+        | Some(amount) => amount,
+        | None => return,
     };
 
     let bill = Bill { name, amount };
@@ -128,18 +148,18 @@ fn do_update_bill(bills: &mut Bills) {
     let _ = io::stdout().flush();
 
     let input = match get_input() {
-        Some(input) => input,
-        None => return,
+        | Some(input) => input,
+        | None => return,
     };
 
     let amount = match get_bill_amount() {
-        Some(amount) => amount,
-        None => return,
+        | Some(amount) => amount,
+        | None => return,
     };
 
     match bills.update(&input, amount) {
-        true => println!("The bill was updated."),
-        false => println!("The bill not found."),
+        | true => println!("The bill was updated."),
+        | false => println!("The bill not found."),
     }
 }
 
@@ -153,28 +173,33 @@ fn do_delete_bill(bills: &mut Bills) {
     let _ = io::stdout().flush();
 
     let input = match get_input() {
-        Some(input) => input,
-        None => return,
+        | Some(input) => input,
+        | None => return,
     };
 
     match bills.delete(&input) {
-        true => println!("The bill was removed."),
-        false => println!("The bill not found."),
+        | true => println!("The bill was removed."),
+        | false => println!("The bill not found."),
     }
 }
 
 fn get_input() -> Option<String> {
     let mut buffer = String::new();
 
-    while io::stdin().read_line(&mut buffer).is_err() {
+    while io::stdin()
+        .read_line(&mut buffer)
+        .is_err()
+    {
         println!("Please enter your data again.");
     }
 
-    let input = buffer.trim().to_owned();
+    let input = buffer
+        .trim()
+        .to_owned();
 
     match input {
-        input if &input == "" => None,
-        _ => Some(input),
+        | input if &input == "" => None,
+        | _ => Some(input),
     }
 }
 
@@ -184,16 +209,16 @@ fn get_bill_amount() -> Option<f64> {
 
     loop {
         let input: String = match get_input() {
-            Some(input) if &input == "" => return None,
-            Some(input) => input,
-            None => "".to_owned(),
+            | Some(input) if &input == "" => return None,
+            | Some(input) => input,
+            | None => "".to_owned(),
         };
 
         let parsed_input: Result<f64, _> = input.parse();
 
         match parsed_input {
-            Ok(amount) => return Some(amount),
-            Err(_) => println!("Please enter a number."),
+            | Ok(amount) => return Some(amount),
+            | Err(_) => println!("Please enter a number."),
         }
     }
 }
