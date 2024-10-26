@@ -1,0 +1,36 @@
+* README
+** How to configure Jupyter Notebook
+*** Option 1. Install Anaconda for Python
+**** Run Jupyter notebook
+You can use Jupyter Notebook immediately
+*** Option 2. Install Python from Python homepage
+You have to install Jupyter Notebook in your virtual environment
+```sh
+python -m pip install --upgarade pip
+python -m venv .venv
+source .venv/bin/activate
+pip install notebook
+```
+** How to configure Rust kernel for Jupyter Notebook
+*** Install Rust
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+*** Install `evcxr*`
+```sh
+cargo install evcxr_repl
+cargo install evcxr_jupyter
+```
+*** Register Jupyter kernel for Rust
+```sh
+evcxr_jupyter --install
+```
+** Using Rust on Jupyter notebook
+*** Run Jupyter notebook
+```sh
+jupyter notebook
+```
+*** Use Rust Kernel
+Check if the kernel is installed
+- `http://localhost:8888/lab`
+Choose `Rust` when you create a new notbook
