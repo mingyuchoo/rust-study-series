@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-use std::io;
-use std::io::Write;
+use std::{collections::HashMap,
+          io,
+          io::Write};
 
 #[derive(Debug, Clone)]
 struct Bill {
-    name: String,
+    name:   String,
     amount: f64,
 }
 
@@ -17,21 +17,15 @@ impl Bills {
     /// Self is Bills.
     /// and we can change Self to Bills in this code.
     fn new() -> Self {
-        Self {
-            items: HashMap::new(),
-        }
+        Self { items: HashMap::new(), }
     }
 
-    fn insert(
-        &mut self,
-        bill: Bill,
-    ) {
+    fn insert(&mut self,
+              bill: Bill) {
         self.items
-            .insert(
-                bill.name
-                    .clone(),
-                bill,
-            );
+            .insert(bill.name
+                        .clone(),
+                    bill);
     }
 
     fn select_all(&self) -> Vec<Bill> {
@@ -44,14 +38,12 @@ impl Bills {
         bills
     }
 
-    fn update(
-        &mut self,
-        name: &str,
-        amount: f64,
-    ) -> bool {
-        match self
-            .items
-            .get_mut(name)
+    fn update(&mut self,
+              name: &str,
+              amount: f64)
+              -> bool {
+        match self.items
+                  .get_mut(name)
         {
             | Some(bill) => {
                 bill.amount = amount;
@@ -61,10 +53,9 @@ impl Bills {
         }
     }
 
-    fn delete(
-        &mut self,
-        name: &str,
-    ) -> bool {
+    fn delete(&mut self,
+              name: &str)
+              -> bool {
         self.items
             .remove(name)
             .is_some()
@@ -114,10 +105,9 @@ fn main_menu() {
 fn do_select_bills(bills: &Bills) {
     println!("-------------------------------------");
 
-    bills
-        .select_all()
-        .iter()
-        .for_each(|bill| println!("- name: {:<10} amount: {:>10}", bill.name, bill.amount));
+    bills.select_all()
+         .iter()
+         .for_each(|bill| println!("- name: {:<10} amount: {:>10}", bill.name, bill.amount));
 }
 
 fn do_insert_bill(bills: &mut Bills) {
@@ -139,10 +129,9 @@ fn do_insert_bill(bills: &mut Bills) {
 }
 
 fn do_update_bill(bills: &mut Bills) {
-    bills
-        .select_all()
-        .iter()
-        .for_each(|bill| println!("{:?}", bill));
+    bills.select_all()
+         .iter()
+         .for_each(|bill| println!("{:?}", bill));
 
     print!("Enter bill name to update: ");
     let _ = io::stdout().flush();
@@ -164,10 +153,9 @@ fn do_update_bill(bills: &mut Bills) {
 }
 
 fn do_delete_bill(bills: &mut Bills) {
-    bills
-        .select_all()
-        .iter()
-        .for_each(|bill| println!("{:?}", bill));
+    bills.select_all()
+         .iter()
+         .for_each(|bill| println!("{:?}", bill));
 
     print!("Enter bill name to remove: ");
     let _ = io::stdout().flush();
@@ -186,16 +174,14 @@ fn do_delete_bill(bills: &mut Bills) {
 fn get_input() -> Option<String> {
     let mut buffer = String::new();
 
-    while io::stdin()
-        .read_line(&mut buffer)
-        .is_err()
+    while io::stdin().read_line(&mut buffer)
+                     .is_err()
     {
         println!("Please enter your data again.");
     }
 
-    let input = buffer
-        .trim()
-        .to_owned();
+    let input = buffer.trim()
+                      .to_owned();
 
     match input {
         | input if &input == "" => None,
