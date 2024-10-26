@@ -1,0 +1,31 @@
+** README
+** Prerequsite
+1. Install =rustup=
+2. Install =node 16.17.x=
+** Structuring project
+Create =<project-name>= directory
+#+begin_src shell
+  mkdir p0_init
+  cd p0_init
+#+end_src
+** Create Rust project
+Create =<rust-project-name>= project
+#+begin_src shell
+  cargo new Rust --lib
+  cd Rust
+#+end_src
+Develop some code for WASM
+** Build Rust project
+#+begin_src shell
+  build.sh
+#+end_src
+** Create Node project
+Create =<node-project-name= directory
+#+begin_src shell
+  mkdir Node && cd Node
+  npm init -y
+#+end_src
+** Run Node application
+#+begin_src shell
+  npm run start
+#+end_src
