@@ -5,32 +5,32 @@
 You can use Jupyter Notebook immediately
 *** Option 2. Install Python from Python homepage
 You have to install Jupyter Notebook in your virtual environment
-```sh
+#+begin_src shell
 python -m pip install --upgarade pip
 python -m venv .venv
 source .venv/bin/activate
 pip install notebook
-```
+#+end_src
 ** How to configure Rust kernel for Jupyter Notebook
 *** Install Rust
-```sh
+#+begin_src shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
-*** Install `evcxr*`
-```sh
+#+end_src
+*** Install =evcxr*=
+#+begin_src shell
 cargo install evcxr_repl
 cargo install evcxr_jupyter
-```
+#+end_src
 *** Register Jupyter kernel for Rust
-```sh
+#+begin_src shell
 evcxr_jupyter --install
-```
+#+end_src
 ** Using Rust on Jupyter notebook
 *** Run Jupyter notebook
-```sh
+#+begin_src shell
 jupyter notebook
-```
+#+end_src
 *** Use Rust Kernel
 Check if the kernel is installed
-- `http://localhost:8888/lab`
-Choose `Rust` when you create a new notbook
+- =http://localhost:8888/lab=
+Choose =Rust= when you create a new notbook
