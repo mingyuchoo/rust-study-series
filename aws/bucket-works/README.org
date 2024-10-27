@@ -1,0 +1,9 @@
+* Bucket Works
+** How to build
+#+begin_src shell
+  cargo build --release
+#+end_src
+** How to use
+#+begin_src shell
+  ./target/release/bucket-works.exe <region-to-use> <unique-s3-bucket-name> <file-name-to-upload>
+#+end_src
