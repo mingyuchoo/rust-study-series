@@ -34,3 +34,8 @@ jupyter notebook
 Check if the kernel is installed
 - =http://localhost:8888/lab=
 Choose =Rust= when you create a new notbook
+** References
+- [[Rust Crash Course][https://github.com/prof-merli/rust-crash-course-jupyter-notebooks/tree/master/notebooks]]
+- [[Depth-First][https://depth-first.com/articles/2020/09/21/interactive-rust-in-a-repl-and-jupyter-notebook-with-evcxr/]]
+
+- 
