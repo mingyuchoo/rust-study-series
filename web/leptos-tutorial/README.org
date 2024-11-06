@@ -12,6 +12,9 @@
 ** For Leptos SSR
 #+begin_src shell
   cargo install cargo-leptos
+  cargo leptos new --git https://github.com/leptos-rs/start
+  cd <project-name>
+  cargo leptos watch
 #+end_src
 ** For Leptos Code Formatting
 #+begin_src shell
