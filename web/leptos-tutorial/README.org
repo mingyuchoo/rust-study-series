@@ -1,9 +1,10 @@
 * README
 ** For Leptos CSR
 #+begin_src shell
+  cargo install cargo-generate
   cargo install trunk
-  cargo init demo
-  cd demo
+  cargo init <project-name>
+  cd <project-name>
   cargo add leptos --features=csr
   cargo add console_error_panic_hook
   rustup target add wasm32-unknown-unknown
