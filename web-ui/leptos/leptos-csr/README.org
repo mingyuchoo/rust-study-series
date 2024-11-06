@@ -1,4 +1,4 @@
-* README
+* Leptos-CSR
 ** Prerequsites for Leptos
 *** Very beginning
 **** Set up toolchains
@@ -6,6 +6,7 @@
   rustup toolchain install nightly
   rustup default nightly
   rustup target add wasm32-unknown-unknown
+  cargo install leptosfmt
 #+end_src
 *** Install Leptos and run
 **** For Leptos CSR
@@ -18,21 +19,10 @@
   cargo add console_error_panic_hook
   trunk serve --open
 #+end_src
-**** For Leptos SSR
-#+begin_src shell
-  cargo install cargo-leptos
-  cargo leptos new --git https://github.com/leptos-rs/start
-  cd <project-name>
-  cargo leptos watch
-#+end_src
-**** For Leptos Code Formatting
-#+begin_src shell
-  cargo install leptosfmt
-#+end_src
 ** How to build and run this project
 #+begin_src shell
   cargo install
   trunk serve  # or `trunk serve --port 3000 --open`
 #+end_src
 ** References
-- [[brookjeynes.dev][https://brookjeynes.dev/posts/learning-leptos-part1/]]
+- [[Building User Interfaces][https://book.leptos.dev/view/index.html]]
