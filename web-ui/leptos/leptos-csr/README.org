@@ -21,7 +21,7 @@
 #+end_src
 ** How to build and run this project
 #+begin_src shell
-  cargo install
+  cargo build
   trunk serve  # or `trunk serve --port 3000 --open`
 #+end_src
 ** References

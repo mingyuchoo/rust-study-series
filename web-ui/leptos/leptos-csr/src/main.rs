@@ -1,6 +1,7 @@
 use leptos::*;
 
-fn main() {
+fn main()
+{
     mount_to_body(|| {
         view! { <p>"Hello, world!"</p> }
     })
