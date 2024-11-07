@@ -15,7 +15,8 @@
   cargo install trunk
   cargo init <project-name>
   cd <project-name>
-  cargo add leptos --features=csr
+  cargo add leptos --features=csr,nightly
+  cargo add leptos_meta --features=csr,nightly
   cargo add console_error_panic_hook
   trunk serve --open
 #+end_src
