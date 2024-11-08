@@ -6,6 +6,16 @@ use actix_web::{get,
                 HttpServer,
                 Responder};
 
+use clap::Parser;
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args
+{
+    #[arg(short, long, default_value_t = 8080)]
+    port: u16,
+}
+
 #[get("/")]
 async fn hello() -> impl Responder
 {
@@ -26,11 +36,15 @@ async fn manual_hello() -> impl Responder
 #[actix_web::main]
 async fn main() -> std::io::Result<()>
 {
+    let args = Args::parse();
+
+    println!("Starting server on port {}", args.port);
+
     HttpServer::new(|| {
         App::new().service(hello)
                   .service(echo)
                   .route("/hey", web::get().to(manual_hello))
-    }).bind(("0.0.0.0", 8080))?
+    }).bind(("0.0.0.0", args.port))?
       .run()
       .await
 }
