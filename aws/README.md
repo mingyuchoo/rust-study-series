@@ -11,7 +11,7 @@
 ### How to create Lambda project with `sam` CLI
 
 ```bash
-$ sam init
+sam init
 
         SAM CLI now collects telemetry to better understand customer needs.
 
@@ -115,7 +115,7 @@ Commands you can use next
 ### How to build Lambda project
 
 ```bash
-$ vi samconfig.toml
+vi samconfig.toml
 ```
 
 ```toml
@@ -129,38 +129,38 @@ beta_features = true
 
 ```bash
 $sam build
-$ sam validate
+sam validate
 ```
 
 ### How to test Lambda project locally
 
 ```bash
-$ sam local invoke
+sam local invoke
 # or
-$ sam local invoke --event events/event.json
+sam local invoke --event events/event.json
 ```
 
 ### How to test Lambda project with API Gateway locally
 
 ```bash
-$ sam local start-api
+sam local start-api
 ```
 
 and run command below in another terminal
 
 ```bash
-$ curl http://localhost:3000/hello
+curl http://localhost:3000/hello
 ```
 
 
 ### How to deploy Lambda project to AWS
 
 ```bash
-$ sam sync --stack-name rust-sam-app --watch # for sync
+sam sync --stack-name rust-sam-app --watch # for sync
 # or
-$ sam deploy
+sam deploy
 # or
-$ sam deploy --guided
+sam deploy --guided
 
 Configuring SAM deploy
 ======================
@@ -186,18 +186,18 @@ Configuring SAM deploy
 ### How to test Lambda project
 
 ```bash
-$ aws lambda invoke
+aws lambda invoke
   --cli-binary-format raw-in-base64-out \
   --function-name HelloWorldFunction-XXXXXXXX \ # Replace with the actual function name
   --payload '{"command": "Say Hi!"}' \
   output.json
-$ cat output.json  # Prints: {"msg": "Command Say Hi! executed."}
+cat output.json  # Prints: {"msg": "Command Say Hi! executed."}
 ```
 
 ### How to delete Lambda project
 
 ```bash
-$ sam delete
+sam delete
         Are you sure you want to delete the stack rust-sam-app in the region None ? [y/N]: y
         Are you sure you want to delete the folder rust-sam-app in S3 which contains the artifacts? [y/N]: y
 ```

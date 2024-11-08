@@ -20,20 +20,20 @@ cargo install cargo-watch
 
 ```bash
 # Run test only
-$ cargo watch -x test
+cargo watch -x test
 
 # Run check then tests
-$ cargo watch -x check -x test
+cargo watch -x check -x test
 
 # Run run current application
 cargo watch -x 'run --bin app'
 
 # Run run with arguments
-$ cargo watch -x 'run -- --some-arg'
+cargo watch -x 'run -- --some-arg'
 
 # run an arbitrary command
-$ cargo watch -- echo Hello world
+cargo watch -- echo Hello world
 
 # Run with features passed to carg
-$ cargo watch --features "foo,bar"
+cargo watch --features "foo,bar"
 ```

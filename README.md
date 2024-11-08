@@ -21,30 +21,30 @@ edit `/etc/nixos/configuration.nix` in root account
 run following commands to install stable toolchain in user account
 
 ```bash
-$ rustup default stable
-$ rustup component add rls # or `llvm`
-$ rustup component add rust-analysis
-$ rustup component add rust-analyzer
+rustup default stable
+rustup component add rls # or `llvm`
+rustup component add rust-analysis
+rustup component add rust-analyzer
 ```
 
 run following command to install cargo tools in user account
 
 ```bash
-$ cargo install cargo-audit
-$ cargo install cargo-binstall
-$ cargo install cargo-dist
-$ cargo install cargo-expand
-$ cargo install cargo-lambda
-$ cargo install cargo-modules
-$ cargo install cargo-watch
+cargo install cargo-audit
+cargo install cargo-binstall
+cargo install cargo-dist
+cargo install cargo-expand
+cargo install cargo-lambda
+cargo install cargo-modules
+cargo install cargo-watch
 ```
 
 ## For Nix
 
 ```bash
-$ sh <(curl -L https://nixos.org/nix/install) --daemon
+sh <(curl -L https://nixos.org/nix/install) --daemon
 # or
-$ sh <(curl -L https://nixos.org/nix/install) --no-daemon
+sh <(curl -L https://nixos.org/nix/install) --no-daemon
 
 nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
 nix-channel --update
@@ -53,14 +53,14 @@ nix-channel --update
 ### How to make dev. environment
 
 ```bash
-$ nix develop
+nix develop
 ```
 
 ## For Ubuntu
 
 ```bash
-$ sudo apt update
-$ sudo apt install -y musl-tools
+sudo apt update
+sudo apt install -y musl-tools
 ```
 
 ### How to install Rustup
@@ -68,9 +68,9 @@ $ sudo apt install -y musl-tools
 - <https://rustup.rs/>
 
 ```bash
-$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-$ rustup default stable
-$ rustup update stable
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup default stable
+rustup update stable
 ```
 
 #### Configure Target Architecture
@@ -78,8 +78,8 @@ $ rustup update stable
 For WSL2 on Windows 11 on Snapdraon X Elite
 
 ```bash
-$ rustup update
-$ rustup target add aarch64-unknown-linux-gnu
+rustup update
+rustup target add aarch64-unknown-linux-gnu
 ```
 
 Create `$HOME/.cargo/config.toml`
@@ -92,26 +92,26 @@ target = "aarch64-unknown-linux-gnu"
 Build your project
 
 ```bash
-$ cargo build
-$ cargo build --release
+cargo build
+cargo build --release
 ```
 
 ### Install component
 
 ```bash
-$ rustup component list
-$ rustup component add cargo
-$ rustup component add clippy
-$ rustup component add llvm-tools
-$ rustup component add rls
-$ rustup component add rust-analysis
-$ rustup component add rust-analyzer
+rustup component list
+rustup component add cargo
+rustup component add clippy
+rustup component add llvm-tools
+rustup component add rls
+rustup component add rust-analysis
+rustup component add rust-analyzer
 ```
 ## Formatting & linting
 
 ```bash
-$ cargo fmt
-$ cargo clippy --fix
+cargo fmt
+cargo clippy --fix
 ```
 
 ## How to use watch mode
@@ -119,32 +119,32 @@ $ cargo clippy --fix
 ### Install `cargo-watch` for watch mode
 
 ```bash
-$ cargo install cargo-watch
+cargo install cargo-watch
 ```
 
 ### Run as watch mode with `cargo-watch`
 
 ```bash
 # Run test only
-$ cargo watch -x test
+cargo watch -x test
 
 # Run check then tests
-$ cargo watch -x check -x test
+cargo watch -x check -x test
 
 # Watch changes in on the `src` and clear the console and then run
-$ cargo watch -c -w src -x run
+cargo watch -c -w src -x run
 
 # Run run current application
-$ cargo watch -x 'run --bin app'
+cargo watch -x 'run --bin app'
 
 # Run run with arguments
-$ cargo watch -x 'run -- --some-arg'
+cargo watch -x 'run -- --some-arg'
 
 # run an arbitrary command
-$ cargo watch -- echo Hello world
+cargo watch -- echo Hello world
 
 # Run with features passed to carg
-$ cargo watch --features "foo,bar"
+cargo watch --features "foo,bar"
 ```
 
 ## How to see module structures
@@ -152,11 +152,11 @@ $ cargo watch --features "foo,bar"
 ### Install `cargo-module`
 
 ```bash
-$ cargo install cargo-modules
+cargo install cargo-modules
 ```
 
 ### Get structure of modules in your crate
 
 ```bash
-$ cargo modules generate tree --types
+cargo modules generate tree --types
 ```

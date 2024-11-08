@@ -12,11 +12,11 @@
 ### How to run Lambda
 
 ```bash
-$ cargo lambda new <function-name>
-$ cargo lambda watch
+cargo lambda new <function-name>
+cargo lambda watch
   $ # open another terminal and then run below
   $ cargo lambda invoke --data-ascii '{"name":"World"}' <function-name>
-$ cargo lambda build --release --output-format zip
+cargo lambda build --release --output-format zip
 ```
 
 

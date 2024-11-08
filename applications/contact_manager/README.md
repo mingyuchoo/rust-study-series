@@ -2,15 +2,15 @@
 ## How to build
 
 ```bash
-$ cargo check
-$ cargo build --profile dev     # for development
-$ cargo build --profile release # for release
+cargo check
+cargo build --profile dev     # for development
+cargo build --profile release # for release
 ```
 
 ## How to run
 
 ```bash
-$ cargo run -- --help
+cargo run -- --help
 contact_manager 0.1.0
 project: contact manager
 
