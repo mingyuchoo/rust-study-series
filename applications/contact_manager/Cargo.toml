@@ -14,7 +14,7 @@ edition = "2021"
 
 [dependencies]
 structopt = "0.3.26"
-thiserror = "1.0.43"
+thiserror = "2.0.0"
 
 [[bin]]
 name = "contact_manager"

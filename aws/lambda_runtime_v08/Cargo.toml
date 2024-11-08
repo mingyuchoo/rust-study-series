@@ -24,9 +24,9 @@ edition = "2021"
 # and it will keep the alphabetic ordering for you.
 
 [dependencies]
-lambda_http = { version = "0.8.1", default-features = false, features = ["apigw_rest"] }
-lambda_runtime = "0.8.1"
-tokio = { version = "1", features = ["macros"] }
-tracing = { version = "0.1", features = ["log"] }
-tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }
+lambda_http = { version = "0.13.0", default-features = false, features = ["apigw_rest"] }
+lambda_runtime = "0.13.0"
+tokio = { version = "1.41.1", features = ["macros"] }
+tracing = { version = "0.1.40", features = ["log"] }
+tracing-subscriber = { version = "0.3.18", default-features = false, features = ["fmt"] }
 
