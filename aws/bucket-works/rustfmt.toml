@@ -1,4 +1,4 @@
-brace_style = "AlwaysNextLine"
+#brace_style = "AlwaysNextLine"
 chain_width = 0
 edition = "2021"
 enum_discrim_align_threshold = 20
