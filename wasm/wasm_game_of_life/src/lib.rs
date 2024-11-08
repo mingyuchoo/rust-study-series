@@ -14,7 +14,6 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn greet()
-{
+pub fn greet() {
     alert("안녕하세요?");
 }

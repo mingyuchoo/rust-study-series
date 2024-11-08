@@ -3,8 +3,7 @@ use p15_minigrep_refined::{run,
 use std::{env,
           process};
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config =
         Config::new(env::args()).unwrap_or_else(|err| {
             eprintln!("입력한 인수를 구문분석하는 동안 오류가 발생했습니다. 확인해보니 {err}");

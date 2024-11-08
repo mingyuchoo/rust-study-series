@@ -4,8 +4,7 @@ use std::{process::Command,
           sync::mpsc::Receiver};
 
 pub fn run(rx: Receiver<Result<Event, Error>>,
-           repo_dir: String)
-{
+           repo_dir: String) {
     loop {
         match rx.recv() {
             | Ok(Ok(event)) => {

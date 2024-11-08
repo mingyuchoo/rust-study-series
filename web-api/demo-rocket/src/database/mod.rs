@@ -4,8 +4,7 @@ use std::env;
 use diesel::{pg::PgConnection,
              prelude::*};
 
-pub fn establish_connection_pg() -> PgConnection
-{
+pub fn establish_connection_pg() -> PgConnection {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");

@@ -1,13 +1,11 @@
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     what_value_of_s_balances_the_scale();
 
     Ok(())
 }
 
 /// 2s + 10 = s + 15
-fn what_value_of_s_balances_the_scale() -> ()
-{
+fn what_value_of_s_balances_the_scale() -> () {
     let max = 100;
 
     // FIXED: NOT idiomatic code
@@ -23,32 +21,27 @@ fn what_value_of_s_balances_the_scale() -> ()
     }
 }
 
-fn left(s: i32) -> i32
-{
+fn left(s: i32) -> i32 {
     2 * s + 10
 }
 
-fn right(s: i32) -> i32
-{
+fn right(s: i32) -> i32 {
     s + 15
 }
 
 #[cfg(test)]
-mod tests
-{
+mod tests {
     use super::*;
 
     #[test]
-    fn test_left()
-    {
+    fn test_left() {
         assert_eq!(left(-1), 8);
         assert_eq!(left(0), 10);
         assert_eq!(left(1), 12);
     }
 
     #[test]
-    fn test_right()
-    {
+    fn test_right() {
         assert_eq!(right(-1), 14);
         assert_eq!(right(0), 15);
         assert_eq!(right(1), 16);

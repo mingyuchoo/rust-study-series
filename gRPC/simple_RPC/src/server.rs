@@ -5,8 +5,7 @@ use tonic::{transport::Server,
             Response,
             Status};
 
-pub mod product_info_proto
-{
+pub mod product_info_proto {
     tonic::include_proto!("ecommerce"); // proto package
 }
 
@@ -19,12 +18,10 @@ use product_info_proto::{product_info_server::{ProductInfo,
 pub struct MyProductInfo {}
 
 #[tonic::async_trait]
-impl ProductInfo for MyProductInfo
-{
+impl ProductInfo for MyProductInfo {
     async fn add_product(&self,
                          request: Request<Product>)
-                         -> Result<Response<ProductId>, Status>
-    {
+                         -> Result<Response<ProductId>, Status> {
         let response: ProductId = ProductId { id: request.into_inner()
                                                          .id, };
 
@@ -33,8 +30,7 @@ impl ProductInfo for MyProductInfo
 
     async fn get_product(&self,
                          request: Request<ProductId>)
-                         -> Result<Response<Product>, Status>
-    {
+                         -> Result<Response<Product>, Status> {
         let response: Product = Product { id:          request.into_inner()
                                                               .id,
                                           name:        String::from("MacBook Air 15"),
@@ -47,8 +43,7 @@ impl ProductInfo for MyProductInfo
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>>
-{
+async fn main() -> Result<(), Box<dyn Error>> {
     let addr: SocketAddr = "[::1]:50051".parse()
                                         .unwrap();
 

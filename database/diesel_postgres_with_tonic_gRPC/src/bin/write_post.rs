@@ -3,8 +3,7 @@ use diesel_postgres_init::*;
 use std::io::{stdin,
               Read};
 
-fn main() -> ()
-{
+fn main() -> () {
     let connection: &mut PgConnection = &mut establish_connection();
 
     let mut title: String = String::new();

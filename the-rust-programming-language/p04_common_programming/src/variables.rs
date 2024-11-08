@@ -1,13 +1,11 @@
-pub fn mutation()
-{
+pub fn mutation() {
     let mut x = 5;
     println!("x의 값: {x}");
     x = 6;
     println!("x의 값: {x}");
 }
 
-pub fn shadowing()
-{
+pub fn shadowing() {
     let x = 5;
     let x = x + 1;
     {

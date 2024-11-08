@@ -1,7 +1,5 @@
-pub fn call1()
-{
-    fn largest_i32(list: &[i32]) -> i32
-    {
+pub fn call1() {
+    fn largest_i32(list: &[i32]) -> i32 {
         let mut largest = list[0];
         for &item in list.iter() {
             if item > largest {
@@ -11,8 +9,7 @@ pub fn call1()
         largest
     }
 
-    fn largest_char(list: &[char]) -> char
-    {
+    fn largest_char(list: &[char]) -> char {
         let mut largest = list[0];
         for &item in list.iter() {
             if item > largest {
@@ -52,10 +49,8 @@ pub fn call1()
 //   println!("가장 큰 문자: {}", result);
 // }
 
-pub fn call3()
-{
-    struct Point<T>
-    {
+pub fn call3() {
+    struct Point<T> {
         x: T,
         y: T,
     }
@@ -67,10 +62,8 @@ pub fn call3()
              integer.x, integer.y, float.x, float.y);
 }
 
-pub fn call4()
-{
-    struct Point<T, U>
-    {
+pub fn call4() {
+    struct Point<T, U> {
         x: T,
         y: U,
     }
@@ -85,30 +78,23 @@ pub fn call4()
              integer_and_float.y, integer_and_float.y);
 }
 
-pub fn call5()
-{
-    struct Point<T>
-    {
+pub fn call5() {
+    struct Point<T> {
         x: T,
         y: T,
     }
-    impl<T> Point<T>
-    {
-        fn x(&self) -> &T
-        {
+    impl<T> Point<T> {
+        fn x(&self) -> &T {
             &self.x
         }
 
-        fn y(&self) -> &T
-        {
+        fn y(&self) -> &T {
             &self.y
         }
     }
 
-    impl Point<f32>
-    {
-        fn distance_from_origin(&self) -> f32
-        {
+    impl Point<f32> {
+        fn distance_from_origin(&self) -> f32 {
             (self.x
                  .powi(2)
              + self.y
@@ -127,20 +113,16 @@ pub fn call5()
     println!("r.distance_from_origin = {}", r.distance_from_origin());
 }
 
-pub fn call6()
-{
-    struct Point<T, U>
-    {
+pub fn call6() {
+    struct Point<T, U> {
         x: T,
         y: U,
     }
 
-    impl<T, U> Point<T, U>
-    {
+    impl<T, U> Point<T, U> {
         fn mixup<V, W>(self,
                        other: Point<V, W>)
-                       -> Point<T, W>
-        {
+                       -> Point<T, W> {
             Point { x: self.x,
                     y: other.y, }
         }

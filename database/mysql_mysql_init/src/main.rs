@@ -6,15 +6,13 @@ use mysql::{prelude::*,
             *};
 
 #[derive(Debug, PartialEq, Eq)]
-struct Payment
-{
+struct Payment {
     customer_id:  i32,
     amount:       i32,
     account_name: Option<String>,
 }
 
-fn main() -> Result<(), Box<dyn Error>>
-{
+fn main() -> Result<(), Box<dyn Error>> {
     dotenv::dotenv().ok();
 
     let url: String = dotenv::var("DATABASE_URL").unwrap();

@@ -3,8 +3,7 @@ use diesel_mysql_init::*;
 use std::io::{stdin,
               Read};
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection: &mut diesel::MysqlConnection = &mut establish_connection();
 
     let mut title: String = String::new();

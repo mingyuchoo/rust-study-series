@@ -4,22 +4,19 @@ use std::fs::File; // 해당 모듈 경로를 현재 범위 안으로 가져오�
 use std::io::Read; // 해당 모듈 경로를 현재 범위 안으로 가져오기
 
 #[cfg(test)]
-mod tests
-{
+mod tests {
     // `tests` 모듈을 선언하기
     use super::*; // 상대경로 `super`로 상위 모듈 경로를 현재 범위 안으로 가져오기
 
     #[test]
-    fn one_result()
-    {
+    fn one_result() {
         let query = "duct";
         let contents = "Rust:\nsafe, fast, productive.\nPick three.";
         assert_eq!(vec!["safe, fast, productive."], search(query, contents));
     }
 
     #[test]
-    fn case_insensitive()
-    {
+    fn case_insensitive() {
         let query = "rUsT";
         let contents = "Rust:\nsafe, fast, productive.\nPick three.\nTrust me.";
         assert_eq!(vec!["Rust:", "Trust me."],
@@ -27,17 +24,14 @@ mod tests
     }
 }
 
-pub struct Config
-{
+pub struct Config {
     pub query:          String,
     pub filename:       String,
     pub case_sensitive: bool,
 }
 
-impl Config
-{
-    pub fn new(args: &[String]) -> Result<Config, &'static str>
-    {
+impl Config {
+    pub fn new(args: &[String]) -> Result<Config, &'static str> {
         if args.len() < 3 {
             return Err("필요한 인수가 지정되지 않았습니다.");
         }
@@ -50,8 +44,7 @@ impl Config
     }
 }
 
-pub fn run(config: Config) -> Result<(), Box<dyn Error>>
-{
+pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let mut f = File::open(config.filename)?;
     let mut contents = String::new();
 
@@ -71,8 +64,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>>
 
 pub fn search<'a>(query: &str,
                   contents: &'a str)
-                  -> Vec<&'a str>
-{
+                  -> Vec<&'a str> {
     let mut results = Vec::new();
 
     for line in contents.lines() {
@@ -86,8 +78,7 @@ pub fn search<'a>(query: &str,
 
 pub fn search_case_insensitive<'a>(query: &str,
                                    contents: &'a str)
-                                   -> Vec<&'a str>
-{
+                                   -> Vec<&'a str> {
     let mut results = Vec::new();
     let query = query.to_lowercase();
 

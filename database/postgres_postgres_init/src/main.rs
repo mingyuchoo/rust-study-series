@@ -4,15 +4,13 @@ use postgres::{Client,
                NoTls};
 use std::collections::HashMap;
 
-struct Author
-{
+struct Author {
     _id:     i32,
     name:    String,
     country: String,
 }
 
-fn main() -> Result<(), Error>
-{
+fn main() -> Result<(), Error> {
     dotenv::dotenv().ok();
 
     let url: String = dotenv::var("DATABASE_URL").unwrap();

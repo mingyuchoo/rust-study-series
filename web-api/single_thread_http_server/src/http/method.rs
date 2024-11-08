@@ -1,6 +1,5 @@
 #[derive(Debug)]
-pub enum Method
-{
+pub enum Method {
     GET,
     DELETE,
     POST,
@@ -13,12 +12,10 @@ pub enum Method
 }
 
 use std::str::FromStr;
-impl FromStr for Method
-{
+impl FromStr for Method {
     type Err = MethodError;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err>
-    {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             | "GET" => Ok(Self::GET),
             | "DELETE" => Ok(Self::DELETE),

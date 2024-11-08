@@ -1,31 +1,25 @@
-mod back_of_house
-{
+mod back_of_house {
     // 모듈 `back_of_house` 를 선언하고, 모듈 콘텐츠를 가져오기
-    pub struct Breakfast
-    {
+    pub struct Breakfast {
         pub toast:      String,
         seasonal_fruit: String,
     }
 
-    impl Breakfast
-    {
-        pub fn summer(toast: &str) -> Breakfast
-        {
+    impl Breakfast {
+        pub fn summer(toast: &str) -> Breakfast {
             Breakfast { toast:          String::from(toast),
                         seasonal_fruit: String::from("복숭아"), }
         }
     }
 
     #[derive(Debug)]
-    pub enum Appetizer
-    {
+    pub enum Appetizer {
         Soup,
         Salad,
     }
 }
 
-pub fn eat_at_restaurant()
-{
+pub fn eat_at_restaurant() {
     // 여름에 아침 식사로 호밀빵을 주문한다.
     let mut meal = back_of_house::Breakfast::summer("호밀빵");
 

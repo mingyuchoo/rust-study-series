@@ -1,5 +1,4 @@
-pub fn call()
-{
+pub fn call() {
     let mut stack = Vec::new();
 
     stack.push(1);

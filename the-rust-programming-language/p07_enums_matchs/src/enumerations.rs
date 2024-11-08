@@ -1,46 +1,38 @@
 /// Enumerations are Sum types in Abstract Data Types in Rust
-pub fn call1()
-{
-    enum IpAddrKind
-    {
+pub fn call1() {
+    enum IpAddrKind {
         V4,
         V6,
     }
-    struct IpAddr1
-    {
+    struct IpAddr1 {
         kind:    IpAddrKind,
         address: String,
     }
 
     #[derive(Debug)]
-    enum IpAddr2
-    {
+    enum IpAddr2 {
         V4(String),
         V6(String),
     }
 
     #[derive(Debug)]
-    enum IpAddr3
-    {
+    enum IpAddr3 {
         V4(u8, u8, u8, u8),
         V6(String),
     }
 
     #[derive(Debug)]
-    enum IpAddr4
-    {
+    enum IpAddr4 {
         V4(Ipv4Addr),
         V6(Ipv6Addr),
     }
 
     #[derive(Debug)]
-    struct Ipv4Addr
-    {
+    struct Ipv4Addr {
         address: String,
     }
     #[derive(Debug)]
-    struct Ipv6Addr
-    {
+    struct Ipv6Addr {
         address: String,
     }
 
@@ -80,16 +72,10 @@ pub fn call1()
     println!("loopback address: {loopback4:#?}");
 }
 
-pub fn call2()
-{
-    enum Message
-    {
+pub fn call2() {
+    enum Message {
         Quit,
-        Move
-        {
-            x: i32,
-            y: i32,
-        },
+        Move { x: i32, y: i32, },
         Write(String),
         ChangeColor(i32, i32, i32),
     }
@@ -100,8 +86,7 @@ pub fn call2()
     // data QuitMessage = QuitMessage
     struct QuitMessage;
 
-    struct MoveMessage
-    {
+    struct MoveMessage {
         x: i32,
         y: i32,
     }

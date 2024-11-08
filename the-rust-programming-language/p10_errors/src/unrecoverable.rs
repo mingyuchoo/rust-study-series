@@ -1,8 +1,7 @@
 use std::{fs::File,
           io::ErrorKind};
 
-pub fn call1()
-{
+pub fn call1() {
     // panic!("crash and burn");
 
     // let v = vec![1, 2, 3];

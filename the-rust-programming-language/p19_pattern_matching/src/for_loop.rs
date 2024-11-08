@@ -1,5 +1,4 @@
-pub fn call()
-{
+pub fn call() {
     let v = vec!['a', 'b', 'c'];
 
     for (index, value) in v.iter()

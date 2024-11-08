@@ -1,5 +1,4 @@
-pub mod greeter_proto
-{
+pub mod greeter_proto {
     tonic::include_proto!("communication"); // proto package
 }
 
@@ -8,8 +7,7 @@ use greeter_proto::{greeter_client::GreeterClient,
                     HelloResponse};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client: GreeterClient<tonic::transport::Channel> =
         GreeterClient::connect("http://[::1]:50051").await
                                                     .unwrap();

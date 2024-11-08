@@ -7,15 +7,13 @@ use std::net::SocketAddr;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct Args
-{
+struct Args {
     #[arg(short, long, default_value_t = 8080)]
     port: u16,
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     println!("Starting server on port {}", args.port);

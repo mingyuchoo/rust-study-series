@@ -1,5 +1,4 @@
-pub fn call1()
-{
+pub fn call1() {
     let num = Some(4);
 
     match num {
@@ -9,8 +8,7 @@ pub fn call1()
     }
 }
 
-pub fn call2()
-{
+pub fn call2() {
     let x = Some(5);
     let y = 10;
 
@@ -23,8 +21,7 @@ pub fn call2()
     println!("result: x={x:?}, y={y:?}");
 }
 
-pub fn call3()
-{
+pub fn call3() {
     let x = 4;
     let y = false;
 

@@ -2,8 +2,7 @@ use std::{sync::{Arc,
                  Mutex},
           thread};
 
-pub fn call1() -> Result<(), std::io::Error>
-{
+pub fn call1() -> Result<(), std::io::Error> {
     let counter = Arc::new(Mutex::new(0));
     let mut handles = vec![];
 

@@ -2,8 +2,7 @@ use eframe::egui;
 use egui_extras;
 use env_logger;
 
-fn main() -> eframe::Result
-{
+fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options =
         eframe::NativeOptions { viewport:
@@ -19,27 +18,22 @@ fn main() -> eframe::Result
                        }))
 }
 
-struct MyApp
-{
+struct MyApp {
     name: String,
     age:  u32,
 }
 
-impl Default for MyApp
-{
-    fn default() -> Self
-    {
+impl Default for MyApp {
+    fn default() -> Self {
         Self { name: "Choo".to_owned(),
                age:  42, }
     }
 }
 
-impl eframe::App for MyApp
-{
+impl eframe::App for MyApp {
     fn update(&mut self,
               ctx: &egui::Context,
-              _frame: &mut eframe::Frame)
-    {
+              _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("My egui Application");
             ui.horizontal(|ui| {

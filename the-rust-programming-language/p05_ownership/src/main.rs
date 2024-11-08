@@ -4,8 +4,7 @@ mod reference_and_borrow;
 mod slice_type;
 mod variable_scope;
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     variable_scope::scope();
 
     complex_data_type::string_type();

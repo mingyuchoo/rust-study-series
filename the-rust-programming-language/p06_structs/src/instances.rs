@@ -1,16 +1,14 @@
 /// struct is similar to data type in Haskell
 struct Color(i32, i32, i32);
 struct Point(i32, i32, i32);
-struct User
-{
+struct User {
     username:      String,
     email:         String,
     sign_in_count: u64,
     active:        bool,
 }
 
-pub fn create_instance()
-{
+pub fn create_instance() {
     println!("-- create_instance()");
 
     let mut user1 = User { username:      String::from("someusername123"),
@@ -32,8 +30,7 @@ pub fn create_instance()
 
 fn build_user(email: String,
               username: String)
-              -> User
-{
+              -> User {
     User { email,    // field init shorthand syntax
            username, // field init shorthand syntax
            active: true,

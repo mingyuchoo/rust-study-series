@@ -1,11 +1,6 @@
-pub fn call1()
-{
-    enum Message
-    {
-        Hello
-        {
-            id: i32,
-        },
+pub fn call1() {
+    enum Message {
+        Hello { id: i32, },
     }
 
     let msg = Message::Hello { id: 5, };

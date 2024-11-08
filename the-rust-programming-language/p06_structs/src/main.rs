@@ -2,8 +2,7 @@ mod example;
 mod instances;
 mod methods;
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     instances::create_instance();
 
     example::program1();

@@ -1,5 +1,4 @@
-pub fn call1()
-{
+pub fn call1() {
     let x = 1;
     match x {
         | 1 => println!("one"),
@@ -10,8 +9,7 @@ pub fn call1()
     }
 }
 
-pub fn call2()
-{
+pub fn call2() {
     let x = Some(5);
     let y = 10;
 
@@ -24,8 +22,7 @@ pub fn call2()
     println!("result: x= {x:?}, y = {y:?}");
 }
 
-pub fn call3()
-{
+pub fn call3() {
     let x = 1;
 
     match x {
@@ -35,8 +32,7 @@ pub fn call3()
     }
 }
 
-pub fn call4()
-{
+pub fn call4() {
     let x = 5;
 
     match x {
@@ -45,8 +41,7 @@ pub fn call4()
     }
 }
 
-pub fn call5()
-{
+pub fn call5() {
     let x = 'c';
 
     match x {
@@ -56,14 +51,12 @@ pub fn call5()
     }
 }
 
-struct Point
-{
+struct Point {
     x: i32,
     y: i32,
 }
 
-pub fn call6()
-{
+pub fn call6() {
     let p = Point { x: 0, y: 7, };
     let Point { x: a, y: b, } = p;
 
@@ -71,8 +64,7 @@ pub fn call6()
     assert_eq!(7, b);
 }
 
-pub fn call7()
-{
+pub fn call7() {
     let p = Point { x: 0, y: 7, };
     let Point { x, y, } = p;
 
@@ -80,26 +72,19 @@ pub fn call7()
     assert_eq!(7, y);
 }
 
-enum Color
-{
+enum Color {
     Rgb(i32, i32, i32),
     Hsv(i32, i32, i32),
 }
 
-enum Message
-{
+enum Message {
     Quit,
-    Move
-    {
-        x: i32,
-        y: i32,
-    },
+    Move { x: i32, y: i32, },
     Write(String),
     ChangeColor(Color),
 }
 
-pub fn call8()
-{
+pub fn call8() {
     let msg = Message::ChangeColor(Color::Hsv(0, 160, 255));
     match msg {
         | Message::ChangeColor(Color::Rgb(r, g, b)) => {

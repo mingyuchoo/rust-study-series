@@ -1,8 +1,7 @@
 use super::StatusCode;
 
 #[derive(Debug)]
-pub struct Response
-{
+pub struct Response {
     status_code: StatusCode,
     body:        Option<String>,
 }
@@ -10,12 +9,10 @@ pub struct Response
 use std::io::{Result as IoResult,
               Write};
 
-impl Response
-{
+impl Response {
     pub fn new(status_code: StatusCode,
                body: Option<String>)
-               -> Self
-    {
+               -> Self {
         Self { status_code, body }
     }
 
@@ -23,8 +20,7 @@ impl Response
     /// impl: Static Dispatch
     pub fn send(&self,
                 stream: &mut impl Write)
-                -> IoResult<()>
-    {
+                -> IoResult<()> {
         let body = match &self.body {
             | Some(b) => b,
             | None => "",

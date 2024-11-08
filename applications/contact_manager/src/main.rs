@@ -8,28 +8,23 @@ use structopt::StructOpt;
 use thiserror::Error;
 
 #[derive(Debug)]
-struct Record
-{
+struct Record {
     id:    i64,
     name:  String,
     email: Option<String>,
 }
 
-struct Records
-{
+struct Records {
     inner: HashMap<i64, Record>,
 }
 
-impl Records
-{
-    fn new() -> Self
-    {
+impl Records {
+    fn new() -> Self {
         Self { inner: HashMap::new(), }
     }
 
     fn add(&mut self,
-           record: Record)
-    {
+           record: Record) {
         self.inner
             .insert(record.id, record);
     }
@@ -37,8 +32,7 @@ impl Records
     fn edit(&mut self,
             id: i64,
             name: &str,
-            email: Option<String>)
-    {
+            email: Option<String>) {
         self.inner
             .insert(id,
                     Record { id,
@@ -46,8 +40,7 @@ impl Records
                              email });
     }
 
-    fn into_vec(mut self) -> Vec<Record>
-    {
+    fn into_vec(mut self) -> Vec<Record> {
         let mut records: Vec<_> = self.inner
                                       .drain()
                                       .map(|kv| kv.1)
@@ -58,8 +51,7 @@ impl Records
         records
     }
 
-    fn next_id(&self) -> i64
-    {
+    fn next_id(&self) -> i64 {
         let mut ids: Vec<_> = self.inner
                                   .keys()
                                   .collect();
@@ -74,8 +66,7 @@ impl Records
 
     fn search(&self,
               name: &str)
-              -> Vec<&Record>
-    {
+              -> Vec<&Record> {
         self.inner
             .values()
             .filter(|record| {
@@ -88,16 +79,14 @@ impl Records
 
     fn remove(&mut self,
               id: i64)
-              -> Option<Record>
-    {
+              -> Option<Record> {
         self.inner
             .remove(&id)
     }
 }
 
 #[derive(Debug, Error)]
-enum ParseError
-{
+enum ParseError {
     #[error("id must be a number: {0}")]
     InvalidId(#[from] std::num::ParseIntError),
 
@@ -110,8 +99,7 @@ enum ParseError
 
 #[derive(Debug, StructOpt)]
 #[structopt(about = "project: contact manager")]
-struct Opt
-{
+struct Opt {
     #[structopt(short, parse(from_os_str), default_value = "data.csv")]
     data_file: PathBuf,
 
@@ -123,34 +111,28 @@ struct Opt
 }
 
 #[derive(Debug, StructOpt)]
-enum Command
-{
-    Add
-    {
+enum Command {
+    Add {
         name:  String,
         #[structopt(short)]
         email: Option<String>,
     },
-    Edit
-    {
+    Edit {
         id:    i64,
         name:  String,
         #[structopt(short)]
         email: Option<String>,
     },
     List {},
-    Remove
-    {
+    Remove {
         id: i64,
     },
-    Search
-    {
+    Search {
         query: String,
     },
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let opt = Opt::from_args();
     if let Err(e) = run(opt) {
         println!("an error occurred: {}", e);
@@ -159,8 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
-fn run(opt: Opt) -> Result<(), std::io::Error>
-{
+fn run(opt: Opt) -> Result<(), std::io::Error> {
     match opt.cmd {
         | Command::Add { name, email, } => {
             let mut records = load_records(opt.data_file
@@ -215,8 +196,7 @@ fn run(opt: Opt) -> Result<(), std::io::Error>
 
 fn load_records(file_name: PathBuf,
                 verbose: bool)
-                -> std::io::Result<Records>
-{
+                -> std::io::Result<Records> {
     let mut file = File::open(file_name)?;
     let mut buffer = String::new();
 
@@ -227,8 +207,7 @@ fn load_records(file_name: PathBuf,
 
 fn parse_records(records: String,
                  verbose: bool)
-                 -> Records
-{
+                 -> Records {
     let mut new_records = Records::new();
 
     for (num, record) in records.split('\n')
@@ -251,8 +230,7 @@ fn parse_records(records: String,
     new_records
 }
 
-fn parse_record(record: &str) -> Result<Record, ParseError>
-{
+fn parse_record(record: &str) -> Result<Record, ParseError> {
     let fields: Vec<&str> = record.split(',')
                                   .collect();
 
@@ -277,8 +255,7 @@ fn parse_record(record: &str) -> Result<Record, ParseError>
 
 fn save_records(file_name: PathBuf,
                 records: Records)
-                -> std::io::Result<()>
-{
+                -> std::io::Result<()> {
     let mut file = OpenOptions::new().write(true)
                                      .truncate(true)
                                      .open(file_name)?;

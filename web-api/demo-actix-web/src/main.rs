@@ -10,32 +10,27 @@ use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct Args
-{
+struct Args {
     #[arg(short, long, default_value_t = 8080)]
     port: u16,
 }
 
 #[get("/")]
-async fn hello() -> impl Responder
-{
+async fn hello() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
 #[post("/echo")]
-async fn echo(req_body: String) -> impl Responder
-{
+async fn echo(req_body: String) -> impl Responder {
     HttpResponse::Ok().body(req_body)
 }
 
-async fn manual_hello() -> impl Responder
-{
+async fn manual_hello() -> impl Responder {
     HttpResponse::Ok().body("Hey there!")
 }
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()>
-{
+async fn main() -> std::io::Result<()> {
     let args = Args::parse();
 
     println!("Starting server on port {}", args.port);

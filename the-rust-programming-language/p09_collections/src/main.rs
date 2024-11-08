@@ -2,8 +2,7 @@ mod hash_maps;
 mod strings;
 mod vectors;
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     vectors::call1();
 
     strings::call1();

@@ -1,8 +1,7 @@
 use std::{sync::mpsc,
           thread};
 
-pub fn call1() -> Result<(), std::io::Error>
-{
+pub fn call1() -> Result<(), std::io::Error> {
     let (tx, rx) = mpsc::channel();
 
     thread::spawn(move || {

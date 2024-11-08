@@ -1,5 +1,4 @@
-pub fn call1()
-{
+pub fn call1() {
     let v1: Vec<i32> = Vec::new();
     let v2 = vec![1, 2, 3, 4, 5];
 
@@ -27,10 +26,8 @@ pub fn call1()
     }
 }
 
-pub fn call2()
-{
-    enum SpreadsheetCell
-    {
+pub fn call2() {
+    enum SpreadsheetCell {
         Int(i32),
         Float(f64),
         Text(String),

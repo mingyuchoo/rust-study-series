@@ -5,8 +5,7 @@ mod ex4;
 mod ex5;
 mod ex6;
 
-fn main() -> Result<(), std::io::Error>
-{
+fn main() -> Result<(), std::io::Error> {
     ex1::call1().expect("panicked!");
     ex2::call1().expect("panicked!");
     ex3::call1().expect("panicked!");

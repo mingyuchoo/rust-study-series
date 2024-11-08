@@ -1,8 +1,7 @@
 use std::{thread,
           time::Duration};
 
-pub fn call1() -> Result<(), std::io::Error>
-{
+pub fn call1() -> Result<(), std::io::Error> {
     let handle = thread::spawn(|| {
         for i in 1 .. 10 {
             println!("새 스레드: {i}");

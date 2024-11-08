@@ -1,5 +1,4 @@
-pub fn get_first_word()
-{
+pub fn get_first_word() {
     println!("-- get_first_word()");
 
     let s: String = String::from("hello world");
@@ -9,8 +8,7 @@ pub fn get_first_word()
 
     println!("the first word is: {word}");
 
-    fn first_word(s: &String) -> usize
-    {
+    fn first_word(s: &String) -> usize {
         let bytes: &[u8] = s.as_bytes();
         for (i, &item) in bytes.iter()
                                .enumerate()
@@ -22,8 +20,7 @@ pub fn get_first_word()
         s.len()
     }
 
-    fn first_word_with_slices(s: &str) -> &str
-    {
+    fn first_word_with_slices(s: &str) -> &str {
         // &String == &str
         let bytes = s.as_bytes();
 
@@ -38,8 +35,7 @@ pub fn get_first_word()
     }
 }
 
-pub fn get_element_of_array()
-{
+pub fn get_element_of_array() {
     println!("-- get_element_of_array()");
 
     let a = [1, 2, 3, 4, 5];

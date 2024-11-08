@@ -3,36 +3,30 @@ use crate::http::{ParseError,
                   Response,
                   StatusCode};
 
-pub trait Handler
-{
+pub trait Handler {
     fn handle_request(&mut self,
                       request: &Request)
                       -> Response;
 
     fn handle_bad_request(&mut self,
                           e: &ParseError)
-                          -> Response
-    {
+                          -> Response {
         println!("Failed to parse request: {}", e);
         Response::new(StatusCode::BadRequest, None)
     }
 }
 
-pub struct Server
-{
+pub struct Server {
     addr: String,
 }
 
-impl Server
-{
-    pub fn new(addr: String) -> Self
-    {
+impl Server {
+    pub fn new(addr: String) -> Self {
         Self { addr }
     }
 
     pub fn run(self,
-               mut handler: impl Handler)
-    {
+               mut handler: impl Handler) {
         println!("Listening on {}", self.addr);
 
         use std::net::TcpListener;

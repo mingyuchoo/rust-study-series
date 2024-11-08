@@ -1,5 +1,4 @@
-pub fn call1()
-{
+pub fn call1() {
     let mut s1 = String::new();
     println!("{s1}");
 
@@ -15,8 +14,7 @@ pub fn call1()
     println!("{s4}");
 }
 
-pub fn call2()
-{
+pub fn call2() {
     let mut s1 = String::from("foo");
     s1.push_str("bar");
     println!("{s1}");
@@ -30,8 +28,7 @@ pub fn call2()
     println!("s3:{s3}");
 }
 
-pub fn call3()
-{
+pub fn call3() {
     let s1 = String::from("Hello, ");
     let s2 = String::from("world!");
     let s3 = s1 + &s2;
@@ -43,8 +40,7 @@ pub fn call3()
     println!("{s3}");
 }
 
-pub fn call4()
-{
+pub fn call4() {
     let s1 = String::from("tic");
     let s2 = String::from("tac");
     let s3 = String::from("toe");
@@ -65,8 +61,7 @@ pub fn call4()
     println!("{s5}");
 }
 
-pub fn call5()
-{
+pub fn call5() {
     let s1 = String::from("hello");
     // let h = s1[0];
 
@@ -81,8 +76,7 @@ pub fn call5()
     println!("s2: {s2}");
 }
 
-pub fn call6()
-{
+pub fn call6() {
     for c in "안녕하세요".chars() {
         println!("{c}");
     }

@@ -4,13 +4,13 @@ use aws_sdk_s3::{primitives::ByteStream,
                  types::{BucketLocationConstraint,
                          CreateBucketConfiguration},
                  Client};
-use std::error::Error;
 use std::{env,
-          path::Path, str::FromStr};
+          error::Error,
+          path::Path,
+          str::FromStr};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>>
-{
+async fn main() -> Result<(), Box<dyn Error>> {
     let arguments: Vec<String> = env::args().collect();
     if arguments.len() != 4 {
         eprintln!("Usage {} <region> <bucket_name> <file_path>",
@@ -41,12 +41,14 @@ async fn main() -> Result<(), Box<dyn Error>>
 async fn create_bucket(client: &Client,
                        region: &String,
                        bucket_name: &str)
-                       -> Result<(), Box<dyn Error>>
-{
+                       -> Result<(), Box<dyn Error>> {
     println!("Creating S3 bucket: {}", bucket_name);
 
     let location =
-        BucketLocationConstraint::from_str(region).map_err(|_| format!("Invalid location constraint: {}", region))?;
+        BucketLocationConstraint::from_str(region).map_err(|_| {
+                                                      format!("Invalid location constraint: {}",
+                                                              region)
+                                                  })?;
 
     let config = create_bucket_config(location);
 
@@ -62,8 +64,7 @@ async fn create_bucket(client: &Client,
 async fn upload_file(client: &Client,
                      bucket_name: &str,
                      file_path: &Path)
-                     -> Result<(), Box<dyn Error>>
-{
+                     -> Result<(), Box<dyn Error>> {
     let file_name = file_path.file_name()
                              .and_then(|name| name.to_str())
                              .ok_or_else(|| anyhow::anyhow!("Invalid file name"))?;
@@ -81,8 +82,7 @@ async fn upload_file(client: &Client,
     Ok(())
 }
 
-fn create_bucket_config(location: BucketLocationConstraint) -> CreateBucketConfiguration
-{
+fn create_bucket_config(location: BucketLocationConstraint) -> CreateBucketConfiguration {
     CreateBucketConfiguration::builder().location_constraint(location)
                                         .build()
 }

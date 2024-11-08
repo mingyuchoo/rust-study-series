@@ -5,8 +5,7 @@ use rdkafka::{producer::{BaseProducer,
                          BaseRecord},
               ClientConfig};
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let producer: BaseProducer = ClientConfig::new().set("bootstrap.servers", "localhost:9092")
                                                     .create()
                                                     .expect("invalid producer config");

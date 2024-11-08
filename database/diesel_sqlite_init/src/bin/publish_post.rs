@@ -1,8 +1,7 @@
 use diesel_sqlite_init::*;
 use std::env::args;
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let id = args().nth(1)
                    .expect("publish a post requires ID")
                    .parse::<i32>()

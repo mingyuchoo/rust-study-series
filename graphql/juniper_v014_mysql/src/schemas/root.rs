@@ -14,8 +14,7 @@ use super::{product::{Product,
             user::{User,
                    UserInput}};
 
-pub struct Context
-{
+pub struct Context {
     pub dbpool: DBPool,
 }
 
@@ -24,11 +23,9 @@ impl juniper::Context for Context {}
 pub struct QueryRoot;
 
 #[juniper::object(Context = Context)]
-impl QueryRoot
-{
+impl QueryRoot {
     #[graphql(description = "List of all users")]
-    fn users(context: &Context) -> FieldResult<Vec<User>>
-    {
+    fn users(context: &Context) -> FieldResult<Vec<User>> {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
@@ -45,8 +42,7 @@ impl QueryRoot
     #[graphql(description = "Get Single user reference by user ID")]
     fn user(context: &Context,
             id: String)
-            -> FieldResult<User>
-    {
+            -> FieldResult<User> {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
@@ -64,8 +60,7 @@ impl QueryRoot
     }
 
     #[graphql(description = "List of all products")]
-    fn products(context: &Context) -> FieldResult<Vec<Product>>
-    {
+    fn products(context: &Context) -> FieldResult<Vec<Product>> {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
@@ -82,8 +77,7 @@ impl QueryRoot
     #[graphql(description = "Get Single product reference by product ID")]
     fn product(context: &Context,
                id: String)
-               -> FieldResult<Product>
-    {
+               -> FieldResult<Product> {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
@@ -106,13 +100,11 @@ impl QueryRoot
 pub struct MutationRoot;
 
 #[juniper::object(Context = Context)]
-impl MutationRoot
-{
+impl MutationRoot {
     #[graphql(description = "Create Single user")]
     fn create_user(context: &Context,
                    user: UserInput)
-                   -> FieldResult<User>
-    {
+                   -> FieldResult<User> {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
@@ -146,8 +138,7 @@ impl MutationRoot
     #[graphql(description = "Delete Single user")]
     fn delete_user(context: &Context,
                    user: UserInput)
-                   -> FieldResult<User>
-    {
+                   -> FieldResult<User> {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
@@ -176,8 +167,7 @@ impl MutationRoot
     #[graphql(description = "Create Single product")]
     fn create_product(context: &Context,
                       product: ProductInput)
-                      -> FieldResult<Product>
-    {
+                      -> FieldResult<Product> {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
@@ -214,8 +204,7 @@ impl MutationRoot
     #[graphql(description = "Delete Single product")]
     fn delete_product(context: &Context,
                       product: ProductInput)
-                      -> FieldResult<Product>
-    {
+                      -> FieldResult<Product> {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
@@ -248,7 +237,6 @@ impl MutationRoot
 
 pub type Schema = RootNode<'static, QueryRoot, MutationRoot>;
 
-pub fn create_schema() -> Schema
-{
+pub fn create_schema() -> Schema {
     Schema::new(QueryRoot, MutationRoot)
 }

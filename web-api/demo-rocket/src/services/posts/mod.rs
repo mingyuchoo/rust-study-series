@@ -13,8 +13,7 @@ use crate::{database,
 
 #[derive(Queryable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::posts)]
-pub struct Post
-{
+pub struct Post {
     pub id:        i32,
     pub title:     String,
     pub body:      String,
@@ -23,16 +22,14 @@ pub struct Post
 
 #[derive(Insertable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::posts)]
-pub struct NewPost
-{
+pub struct NewPost {
     pub title: String,
     pub body:  String,
 }
 
 pub type ServiceError = Debug<result::Error>;
 
-pub fn create_post(post: Json<NewPost>) -> Json<NewPost>
-{
+pub fn create_post(post: Json<NewPost>) -> Json<NewPost> {
     use schema::posts::dsl::posts;
     let mut connection = database::establish_connection_pg();
     let new_post = NewPost { title: post.title
@@ -47,8 +44,7 @@ pub fn create_post(post: Json<NewPost>) -> Json<NewPost>
 
 pub fn list_posts(offset: i64,
                   limit: i64)
-                  -> Vec<Post>
-{
+                  -> Vec<Post> {
     let connection: &mut PgConnection = &mut database::establish_connection_pg();
     schema::posts::dsl::posts.limit(limit)
                              .offset(offset)

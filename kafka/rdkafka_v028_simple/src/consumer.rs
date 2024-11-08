@@ -3,8 +3,7 @@ use rdkafka::{consumer::{BaseConsumer,
               ClientConfig,
               Message};
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let consumer: BaseConsumer = ClientConfig::new().set("bootstrap.servers", "localhost:9092")
                                                     .set("group.id", "my_group_id")
                                                     .create()

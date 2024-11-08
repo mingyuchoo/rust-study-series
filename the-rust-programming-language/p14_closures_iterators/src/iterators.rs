@@ -1,5 +1,4 @@
-pub fn call1()
-{
+pub fn call1() {
     let v1: Vec<i32> = vec![1, 2, 3];
     for val in v1.iter() {
         println!("값: {val}");
@@ -12,8 +11,7 @@ pub fn call1()
 }
 
 #[test]
-fn iterator_demonstration()
-{
+fn iterator_demonstration() {
     let v1: Vec<i32> = vec![1, 2, 3];
     let mut v1_iter: std::slice::Iter<'_, i32> = v1.iter();
 
@@ -24,8 +22,7 @@ fn iterator_demonstration()
 }
 
 #[test]
-fn iterator_sum()
-{
+fn iterator_sum() {
     let v1: Vec<i32> = vec![1, 2, 3];
     let v1_iter: std::slice::Iter<'_, i32> = v1.iter();
     let total: i32 = v1_iter.sum();
@@ -38,8 +35,7 @@ fn iterator_sum()
 }
 
 #[test]
-pub fn call2()
-{
+pub fn call2() {
     let v1: Vec<i32> = vec![1, 2, 3];
     let v2: Vec<_> = v1.iter()
                        .map(|x: &i32| x + 1)
@@ -49,24 +45,21 @@ pub fn call2()
 }
 
 #[derive(PartialEq, Debug)]
-struct Shoe
-{
+struct Shoe {
     size:  u32,
     style: String,
 }
 
 fn shoes_in_my_size(shoes: Vec<Shoe>,
                     shoe_size: u32)
-                    -> Vec<Shoe>
-{
+                    -> Vec<Shoe> {
     shoes.into_iter()
          .filter(|s: &Shoe| s.size == shoe_size)
          .collect()
 }
 
 #[test]
-fn filters_by_size()
-{
+fn filters_by_size() {
     let shoes: Vec<Shoe> = vec![Shoe { size:  10,
                                        style: String::from("스니커즈"), },
                                 Shoe { size:  13,
@@ -83,25 +76,20 @@ fn filters_by_size()
                            style: String::from("부츠"), },]);
 }
 
-struct Counter
-{
+struct Counter {
     count: u32,
 }
 
-impl Counter
-{
-    fn new() -> Counter
-    {
+impl Counter {
+    fn new() -> Counter {
         Counter { count: 0, }
     }
 }
 
-impl Iterator for Counter
-{
+impl Iterator for Counter {
     type Item = u32;
 
-    fn next(&mut self) -> Option<Self::Item>
-    {
+    fn next(&mut self) -> Option<Self::Item> {
         self.count += 1;
         if self.count < 6 {
             Some(self.count)
@@ -112,8 +100,7 @@ impl Iterator for Counter
 }
 
 #[test]
-fn calling_next_directly()
-{
+fn calling_next_directly() {
     let mut counter: Counter = Counter::new();
     assert_eq!(counter.next(), Some(1));
     assert_eq!(counter.next(), Some(2));
@@ -124,8 +111,7 @@ fn calling_next_directly()
 }
 
 #[test]
-fn using_other_iterator_trait_methods()
-{
+fn using_other_iterator_trait_methods() {
     let sum: u32 = Counter::new().zip(Counter::new().skip(1))
                                  .map(|(a, b)| a * b)
                                  .filter(|x: &u32| x % 3 == 0)

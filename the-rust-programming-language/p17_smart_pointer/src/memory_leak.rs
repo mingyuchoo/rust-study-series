@@ -5,16 +5,13 @@ use List::{Cons,
            Nil};
 
 #[derive(Debug)]
-enum List
-{
+enum List {
     Cons(i32, RefCell<Rc<List>>),
     Nil,
 }
 
-impl List
-{
-    fn tail(&self) -> Option<&RefCell<Rc<List>>>
-    {
+impl List {
+    fn tail(&self) -> Option<&RefCell<Rc<List>>> {
         match *self {
             | Cons(_, ref item) => Some(item),
             | Nil => None,
@@ -22,8 +19,7 @@ impl List
     }
 }
 
-pub fn call1()
-{
+pub fn call1() {
     let a = Rc::new(Cons(5, RefCell::new(Rc::new(Nil))));
 
     println!("a의 최초 rc 카운트 = {}", Rc::strong_count(&a));
@@ -44,15 +40,13 @@ pub fn call1()
 }
 
 #[derive(Debug)]
-struct Node
-{
+struct Node {
     value:    i32,
     parent:   RefCell<Weak<Node>>,
     children: RefCell<Vec<Rc<Node>>>,
 }
 
-pub fn call2()
-{
+pub fn call2() {
     let leaf = Rc::new(Node { value:    3,
                               parent:   RefCell::new(Weak::new()),
                               children: RefCell::new(vec![]), });

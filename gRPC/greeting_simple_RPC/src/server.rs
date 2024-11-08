@@ -4,8 +4,7 @@ use tonic::{transport::Server,
             Response,
             Status};
 
-pub mod greeter_proto
-{
+pub mod greeter_proto {
     tonic::include_proto!("communication"); // proto package
 }
 
@@ -19,13 +18,11 @@ pub struct MyGreeter {}
 
 // Proto Service
 #[tonic::async_trait]
-impl Greeter for MyGreeter
-{
+impl Greeter for MyGreeter {
     // Proto Service rpc
     async fn say_hello(&self,
                        request: Request<HelloRequest>)
-                       -> Result<Response<HelloResponse>, Status>
-    {
+                       -> Result<Response<HelloResponse>, Status> {
         println!("Got a request from {:?}", request.remote_addr());
 
         let response: HelloResponse = HelloResponse { message: format!("Hello {}!",
@@ -37,8 +34,7 @@ impl Greeter for MyGreeter
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr: SocketAddr = "[::1]:50051".parse()
                                         .unwrap();
 

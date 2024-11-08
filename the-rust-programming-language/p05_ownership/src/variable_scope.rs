@@ -1,5 +1,4 @@
-pub fn scope()
-{
+pub fn scope() {
     println!("-- scope()");
 
     let s = "hello";

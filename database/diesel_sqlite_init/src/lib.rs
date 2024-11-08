@@ -7,8 +7,7 @@ use models::{NewPost,
              Post};
 use std::env;
 
-pub fn establish_connection() -> SqliteConnection
-{
+pub fn establish_connection() -> SqliteConnection {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
@@ -20,8 +19,7 @@ pub fn establish_connection() -> SqliteConnection
 pub fn create_post(connection: &mut SqliteConnection,
                    title: &str,
                    body: &str)
-                   -> Result<Post, diesel::result::Error>
-{
+                   -> Result<Post, diesel::result::Error> {
     // use self::schema::posts;
     use self::schema::posts::dsl::posts;
 
@@ -35,8 +33,7 @@ pub fn create_post(connection: &mut SqliteConnection,
 
 pub fn select_post(connection: &mut SqliteConnection,
                    is_published: bool)
-                   -> Result<Vec<Post>, diesel::result::Error>
-{
+                   -> Result<Vec<Post>, diesel::result::Error> {
     use self::schema::posts::dsl::{posts,
                                    published};
 
@@ -48,8 +45,7 @@ pub fn select_post(connection: &mut SqliteConnection,
 
 pub fn update_post(connection: &mut SqliteConnection,
                    id: i32)
-                   -> Result<Post, diesel::result::Error>
-{
+                   -> Result<Post, diesel::result::Error> {
     use self::schema::posts::dsl::{posts,
                                    published};
 
@@ -60,8 +56,7 @@ pub fn update_post(connection: &mut SqliteConnection,
 
 pub fn delete_post(connection: &mut SqliteConnection,
                    id: i32)
-                   -> Result<usize, diesel::result::Error>
-{
+                   -> Result<usize, diesel::result::Error> {
     use self::schema::posts::dsl::posts;
 
     diesel::delete(posts.find(id)).execute(connection)

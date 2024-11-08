@@ -2,8 +2,7 @@ mod graphql_schema;
 use crate::graphql_schema::{create_schema,
                             Schema};
 
-async fn graphiql() -> actix_web::HttpResponse
-{
+async fn graphiql() -> actix_web::HttpResponse {
     actix_web::HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(
@@ -16,16 +15,14 @@ async fn graphiql() -> actix_web::HttpResponse
 
 async fn graphql(schema: actix_web::web::Data<Schema>,
                  req: async_graphql_actix_web::GraphQLRequest)
-                 -> async_graphql_actix_web::GraphQLResponse
-{
+                 -> async_graphql_actix_web::GraphQLResponse {
     schema.execute(req.into_inner())
           .await
           .into()
 }
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()>
-{
+async fn main() -> std::io::Result<()> {
     actix_web::HttpServer::new(move || {
         actix_web::App::new().app_data(actix_web::web::Data::new(create_schema()))
                              .route("/", actix_web::web::get().to(graphiql))

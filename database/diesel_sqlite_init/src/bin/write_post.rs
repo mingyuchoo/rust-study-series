@@ -2,8 +2,7 @@ use diesel_sqlite_init::*;
 use std::io::{stdin,
               Read};
 
-fn main() -> Result<(), Box<dyn std::error::Error>>
-{
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection = &mut establish_connection();
 
     println!("What would you like your title to be?");

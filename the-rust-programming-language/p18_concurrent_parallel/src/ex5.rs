@@ -2,8 +2,7 @@ use std::{sync::mpsc,
           thread,
           time::Duration};
 
-pub fn call1() -> Result<(), std::io::Error>
-{
+pub fn call1() -> Result<(), std::io::Error> {
     let (tx, rx) = mpsc::channel();
     let tx1 = mpsc::Sender::clone(&tx);
 
