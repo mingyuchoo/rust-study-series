@@ -27,5 +27,5 @@ fn main() -> ()
 #[cfg(not(windows))]
 const EOF: &str = "CTRL+D";
 
-#[cfg(window)]
+#[cfg(windows)]
 const EOF: &str = "CTRL+Z";

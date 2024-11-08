@@ -1,6 +1,6 @@
 [package]
 name = "diesel_postgres_init"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
 edition = "2021"
 
@@ -13,5 +13,5 @@ opt-level = 3
 debug = false
 
 [dependencies]
-diesel = { version = "2.1.4", features = ["postgres"] }
+diesel = { version = "2.2.4", features = ["postgres"] }
 dotenvy = "0.15.7"
