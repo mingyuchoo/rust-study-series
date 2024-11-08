@@ -1,24 +1,23 @@
 [package]
-name = "demo-rocket"
-version = "0.1.0"
-edition = "2021"
+  edition = "2021"
+  name    = "demo-rocket"
+  version = "0.1.0"
 
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [dependencies]
-askama_rocket = "0.12.0"
-dotenvy       = "0.15.7"
-askama               = { version = "0.12.1", features = ["config", "with-rocket", "mime", "mime_guess"] }
-diesel               = { version = "2.2.4",   features = ["postgres", "r2d2"] }
-rocket               = { version = "0.5.1",   features = ["json", "secrets"] }
-serde                = { version = "1.0.214", features = ["derive"] }
+  askama        = {version = "0.12.1", features = ["config", "mime", "mime_guess", "with-rocket"]}
+  askama_rocket = "0.12.0"
+  diesel        = {version = "2.2.4", features = ["postgres", "r2d2"]}
+  dotenvy       = "0.15.7"
+  rocket        = {version = "0.5.1", features = ["json", "secrets"]}
+  serde         = {version = "1.0.214", features = ["derive"]}
 
 [build-dependencies]
-npm_rs = "1.0.0"
-
+  npm_rs = "1.0.0"

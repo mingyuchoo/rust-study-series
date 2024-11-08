@@ -1,21 +1,21 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "contact_manager"
-version = "0.1.0"
-authors = ["Mingyu choo <mingyuchoo@gmail.com"]
-edition = "2021"
+  authors = ["Mingyu choo <mingyuchoo@gmail.com"]
+  edition = "2021"
+  name    = "contact_manager"
+  version = "0.1.0"
 
 [dependencies]
-structopt = "0.3.26"
-thiserror = "2.0.0"
+  structopt = "0.3.26"
+  thiserror = "2.0.0"
 
 [[bin]]
-name = "contact_manager"
-path = "src/main.rs"
+  name = "contact_manager"
+  path = "src/main.rs"

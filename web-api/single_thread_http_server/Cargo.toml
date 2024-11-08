@@ -1,15 +1,15 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "single_thread_http_server"
-version = "0.1.0"
-edition = "2021"
+  edition = "2021"
+  name    = "single_thread_http_server"
+  version = "0.1.0"
 
 
 [dependencies]

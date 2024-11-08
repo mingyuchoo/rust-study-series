@@ -1,18 +1,18 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "mysql_mysql_init"
-version = "0.1.0"
-authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2021"
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "mysql_mysql_init"
+  version = "0.1.0"
 
 
 [dependencies]
-dotenv = "0.15.0"
-mysql = "25.0.1"
+  dotenv = "0.15.0"
+  mysql  = "25.0.1"

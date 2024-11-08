@@ -1,8 +1,8 @@
 [package]
-name = "demo-actix-web"
-version = "0.1.0"
-edition = "2021"
+  edition = "2021"
+  name    = "demo-actix-web"
+  version = "0.1.0"
 
 [dependencies]
-actix-web = "4.9.0"
-clap = { version = "4.5.20", features = ["derive"] }
+  actix-web = "4.9.0"
+  clap      = {version = "4.5.20", features = ["derive"]}

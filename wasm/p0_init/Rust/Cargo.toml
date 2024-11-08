@@ -1,19 +1,19 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "rust"
-version = "0.1.0"
-authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2021"
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "rust"
+  version = "0.1.0"
 
 [lib]
-patch = "src/lib.rs"
-crate-type = ["cdylib"]
+  crate-type = ["cdylib"]
+  patch      = "src/lib.rs"
 
 [dependencies]

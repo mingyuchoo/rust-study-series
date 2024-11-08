@@ -1,9 +1,9 @@
 [package]
-name = "web_crawler"
-version = "0.1.0"
-edition = "2021"
+  edition = "2021"
+  name    = "web_crawler"
+  version = "0.1.0"
 
 [dependencies]
-reqwest = { version = "0.12.4", features = ["blocking", "json"] }
-select = "0.6.0"
-tokio = { version = "1.41.1", features = ["full"] }
+  reqwest = {version = "0.12.4", features = ["blocking", "json"]}
+  select  = "0.6.0"
+  tokio   = {version = "1.41.1", features = ["full"]}

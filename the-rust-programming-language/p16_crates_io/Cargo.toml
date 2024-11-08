@@ -1,12 +1,12 @@
 [workspace]
-members = [
-  "adder",
-  "add_one",
-  "art",
-]
+  members = [
+    "add_one",
+    "adder",
+    "art",
+  ]
 
 [profile.dev]
-opt-level = 0
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
+  opt-level = 3

@@ -3,34 +3,34 @@
 version = 0.1
 
 [default]
-[default.global.parameters]
-stack_name = "rust-sam-app"
+  [default.global.parameters]
+    stack_name = "rust-sam-app"
 
-[default.build.parameters]
-cached = true
-parallel = true
-beta_features = true
+  [default.build.parameters]
+    beta_features = true
+    cached        = true
+    parallel      = true
 
-[default.validate.parameters]
-lint = true
+  [default.validate.parameters]
+    lint = true
 
-[default.deploy.parameters]
-capabilities = "CAPABILITY_IAM"
-confirm_changeset = true
-resolve_s3 = true
-s3_prefix = "rust-sam-app"
-region = "ap-northeast-2"
-image_repositories = []
+  [default.deploy.parameters]
+    capabilities       = "CAPABILITY_IAM"
+    confirm_changeset  = true
+    image_repositories = []
+    region             = "ap-northeast-2"
+    resolve_s3         = true
+    s3_prefix          = "rust-sam-app"
 
-[default.package.parameters]
-resolve_s3 = true
+  [default.package.parameters]
+    resolve_s3 = true
 
-[default.sync.parameters]
-watch = true
-beta_features = true
+  [default.sync.parameters]
+    beta_features = true
+    watch         = true
 
-[default.local_start_api.parameters]
-warm_containers = "EAGER"
+  [default.local_start_api.parameters]
+    warm_containers = "EAGER"
 
-[default.local_start_lambda.parameters]
-warm_containers = "EAGER"
+  [default.local_start_lambda.parameters]
+    warm_containers = "EAGER"

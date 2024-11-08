@@ -1,16 +1,16 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "p03_guessing_game"
-version = "0.1.0"
-authors = ["mingyuchoo <mingyuchoo@gmail.com>"]
-edition = "2021"
+  authors = ["mingyuchoo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "p03_guessing_game"
+  version = "0.1.0"
 
 [dependencies]
-rand = "0.6.5"
+  rand = "0.6.5"

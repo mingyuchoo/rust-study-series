@@ -1,17 +1,17 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "check_date"
-version = "1.0.0"
-edition = "2021"
+  edition = "2021"
+  name    = "check_date"
+  version = "1.0.0"
 
 
 [dependencies]
-regex = "1.11.1"
-time = "0.3.36"
+  regex = "1.11.1"
+  time  = "0.3.36"

@@ -1,2 +1,2 @@
 [general]
-dirs = ["public/html"]
+  dirs = ["public/html"]

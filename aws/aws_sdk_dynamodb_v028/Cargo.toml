@@ -1,18 +1,18 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "aws_sdk_dynamodb_v028"
-version = "0.1.0"
-edition = "2021"
+  edition = "2021"
+  name    = "aws_sdk_dynamodb_v028"
+  version = "0.1.0"
 
 
 [dependencies]
-aws-config = "1.5.10"
-aws-sdk-dynamodb = "1.53.0"
-tokio = { version = "1.41.1", features = ["full"] }
+  aws-config       = "1.5.10"
+  aws-sdk-dynamodb = "1.53.0"
+  tokio            = {version = "1.41.1", features = ["full"]}

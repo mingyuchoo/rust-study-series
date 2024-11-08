@@ -1,20 +1,20 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "p20_custom_error_types"
-version = "0.1.0"
-edition = "2021"
+  edition = "2021"
+  name    = "p20_custom_error_types"
+  version = "0.1.0"
 
 
 [dependencies]
-thiserror = "2.0.0"
+  thiserror = "2.0.0"
 
 [[bin]]
-name = "main"
-path = "src/main.rs"
+  name = "main"
+  path = "src/main.rs"

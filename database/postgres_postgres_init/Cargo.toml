@@ -1,18 +1,18 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "postgres_postgres_init"
-version = "0.1.0"
-authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2021"
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "postgres_postgres_init"
+  version = "0.1.0"
 
 
 [dependencies]
-dotenv = "0.15.0"
-postgres = "0.19.9"
+  dotenv   = "0.15.0"
+  postgres = "0.19.9"

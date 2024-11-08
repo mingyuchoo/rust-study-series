@@ -1,18 +1,18 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "async_graphql_v5"
-version = "0.1.0"
-authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2021"
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "async_graphql_v5"
+  version = "0.1.0"
 
 [dependencies]
-async-graphql = "5.0"
-async-graphql-actix-web = "5.0"
-actix-web = "4.3"
+  actix-web               = "4.3"
+  async-graphql           = "5.0"
+  async-graphql-actix-web = "5.0"

@@ -1,18 +1,18 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "actix_sqlx_mysql"
-version = "0.1.0"
-authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2021"
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "actix_sqlx_mysql"
+  version = "0.1.0"
 
 
 [dependencies]
-actix-web = "4"
-sqlx = { version = "0.6", features = [ "runtime-actix-native-tls" , "mysql" ] }
+  actix-web = "4"
+  sqlx      = {version = "0.6", features = ["mysql", "runtime-actix-native-tls"]}

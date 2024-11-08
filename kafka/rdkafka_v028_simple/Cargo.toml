@@ -1,25 +1,25 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "rdkafka_v028_simple"
-version = "0.1.0"
-authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2021"
-build   = "build.rs"
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  build   = "build.rs"
+  edition = "2021"
+  name    = "rdkafka_v028_simple"
+  version = "0.1.0"
 
 [dependencies]
-rdkafka = { version = "0.32.2", features = ["cmake-build","ssl", "sasl"] }
+  rdkafka = {version = "0.32.2", features = ["cmake-build", "sasl", "ssl"]}
 
 [[bin]]
-name = "producer"
-path = "src/producer.rs"
+  name = "producer"
+  path = "src/producer.rs"
 
 [[bin]]
-name = "consumer"
-path = "src/consumer.rs"
+  name = "consumer"
+  path = "src/consumer.rs"

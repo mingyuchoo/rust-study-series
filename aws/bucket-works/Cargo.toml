@@ -1,10 +1,10 @@
 [package]
-name = "bucket-works"
-version = "0.1.0"
-edition = "2021"
+  edition = "2021"
+  name    = "bucket-works"
+  version = "0.1.0"
 
 [dependencies]
-anyhow = "1.0.93"
-aws-config = "1.5.9"
-aws-sdk-s3 = "1.60.0"
-tokio = { version = "1.41.1", features = ["full"] }
+  anyhow     = "1.0.93"
+  aws-config = "1.5.9"
+  aws-sdk-s3 = "1.60.0"
+  tokio      = {version = "1.41.1", features = ["full"]}

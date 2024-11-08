@@ -1,42 +1,42 @@
 [profile.dev]
-opt-level = 0
-debug = true
+  debug     = true
+  opt-level = 0
 
 [profile.release]
-opt-level = 3
-debug = false
+  debug     = false
+  opt-level = 3
 
 [package]
-name = "diesel_sqlite_init"
-version = "0.1.0"
-authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-edition = "2021"
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "diesel_sqlite_init"
+  version = "0.1.0"
 
 
 [dependencies]
-diesel = { version = "2.2.4", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
-dotenvy = "0.15.7"
+  diesel  = {version = "2.2.4", features = ["returning_clauses_for_sqlite_3_35", "sqlite"]}
+  dotenvy = "0.15.7"
 
-[dependencies.rusqlite]
-version = "0.29.0"
-features = ["bundled"]
-
-[[bin]]
-name = "show_posts"
-path = "src/bin/show_posts.rs"
+  [dependencies.rusqlite]
+    features = ["bundled"]
+    version  = "0.29.0"
 
 [[bin]]
-name = "show_drafts"
-path = "src/bin/show_drafts.rs"
+  name = "show_posts"
+  path = "src/bin/show_posts.rs"
 
 [[bin]]
-name = "write_post"
-path = "src/bin/write_post.rs"
+  name = "show_drafts"
+  path = "src/bin/show_drafts.rs"
 
 [[bin]]
-name = "publish_post"
-path = "src/bin/publish_post.rs"
+  name = "write_post"
+  path = "src/bin/write_post.rs"
 
 [[bin]]
-name = "delete_post"
-path = "src/bin/delete_post.rs"
+  name = "publish_post"
+  path = "src/bin/publish_post.rs"
+
+[[bin]]
+  name = "delete_post"
+  path = "src/bin/delete_post.rs"

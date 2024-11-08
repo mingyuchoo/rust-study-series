@@ -1,9 +1,9 @@
 [package]
-name = "demo-axum"
-version = "0.1.0"
-edition = "2021"
+  edition = "2021"
+  name    = "demo-axum"
+  version = "0.1.0"
 
 [dependencies]
-axum = "0.7.5"
-clap = { version = "4.5.20", features = ["derive"] }
-tokio = { version = "1.41.1", features = ["full"] }
+  axum  = "0.7.5"
+  clap  = {version = "4.5.20", features = ["derive"]}
+  tokio = {version = "1.41.1", features = ["full"]}

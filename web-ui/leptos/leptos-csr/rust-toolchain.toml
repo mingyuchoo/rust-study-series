@@ -1,12 +1,13 @@
 [toolchain]
-profile = "default"
-channel = "nightly"
-components = [ "rustfmt"
-             , "rust-src"
-             , "clippy"
-             , "rust-analyzer"
-             , "trunk"
-             , "cargo-leptos"
-             , "cargo-generate"
-             , "leptosfmt"
-             ] 
+  channel = "nightly"
+  components = [
+    "cargo-generate",
+    "cargo-leptos",
+    "clippy",
+    "leptosfmt",
+    "rust-analyzer",
+    "rust-src",
+    "rustfmt",
+    "trunk",
+  ]
+  profile = "default"
