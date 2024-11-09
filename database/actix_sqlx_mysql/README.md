@@ -10,7 +10,7 @@ cd {project-name}
 # README
 [dependencies]
 actix-web = "4"
-sqlx = { version = "0.6", features = [ "runtime-actix-native-tls" , "mysql" ] }
+sqlx = { version = "0.8.2", features = [ "runtime-actix-native-tls" , "mysql" ] }
 ```
 
 ## MySQL
