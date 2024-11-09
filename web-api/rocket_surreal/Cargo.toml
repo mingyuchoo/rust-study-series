@@ -1,0 +1,12 @@
+[package]
+name = "rocket_surreal"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+faker_rand = "0.1.1"
+rand = "0.8.5"
+rocket = { version = "0.5.1", features = ["json"] }
+serde = { version = "1.0.214", features = ["derive"] }
+surrealdb = "2.0.4"
+thiserror = "2.0.1"

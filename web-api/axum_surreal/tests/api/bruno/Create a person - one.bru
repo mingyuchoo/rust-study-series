@@ -1,0 +1,21 @@
+meta {
+  name: Create a person - one
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:8080/person/one
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Jone Doe"
+  }
+}
