@@ -2,8 +2,8 @@
 ## How to create project
 
 ```bash
-cargo new <project-name> --bin
-cd <project-name>
+cargo new {project-name} --bin
+cd {project-name}
 ```
 
 ```toml

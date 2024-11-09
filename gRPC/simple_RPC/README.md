@@ -1,7 +1,7 @@
 # README
 ```bash
-cargo new <project-name>
-cd <project-name>
+cargo new {project-name}
+cd {project-name}
 touch README.md
 mkdir proto
 cargo add tokio --features tokio/macros,rt-multi-thread

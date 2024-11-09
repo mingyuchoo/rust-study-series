@@ -2,8 +2,8 @@
 ## working process
 
 ```bash
-cargo new <project-name>
-cd <project-name>
+cargo new {project-name}
+cd {project-name}
 touch README.md
 mkdir proto data
 cargo add tokio --features tokio/macros,rt-multi-thread

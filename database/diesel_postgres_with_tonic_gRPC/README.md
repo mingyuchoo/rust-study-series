@@ -16,8 +16,8 @@ cargo install diesel_cli --no-default-features --features postgres
 ## Create a new Rust project
 
 ```bash
-cargo new <project_name> --lib
-cd <project_name>
+cargo new {project_name} --lib
+cd {project_name}
 ```
 
 ## Create a database environment file

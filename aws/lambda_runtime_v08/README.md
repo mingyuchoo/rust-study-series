@@ -29,7 +29,7 @@ add `cargo-lambda` to `/etc/nixos/configuration.nix`
 ```nix
 { config, pkgs, ... }:
 {
-    users.users.<username> = {
+    users.users.{username} = {
         packages = with pkgs; [
             cargo-lambda
         ]
