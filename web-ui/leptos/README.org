@@ -34,5 +34,125 @@
   cargo install
   trunk serve  # or `trunk serve --port 3000 --open`
 #+end_src
+** How to start a new project
+*** Creating a new project
+#+begin_src shell
+  cargo new {project_name}
+  cd {project_name}
+  touch Makefile.toml
+  touch rust-toolchain.toml
+  touch rustfmt.toml
+#+end_src
+Add =rust-toolchain.toml= contents below
+#+begin_src toml
+  [toolchain]
+    channel    = "nightly"
+    components = ["clippy", "rust-analyzer", "rust-src", "rustfmt"]
+    profile    = "default"
+#+end_src
+Add =rustfmt.toml= contents below
+#+begin_src toml
+  # Stable options
+  editon       = "2021"
+  max_width    = 80
+  # Unstable options
+  format_code_in_doc_comments = true
+  format_strings              = true
+  group_imports               = "One"
+  imports_granularity         = "Crate"
+#+end_src
+Add =Makefile.toml= contents below
+#+begin_src toml
+  [tasks.build]
+    args       = ["build"]
+    command    = "cargo"
+  [tasks.run]
+    args       = ["run"]
+    command    = "cargo"
+  [tasks.test]
+    args       = ["test"]
+    command    = "cargo"
+  [tasks.start]
+    args       = ["serve", "--port", "3000"]
+    command    = "trunk"
+  [tasks.default]
+    dependencies = [
+      "build",
+      "run",
+      "test",
+      "start",
+    ]
+#+end_src
+#+begin_src shell
+  cargo make
+  # or 
+  cargo make build
+  # or
+  cargo make run
+  # or
+  cargo make test
+#+end_src
+*** Adding crates for =Leptos=
+Add crates
+#+begin_src shell
+  cargo add leptos        --features=csr,nightly
+  cargo add leptos_meta   --features=csr,nightly
+  cargo add leptos_router --features=csr,nightly
+  cargo add console_error_panic_hook
+#+end_src
+*** Adding target for =Leptos=
+Add crates
+#+begin_src shell
+  rustup target add wasm32-unknown-unknown
+#+end_src
+*** Adding ~index.html~ file in ~$PROJECT_HOME~
+#+begin_src html
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <emta charset="utf-8"/>
+      <link data-trunk rel="rust" data-wasm-opt="z"/>
+      <link data-trunk rel="icon" type="image/ico" href="/public/favicon.ico"/>
+      <link data-trunk rel="tailwind-css" href="/style/tailwind.css"/>
+      <title>Leptos CSR</title>
+    </head>
+    <body>
+    </body>
+  </html>
+#+end_src
+*** Modify ~src/main.rs~ file
+#+begin_src rust
+  use leptos::*;
+  fn main() {
+    mount_to_body(|| view! {
+      <p>
+        "Hello, Leptos!"
+      </p>
+    })
+  }
+#+end_src
+*** Create directores and add files to them
+#+begin_src shell
+  mkdir public
+  cp {somewhere} public/
+  mkdir style
+  cp {somewhere} style/
+  touch tailwind.config.js
+#+end_src
+#+begin_src js
+  /** @type {import('tailwindcss').Config} */
+  module.exports = {
+    content: {
+      files: ["*.html", "./src/**/*/rs"],
+      transform: {
+        rs: (content) => content.replace(/(?:^|\s)class:/g, ' '),
+      },
+    },
+    theme: {
+      extend: {},
+    },
+    plugins: [],
+  }
+#+end_src
 ** References
 - [[brookjeynes.dev][https://brookjeynes.dev/posts/learning-leptos-part1/]]
