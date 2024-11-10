@@ -1,12 +1,113 @@
-use actix_web::{App, HttpServer};
 use std::sync::LazyLock;
 use surrealdb::{
     engine::remote::ws::{Client, Ws},
     opt::auth::Root,
     Surreal,
 };
+use actix_files::Files;
+use actix_surreal::app::*;
+use actix_web::*;
+use leptos::*;
+use leptos_actix::{generate_route_list, LeptosRoutes};
+
+
 
 static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
+
+
+#[derive(Debug)]
+enum AppError {
+    Surreal(surrealdb::Error),
+    Io(std::io::Error),
+}
+
+impl From<surrealdb::Error> for AppError {
+    fn from(err: surrealdb::Error) -> Self {
+        AppError::Surreal(err)
+    }
+}
+
+impl From<std::io::Error> for AppError {
+    fn from(err: std::io::Error) -> Self {
+        AppError::Io(err)
+    }
+}
+
+async fn setup_database() -> Result<(), AppError> {
+    DB.connect::<Ws>("localhost:8000").await?;
+    DB.signin(Root { username: "root", password: "root" }).await?;
+    DB.use_ns("namespace").use_db("database").await?;
+
+    DB.query(
+        "DEFINE TABLE person SCHEMALESS
+        PERMISSIONS FOR
+            CREATE, SELECT WHERE $auth,
+            FOR UPDATE, DELETE WHERE created_by = $auth;
+        DEFINE FIELD name ON TABLE person TYPE string;
+        DEFINE FIELD created_by ON TABLE person VALUE $auth READONLY;
+        DEFINE INDEX unique_name ON TABLE user FIELDS name UNIQUE;
+        DEFINE ACCESS account ON DATABASE TYPE RECORD
+        SIGNUP ( CREATE user SET name = $name, pass = crypto::argon2::generate($pass) )
+        SIGNIN ( SELECT * FROM user WHERE name = $name AND crypto::argon2::compare(pass, $pass) )
+        DURATION FOR TOKEN 15m, FOR SESSION 12h
+        ;",
+    )
+    .await?;
+
+    Ok(())
+}
+
+
+#[actix_web::main]
+async fn main() -> std::io::Result<()> {
+
+    let conf = get_configuration(None).await.unwrap();
+    let addr = conf.leptos_options.site_addr;
+    let routes = generate_route_list(App);
+    println!("listening on http://{}", &addr);
+
+    // SurrealDB 설정
+    if let Err(err) = setup_database().await {
+        eprintln!("Failed to set up database: {:?}", err);
+        return Err(std::io::Error::new(std::io::ErrorKind::Other, "Database setup failed"));
+    }
+
+    HttpServer::new(move || {
+        let leptos_options = &conf.leptos_options;
+        let site_root = &leptos_options.site_root;
+
+        App::new()
+            .service(Files::new("/pkg", format!("{site_root}/pkg")))
+            .service(Files::new("/assets", site_root))
+            .service(favicon)
+            .service(routes::create_person)
+            .service(routes::read_person)
+            .service(routes::update_person)
+            .service(routes::delete_person)
+            .service(routes::list_people)
+            .service(routes::paths)
+            .service(routes::session)
+            .service(routes::make_new_user)
+            .service(routes::get_new_token)
+            .leptos_routes(leptos_options.to_owned(), routes.to_owned(), App)
+            .app_data(web::Data::new(leptos_options.to_owned()))
+            .wrap(middleware::Compress::default())
+    })
+    .bind(&addr)?
+    .run()
+    .await
+}
+
+#[actix_web::get("favicon.ico")]
+async fn favicon(
+    leptos_options: actix_web::web::Data<leptos::LeptosOptions>,
+) -> actix_web::Result<actix_files::NamedFile> {
+    let leptos_options = leptos_options.into_inner();
+    let site_root = &leptos_options.site_root;
+    Ok(actix_files::NamedFile::open(format!(
+        "{site_root}/favicon.ico"
+    ))?)
+}
 
 mod error {
     use actix_web::{HttpResponse, ResponseError};
@@ -33,6 +134,7 @@ mod error {
         }
     }
 }
+
 
 mod routes {
 
@@ -66,10 +168,10 @@ mod routes {
 /session: See session data  |  curl -X GET    -H "Content-Type: application/json"                          http://localhost:8080/session
                             |
 /person/{id}:               |
-  Create a person           |  curl -X POST   -H "Content-Type: application/json" -d '{"name":"John Doe"}' http://localhost:8080/person/one
-  Get a person              |  curl -X GET    -H "Content-Type: application/json"                          http://localhost:8080/person/one
-  Update a person           |  curl -X PUT    -H "Content-Type: application/json" -d '{"name":"Jane Doe"}' http://localhost:8080/person/one
-  Delete a person           |  curl -X DELETE -H "Content-Type: application/json"                          http://localhost:8080/person/one
+Create a person           |  curl -X POST   -H "Content-Type: application/json" -d '{"name":"John Doe"}' http://localhost:8080/person/one
+Get a person              |  curl -X GET    -H "Content-Type: application/json"                          http://localhost:8080/person/one
+Update a person           |  curl -X PUT    -H "Content-Type: application/json" -d '{"name":"Jane Doe"}' http://localhost:8080/person/one
+Delete a person           |  curl -X DELETE -H "Content-Type: application/json"                          http://localhost:8080/person/one
                             |
 /people: List all people    |  curl -X GET    -H "Content-Type: application/json"                          http://localhost:8080/people
 
@@ -143,47 +245,4 @@ mod routes {
         let command = r#"curl -X POST -H "Accept: application/json" -d '{"ns":"namespace","db":"database","ac":"account","user":"your_username","pass":"your_password"}' http://localhost:8000/signin"#;
         format!("Need a new token? Use this command:\n\n{command}\n\nThen log in with surreal sql --namespace namespace --database database --pretty --token YOUR_TOKEN_HERE")
     }
-}
-
-#[actix_web::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    DB.connect::<Ws>("localhost:8000").await?;
-
-    DB.signin(Root { username: "root", password: "root" }).await?;
-
-    DB.use_ns("namespace").use_db("database").await?;
-
-    DB.query(
-        "DEFINE TABLE person SCHEMALESS
-            PERMISSIONS FOR 
-                CREATE, SELECT WHERE $auth,
-                FOR UPDATE, DELETE WHERE created_by = $auth;
-        DEFINE FIELD name ON TABLE person TYPE string;
-        DEFINE FIELD created_by ON TABLE person VALUE $auth READONLY;
-        DEFINE INDEX unique_name ON TABLE user FIELDS name UNIQUE;
-        DEFINE ACCESS account ON DATABASE TYPE RECORD
-        SIGNUP ( CREATE user SET name = $name, pass = crypto::argon2::generate($pass) )
-        SIGNIN ( SELECT * FROM user WHERE name = $name AND crypto::argon2::compare(pass, $pass) )
-        DURATION FOR TOKEN 15m, FOR SESSION 12h
-        ;",
-    )
-    .await?;
-
-    HttpServer::new(|| {
-        App::new()
-            .service(routes::create_person)
-            .service(routes::read_person)
-            .service(routes::update_person)
-            .service(routes::delete_person)
-            .service(routes::list_people)
-            .service(routes::paths)
-            .service(routes::session)
-            .service(routes::make_new_user)
-            .service(routes::get_new_token)
-    })
-    .bind(("localhost", 8080))?
-    .run()
-    .await?;
-
-    Ok(())
 }
