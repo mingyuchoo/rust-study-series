@@ -1,47 +1,60 @@
+use gloo_net::http::Request;
 use leptos::*;
-use gloo_timers::future::TimeoutFuture;
+use serde::Deserialize;
 
-async fn load_data(value: i32) -> i32 {
-    TimeoutFuture::new(1_000).await;
-    value * 10
+#[derive(Debug, Deserialize, Clone)]
+struct Todo {
+    userId:    u32,
+    id:        u32,
+    title:     String,
+    completed: bool,
 }
 
 #[component]
 pub fn Api() -> impl IntoView {
-    let (count, set_count) = create_signal(0);
-    let async_data = create_resource(
-        count,
-        |value| async move { load_data(value).await },
-    );
-    let stable = create_resource(|| (), |_| async move { load_data(1).await });
-    let async_result = move || {
-        async_data
-            .get()
-            .map(|value| format!("Server returned {value:?}"))
-            .unwrap_or_else(|| "Loading...".into())
-    };
-    let loading = async_data.loading();
-    let is_loading = move || if loading() { "Loading..." } else { "Idle." };
+    let (todos, set_todos) = create_signal(Vec::new());
+    let (loading, set_loading) = create_signal(false);
+    let fetch_todos = create_action(move |_: &()| async move {
+        set_loading.set(true);
+        let fetched_todos: Vec<Todo> =
+            Request::get("https://jsonplaceholder.typicode.com/todos").send()
+                                                                      .await
+                                                                      .unwrap()
+                                                                      .json()
+                                                                      .await
+                                                                      .unwrap();
+        set_loading.set(false);
+        fetched_todos
+    });
+
+    create_effect(move |_| {
+        if let Some(fetched_todos) = fetch_todos.value()
+                                                .get()
+        {
+            set_todos.set(fetched_todos);
+        }
+    });
 
     view! {
-        <button
-            on:click=move |_| {
-                set_count.update(|n| *n += 1);
+        <main>
+            <button on:click=move |_| fetch_todos.dispatch(())>
+                "Fetch Todos"
+            </button>
+            {move ||
+                if loading() {
+                    view! { <p>"Loading..."</p> }.into_any()
+                }else {
+                    view! {
+                        <ul>
+                            {move || todos().into_iter().map(|todo| view! {
+                                <li>
+                                    {format!("User ID: {}, Title: {}, Completed: {}", todo.userId, todo.title, todo.completed)}
+                                </li>
+                            }).collect::<Vec<_>>()}
+                        </ul>
+                    }.into_any()
+                }
             }
-        >
-            "Click me"
-        </button>
-        <p>
-            <code>"stable"</code>": " {move || stable.get()}
-        </p>
-        <p>
-            <code>"count"</code>": " {count}
-        </p>
-        <p>
-            <code>"async_value"</code>": "
-            {async_result}
-            <br/>
-            {is_loading}
-        </p>
+        </main>
     }
 }
