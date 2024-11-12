@@ -1,7 +1,7 @@
 [package]
   authors = ["my-name <my-email@address.com>"]
   edition = "2021"
-  name    = "my-api"
+  name    = "leptos-csr-extern-api"
   version = "0.1.0"
 
 [dependencies]
