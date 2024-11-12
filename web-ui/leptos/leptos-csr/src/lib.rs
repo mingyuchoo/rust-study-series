@@ -10,6 +10,7 @@ pub fn App() -> impl IntoView {
             <part1::dynamic_attributes::DynamicAttributes/>
             <part1::components_and_props::ComponentsAndProps/>
             <part1::iteration::Iteration/>
+            <part1::iteration_with_for::IterationWithFor/>
             <part2::typicode::Api/>
         }
     })

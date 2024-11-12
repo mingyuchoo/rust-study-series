@@ -7,7 +7,7 @@ struct DatabaseEntry {
 }
 
 #[component]
-pub fn App() -> impl IntoView {
+pub fn IterationWithFor() -> impl IntoView {
     let (data, set_data) =
         create_signal(vec![DatabaseEntry { key:   "foo".to_string(),
                                            value: 10, },
