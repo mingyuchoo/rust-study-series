@@ -1,14 +1,14 @@
-use std::{thread,
-          time::Duration};
-
 use rdkafka::{producer::{BaseProducer,
                          BaseRecord},
               ClientConfig};
+use std::{thread,
+          time::Duration};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let producer: BaseProducer = ClientConfig::new().set("bootstrap.servers", "localhost:9092")
-                                                    .create()
-                                                    .expect("invalid producer config");
+    let producer: BaseProducer =
+        ClientConfig::new().set("bootstrap.servers", "localhost:9092")
+                           .create()
+                           .expect("invalid producer config");
 
     for i in 1 .. 100 {
         println!("sending message");

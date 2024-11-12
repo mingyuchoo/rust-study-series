@@ -39,17 +39,24 @@ impl Server {
                     use std::io::Read;
                     match stream.read(&mut buffer) {
                         | Ok(_) => {
-                            println!("Received a request: {}", String::from_utf8_lossy(&buffer));
+                            println!("Received a request: {}",
+                                     String::from_utf8_lossy(&buffer));
 
-                            let response = match Request::try_from(&buffer[..]) {
-                                | Ok(request) => handler.handle_request(&request),
+                            let response = match Request::try_from(&buffer[..])
+                            {
+                                | Ok(request) => {
+                                    handler.handle_request(&request)
+                                },
                                 | Err(e) => handler.handle_bad_request(&e),
                             };
                             if let Err(e) = response.send(&mut stream) {
-                                println!("Failed to read from connection: {}", e);
+                                println!("Failed to read from connection: {}",
+                                         e);
                             }
                         },
-                        | Err(e) => println!("Failed to establish a connection: {}", e),
+                        | Err(e) => {
+                            println!("Failed to establish a connection: {}", e)
+                        },
                     }
                 },
                 | Err(e) => println!("Failed to establish a connection: {}", e),

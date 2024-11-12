@@ -1,9 +1,8 @@
-use std::{error::Error,
-          result::Result};
-
 use dotenv;
 use mysql::{prelude::*,
             *};
+use std::{error::Error,
+          result::Result};
 
 #[derive(Debug, PartialEq, Eq)]
 struct Payment {
@@ -27,21 +26,22 @@ fn main() -> Result<(), Box<dyn Error>> {
                     )
                     ")?;
 
-    let payments: Vec<Payment> = vec![Payment { customer_id:  1,
-                                                amount:       2,
-                                                account_name: None, },
-                                      Payment { customer_id:  3,
-                                                amount:       4,
-                                                account_name: Some("foo".into()), },
-                                      Payment { customer_id:  5,
-                                                amount:       6,
-                                                account_name: None, },
-                                      Payment { customer_id:  7,
-                                                amount:       8,
-                                                account_name: None, },
-                                      Payment { customer_id:  9,
-                                                amount:       10,
-                                                account_name: Some("bar".into()), },];
+    let payments: Vec<Payment> =
+        vec![Payment { customer_id:  1,
+                       amount:       2,
+                       account_name: None, },
+             Payment { customer_id:  3,
+                       amount:       4,
+                       account_name: Some("foo".into()), },
+             Payment { customer_id:  5,
+                       amount:       6,
+                       account_name: None, },
+             Payment { customer_id:  7,
+                       amount:       8,
+                       account_name: None, },
+             Payment { customer_id:  9,
+                       amount:       10,
+                       account_name: Some("bar".into()), },];
 
     conn.exec_batch(r"
                     INSERT INTO payment (customer_id, amount, account_name)

@@ -3,7 +3,6 @@ use super::{http::{Method,
                    Response,
                    StatusCode},
             server::Handler};
-
 use std::fs;
 
 pub struct WebsiteHandler {
@@ -25,7 +24,8 @@ impl WebsiteHandler {
                 if path.starts_with(&self.public_path) {
                     fs::read_to_string(path).ok()
                 } else {
-                    println!("Directory Traversal Attack Attempted: {}", file_path);
+                    println!("Directory Traversal Attack Attempted: {}",
+                             file_path);
                     None
                 }
             },
@@ -39,13 +39,19 @@ impl Handler for WebsiteHandler {
                       request: &Request)
                       -> Response {
         match request.method() {
-            | Method::GET => match request.path() {
-                | "/" => Response::new(StatusCode::Ok, self.read_file("index.html")),
-                | "/hello" => Response::new(StatusCode::Ok, self.read_file("hello.html")),
-                | path => match self.read_file(path) {
-                    | Some(contents) => Response::new(StatusCode::Ok, Some(contents)),
-                    | None => Response::new(StatusCode::NotFound, None),
-                },
+            | Method::GET => {
+                match request.path() {
+                    | "/" => Response::new(StatusCode::Ok,
+                                           self.read_file("index.html")),
+                    | "/hello" => Response::new(StatusCode::Ok,
+                                                self.read_file("hello.html")),
+                    | path => match self.read_file(path) {
+                        | Some(contents) => {
+                            Response::new(StatusCode::Ok, Some(contents))
+                        },
+                        | None => Response::new(StatusCode::NotFound, None),
+                    },
+                }
             },
             | _ => Response::new(StatusCode::NotFound, None),
         }

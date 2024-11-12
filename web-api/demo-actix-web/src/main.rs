@@ -5,7 +5,6 @@ use actix_web::{get,
                 HttpResponse,
                 HttpServer,
                 Responder};
-
 use clap::Parser;
 
 #[derive(Parser, Debug)]

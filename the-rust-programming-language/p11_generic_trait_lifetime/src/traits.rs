@@ -14,7 +14,8 @@ pub fn call1() {
 
     impl Summary for NewsArticle {
         fn summarize(&self) -> String {
-            format!("{}, by {}, ({})", self.headline, self.author, self.location)
+            format!("{}, by {}, ({})",
+                    self.headline, self.author, self.location)
         }
     }
 
@@ -32,7 +33,8 @@ pub fn call1() {
     }
 
     let tweet = Tweet { username: String::from("horse_ebooks"),
-                        content:  String::from("러스트 언어 공부를 시작했습니다."),
+                        content:  String::from("러스트 언어 공부를 \
+                                                시작했습니다."),
                         reply:    false,
                         retweet:  false, };
 
@@ -55,14 +57,14 @@ pub fn call2() {
 
     impl Summary for NewsArticle {}
 
-    let article = NewsArticle {
-        headline: String::from("대한민국, 러시아 월드컵 예선에서 독일을 이겼다."),
-        location: String::from("카잔 아레나, 러시아"),
-        author: String::from("위키백과"),
-        content: String::from(
-            "2018년 6월 27일 러시아 카잔의 카잔 아레나에서 열린 2018년 월드컵...",
-        ),
-    };
+    let article =
+        NewsArticle { headline: String::from("대한민국, 러시아 월드컵 \
+                                              예선에서 독일을 이겼다."),
+                      location: String::from("카잔 아레나, 러시아"),
+                      author:   String::from("위키백과"),
+                      content:  String::from("2018년 6월 27일 러시아 카잔의 \
+                                              카잔 아레나에서 열린 2018년 \
+                                              월드컵..."), };
 
     println!("새로운 기사: {}", article.summarize());
 }
@@ -89,7 +91,8 @@ pub fn call3() {
     }
 
     let tweet = Tweet { username: String::from("hourse_ebook"),
-                        content:  String::from("러스트 언어 공부를 시작했습니다."),
+                        content:  String::from("러스트 언어 공부를 \
+                                                시작했습니다."),
                         reply:    false,
                         retweet:  false, };
 

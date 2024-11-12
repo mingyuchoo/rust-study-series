@@ -1,3 +1,8 @@
+use super::{product::{Product,
+                      ProductInput},
+            user::{User,
+                   UserInput}};
+use crate::db::DBPool;
 use juniper::{FieldError,
               FieldResult,
               RootNode};
@@ -6,13 +11,6 @@ use mysql::{from_row,
             prelude::*,
             Error as DBError,
             Row};
-
-use crate::db::DBPool;
-
-use super::{product::{Product,
-                      ProductInput},
-            user::{User,
-                   UserInput}};
 
 pub struct Context {
     pub dbpool: DBPool,
@@ -29,11 +27,10 @@ impl QueryRoot {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
-        let users = conn.query_map("select id, name, email from user", |(id, name, email)| {
-                            User { id:    id,
-                                   name:  name,
-                                   email: email, }
-                        })
+        let users = conn.query_map("select id, name, email from user",
+                                   |(id, name, email)| User { id:    id,
+                                                              name:  name,
+                                                              email: email, })
                         .unwrap();
 
         Ok(users)
@@ -47,7 +44,8 @@ impl QueryRoot {
                               .get_conn()
                               .unwrap();
         let user: Result<Option<Row>, DBError> =
-            conn.exec_first("SELECT * FROM user WHERE id=:id", params! {"id" => id});
+            conn.exec_first("SELECT * FROM user WHERE id=:id",
+                            params! {"id" => id});
 
         if let Err(err) = user {
             return Err(FieldError::new("User Not Found",
@@ -64,13 +62,13 @@ impl QueryRoot {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
-        let products = conn.query_map("SELECT * FROM product", |(id, user_id, name, price)| {
-                               Product { id,
-                                         user_id,
-                                         name,
-                                         price }
-                           })
-                           .unwrap();
+        let products =
+            conn.query_map("SELECT * FROM product",
+                           |(id, user_id, name, price)| Product { id,
+                                                                  user_id,
+                                                                  name,
+                                                                  price })
+                .unwrap();
         Ok(products)
     }
 
@@ -82,7 +80,8 @@ impl QueryRoot {
                               .get_conn()
                               .unwrap();
         let product: Result<Option<Row>, DBError> =
-            conn.exec_first("SELECT * FROM product WHERE id=:id", params! {"id" => id});
+            conn.exec_first("SELECT * FROM product WHERE id=:id",
+                            params! {"id" => id});
         if let Err(err) = product {
             return Err(FieldError::new("Product Not Found",
                                        graphql_value!({ "not_found": "product not found" })));
@@ -112,7 +111,8 @@ impl MutationRoot {
                                          .to_string();
 
         let insert: Result<Option<Row>, DBError> =
-            conn.exec_first("INSERT INTO user(id, name, email) VALUES(:id, :name, :email)",
+            conn.exec_first("INSERT INTO user(id, name, email) VALUES(:id, \
+                             :name, :email)",
                             params! {
                                 "id" => &new_id,
                                 "name" => &user.name,
@@ -144,7 +144,8 @@ impl MutationRoot {
                               .unwrap();
 
         let delete: Result<Option<Row>, DBError> =
-            conn.exec_first("DELETE FROM user WHERE name = :name AND email = :email",
+            conn.exec_first("DELETE FROM user WHERE name = :name AND email = \
+                             :email",
                             params! {
                                 "name" => &user.name,
                                 "email" => &user.email,
@@ -174,15 +175,15 @@ impl MutationRoot {
         let new_id = uuid::Uuid::new_v4().to_simple()
                                          .to_string();
 
-        let insert: Result<Option<Row>, DBError> = conn.exec_first(
-            "INSERT INTO product(id, user_id, name, price) VALUES(:id, :user_id, :name, :price)",
-            params! {
-                "id" => &new_id,
-                "user_id" => &product.user_id,
-                "name" => &product.name,
-                "price" => &product.price.to_owned(),
-            },
-        );
+        let insert: Result<Option<Row>, DBError> =
+            conn.exec_first("INSERT INTO product(id, user_id, name, price) \
+                             VALUES(:id, :user_id, :name, :price)",
+                            params! {
+                                "id" => &new_id,
+                                "user_id" => &product.user_id,
+                                "name" => &product.name,
+                                "price" => &product.price.to_owned(),
+                            });
 
         match insert {
             | Ok(opt_row) => Ok(Product { id:      new_id,
@@ -209,14 +210,14 @@ impl MutationRoot {
                               .get_conn()
                               .unwrap();
 
-        let insert: Result<Option<Row>, DBError> = conn.exec_first(
-            "DELETE FROM product WHERE user_id = :user_id AND name = :name AND price = :price",
-            params! {
-                "user_id" => &product.user_id,
-                "name" => &product.name,
-                "price" => &product.price.to_owned(),
-            },
-        );
+        let insert: Result<Option<Row>, DBError> =
+            conn.exec_first("DELETE FROM product WHERE user_id = :user_id \
+                             AND name = :name AND price = :price",
+                            params! {
+                                "user_id" => &product.user_id,
+                                "name" => &product.name,
+                                "price" => &product.price.to_owned(),
+                            });
 
         match insert {
             | Ok(opt_row) => Ok(Product { id:      "".to_string(),

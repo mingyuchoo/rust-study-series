@@ -1,7 +1,6 @@
 use axum::{routing::{get,
                      post},
            Router};
-
 use clap::Parser;
 use std::net::SocketAddr;
 

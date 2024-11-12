@@ -106,8 +106,8 @@ pub fn call5() {
     let r = Point { x: 5.0, y: 10.0, };
 
     println!("p.x = {}, p.y = {}", p.x(), p.y());
-    // println!("p.distance_from_origin = {}", p.distance_from_origin()); // CAN NOT
-    // use this method for i32
+    // println!("p.distance_from_origin = {}", p.distance_from_origin()); // CAN
+    // NOT use this method for i32
 
     println!("r.x = {}, r.y = {}", r.x(), r.y());
     println!("r.distance_from_origin = {}", r.distance_from_origin());

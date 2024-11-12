@@ -1,9 +1,8 @@
+use crate::schemas::{root::Context,
+                     user::User};
 use mysql::{from_row,
             params,
             prelude::*};
-
-use crate::schemas::{root::Context,
-                     user::User};
 
 /// Product
 #[derive(Default, Debug)]

@@ -15,7 +15,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (tx, rx) = channel();
 
-    let mut watcher: RecommendedWatcher = Watcher::new(tx, Config::default()).unwrap();
+    let mut watcher: RecommendedWatcher =
+        Watcher::new(tx, Config::default()).unwrap();
     watcher.watch(repo_path, RecursiveMode::Recursive)
            .unwrap();
 

@@ -1,5 +1,4 @@
 use diesel_mysql_init::*;
-
 use std::io::{stdin,
               Read};
 

@@ -17,7 +17,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     stdin().read_to_string(&mut body)
            .unwrap();
 
-    let post = create_post(connection, title, &body).expect("Error saving new post");
+    let post =
+        create_post(connection, title, &body).expect("Error saving new post");
     println!("\nSaved draft {title} with ID: {}", post.id);
 
     Ok(())

@@ -31,12 +31,13 @@ impl ProductInfo for MyProductInfo {
     async fn get_product(&self,
                          request: Request<ProductId>)
                          -> Result<Response<Product>, Status> {
-        let response: Product = Product { id:          request.into_inner()
-                                                              .id,
-                                          name:        String::from("MacBook Air 15"),
-                                          description:
-                                              String::from("Impressively big. Impossibly thin."),
-                                          price:       1299.9, };
+        let response: Product =
+            Product { id:          request.into_inner()
+                                          .id,
+                      name:        String::from("MacBook Air 15"),
+                      description: String::from("Impressively big. \
+                                                 Impossibly thin."),
+                      price:       1299.9, };
 
         Ok(Response::new(response))
     }
