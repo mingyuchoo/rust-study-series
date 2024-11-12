@@ -1,15 +1,14 @@
 use leptos::*;
 
-mod part1;
+use leptos_tutorial::App;
 
-fn main()
-{
+fn main() {
+    _ = console_log::init_with_level(log::Level::Debug);
+    console_error_panic_hook::set_once();
+
     mount_to_body(|| {
         view! {
-            <part1::basic_component::BasicComponent/>
-            <part1::dynamic_attributes::DynamicAttributes/>
-            <part1::components_and_props::ComponentsAndProps/>
-            <part1::iteration::Iteration/>
+            <App/>
         }
     })
 }
