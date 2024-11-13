@@ -8,10 +8,11 @@ pub fn run(rx: Receiver<Result<Event, Error>>,
     loop {
         match rx.recv() {
             | Ok(Ok(event)) => {
-                let is_in_target_dir = event.paths
-                                            .iter()
-                                            .any(|path| {
-                                                path.strip_prefix(&repo_dir)
+                let is_in_target_dir =
+                 event.paths
+                      .iter()
+                      .any(|path| {
+                            path.strip_prefix(&repo_dir)
                             .ok()
                             .and_then(|p| {
                                 p.components()

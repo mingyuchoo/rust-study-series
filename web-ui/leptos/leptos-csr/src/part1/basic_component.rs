@@ -1,8 +1,7 @@
 use leptos::*;
 
 #[component]
-pub fn BasicComponent() -> impl IntoView
-{
+pub fn BasicComponent() -> impl IntoView {
     let (count, set_count) = create_signal(0);
 
     view! {

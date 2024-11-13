@@ -1,0 +1,32 @@
+[tasks.clean]
+  args    = ["clean"]
+  command = "cargo"
+
+[tasks.clippy]
+  args    = ["clippy"]
+  command = "cargo"
+
+[tasks.check]
+  args    = ["check"]
+  command = "cargo"
+
+[tasks.format]
+  args          = ["fmt"]
+  command       = "cargo"
+  dependencies  = ["check", "clippy"]
+  install_crate = "rustfmt"
+
+[tasks.build]
+  args         = ["build"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.test]
+  args         = ["test"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.run]
+  args         = ["run"]
+  command      = "cargo"
+  dependencies = ["format"]

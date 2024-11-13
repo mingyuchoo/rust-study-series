@@ -11,6 +11,10 @@ pub fn App() -> impl IntoView {
             <part1::components_and_props::ComponentsAndProps/>
             <part1::iteration::Iteration/>
             <part1::iteration_with_for::IterationWithFor/>
+            <part1::forms_and_inputs::ControlledInputs/>
+            <part1::forms_and_inputs::UncontrolledInputs/>
+            <part1::forms_and_inputs::SpecialCasesTextarea/>
+            <part1::forms_and_inputs::SpecialCasesSelect/>
             <part2::typicode::Api/>
         }
     })

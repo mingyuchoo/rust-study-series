@@ -1,8 +1,7 @@
 use leptos::*;
 
 #[component]
-pub fn ComponentsAndProps() -> impl IntoView
-{
+pub fn ComponentsAndProps() -> impl IntoView {
     let (count, set_count) = create_signal(0);
     let double_count = move || count() * 2;
 
@@ -25,8 +24,7 @@ fn ProgressBar(/// The maximum value of the progress bar.
                /// How much progress should be displayed.
                #[prop(into)]
                progress: Signal<i32>)
-               -> impl IntoView
-{
+               -> impl IntoView {
     view! {
         <progress max=max value=progress />
 

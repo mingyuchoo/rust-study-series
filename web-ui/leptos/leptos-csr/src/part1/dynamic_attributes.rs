@@ -1,8 +1,7 @@
 use leptos::*;
 
 #[component]
-pub fn DynamicAttributes() -> impl IntoView
-{
+pub fn DynamicAttributes() -> impl IntoView {
     let (count, set_count) = create_signal(0);
     let (x, set_x) = create_signal(0);
     let double_count = move || count() * 2;
