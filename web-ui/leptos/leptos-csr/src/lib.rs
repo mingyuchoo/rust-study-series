@@ -15,6 +15,10 @@ pub fn App() -> impl IntoView {
             <part1::forms_and_inputs::UncontrolledInputs/>
             <part1::forms_and_inputs::SpecialCasesTextarea/>
             <part1::forms_and_inputs::SpecialCasesSelect/>
+            <part1::control_flow::SoWhat/>
+            <part1::control_flow::PreventingOverRendering/>
+            <part1::control_flow::TypeConversions/>
+            <part1::error_handling::NumericInput/>
             <part2::typicode::Api/>
         }
     })

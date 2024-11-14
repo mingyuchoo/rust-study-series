@@ -37,6 +37,9 @@ pub fn Api() -> impl IntoView {
 
     view! {
         <main>
+            <h1>
+                "Typicode API"
+            </h1>
             <button on:click=move |_| fetch_todos.dispatch(())>
                 "Fetch Todos"
             </button>
