@@ -1,2 +1,2 @@
 [rustfmt]
-  overrideCommand = ["--rustfmt", "--stdin", "leptosfmt"]
+  overrideCommand = ["leptosfmt", "--stdin", "--rustfmt"]
