@@ -1,0 +1,10 @@
+[toolchain]
+  channel = "nightly"
+  components = [
+    "clippy",
+    "leptosfmt",
+    "rust-analyzer",
+    "rust-src",
+    "rustfmt",
+  ]
+  profile = "default"
