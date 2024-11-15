@@ -3,15 +3,11 @@ use leptos::*;
 #[component]
 pub fn ComponentChildren() -> impl IntoView {
     view! {
-        <h1>
-            "Compoent Children"
-        </h1>
+        <h1>"Compoent Children"</h1>
         <TakesChildren render_prop=|| view! {<p>"Hi, there!"</p>}>
             // there get passed to `children`
-            "Some text"
-            <span>
-                "A span"
-            </span>
+           "Some text"
+            <span>"A span"</span>
         </TakesChildren>
     }
 }
@@ -27,13 +23,9 @@ pub fn TakesChildren<F, IV>(// Take a function (type F) that returns anything
           IV: IntoView,
 {
     view! {
-        <h2>
-            "Render Prop"
-        </h2>
+        <h2>"Render Prop"</h2>
         {render_prop()}
-        <h2>
-            "Children"
-        </h2>
+        <h2>"Children"</h2>
         {children()}
     }
 }
@@ -41,13 +33,11 @@ pub fn TakesChildren<F, IV>(// Take a function (type F) that returns anything
 #[component]
 pub fn ManipulatingChildren() -> impl IntoView {
     view! {
-        <h1>
-            "Manipulating Children"
-        </h1>
+        <h1>"Manipulating Children"</h1>
         <WrapsChildren>
-            "A"
-            "B"
-            "C"
+           "A"
+           "B"
+           "C"
         </WrapsChildren>
     }
 }
@@ -60,11 +50,7 @@ pub fn WrapsChildren(children: Children) -> impl IntoView {
                              .map(|child| view! {<li>{child}</li>})
                              .collect_view();
     view! {
-        <h2>
-            "WrapsChildren"
-        </h2>
-        <ul>
-            {children}
-        </ul>
+        <h2>"WrapsChildren"</h2>
+        <ul> {children} </ul>
     }
 }

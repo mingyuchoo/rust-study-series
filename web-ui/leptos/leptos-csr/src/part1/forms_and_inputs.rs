@@ -4,9 +4,7 @@ use leptos::*;
 pub fn ControlledInputs() -> impl IntoView {
     let (name, set_name) = create_signal("Controlled".to_string());
     view! {
-        <h2>
-            "ControlledInputs"
-        </h2>
+        <h2>"ControlledInputs"</h2>
         <input
             type="text"
             on:input=move |ev| {
@@ -20,9 +18,7 @@ pub fn ControlledInputs() -> impl IntoView {
             // rather than an attribute.
             prop:value=name
         />
-        <p>
-            "Name is: " {name}
-        </p>
+        <p>"Name is: " {name}</p>
     }
 }
 
@@ -49,16 +45,12 @@ pub fn UncontrolledInputs() -> impl IntoView {
     };
 
     view! {
-        <h2>
-            "UncontrolledInputs"
-        </h2>
+        <h2>"UncontrolledInputs"</h2>
         <form on:submit=on_submit>
             <input type="text" value=name node_ref=input_element/>
             <input type="submit" value="Submit"/>
         </form>
-        <p>
-            "Name is: " {name}
-        </p>
+        <p>"Name is: " {name}</p>
     }
 }
 
@@ -66,9 +58,7 @@ pub fn UncontrolledInputs() -> impl IntoView {
 pub fn SpecialCasesTextarea() -> impl IntoView {
     let (name, set_name) = create_signal("SpecialCases".to_string());
     view! {
-        <h2>
-            "SpecialCasesTextarea"
-        </h2>
+        <h2>"SpecialCasesTextarea"</h2>
         <textarea
             prop:value=move || name.get()
             on:input=move |ev| {
@@ -85,9 +75,7 @@ pub fn SpecialCasesTextarea() -> impl IntoView {
 pub fn SpecialCasesSelect() -> impl IntoView {
     let (value, set_value) = create_signal(0i32);
     view! {
-        <h2>
-            "SpecialCasesSelect"
-        </h2>
+        <h2>"SpecialCasesSelect"</h2>
         <select
             on:change=move |ev| {
                 let new_value = event_target_value(&ev);

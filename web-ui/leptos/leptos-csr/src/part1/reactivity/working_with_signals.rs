@@ -19,9 +19,7 @@ pub fn GettingAndSetting() -> impl IntoView {
 
     view! {
         <div>
-            <h1>
-                "Getting and Setting"
-            </h1>
+            <h1>"Getting and Setting"</h1>
             <p>"Count: " {count}</p>
             <p>"Count: " {count.get()}</p>
             <p>"Count: " {count.with(|n| n.clone())}</p>

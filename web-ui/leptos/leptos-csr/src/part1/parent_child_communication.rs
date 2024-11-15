@@ -7,12 +7,8 @@ pub fn PassAWriteSignal() -> impl IntoView {
     let (toggled, set_toggled) = create_signal(false);
     view! {
         <div>
-            <h1>
-                "Parent-Child Communication"
-            </h1>
-            <p>
-                "Toggled? " {toggled}
-            </p>
+            <h1>"Parent-Child Communication"</h1>
+            <p>"Toggled? " {toggled} </p>
             <ButtonA setter=set_toggled/>
         </div>
     }
@@ -21,9 +17,7 @@ pub fn PassAWriteSignal() -> impl IntoView {
 #[component]
 pub fn ButtonA(setter: WriteSignal<bool>) -> impl IntoView {
     view! {
-        <button
-            on:click=move |_ev| setter.update(|value| *value = !*value)
-        >
+        <button on:click=move |_ev| setter.update(|value| *value = !*value) >
             "Toggle"
         </button>
     }
@@ -35,9 +29,7 @@ pub fn UseACallback() -> impl IntoView {
     let (toggled, set_toggled) = create_signal(false);
     view! {
         <div>
-            <p>
-                "Toggled? " {toggled}
-            </p>
+            <p>"Toggled? " {toggled} </p>
             <ButtonB1 on_click=move |_ev| set_toggled.update(|value| *value = !*value)/>
             <ButtonB2 on_click=move |_ev| set_toggled.update(|value| *value = !*value)/>
         </div>
@@ -48,9 +40,7 @@ pub fn UseACallback() -> impl IntoView {
 #[component]
 pub fn ButtonB1(#[prop(into)] on_click: Callback<MouseEvent>) -> impl IntoView {
     view! {
-        <button on:click=on_click>
-            "Toggle"
-        </button>
+        <button on:click=on_click>"Toggle"</button>
     }
 }
 
@@ -60,9 +50,7 @@ pub fn ButtonB2<F>(on_click: F) -> impl IntoView
     where F: Fn(MouseEvent) + 'static,
 {
     view! {
-        <button on:click=on_click>
-            "Toggle"
-        </button>
+        <button on:click=on_click>"Toggle"</button>
     }
 }
 
@@ -83,9 +71,7 @@ pub fn UseAnEventListener() -> impl IntoView {
 #[component]
 pub fn ButtonC() -> impl IntoView {
     view! {
-        <button>
-            "Toggle"
-        </button>
+        <button>"Toggle"</button>
     }
 }
 
@@ -98,9 +84,7 @@ pub fn ProvidingAContext() -> impl IntoView {
     provide_context(set_toggled);
     view! {
         <main>
-            <h1>
-                "Provding a Context"
-            </h1>
+            <h1>"Provding a Context"</h1>
             <p>"Toggled? " {toggled}</p>
             <Layout/>
         </main>
@@ -111,9 +95,7 @@ pub fn ProvidingAContext() -> impl IntoView {
 pub fn Layout() -> impl IntoView {
     view! {
         <header>
-            <h2>
-                "My Page"
-            </h2>
+            <h2>"My Page"</h2>
         </header>
         <main>
             <Content/>
@@ -135,13 +117,9 @@ pub fn ButtonD() -> impl IntoView {
     // use_context searches up the context tree,
     // hoping to find a `WriteSignal<bool>`
     // in the case, I .expect() because I know I provided it
-    let setter = use_context::<WriteSignal<bool>>().expect("to have found \
-                                                            the setter \
-                                                            provided.");
+    let setter = use_context::<WriteSignal<bool>>().expect("to have found the setter provided.");
     view! {
-        <button
-            on:click=move |_ev| setter.update(|value| *value = !*value)
-        >
+        <button on:click=move |_ev| setter.update(|value| *value = !*value) >
             "Toggle"
         </button>
     }

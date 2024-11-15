@@ -6,9 +6,7 @@ pub fn BasicComponent() -> impl IntoView {
 
     view! {
         <h1>Baisc Component</h1>
-        <button
-            on:click=move |_| set_count.update(|n| *n += 1)
-        >
+        <button on:click=move |_| set_count.update(|n| *n += 1)>
             "Click me"
         </button>
         <p>

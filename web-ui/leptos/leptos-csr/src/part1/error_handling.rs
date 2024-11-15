@@ -7,9 +7,7 @@ pub fn NumericInput() -> impl IntoView {
     // when input changes, try to parse a number from the input
     let on_input = move |ev| set_value(event_target_value(&ev).parse::<i32>());
     view! {
-        <h1>
-            "Error Handling"
-        </h1>
+        <h1>"Error Handling"</h1>
         <label>
             "Type a number (or something that's not a number!)"
             <input type="number" on:input=on_input/>
@@ -29,9 +27,7 @@ pub fn NumericInput() -> impl IntoView {
                     </div>
                 }
             >
-                <p>
-                    "You entered " <strong>{value}</strong>
-                </p>
+                <p>"You entered " <strong>{value}</strong></p>
             </ErrorBoundary>
         </label>
     }

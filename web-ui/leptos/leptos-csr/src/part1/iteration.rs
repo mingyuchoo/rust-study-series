@@ -30,8 +30,6 @@ pub fn Iteration() -> impl IntoView {
                     .collect_view()
                 }
             </ul>
-            <ul>
-                {counter_buttons}
-            </ul>
+            <ul>{counter_buttons}</ul>
     }
 }

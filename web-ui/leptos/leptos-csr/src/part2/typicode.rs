@@ -45,7 +45,8 @@ pub fn Api() -> impl IntoView {
             {move ||
                 if loading() {
                     view! { <p>"Loading..."</p>}.into_any()
-                } else {
+                }
+                else {
                     view! {
                         <ul>
                             {move || todos().into_iter().map(|todo| view! {
