@@ -52,5 +52,4 @@ diesel::table! {
 diesel::joinable!(book -> author (author_id));
 diesel::joinable!(order -> customer (customer_id));
 
-diesel::allow_tables_to_appear_in_same_query!(author, book, customer, order,
-                                              posts,);
+diesel::allow_tables_to_appear_in_same_query!(author, book, customer, order, posts,);

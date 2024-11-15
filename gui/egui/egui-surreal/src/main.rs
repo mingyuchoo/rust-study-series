@@ -3,15 +3,15 @@ use egui::RichText;
 use faker_rand::en_us::names::FirstName;
 use serde::{Deserialize,
             Serialize};
-use std::{ops::Deref,
-          sync::mpsc::{channel,
-                       Receiver,
-                       Sender}};
-use surrealdb::{engine::remote::ws::{Client,
-                                     Ws},
-                opt::auth::{Record,
-                            Root},
-                RecordId,
+use std::ops::Deref;
+use std::sync::mpsc::{channel,
+                      Receiver,
+                      Sender};
+use surrealdb::engine::remote::ws::{Client,
+                                    Ws};
+use surrealdb::opt::auth::{Record,
+                           Root};
+use surrealdb::{RecordId,
                 RecordIdKey,
                 Surreal};
 
@@ -92,7 +92,8 @@ impl Database {
                     let res: Vec<Person> = self.delete(PERSON)
                                                .await?;
                     Ok(format!("{res:?}"))
-                } else {
+                }
+                else {
                     let key = RecordIdKey::from(s);
                     self.delete::<Option<Person>>((PERSON, key))
                         .await?
@@ -123,15 +124,16 @@ impl Database {
                 | Err(e) => Ok(e.to_string()),
             },
             | Command::SignIn(s) => {
-                let Ok(Params { name, pass, }) =
-                    serde_json::from_str::<Params>(&s)
+                let Ok(Params { name,
+                                pass, }) = serde_json::from_str::<Params>(&s)
                 else {
                     return Ok("Params don't work!".to_string());
                 };
                 self.signin(Record { access:    "account",
                                      namespace: "test",
                                      database:  "test",
-                                     params:    Params { name, pass }, })
+                                     params:    Params { name,
+                                                         pass }, })
                     .await?;
                 Ok(format!("Signed in as {name}!"))
             },
@@ -141,12 +143,10 @@ impl Database {
                     .await?;
                 Ok(format!("Back to root!"))
             },
-            | Command::Session => {
-                Ok(self.query("RETURN <string>$session")
-                       .await?
-                       .take::<Option<String>>(0)?
-                       .unwrap_or("No session data found!".into()))
-            },
+            | Command::Session => Ok(self.query("RETURN <string>$session")
+                                         .await?
+                                         .take::<Option<String>>(0)?
+                                         .unwrap_or("No session data found!".into())),
         }
     }
 }
@@ -174,66 +174,66 @@ impl eframe::App for SurrealDbApp {
               ctx: &egui::Context,
               _frame: &mut eframe::Frame) {
         egui::SidePanel::left("left").show(ctx, |ui| {
-            if let Ok(response) = self.response_receiver
-                                      .try_recv()
-            {
-                self.results = response;
-            }
-            if ui.button("Create person")
-                 .clicked()
-            {
-                self.send(Command::CreatePerson(self.input
-                                                    .clone()))
-            };
-            if ui.button("Delete person")
-                 .clicked()
-            {
-                self.send(Command::DeletePerson(self.input
-                                                    .clone()))
-            }
-            if ui.button("List people")
-                 .clicked()
-            {
-                self.send(Command::ListPeople)
-            }
-            if ui.button("Session data")
-                 .clicked()
-            {
-                self.send(Command::Session)
-            }
-            if ui.button("New user")
-                 .clicked()
-            {
-                self.send(Command::SignUp)
-            }
-            if ui.button("Sign in as record user")
-                 .clicked()
-            {
-                self.send(Command::SignIn(self.input
-                                              .clone()));
-            }
-            if ui.button("Sign in as root")
-                 .clicked()
-            {
-                self.send(Command::SignInRoot)
-            }
-            if ui.button("Raw query")
-                 .clicked()
-            {
-                self.send(Command::RawQuery(self.input
-                                                .clone()))
-            }
-        });
+                                         if let Ok(response) = self.response_receiver
+                                                                   .try_recv()
+                                         {
+                                             self.results = response;
+                                         }
+                                         if ui.button("Create person")
+                                              .clicked()
+                                         {
+                                             self.send(Command::CreatePerson(self.input
+                                                                                 .clone()))
+                                         };
+                                         if ui.button("Delete person")
+                                              .clicked()
+                                         {
+                                             self.send(Command::DeletePerson(self.input
+                                                                                 .clone()))
+                                         }
+                                         if ui.button("List people")
+                                              .clicked()
+                                         {
+                                             self.send(Command::ListPeople)
+                                         }
+                                         if ui.button("Session data")
+                                              .clicked()
+                                         {
+                                             self.send(Command::Session)
+                                         }
+                                         if ui.button("New user")
+                                              .clicked()
+                                         {
+                                             self.send(Command::SignUp)
+                                         }
+                                         if ui.button("Sign in as record user")
+                                              .clicked()
+                                         {
+                                             self.send(Command::SignIn(self.input
+                                                                           .clone()));
+                                         }
+                                         if ui.button("Sign in as root")
+                                              .clicked()
+                                         {
+                                             self.send(Command::SignInRoot)
+                                         }
+                                         if ui.button("Raw query")
+                                              .clicked()
+                                         {
+                                             self.send(Command::RawQuery(self.input
+                                                                             .clone()))
+                                         }
+                                     });
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label(RichText::new("Input:").heading());
-            ui.text_edit_multiline(&mut self.input);
-        });
+                                         ui.label(RichText::new("Input:").heading());
+                                         ui.text_edit_multiline(&mut self.input);
+                                     });
         egui::SidePanel::right("right").show(ctx, |ui| {
-            egui::ScrollArea::vertical().show(ui, |ui| {
-                ui.label(RichText::new("Results:").heading());
-                ui.text_edit_multiline(&mut self.results);
-            });
-        });
+                                           egui::ScrollArea::vertical().show(ui, |ui| {
+                                               ui.label(RichText::new("Results:").heading());
+                                               ui.text_edit_multiline(&mut self.results);
+                                           });
+                                       });
     }
 }
 
@@ -301,8 +301,6 @@ fn main() -> Result<(), Error> {
                              response_receiver };
 
     let native_options = eframe::NativeOptions::default();
-    let _ = eframe::run_native("SurrealDB App",
-                               native_options,
-                               Box::new(|_cc| Ok(Box::new(app))));
+    let _ = eframe::run_native("SurrealDB App", native_options, Box::new(|_cc| Ok(Box::new(app))));
     Ok(())
 }

@@ -1,6 +1,6 @@
-use std::{collections::HashMap,
-          io,
-          io::Write};
+use std::collections::HashMap;
+use std::io;
+use std::io::Write;
 
 #[derive(Debug, Clone)]
 struct Bill {
@@ -107,9 +107,7 @@ fn do_select_bills(bills: &Bills) {
 
     bills.select_all()
          .iter()
-         .for_each(|bill| {
-             println!("- name: {:<10} amount: {:>10}", bill.name, bill.amount)
-         });
+         .for_each(|bill| println!("- name: {:<10} amount: {:>10}", bill.name, bill.amount));
 }
 
 fn do_insert_bill(bills: &mut Bills) {
@@ -125,7 +123,8 @@ fn do_insert_bill(bills: &mut Bills) {
         | None => return,
     };
 
-    let bill = Bill { name, amount };
+    let bill = Bill { name,
+                      amount };
     bills.insert(bill);
     println!("The bill added.");
 }

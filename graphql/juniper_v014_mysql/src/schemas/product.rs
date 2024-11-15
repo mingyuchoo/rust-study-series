@@ -1,8 +1,8 @@
-use crate::schemas::{root::Context,
-                     user::User};
+use crate::schemas::root::Context;
+use crate::schemas::user::User;
+use mysql::prelude::*;
 use mysql::{from_row,
-            params,
-            prelude::*};
+            params};
 
 /// Product
 #[derive(Default, Debug)]
@@ -37,14 +37,16 @@ impl Product {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
-        let user = conn.exec_first("SELECT * FROM user WHERE id=:id",
-                                   params! {"id" => &self.user_id});
+        let user = conn.exec_first("SELECT * FROM user WHERE id=:id", params! {"id" => &self.user_id});
         if let Err(err) = user {
             None
-        } else {
+        }
+        else {
             let (id, name, email) = from_row(user.unwrap()
                                                  .unwrap());
-            Some(User { id, name, email })
+            Some(User { id,
+                        name,
+                        email })
         }
     }
 }

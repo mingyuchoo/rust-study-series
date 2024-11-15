@@ -1,7 +1,7 @@
-use crate::schemas::{product::Product,
-                     root::Context};
-use mysql::{params,
-            prelude::*};
+use crate::schemas::product::Product;
+use crate::schemas::root::Context;
+use mysql::params;
+use mysql::prelude::*;
 
 /// User
 #[derive(Default, Debug)]

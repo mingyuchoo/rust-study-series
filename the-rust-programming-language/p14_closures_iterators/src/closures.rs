@@ -1,5 +1,5 @@
-use std::{thread,
-          time::Duration};
+use std::thread;
+use std::time::Duration;
 
 pub fn call1() {
     let value: u32 = simulated_expensive_calculation(3);
@@ -78,10 +78,12 @@ fn generate_workout_1(intensity: u32,
     if intensity < 25 {
         println!("오늘은 {expensive_result}번의 팔 굽혀펴기를 하세요!");
         println!("다음에는 {expensive_result}번의 윗몸 일으키기를 하세요!");
-    } else {
+    }
+    else {
         if random_number == 3 {
             println!("오늘은 수분을 충분히 섭취하며 쉬세요!");
-        } else {
+        }
+        else {
             println!("오늘은 {expensive_result}분간 달리기를 하세요!");
         }
     }
@@ -96,16 +98,15 @@ fn generate_workout_2(intensity: u32,
     };
 
     if intensity < 25 {
-        println!("오늘은 {}번의 팔 굽혀펴기를 하세요!",
-                 expensive_closure(intensity));
-        println!("다음에는 {}번의 윗몸 일으키기를 하세요!",
-                 expensive_closure(intensity));
-    } else {
+        println!("오늘은 {}번의 팔 굽혀펴기를 하세요!", expensive_closure(intensity));
+        println!("다음에는 {}번의 윗몸 일으키기를 하세요!", expensive_closure(intensity));
+    }
+    else {
         if random_number == 3 {
             println!("오늘은 수분을 충분히 섭취하며 쉬세요!");
-        } else {
-            println!("오늘은 {}분간 달리기를 하세요!",
-                     expensive_closure(intensity));
+        }
+        else {
+            println!("오늘은 {}분간 달리기를 하세요!", expensive_closure(intensity));
         }
     }
 }
@@ -147,16 +148,16 @@ fn generate_workout_3(intensity: u32,
     });
 
     if intensity < 25 {
-        println!("오늘은 {}번의 팔 굽혀펴기를 하세요!",
-                 expensive_result.value(intensity));
+        println!("오늘은 {}번의 팔 굽혀펴기를 하세요!", expensive_result.value(intensity));
         println!("다음에는 {}번의 윗몸 일으키기를 하세요!",
                  expensive_result.value(intensity));
-    } else {
+    }
+    else {
         if random_number == 3 {
             println!("오늘은 수분을 충분히 섭취하며 쉬세요!");
-        } else {
-            println!("오늘은 {}분간 달리기를 하세요!",
-                     expensive_result.value(intensity));
+        }
+        else {
+            println!("오늘은 {}분간 달리기를 하세요!", expensive_result.value(intensity));
         }
     }
 }

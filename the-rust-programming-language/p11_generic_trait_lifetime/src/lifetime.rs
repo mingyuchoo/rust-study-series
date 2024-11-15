@@ -20,7 +20,8 @@ pub fn call1() {
                    -> &'a str {
         if x.len() > y.len() {
             x
-        } else {
+        }
+        else {
             y
         }
     }
@@ -65,13 +66,13 @@ pub fn call4() {
         println!("주목하세요: {ann}");
         if x.len() > y.len() {
             x
-        } else {
+        }
+        else {
             y
         }
     }
     let string1 = String::from("abcd");
     let string2 = "xyz";
-    let result =
-        longest_with_an_announcement(string1.as_str(), string2, "World");
+    let result = longest_with_an_announcement(string1.as_str(), string2, "World");
     println!("더 긴 문자열은 {result} 입니다.");
 }

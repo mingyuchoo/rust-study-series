@@ -1,6 +1,6 @@
 use reqwest::blocking::Client;
-use select::{document::Document,
-             predicate::Name};
+use select::document::Document;
+use select::predicate::Name;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {

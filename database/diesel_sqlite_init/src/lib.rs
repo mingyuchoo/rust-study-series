@@ -10,8 +10,7 @@ use std::env;
 pub fn establish_connection() -> SqliteConnection {
     dotenv().ok();
 
-    let database_url =
-        env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     SqliteConnection::establish(&database_url).unwrap_or_else(|_| {
                                                   panic!("Error connecting to \
                                                           {}",
@@ -26,7 +25,8 @@ pub fn create_post(connection: &mut SqliteConnection,
     // use self::schema::posts;
     use self::schema::posts::dsl::posts;
 
-    let new_post = NewPost { title, body };
+    let new_post = NewPost { title,
+                             body };
 
     // diesel::insert_into(posts::table)
     diesel::insert_into(posts).values(&new_post)

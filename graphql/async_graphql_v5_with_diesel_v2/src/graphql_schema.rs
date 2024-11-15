@@ -52,10 +52,8 @@ impl Team {
 
 fn establish_connection() -> diesel::pg::PgConnection {
     dotenv::dotenv().ok();
-    let database_url =
-        std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    diesel::pg::PgConnection::establish(&database_url).expect(&format!("Error connection to {}",
-                                                                       database_url))
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    diesel::pg::PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
 }
 
 pub struct QueryRoot;
@@ -63,8 +61,8 @@ pub struct QueryRoot;
 #[async_graphql::Object]
 impl QueryRoot {
     async fn members(&self) -> Vec<Member> {
-        use diesel::{query_dsl::methods::LimitDsl,
-                     RunQueryDsl};
+        use diesel::query_dsl::methods::LimitDsl;
+        use diesel::RunQueryDsl;
 
         let connection = &mut establish_connection();
         crate::diesel_schema::members::dsl::members.limit(100)
@@ -74,9 +72,7 @@ impl QueryRoot {
     }
 }
 
-pub type Schema = async_graphql::Schema<QueryRoot,
-                                        async_graphql::EmptyMutation,
-                                        async_graphql::EmptySubscription>;
+pub type Schema = async_graphql::Schema<QueryRoot, async_graphql::EmptyMutation, async_graphql::EmptySubscription>;
 
 pub fn create_schema() -> Schema {
     async_graphql::Schema::new(QueryRoot,

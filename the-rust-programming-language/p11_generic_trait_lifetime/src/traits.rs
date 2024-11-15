@@ -14,8 +14,7 @@ pub fn call1() {
 
     impl Summary for NewsArticle {
         fn summarize(&self) -> String {
-            format!("{}, by {}, ({})",
-                    self.headline, self.author, self.location)
+            format!("{}, by {}, ({})", self.headline, self.author, self.location)
         }
     }
 
@@ -216,7 +215,8 @@ pub fn call7() {
         fn new(x: T,
                y: T)
                -> Self {
-            Self { x, y }
+            Self { x,
+                   y }
         }
     }
 
@@ -224,7 +224,8 @@ pub fn call7() {
         fn cmp_display(&self) {
             if self.x >= self.y {
                 println!("가장 큰 멤버는  x: {}", self.x);
-            } else {
+            }
+            else {
                 println!("가장 큰 멤버는  y: {}", self.y);
             }
         }

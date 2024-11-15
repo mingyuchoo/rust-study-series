@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
-use tonic::{transport::Server,
-            Request,
+use tonic::transport::Server;
+use tonic::{Request,
             Response,
             Status};
 
@@ -8,9 +8,9 @@ pub mod greeter_proto {
     tonic::include_proto!("communication"); // proto package
 }
 
-use greeter_proto::{greeter_server::{Greeter,
-                                     GreeterServer},
-                    HelloRequest,
+use greeter_proto::greeter_server::{Greeter,
+                                    GreeterServer};
+use greeter_proto::{HelloRequest,
                     HelloResponse};
 
 #[derive(Default)]
@@ -25,10 +25,9 @@ impl Greeter for MyGreeter {
                        -> Result<Response<HelloResponse>, Status> {
         println!("Got a request from {:?}", request.remote_addr());
 
-        let response: HelloResponse = HelloResponse { message:
-                                                          format!("Hello {}!",
-                                             request.into_inner()
-                                                    .name), };
+        let response: HelloResponse = HelloResponse { message: format!("Hello {}!",
+                                                                       request.into_inner()
+                                                                              .name), };
 
         Ok(Response::new(response))
     }

@@ -1,6 +1,5 @@
 use leptos::*;
 
-
 // Important thing is <ErrorBoundary>
 #[component]
 pub fn NumericInput() -> impl IntoView {

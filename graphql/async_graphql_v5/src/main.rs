@@ -21,13 +21,9 @@ async fn graphiql() -> actix_web::HttpResponse {
         )
 }
 
-async fn graphql(schema: actix_web::web::Data<
-        async_graphql::Schema<
-            QueryRoot,
-            async_graphql::EmptyMutation,
-            async_graphql::EmptySubscription,
-        >,
-    >,
+async fn graphql(schema: actix_web::web::Data<async_graphql::Schema<QueryRoot,
+                                                            async_graphql::EmptyMutation,
+                                                            async_graphql::EmptySubscription>>,
                  req: async_graphql_actix_web::GraphQLRequest)
                  -> async_graphql_actix_web::GraphQLResponse {
     schema.execute(req.into_inner())

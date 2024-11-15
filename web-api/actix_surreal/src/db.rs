@@ -1,9 +1,9 @@
 use crate::error::AppError;
 use std::sync::LazyLock;
-use surrealdb::{engine::remote::ws::{Client,
-                                     Ws},
-                opt::auth::Root,
-                Surreal};
+use surrealdb::engine::remote::ws::{Client,
+                                    Ws};
+use surrealdb::opt::auth::Root;
+use surrealdb::Surreal;
 
 pub static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 

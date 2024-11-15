@@ -42,7 +42,8 @@ pub fn boolean() {
 
     if f {
         println!("t is true");
-    } else {
+    }
+    else {
         println!("f is false");
     }
 }

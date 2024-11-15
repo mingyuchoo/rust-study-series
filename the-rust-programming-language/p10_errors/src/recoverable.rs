@@ -1,7 +1,7 @@
-use std::{error::Error,
-          fs::File,
-          io,
-          io::Read};
+use std::error::Error;
+use std::fs::File;
+use std::io;
+use std::io::Read;
 
 pub fn call1() {
     let f1 = File::open("Hello.txt").unwrap();

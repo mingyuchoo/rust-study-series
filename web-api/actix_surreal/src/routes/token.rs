@@ -1,5 +1,5 @@
-use crate::{error::AppError,
-            DB};
+use crate::error::AppError;
+use crate::DB;
 use actix_web::get;
 use faker_rand::en_us::names::FirstName;
 use serde::{Deserialize,

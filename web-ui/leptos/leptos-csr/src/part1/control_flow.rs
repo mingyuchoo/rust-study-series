@@ -1,5 +1,6 @@
 use leptos::*;
 
+#[component]
 pub fn SoWhat() -> impl IntoView {
     let (value, set_value) = create_signal(0);
 
@@ -18,7 +19,8 @@ pub fn SoWhat() -> impl IntoView {
     let message2 = move || {
         if is_odd() {
             Some("Ding ding ding")
-        } else {
+        }
+        else {
             None
         }
     };
@@ -49,13 +51,15 @@ pub fn SoWhat() -> impl IntoView {
     }
 }
 
+#[component]
 pub fn NotPreventingOverRendering() -> impl IntoView {
     let (value, set_value) = create_signal(0);
     let message = move || {
         if value() > 5 {
             logging::log!("{}: rendering Big", value());
             "Big"
-        } else {
+        }
+        else {
             logging::log!("{}: rendering Small", value());
             "Small"
         }
@@ -75,6 +79,7 @@ pub fn NotPreventingOverRendering() -> impl IntoView {
     }
 }
 
+#[component]
 pub fn PreventingOverRendering() -> impl IntoView {
     let (value, set_value) = create_signal(0);
     view! {
@@ -100,6 +105,7 @@ pub fn PreventingOverRendering() -> impl IntoView {
     }
 }
 
+#[component]
 pub fn TypeConversions() -> impl IntoView {
     let (value, set_value) = create_signal(0);
     let is_odd = move || value() & 1 == 1;

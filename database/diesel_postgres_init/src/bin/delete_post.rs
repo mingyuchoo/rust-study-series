@@ -10,9 +10,8 @@ fn main() -> () {
     let pattern: String = format!("%{}%", target);
 
     let connection: &mut PgConnection = &mut establish_connection();
-    let num_deleted =
-        diesel::delete(posts.filter(title.like(pattern))).execute(connection)
-                                                         .expect("Error deleting posts");
+    let num_deleted = diesel::delete(posts.filter(title.like(pattern))).execute(connection)
+                                                                       .expect("Error deleting posts");
 
     println!("Deleted {} posts", num_deleted);
 }

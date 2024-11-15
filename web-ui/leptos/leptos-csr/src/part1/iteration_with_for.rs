@@ -8,13 +8,12 @@ struct DatabaseEntry {
 
 #[component]
 pub fn IterationWithFor() -> impl IntoView {
-    let (data, set_data) =
-        create_signal(vec![DatabaseEntry { key:   "foo".to_string(),
-                                           value: 10, },
-                           DatabaseEntry { key:   "bar".to_string(),
-                                           value: 20, },
-                           DatabaseEntry { key:   "baz".to_string(),
-                                           value: 15, },]);
+    let (data, set_data) = create_signal(vec![DatabaseEntry { key:   "foo".to_string(),
+                                                              value: 10, },
+                                              DatabaseEntry { key:   "bar".to_string(),
+                                                              value: 20, },
+                                              DatabaseEntry { key:   "baz".to_string(),
+                                                              value: 15, },]);
     view! {
         <button on:click=move |_| {
             set_data.update(|data| {

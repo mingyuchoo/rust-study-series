@@ -1,7 +1,7 @@
-use crate::{error::AppError,
-            DB};
-use actix_web::{get,
-                web::Json};
+use crate::error::AppError;
+use crate::DB;
+use actix_web::get;
+use actix_web::web::Json;
 
 #[get("/session")]
 pub async fn session() -> Result<Json<String>, AppError> {

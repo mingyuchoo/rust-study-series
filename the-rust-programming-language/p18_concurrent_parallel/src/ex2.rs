@@ -1,5 +1,5 @@
-use std::{thread,
-          time::Duration};
+use std::thread;
+use std::time::Duration;
 
 pub fn call1() -> Result<(), std::io::Error> {
     let handle = thread::spawn(|| {

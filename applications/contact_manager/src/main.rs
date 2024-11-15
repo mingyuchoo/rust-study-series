@@ -1,9 +1,9 @@
-use std::{collections::HashMap,
-          fs::{File,
-               OpenOptions},
-          io::{Read,
-               Write},
-          path::PathBuf};
+use std::collections::HashMap;
+use std::fs::{File,
+              OpenOptions};
+use std::io::{Read,
+              Write};
+use std::path::PathBuf;
 use structopt::StructOpt;
 use thiserror::Error;
 
@@ -143,7 +143,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn run(opt: Opt) -> Result<(), std::io::Error> {
     match opt.cmd {
-        | Command::Add { name, email, } => {
+        | Command::Add { name,
+                         email, } => {
             let mut records = load_records(opt.data_file
                                               .clone(),
                                            opt.verbose)?;
@@ -153,7 +154,9 @@ fn run(opt: Opt) -> Result<(), std::io::Error> {
                                  email });
             save_records(opt.data_file, records)?;
         },
-        | Command::Edit { id, name, email, } => {
+        | Command::Edit { id,
+                          name,
+                          email, } => {
             let mut records = load_records(opt.data_file
                                               .clone(),
                                            opt.verbose)?;
@@ -176,7 +179,8 @@ fn run(opt: Opt) -> Result<(), std::io::Error> {
             {
                 save_records(opt.data_file, records)?;
                 println!("record deleted");
-            } else {
+            }
+            else {
                 println!("record not found");
             }
         },
@@ -185,7 +189,8 @@ fn run(opt: Opt) -> Result<(), std::io::Error> {
             let results = records.search(&query);
             if results.is_empty() {
                 println!("no records found");
-            } else {
+            }
+            else {
                 results.iter()
                        .for_each(|record| println!("{:?}", record));
             }
@@ -218,10 +223,7 @@ fn parse_records(records: String,
                 | Ok(record) => new_records.add(record),
                 | Err(e) => {
                     if verbose {
-                        println!("error on line number {}: {}\n > \"{}\"\n",
-                                 num + 1,
-                                 e,
-                                 record);
+                        println!("error on line number {}: {}\n > \"{}\"\n", num + 1, e, record);
                     }
                 },
             }
@@ -250,7 +252,9 @@ fn parse_record(record: &str) -> Result<Record, ParseError> {
                       .map(|email| email.to_string())
                       .filter(|email| email != "");
 
-    Ok(Record { id, name, email })
+    Ok(Record { id,
+                name,
+                email })
 }
 
 fn save_records(file_name: PathBuf,

@@ -1,6 +1,6 @@
-use std::{sync::mpsc,
-          thread,
-          time::Duration};
+use std::sync::mpsc;
+use std::thread;
+use std::time::Duration;
 
 pub fn call1() -> Result<(), std::io::Error> {
     let (tx, rx) = mpsc::channel();

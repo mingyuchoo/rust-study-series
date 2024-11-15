@@ -11,9 +11,7 @@ pub enum AppError {
 impl ResponseError for AppError {
     fn error_response(&self) -> HttpResponse {
         match self {
-            | AppError::Db(e) => {
-                HttpResponse::InternalServerError().body(e.to_string())
-            },
+            | AppError::Db(e) => HttpResponse::InternalServerError().body(e.to_string()),
         }
     }
 }

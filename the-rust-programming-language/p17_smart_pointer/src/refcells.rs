@@ -64,10 +64,12 @@ impl<'a, T> LimitTracker<'a, T> where T: Messenger,
         if percentage_of_max >= 0.75 && percentage_of_max < 0.9 {
             self.messenger
                 .send("경고: 최댓값의 75%를 사용했습니다.");
-        } else if percentage_of_max >= 0.9 && percentage_of_max < 1.0 {
+        }
+        else if percentage_of_max >= 0.9 && percentage_of_max < 1.0 {
             self.messenger
                 .send("긴급 경고: 최대값의 90%를 사용했습니다.");
-        } else if percentage_of_max >= 1.0 {
+        }
+        else if percentage_of_max >= 1.0 {
             self.messenger
                 .send("에러: 최대값을 초과했습니다.");
         }
@@ -80,8 +82,8 @@ enum List {
     Nil,
 }
 
-use std::{cell::RefCell,
-          rc::Rc};
+use std::cell::RefCell;
+use std::rc::Rc;
 use List::{Cons,
            Nil};
 

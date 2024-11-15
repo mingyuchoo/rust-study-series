@@ -4,7 +4,8 @@ pub fn if_conditions() {
 
     if number < 5 {
         println!("조건이 일치합니다.");
-    } else {
+    }
+    else {
         println!("조건이 일치하지 않습니다.");
     }
 
@@ -15,11 +16,14 @@ pub fn if_conditions() {
     let new_number = 6;
     if new_number % 4 == 0 {
         println!("new_number is divisible by 4");
-    } else if new_number % 3 == 0 {
+    }
+    else if new_number % 3 == 0 {
         println!("new_number is divisible by 3");
-    } else if new_number % 2 == 0 {
+    }
+    else if new_number % 2 == 0 {
         println!("new_number is divisible by 2");
-    } else {
+    }
+    else {
         println!("new_number is NOT divisible by 4, 3, or 2");
     }
 }

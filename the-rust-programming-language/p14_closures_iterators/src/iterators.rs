@@ -93,7 +93,8 @@ impl Iterator for Counter {
         self.count += 1;
         if self.count < 6 {
             Some(self.count)
-        } else {
+        }
+        else {
             None
         }
     }

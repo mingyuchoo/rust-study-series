@@ -1,7 +1,7 @@
-use std::{env,
-          error::Error,
-          fs::File,
-          io::Read};
+use std::env;
+use std::error::Error;
+use std::fs::File;
+use std::io::Read;
 
 #[cfg(test)]
 mod tests {
@@ -19,8 +19,7 @@ mod tests {
     fn case_insensitive() {
         let query = "rUsT";
         let contents = "Rust:\nsafe, fast, productive.\nPick three.\nTrust me.";
-        assert_eq!(vec!["Rust:", "Trust me."],
-                   search_case_insensitive(query, contents));
+        assert_eq!(vec!["Rust:", "Trust me."], search_case_insensitive(query, contents));
     }
 }
 
@@ -57,7 +56,8 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     let results = if config.case_sensitive {
         search(&config.query, &contents)
-    } else {
+    }
+    else {
         search_case_insensitive(&config.query, &contents)
     };
 

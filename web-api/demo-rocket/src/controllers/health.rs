@@ -1,8 +1,7 @@
-use rocket::{get,
-             http::Status,
-             serde::json::Json};
-
 use crate::controllers::GenericResponse;
+use rocket::get;
+use rocket::http::Status;
+use rocket::serde::json::Json;
 
 type HealthResult<T, E> = Result<T, E>;
 

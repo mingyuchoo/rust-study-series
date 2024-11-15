@@ -13,8 +13,8 @@ mod db;
 mod handlers;
 mod schemas;
 
-use crate::{db::get_db_pool,
-            handlers::register};
+use crate::db::get_db_pool;
+use crate::handlers::register;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {

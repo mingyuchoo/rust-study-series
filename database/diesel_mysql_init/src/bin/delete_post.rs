@@ -11,9 +11,8 @@ fn main() -> () {
 
     let connection: &mut MysqlConnection = &mut establish_connection();
 
-    let num_deleted =
-        diesel::delete(posts.filter(title.like(pattern))).execute(connection)
-                                                         .expect("Error deleting posts");
+    let num_deleted = diesel::delete(posts.filter(title.like(pattern))).execute(connection)
+                                                                       .expect("Error deleting posts");
 
     println!("Deleted {num_deleted} posts");
 

@@ -5,9 +5,9 @@ use leptos_router::*;
 mod components;
 mod pages;
 
-use crate::pages::{api::Api,
-                   home::Home,
-                   not_found::NotFound};
+use crate::pages::api::Api;
+use crate::pages::home::Home;
+use crate::pages::not_found::NotFound;
 
 #[component]
 pub fn App() -> impl IntoView {

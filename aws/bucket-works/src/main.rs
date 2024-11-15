@@ -1,33 +1,30 @@
 use anyhow::Result;
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_s3::{primitives::ByteStream,
-                 types::{BucketLocationConstraint,
-                         CreateBucketConfiguration},
-                 Client};
-use std::{env,
-          error::Error,
-          path::Path,
-          str::FromStr};
+use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::types::{BucketLocationConstraint,
+                        CreateBucketConfiguration};
+use aws_sdk_s3::Client;
+use std::env;
+use std::error::Error;
+use std::path::Path;
+use std::str::FromStr;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let arguments: Vec<String> = env::args().collect();
     if arguments.len() != 4 {
-        eprintln!("Usage {} <region> <bucket_name> <file_path>",
-                  arguments[0].clone());
+        eprintln!("Usage {} <region> <bucket_name> <file_path>", arguments[0].clone());
         std::process::exit(1);
     }
     let region = arguments[1].clone();
     let bucket_name = arguments[2].clone();
     let file_path = Path::new(&arguments[3]);
 
-    let region_provider =
-        RegionProviderChain::default_provider().or_else(aws_sdk_s3::config::Region::new(region));
+    let region_provider = RegionProviderChain::default_provider().or_else(aws_sdk_s3::config::Region::new(region));
 
-    let config =
-        aws_config::defaults(aws_config::BehaviorVersion::latest()).region(region_provider)
-                                                                   .load()
-                                                                   .await;
+    let config = aws_config::defaults(aws_config::BehaviorVersion::latest()).region(region_provider)
+                                                                            .load()
+                                                                            .await;
 
     let client = Client::new(&config);
 
@@ -44,9 +41,8 @@ async fn create_bucket(client: &Client,
                        -> Result<(), Box<dyn Error>> {
     println!("Creating S3 bucket: {}", bucket_name);
 
-    let location = BucketLocationConstraint::from_str(region).map_err(|_| {
-                       format!("Invalid location constraint: {}", region)
-                   })?;
+    let location =
+        BucketLocationConstraint::from_str(region).map_err(|_| format!("Invalid location constraint: {}", region))?;
 
     let config = create_bucket_config(location);
 
@@ -63,10 +59,9 @@ async fn upload_file(client: &Client,
                      bucket_name: &str,
                      file_path: &Path)
                      -> Result<(), Box<dyn Error>> {
-    let file_name =
-        file_path.file_name()
-                 .and_then(|name| name.to_str())
-                 .ok_or_else(|| anyhow::anyhow!("Invalid file name"))?;
+    let file_name = file_path.file_name()
+                             .and_then(|name| name.to_str())
+                             .ok_or_else(|| anyhow::anyhow!("Invalid file name"))?;
 
     println!("Uploading file: {}", file_name);
 
@@ -81,8 +76,7 @@ async fn upload_file(client: &Client,
     Ok(())
 }
 
-fn create_bucket_config(location: BucketLocationConstraint)
-                        -> CreateBucketConfiguration {
+fn create_bucket_config(location: BucketLocationConstraint) -> CreateBucketConfiguration {
     CreateBucketConfiguration::builder().location_constraint(location)
                                         .build()
 }

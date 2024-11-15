@@ -1,12 +1,12 @@
-use crate::{db::DBPool,
-            schemas::root::{create_schema,
-                            Context,
-                            Schema}};
+use crate::db::DBPool;
+use crate::schemas::root::{create_schema,
+                           Context,
+                           Schema};
 use actix_web::{web,
                 Error,
                 HttpResponse};
-use juniper::http::{playground::playground_source,
-                    GraphQLRequest};
+use juniper::http::playground::playground_source;
+use juniper::http::GraphQLRequest;
 
 pub async fn graphql(pool: web::Data<DBPool>,
                      schema: web::Data<Schema>,
@@ -14,12 +14,11 @@ pub async fn graphql(pool: web::Data<DBPool>,
                      -> Result<HttpResponse, Error> {
     let ctx = Context { dbpool: pool.get_ref()
                                     .to_owned(), };
-    let res =
-        web::block(move || {
-            let res = data.execute(&schema, &ctx);
-            Ok::<_, serde_json::error::Error>(serde_json::to_string(&res)?)
-        }).await
-          .map_err(Error::from)?;
+    let res = web::block(move || {
+                  let res = data.execute(&schema, &ctx);
+                  Ok::<_, serde_json::error::Error>(serde_json::to_string(&res)?)
+              }).await
+                .map_err(Error::from)?;
 
     Ok(HttpResponse::Ok().content_type("application/json")
                          .body(res))

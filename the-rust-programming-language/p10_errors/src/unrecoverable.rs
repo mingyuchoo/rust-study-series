@@ -1,5 +1,5 @@
-use std::{fs::File,
-          io::ErrorKind};
+use std::fs::File;
+use std::io::ErrorKind;
 
 pub fn call1() {
     // panic!("crash and burn");

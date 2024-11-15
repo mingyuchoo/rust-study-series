@@ -1,7 +1,7 @@
-use std::{error::Error,
-          net::SocketAddr};
-use tonic::{transport::Server,
-            Request,
+use std::error::Error;
+use std::net::SocketAddr;
+use tonic::transport::Server;
+use tonic::{Request,
             Response,
             Status};
 
@@ -9,9 +9,9 @@ pub mod product_info_proto {
     tonic::include_proto!("ecommerce"); // proto package
 }
 
-use product_info_proto::{product_info_server::{ProductInfo,
-                                               ProductInfoServer},
-                         Product,
+use product_info_proto::product_info_server::{ProductInfo,
+                                              ProductInfoServer};
+use product_info_proto::{Product,
                          ProductId};
 
 #[derive(Default)]

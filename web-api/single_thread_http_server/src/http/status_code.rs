@@ -4,9 +4,9 @@ use std::fmt::{Display,
 
 #[derive(Copy, Clone, Debug)]
 pub enum StatusCode {
-    Ok = 200,
+    Ok         = 200,
     BadRequest = 400,
-    NotFound = 404,
+    NotFound   = 404,
 }
 
 impl StatusCode {

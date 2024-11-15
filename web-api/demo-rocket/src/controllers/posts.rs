@@ -1,10 +1,9 @@
-use rocket::{get,
-             post,
-             response::status::{Accepted,
-                                Created},
-             serde::json::Json};
-
 use crate::services::posts;
+use rocket::response::status::{Accepted,
+                               Created};
+use rocket::serde::json::Json;
+use rocket::{get,
+             post};
 
 type PostsResult<T, E = posts::ServiceError> = Result<T, E>;
 

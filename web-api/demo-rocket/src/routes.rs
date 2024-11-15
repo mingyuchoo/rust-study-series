@@ -1,5 +1,5 @@
-use rocket::{fs::FileServer,
-             routes,
+use rocket::fs::FileServer;
+use rocket::{routes,
              Build,
              Rocket};
 

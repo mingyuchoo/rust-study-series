@@ -1,6 +1,6 @@
-use std::{cell::RefCell,
-          rc::{Rc,
-               Weak}};
+use std::cell::RefCell;
+use std::rc::{Rc,
+              Weak};
 use List::{Cons,
            Nil};
 
@@ -58,8 +58,7 @@ pub fn call2() {
     {
         let branch = Rc::new(Node { value:    5,
                                     parent:   RefCell::new(Weak::new()),
-                                    children:
-                                        RefCell::new(vec![Rc::clone(&leaf)]), });
+                                    children: RefCell::new(vec![Rc::clone(&leaf)]), });
 
         *leaf.parent
              .borrow_mut() = Rc::downgrade(&branch);

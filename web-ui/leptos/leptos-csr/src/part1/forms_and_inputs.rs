@@ -1,5 +1,6 @@
 use leptos::*;
 
+#[component]
 pub fn ControlledInputs() -> impl IntoView {
     let (name, set_name) = create_signal("Controlled".to_string());
     view! {
@@ -25,6 +26,7 @@ pub fn ControlledInputs() -> impl IntoView {
     }
 }
 
+#[component]
 pub fn UncontrolledInputs() -> impl IntoView {
     let (name, set_name) = create_signal("Uncontrolled".to_string());
     let input_element: NodeRef<html::Input> = create_node_ref();
@@ -60,6 +62,7 @@ pub fn UncontrolledInputs() -> impl IntoView {
     }
 }
 
+#[component]
 pub fn SpecialCasesTextarea() -> impl IntoView {
     let (name, set_name) = create_signal("SpecialCases".to_string());
     view! {
@@ -78,6 +81,7 @@ pub fn SpecialCasesTextarea() -> impl IntoView {
     }
 }
 
+#[component]
 pub fn SpecialCasesSelect() -> impl IntoView {
     let (value, set_value) = create_signal(0i32);
     view! {

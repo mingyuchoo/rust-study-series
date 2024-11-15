@@ -1,14 +1,14 @@
-use super::{product::{Product,
-                      ProductInput},
-            user::{User,
-                   UserInput}};
+use super::product::{Product,
+                     ProductInput};
+use super::user::{User,
+                  UserInput};
 use crate::db::DBPool;
 use juniper::{FieldError,
               FieldResult,
               RootNode};
+use mysql::prelude::*;
 use mysql::{from_row,
             params,
-            prelude::*,
             Error as DBError,
             Row};
 
@@ -44,17 +44,17 @@ impl QueryRoot {
                               .get_conn()
                               .unwrap();
         let user: Result<Option<Row>, DBError> =
-            conn.exec_first("SELECT * FROM user WHERE id=:id",
-                            params! {"id" => id});
+            conn.exec_first("SELECT * FROM user WHERE id=:id", params! {"id" => id});
 
         if let Err(err) = user {
-            return Err(FieldError::new("User Not Found",
-                                       graphql_value!({ "not_found": "user not found" })));
+            return Err(FieldError::new("User Not Found", graphql_value!({ "not_found": "user not found" })));
         }
 
         let (id, name, email) = from_row(user.unwrap()
                                              .unwrap());
-        Ok(User { id, name, email })
+        Ok(User { id,
+                  name,
+                  email })
     }
 
     #[graphql(description = "List of all products")]
@@ -62,13 +62,11 @@ impl QueryRoot {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
-        let products =
-            conn.query_map("SELECT * FROM product",
-                           |(id, user_id, name, price)| Product { id,
-                                                                  user_id,
-                                                                  name,
-                                                                  price })
-                .unwrap();
+        let products = conn.query_map("SELECT * FROM product", |(id, user_id, name, price)| Product { id,
+                                                                                                      user_id,
+                                                                                                      name,
+                                                                                                      price })
+                           .unwrap();
         Ok(products)
     }
 
@@ -80,8 +78,7 @@ impl QueryRoot {
                               .get_conn()
                               .unwrap();
         let product: Result<Option<Row>, DBError> =
-            conn.exec_first("SELECT * FROM product WHERE id=:id",
-                            params! {"id" => id});
+            conn.exec_first("SELECT * FROM product WHERE id=:id", params! {"id" => id});
         if let Err(err) = product {
             return Err(FieldError::new("Product Not Found",
                                        graphql_value!({ "not_found": "product not found" })));
@@ -128,8 +125,7 @@ impl MutationRoot {
                     | DBError::MySqlError(err) => err.message,
                     | _ => "internal error".to_owned(),
                 };
-                Err(FieldError::new("Failed to create new user",
-                                    graphql_value!({ "internal_error": msg })))
+                Err(FieldError::new("Failed to create new user", graphql_value!({ "internal_error": msg })))
             },
         }
     }
@@ -159,8 +155,7 @@ impl MutationRoot {
                     | DBError::MySqlError(err) => err.message,
                     | _ => "internal error".to_owned(),
                 };
-                Err(FieldError::new("Failed to delete a user",
-                                    graphql_value!({ "internal_error": msg })))
+                Err(FieldError::new("Failed to delete a user", graphql_value!({ "internal_error": msg })))
             },
         }
     }
@@ -229,8 +224,7 @@ impl MutationRoot {
                     | DBError::MySqlError(err) => err.message,
                     | _ => "internal error".to_owned(),
                 };
-                Err(FieldError::new("Failed to delete a product",
-                                    graphql_value!({ "internal_error": msg })))
+                Err(FieldError::new("Failed to delete a product", graphql_value!({ "internal_error": msg })))
             },
         }
     }

@@ -1,5 +1,5 @@
-use leptos::{ev::MouseEvent,
-             *};
+use leptos::ev::MouseEvent;
+use leptos::*;
 
 // Pass a WriteSignal
 #[component]

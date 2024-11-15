@@ -1,15 +1,13 @@
-use rocket::serde::{json::Json,
-                    Deserialize,
-                    Serialize};
-
-use diesel::{prelude::*,
-             result,
+use crate::{database,
+            schema};
+use diesel::prelude::*;
+use diesel::{result,
              Insertable,
              Queryable};
 use rocket::response::Debug;
-
-use crate::{database,
-            schema};
+use rocket::serde::json::Json;
+use rocket::serde::{Deserialize,
+                    Serialize};
 
 #[derive(Queryable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::posts)]

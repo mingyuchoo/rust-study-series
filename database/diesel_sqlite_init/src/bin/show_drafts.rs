@@ -3,8 +3,7 @@ use diesel_sqlite_init::*;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection = &mut establish_connection();
 
-    let results =
-        select_post(connection, false).expect("Error loading drafts.");
+    let results = select_post(connection, false).expect("Error loading drafts.");
 
     println!("Displaying {} drafts", results.len());
 

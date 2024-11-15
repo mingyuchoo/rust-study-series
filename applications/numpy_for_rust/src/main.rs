@@ -1,9 +1,9 @@
-use ndarray::{prelude::{array,
-                        Array,
-                        Array1,
-                        ArrayBase,
-                        Dim},
-              OwnedRepr,
+use ndarray::prelude::{array,
+                       Array,
+                       Array1,
+                       ArrayBase,
+                       Dim};
+use ndarray::{OwnedRepr,
               ShapeError};
 use std::f64::consts::PI;
 
