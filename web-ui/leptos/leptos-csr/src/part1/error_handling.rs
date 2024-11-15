@@ -1,5 +1,7 @@
 use leptos::*;
 
+
+// Important thing is <ErrorBoundary>
 #[component]
 pub fn NumericInput() -> impl IntoView {
     let (value, set_value) = create_signal(Ok(0));

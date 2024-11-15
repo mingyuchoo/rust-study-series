@@ -19,6 +19,9 @@ pub fn App() -> impl IntoView {
             <part1::control_flow::PreventingOverRendering/>
             <part1::control_flow::TypeConversions/>
             <part1::error_handling::NumericInput/>
+            <part1::parent_child_communication::PassAWriteSignal/>
+            <part1::parent_child_communication::UseACallback/>
+            <part1::parent_child_communication::ProvidingAContext/>
             <part2::typicode::Api/>
         }
     })

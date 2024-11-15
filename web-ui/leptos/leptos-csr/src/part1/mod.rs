@@ -6,3 +6,4 @@ pub mod error_handling;
 pub mod forms_and_inputs;
 pub mod iteration;
 pub mod iteration_with_for;
+pub mod parent_child_communication;
