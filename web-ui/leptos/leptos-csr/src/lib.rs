@@ -35,6 +35,8 @@ pub fn App() -> impl IntoView {
                     <Route path="/part1/reactivity/responding_to_changes_with_create_effect/CancelableTrackingWithWatch" view=part1::reactivity::responding_to_changes_with_create_effect::CancelableTrackingWithWatch/>
                     <Route path="/part1/reactivity/interlude/ReactivityAndFunctions" view=part1::reactivity::interlude::ReactivityAndFunctions/>
                     <Route path="/part1/testing/test_business_logic/HardToTest" view=part1::testing::test_business_logic::HardToTest/>
+                    <Route path="/part1/testing/test_business_logic/EasyToTest" view=part1::testing::test_business_logic::EasyToTest/>
+                    <Route path="/part1/testing/end_to_end_testing/WasmBindgenTest" view=part1::testing::end_to_end_testing::WasmBindgenTest/>
                     <Route path="/part2/typicode/Api" view=part2::typicode::Api/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
@@ -73,6 +75,8 @@ fn Home() -> impl IntoView {
                       "CancelableTrackingWithWatch"),
                      ("/part1/reactivity/interlude/ReactivityAndFunctions", "ReactivityAndFunctions"),
                      ("/part1/testing/test_business_logic/HardToTest", "HardToTest"),
+                     ("/part1/testing/test_business_logic/EasyToTest", "EasyToTest"),
+                     ("/part1/testing/end_to_end_testing/WasmBindgenTest", "WasmBindgenTest"),
                      ("/part2/typicode/Api", "Api"),];
 
     view! {
