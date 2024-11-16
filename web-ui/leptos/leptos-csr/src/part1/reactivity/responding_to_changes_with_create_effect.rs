@@ -40,22 +40,51 @@ pub fn ZeroCostishAbstraction() -> impl IntoView {
             <h2>"Effects as Zero-Cost-ish Abstraction"</h2>
             <p>"First name: " {first}</p>
             <p>"Last name: " {last}</p>
-            <input
-                type="text"
-                on:input=move |ev| {
-                    set_first(event_target_value(&ev))
-                }
-                prop:value=first
-            />
-            <input
-                type="text"
-                on:input=move |ev| {
-                    set_last(event_target_value(&ev))
-                }
-                prop:value=last
-            />
+            <input type="text" on:input=move |ev| set_first(event_target_value(&ev)) prop:value=first/>
+            <input type="text" on:input=move |ev| set_last(event_target_value(&ev))  prop:value=last/>
             <button on:click=move |_ev| set_use_last.update(|value| *value = !*value)>
                 "Toggle"
+            </button>
+        </main>
+    }
+}
+
+#[component]
+pub fn CancelableTrackingWithWatch() -> impl IntoView {
+    let (num, set_num) = create_signal(0);
+    let stop = watch(move || num.get(),
+                     move |num, prev_num, _| {
+                         log::debug!("Number: {}; Prev: {:?}", num, prev_num);
+                     },
+                     false);
+
+    view! {
+        <main>
+            <h2>"Explicit, Cancelable Tracking with watch"</h2>
+            <p>"Number: " {num.get()}</p>
+            <button
+                on:click=move |_ev| {
+                    // > "Number:1; Prev: Some(0)"
+                    set_num.set(1)
+                }
+            >
+                "Set to 1"
+            </button>
+            <button
+                on:click=move |_ev| {
+                    // stop watching
+                    stop()
+                }
+            >
+                "Stop watching"
+            </button>
+            <button
+                on:click=move |_ev| {
+                    // (nothing happens)
+                    set_num.set(2)
+                }
+            >
+                "Set to 2"
             </button>
         </main>
     }

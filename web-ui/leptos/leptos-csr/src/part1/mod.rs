@@ -9,3 +9,4 @@ pub mod iteration_with_for;
 pub mod parent_child_communication;
 pub mod passing_children_to_components;
 pub mod reactivity;
+pub mod testing;

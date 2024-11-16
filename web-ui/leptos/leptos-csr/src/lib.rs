@@ -32,6 +32,9 @@ pub fn App() -> impl IntoView {
                     <Route path="/part1/reactivity/making_signals_depend_on/GoodOptions" view=part1::reactivity::making_signals_depend_on::GoodOptions/>
                     <Route path="/part1/reactivity/responding_to_changes_with_create_effect/Basic" view=part1::reactivity::responding_to_changes_with_create_effect::Basic/>
                     <Route path="/part1/reactivity/responding_to_changes_with_create_effect/ZeroCostishAbstraction" view=part1::reactivity::responding_to_changes_with_create_effect::ZeroCostishAbstraction/>
+                    <Route path="/part1/reactivity/responding_to_changes_with_create_effect/CancelableTrackingWithWatch" view=part1::reactivity::responding_to_changes_with_create_effect::CancelableTrackingWithWatch/>
+                    <Route path="/part1/reactivity/interlude/ReactivityAndFunctions" view=part1::reactivity::interlude::ReactivityAndFunctions/>
+                    <Route path="/part1/testing/test_business_logic/HardToTest" view=part1::testing::test_business_logic::HardToTest/>
                     <Route path="/part2/typicode/Api" view=part2::typicode::Api/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
@@ -66,6 +69,10 @@ fn Home() -> impl IntoView {
                      ("/part1/reactivity/responding_to_changes_with_create_effect/Basic", "Basic"),
                      ("/part1/reactivity/responding_to_changes_with_create_effect/ZeroCostishAbstraction",
                       "ZeroCostishAbstraction"),
+                     ("/part1/reactivity/responding_to_changes_with_create_effect/CancelableTrackingWithWatch",
+                      "CancelableTrackingWithWatch"),
+                     ("/part1/reactivity/interlude/ReactivityAndFunctions", "ReactivityAndFunctions"),
+                     ("/part1/testing/test_business_logic/HardToTest", "HardToTest"),
                      ("/part2/typicode/Api", "Api"),];
 
     view! {
