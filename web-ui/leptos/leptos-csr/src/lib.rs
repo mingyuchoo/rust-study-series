@@ -29,6 +29,9 @@ pub fn App() -> impl IntoView {
                     <Route path="/part1/passing_children_to_components/ComponentChildren" view=part1::passing_children_to_components::ComponentChildren/>
                     <Route path="/part1/passing_children_to_components/ManipulatingChildren" view=part1::passing_children_to_components::ManipulatingChildren/>
                     <Route path="/part1/reactivity/working_with_signals/GettingAndSetting" view=part1::reactivity::working_with_signals::GettingAndSetting/>
+                    <Route path="/part1/reactivity/making_signals_depend_on/GoodOptions" view=part1::reactivity::making_signals_depend_on::GoodOptions/>
+                    <Route path="/part1/reactivity/responding_to_changes_with_create_effect/Basic" view=part1::reactivity::responding_to_changes_with_create_effect::Basic/>
+                    <Route path="/part1/reactivity/responding_to_changes_with_create_effect/ZeroCostishAbstraction" view=part1::reactivity::responding_to_changes_with_create_effect::ZeroCostishAbstraction/>
                     <Route path="/part2/typicode/Api" view=part2::typicode::Api/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
@@ -59,6 +62,10 @@ fn Home() -> impl IntoView {
                      ("/part1/passing_children_to_components/ComponentChildren", "ComponentChildren"),
                      ("/part1/passing_children_to_components/ManipulatingChildren", "ManipulatingChildren"),
                      ("/part1/reactivity/working_with_signals/GettingAndSetting", "GettingAndSetting"),
+                     ("/part1/reactivity/making_signals_depend_on/GoodOptions", "GoodOptions"),
+                     ("/part1/reactivity/responding_to_changes_with_create_effect/Basic", "Basic"),
+                     ("/part1/reactivity/responding_to_changes_with_create_effect/ZeroCostishAbstraction",
+                      "ZeroCostishAbstraction"),
                      ("/part2/typicode/Api", "Api"),];
 
     view! {
