@@ -39,6 +39,10 @@ pub fn App() -> impl IntoView {
                     <Route path="/part1/testing/test_business_logic/EasyToTest" view=part1::testing::test_business_logic::EasyToTest/>
                     <Route path="/part1/testing/end_to_end_testing/WasmBindgenTest" view=part1::testing::end_to_end_testing::WasmBindgenTest/>
                     <Route path="/part1/asynchronous/loading_data_with_resources/CreateResource" view=part1::asynchronous::loading_data_with_resources::CreateResource/>
+                    <Route path="/part1/asynchronous/suspense_component/SuspenseComponent" view=part1::asynchronous::suspense_component::SuspenseComponent/>
+                    <Route path="/part1/asynchronous/transition_component/TransitionComponent" view=part1::asynchronous::transition_component::TransitionComponent/>
+                    <Route path="/part1/asynchronous/create_action/CreateAction" view=part1::asynchronous::create_action::CreateAction/>
+                    <Route path="/part1/interlude/projecting_children/ProjectingChildren" view=part1::interlude::projecting_children::ProjectingChildren/>
                     <Route path="/part2/typicode/Api" view=part2::typicode::Api/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
@@ -80,6 +84,10 @@ fn Home() -> impl IntoView {
                      ("/part1/testing/test_business_logic/EasyToTest", "EasyToTest"),
                      ("/part1/testing/end_to_end_testing/WasmBindgenTest", "WasmBindgenTest"),
                      ("/part1/asynchronous/loading_data_with_resources/CreateResource", "CreateResource"),
+                     ("/part1/asynchronous/suspense_component/SuspenseComponent", "SuspenseComponent"),
+                     ("/part1/asynchronous/transition_component/TransitionComponent", "TransitionComponent"),
+                     ("/part1/asynchronous/create_action/CreateAction", "CreateAction"),
+                     ("/part1/interlude/projecting_children/ProjectingChildren", "ProjectingChildren"),
                      ("/part2/typicode/Api", "Api"),];
 
     view! {
