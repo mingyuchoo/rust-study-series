@@ -39,13 +39,25 @@ pub fn CreateResource() -> impl IntoView {
         .unwrap_or_else(|| "Loading...".into())
     };
 
+    // the resource's loading() method gives use a signal
+    // to indicate whether it's currently loading
+    let loading = async_data.loading();
+    let is_loading = move || if loading() { "Loading..." } else { "Idle." };
+
     view! {
         <main>
             <h1>"Create resource"</h1>
-            { move || match once.get() {
-                | None => view! { <p>"Loading..."</p>}.into_view(),
-                | Some(data) => view! { <ShowData data/>}.into_view(),
-            }}
+            <button on:click=move |_| { set_count.update(|n| *n += 1)}>
+                "Click me"
+            </button>
+            <p><code>"stable"</code>": " {move || stable.get()}</p>
+            <p><code>"count"</code>": " {count}</p>
+            <p>
+                <code>"async_value"</code>": "
+                {async_result}
+                <br/>
+                {is_loading}
+            </p>
         </main>
     }
 }

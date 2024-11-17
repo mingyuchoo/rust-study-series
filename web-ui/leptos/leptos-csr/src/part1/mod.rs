@@ -1,3 +1,4 @@
+pub mod asynchronous;
 pub mod basic_component;
 pub mod components_and_props;
 pub mod control_flow;

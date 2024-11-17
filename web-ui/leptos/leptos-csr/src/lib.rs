@@ -4,6 +4,7 @@ use leptos_router::*;
 mod part1;
 mod part2;
 
+#[component]
 pub fn App() -> impl IntoView {
     mount_to_body(|| {
         view! {
@@ -37,6 +38,7 @@ pub fn App() -> impl IntoView {
                     <Route path="/part1/testing/test_business_logic/HardToTest" view=part1::testing::test_business_logic::HardToTest/>
                     <Route path="/part1/testing/test_business_logic/EasyToTest" view=part1::testing::test_business_logic::EasyToTest/>
                     <Route path="/part1/testing/end_to_end_testing/WasmBindgenTest" view=part1::testing::end_to_end_testing::WasmBindgenTest/>
+                    <Route path="/part1/asynchronous/loading_data_with_resources/CreateResource" view=part1::asynchronous::loading_data_with_resources::CreateResource/>
                     <Route path="/part2/typicode/Api" view=part2::typicode::Api/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
@@ -77,6 +79,7 @@ fn Home() -> impl IntoView {
                      ("/part1/testing/test_business_logic/HardToTest", "HardToTest"),
                      ("/part1/testing/test_business_logic/EasyToTest", "EasyToTest"),
                      ("/part1/testing/end_to_end_testing/WasmBindgenTest", "WasmBindgenTest"),
+                     ("/part1/asynchronous/loading_data_with_resources/CreateResource", "CreateResource"),
                      ("/part2/typicode/Api", "Api"),];
 
     view! {
