@@ -43,6 +43,7 @@ pub fn App() -> impl IntoView {
                     <Route path="/part1/asynchronous/transition_component/TransitionComponent" view=part1::asynchronous::transition_component::TransitionComponent/>
                     <Route path="/part1/asynchronous/create_action/CreateAction" view=part1::asynchronous::create_action::CreateAction/>
                     <Route path="/part1/interlude/projecting_children/ProjectingChildren" view=part1::interlude::projecting_children::ProjectingChildren/>
+                    <Route path="/part1/globalstatemanagement/global_state_management/GlobalStateManagement" view=part1::globalstatemanagement::global_state_management::GlobalStateManagement/>
                     <Route path="/part2/typicode/Api" view=part2::typicode::Api/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
@@ -88,6 +89,8 @@ fn Home() -> impl IntoView {
                      ("/part1/asynchronous/transition_component/TransitionComponent", "TransitionComponent"),
                      ("/part1/asynchronous/create_action/CreateAction", "CreateAction"),
                      ("/part1/interlude/projecting_children/ProjectingChildren", "ProjectingChildren"),
+                     ("/part1/globalstatemanagement/global_state_management/GlobalStateManagement",
+                      "GlobalStateManagement"),
                      ("/part2/typicode/Api", "Api"),];
 
     view! {

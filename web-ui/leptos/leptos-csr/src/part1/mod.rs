@@ -5,6 +5,7 @@ pub mod control_flow;
 pub mod dynamic_attributes;
 pub mod error_handling;
 pub mod forms_and_inputs;
+pub mod globalstatemanagement;
 pub mod interlude;
 pub mod iteration;
 pub mod iteration_with_for;
