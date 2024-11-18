@@ -13,4 +13,5 @@ pub mod parent_child_communication;
 pub mod passing_children_to_components;
 pub mod reactivity;
 pub mod routing;
+pub mod styling;
 pub mod testing;

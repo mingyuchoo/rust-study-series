@@ -45,6 +45,8 @@ pub fn App() -> impl IntoView {
                     <Route path="/part1/interlude/projecting_children/ProjectingChildren" view=part1::interlude::projecting_children::ProjectingChildren/>
                     <Route path="/part1/globalstatemanagement/global_state_management/GlobalStateManagement" view=part1::globalstatemanagement::global_state_management::GlobalStateManagement/>
                     <Route path="/part1/routing/defining_routes/DefiningRoutes" view=part1::routing::defining_routes::DefiningRoutes/>
+                    <Route path="/part1/routing/form_component/FormComponent" view=part1::routing::form_component::FormComponent/>
+                    <Route path="/part1/styling/tailwind_css/TailwindCSS" view=part1::styling::tailwind_css::TailwindCSS/>
                     <Route path="/part2/typicode/Api" view=part2::typicode::Api/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
@@ -93,6 +95,8 @@ fn Home() -> impl IntoView {
                      ("/part1/globalstatemanagement/global_state_management/GlobalStateManagement",
                       "GlobalStateManagement"),
                      ("/part1/routing/defining_routes/DefiningRoutes", "DefiningRoutes"),
+                     ("/part1/routing/form_component/FormComponent", "FormComponent"),
+                     ("/part1/styling/tailwind_css/TailwindCSS", "TailwindCSS"),
                      ("/part2/typicode/Api", "Api"),];
 
     view! {
