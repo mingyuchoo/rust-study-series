@@ -1,0 +1,14 @@
+[toolchain]
+  channel = "nightly"
+  components = [
+    "cargo-generate",
+    "cargo-leptos",
+    "clippy",
+    "leptosfmt",
+    "rust-analyzer",
+    "rust-src",
+    "rustfmt",
+    "trunk",
+  ]
+  profile = "default"
+  targets = ["wasm32-unknown-unknown"]
