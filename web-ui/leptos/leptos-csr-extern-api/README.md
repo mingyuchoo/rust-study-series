@@ -25,7 +25,7 @@ cargo generate --git https://github.com/leptos-community/start-csr
 to generate your new project, then
 
 ```sh
-cd my-api
+cd leptos-csr-extern-api
 ```
 
 to go to your newly created project.

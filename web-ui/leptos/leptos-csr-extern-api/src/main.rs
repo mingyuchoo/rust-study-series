@@ -1,5 +1,5 @@
 use leptos::*;
-use my_api::App;
+use leptos_csr_extern_api::App;
 
 fn main() {
     _ = console_log::init_with_level(log::Level::Debug);
