@@ -2,24 +2,21 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+//use crate::models::todo::Todo;
+use crate::server::todo::fetch_todos;
+
 #[component]
 pub fn App() -> impl IntoView {
-    // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
     view! {
-        // injects a stylesheet into the document <head>
-        // id=leptos means cargo-leptos will hot-reload this stylesheet
         <Stylesheet id="leptos" href="/pkg/leptos-ssr.css"/>
-
-        // sets the document title
         <Title text="Welcome to Leptos"/>
-
-        // content for this welcome page
         <Router>
             <main>
                 <Routes>
                     <Route path="" view=HomePage/>
+                    <Route path="/todo" view=TodosPage/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
             </main>
@@ -27,10 +24,8 @@ pub fn App() -> impl IntoView {
     }
 }
 
-/// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
-    // Creates a reactive value to update the button
     let (count, set_count) = create_signal(0);
     let on_click = move |_| set_count.update(|count| *count += 1);
 
@@ -40,19 +35,43 @@ fn HomePage() -> impl IntoView {
     }
 }
 
-/// 404 - Not Found
+
+#[component]
+fn TodosPage() -> impl IntoView {
+    let todos = create_resource(|| (), |_| fetch_todos());
+
+    view! {
+        <div>
+            <h1>"Todo List"</h1>
+            <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+                {move || {
+                    todos.get().map(|todos| match todos {
+                        Ok(todos) => {
+                            view! {
+                                <ul>
+                                    {todos.into_iter().map(|todo| {
+                                        view! {
+                                            <li>
+                                                <input type="checkbox" checked=todo.completed/>
+                                                {todo.title}
+                                            </li>
+                                        }
+                                    }).collect::<Vec<_>>()}
+                                </ul>
+                            }.into_view()
+                        }
+                        Err(e) => view! { <p>"Error loading todos: " {e.to_string()}</p> }.into_view()
+                    })
+                }}
+            </Suspense>
+        </div>
+    }
+}
+
 #[component]
 fn NotFound() -> impl IntoView {
-    // set an HTTP status code 404
-    // this is feature gated because it can only be done during
-    // initial server-side rendering
-    // if you navigate to the 404 page subsequently, the status
-    // code will not be set because there is not a new HTTP request
-    // to the server
     #[cfg(feature = "ssr")]
     {
-        // this can be done inline because it's synchronous
-        // if it were async, we'd use a server function
         let resp = expect_context::<leptos_actix::ResponseOptions>();
         resp.set_status(actix_web::http::StatusCode::NOT_FOUND);
     }
