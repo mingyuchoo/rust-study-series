@@ -1,5 +1,5 @@
-use leptos::*;
 use crate::models::todo::Todo;
+use leptos::*;
 
 #[server]
 pub async fn fetch_todos() -> Result<Vec<Todo>, ServerFnError> {

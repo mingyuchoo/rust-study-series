@@ -1,9 +1,8 @@
+// use crate::models::todo::Todo;
+use crate::server::todo::fetch_todos;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-
-//use crate::models::todo::Todo;
-use crate::server::todo::fetch_todos;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -34,7 +33,6 @@ fn HomePage() -> impl IntoView {
         <button on:click=on_click>"Click Me: " {count}</button>
     }
 }
-
 
 #[component]
 fn TodosPage() -> impl IntoView {
