@@ -17,20 +17,21 @@
   leptos_meta              = {version = "0.6", features = ["nightly"]}
   leptos_router            = {version = "0.6", features = ["nightly"]}
   log                      = "0.4.22"
-serde = { version = "1.0.215", features = ["derive"] }
-serde_json = "1.0.133"
-  wasm-bindgen             = "=0.2.95"
+  serde                    = {version = "1.0.215", features = ["derive"]}
+  serde_json               = "1.0.133"
+thiserror = "2.0.3"
+  wasm-bindgen             = {version = "0.2.95", features = ["serde-serialize", "strict-macro"]}
 
 [features]
   csr = [
     "leptos/csr",
     "leptos_meta/csr",
-    "leptos_router/csr"
+    "leptos_router/csr",
   ]
   hydrate = [
     "leptos/hydrate",
     "leptos_meta/hydrate",
-    "leptos_router/hydrate"
+    "leptos_router/hydrate",
   ]
   ssr = [
     "dep:actix-files",
@@ -52,7 +53,7 @@ serde_json = "1.0.133"
     assets-dir           = "assets"
     bin-default-features = false
     bin-features         = ["ssr"]
-    bin-target-triple    = "aarch64-unknown-linux-gnu"
+    #bin-target-triple    = "aarch64-unknown-linux-gnu"
     browserquery         = "defaults"
     end2end-cmd          = "npx playwright test"
     end2end-dir          = "end2end"
