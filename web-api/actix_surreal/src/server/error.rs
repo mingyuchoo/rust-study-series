@@ -3,20 +3,20 @@ use actix_web::{HttpResponse,
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum AppError {
+pub enum ServerError {
     #[error("database error")]
     Db(String),
 }
 
-impl ResponseError for AppError {
+impl ResponseError for ServerError {
     fn error_response(&self) -> HttpResponse {
         match self {
-            | AppError::Db(e) => HttpResponse::InternalServerError().body(e.to_string()),
+            | ServerError::Db(e) => HttpResponse::InternalServerError().body(e.to_string()),
         }
     }
 }
 
-impl From<surrealdb::Error> for AppError {
+impl From<surrealdb::Error> for ServerError {
     fn from(error: surrealdb::Error) -> Self {
         eprintln!("{error}");
         Self::Db(error.to_string())

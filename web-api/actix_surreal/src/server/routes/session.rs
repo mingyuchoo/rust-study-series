@@ -1,10 +1,10 @@
-use crate::error::AppError;
+use crate::server::error::ServerError;
 use crate::DB;
 use actix_web::get;
 use actix_web::web::Json;
 
 #[get("/session")]
-pub async fn session() -> Result<Json<String>, AppError> {
+pub async fn session() -> Result<Json<String>, ServerError> {
     let res: Option<String> = DB.query("RETURN <string>$session")
                                 .await?
                                 .take(0)?;

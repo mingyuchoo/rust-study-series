@@ -1,4 +1,4 @@
-use crate::error::AppError;
+use crate::server::error::ServerError;
 use crate::DB;
 use actix_web::get;
 use faker_rand::en_us::names::FirstName;
@@ -13,7 +13,7 @@ struct Params<'a> {
 }
 
 #[get("/new_user")]
-pub async fn make_new_user() -> Result<String, AppError> {
+pub async fn make_new_user() -> Result<String, ServerError> {
     let name = rand::random::<FirstName>().to_string();
     let pass = rand::random::<FirstName>().to_string();
     let jwt = DB.signup(Record { access:    "account",

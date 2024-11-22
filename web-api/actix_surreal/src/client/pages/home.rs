@@ -1,33 +1,13 @@
 use leptos::*;
-use leptos_meta::*;
-use leptos_router::*;
 
 #[component]
-pub fn App() -> impl IntoView {
-    provide_meta_context();
-
-    view! {
-        <Stylesheet id="leptos" href="/pkg/actix_surreal.css"/>
-        <Title text="Welcome to Leptos"/>
-        <Router>
-            <main>
-                <Routes>
-                    <Route path="" view=HomePage/>
-                    <Route path="/*any" view=NotFound/>
-                </Routes>
-            </main>
-        </Router>
-    }
-}
-
-#[component]
-fn HomePage() -> impl IntoView {
+pub fn HomePage() -> impl IntoView {
     let (count, set_count) = create_signal(0);
 
     view! {
         <main>
             <div class="bg-gradient-to-tl from-blue-800 to-blue-500 text-white font-mono flex flex-col min-h-screen">
-                <h1>"Welcome to Leptos!"</h1>
+                <h1 class="text-2xl font-bold mb-4">"Welcome to Leptos!"</h1>
                 <div class="flex flex-row-reverse flex-wrap m-auto">
                     <button
                         on:click=move |_| set_count.update(|count| *count += 1)
@@ -48,18 +28,5 @@ fn HomePage() -> impl IntoView {
                 </div>
             </div>
         </main>
-    }
-}
-
-#[component]
-fn NotFound() -> impl IntoView {
-    #[cfg(feature = "ssr")]
-    {
-        let resp = expect_context::<leptos_actix::ResponseOptions>();
-        resp.set_status(actix_web::http::StatusCode::NOT_FOUND);
-    }
-
-    view! {
-        <h1>"Not Found"</h1>
     }
 }

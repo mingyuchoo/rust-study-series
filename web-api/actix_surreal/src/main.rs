@@ -1,16 +1,13 @@
-mod app;
 mod config;
-mod db;
-mod error;
-mod routes;
-
+mod server;
 use actix_files::Files;
+use actix_surreal::client::app;
 use actix_web::*;
 use config::AppConfig;
-use db::DB;
 use leptos::*;
 use leptos_actix::{generate_route_list,
                    LeptosRoutes};
+use server::db::DB;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -21,7 +18,7 @@ async fn main() -> std::io::Result<()> {
 
     println!("listening on http://{}", &addr);
 
-    if let Err(err) = db::setup_database().await {
+    if let Err(err) = server::db::setup_database().await {
         eprintln!("Failed to set up database: {:?}", err);
         return Err(std::io::Error::new(std::io::ErrorKind::Other, "Database setup failed"));
     }
@@ -32,7 +29,7 @@ async fn main() -> std::io::Result<()> {
         App::new().service(Files::new("/pkg", format!("{site_root}/pkg")))
                   .service(Files::new("/assets", site_root))
                   .service(favicon)
-                  .configure(routes::config)
+                  .configure(server::routes::config)
                   .leptos_routes(leptos_options.to_owned(), routes.to_owned(), app::App)
                   .app_data(web::Data::new(leptos_options.to_owned()))
                   .wrap(middleware::Compress::default())

@@ -1,5 +1,5 @@
-use crate::db::DB;
-use crate::error::AppError;
+use crate::server::db::DB;
+use crate::server::error::ServerError;
 use actix_web::web::{Json,
                      Path};
 use actix_web::{delete,
@@ -26,7 +26,7 @@ pub struct Person {
 #[post("/person/{id}")]
 pub async fn create_person(id: Path<String>,
                            person: Json<PersonData>)
-                           -> Result<Json<Option<Person>>, AppError> {
+                           -> Result<Json<Option<Person>>, ServerError> {
     let person = DB.create((PERSON, &*id))
                    .content(person)
                    .await?;
@@ -34,7 +34,7 @@ pub async fn create_person(id: Path<String>,
 }
 
 #[get("/person/{id}")]
-pub async fn read_person(id: Path<String>) -> Result<Json<Option<Person>>, AppError> {
+pub async fn read_person(id: Path<String>) -> Result<Json<Option<Person>>, ServerError> {
     let person = DB.select((PERSON, &*id))
                    .await?;
     Ok(Json(person))
@@ -43,7 +43,7 @@ pub async fn read_person(id: Path<String>) -> Result<Json<Option<Person>>, AppEr
 #[put("/person/{id}")]
 pub async fn update_person(id: Path<String>,
                            person: Json<PersonData>)
-                           -> Result<Json<Option<Person>>, AppError> {
+                           -> Result<Json<Option<Person>>, ServerError> {
     let person = DB.update((PERSON, &*id))
                    .content(person)
                    .await?;
@@ -51,14 +51,14 @@ pub async fn update_person(id: Path<String>,
 }
 
 #[delete("/person/{id}")]
-pub async fn delete_person(id: Path<String>) -> Result<Json<Option<Person>>, AppError> {
+pub async fn delete_person(id: Path<String>) -> Result<Json<Option<Person>>, ServerError> {
     let person = DB.delete((PERSON, &*id))
                    .await?;
     Ok(Json(person))
 }
 
 #[get("/people")]
-pub async fn list_people() -> Result<Json<Vec<Person>>, AppError> {
+pub async fn list_people() -> Result<Json<Vec<Person>>, ServerError> {
     let people = DB.select(PERSON)
                    .await?;
     Ok(Json(people))
