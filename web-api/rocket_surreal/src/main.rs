@@ -2,8 +2,7 @@
 extern crate rocket;
 
 use std::sync::LazyLock;
-use surrealdb::engine::remote::ws::{Client,
-                                    Ws};
+use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 
@@ -11,9 +10,7 @@ static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 mod error {
     use rocket::http::Status;
-    use rocket::response::{self,
-                           Responder,
-                           Response};
+    use rocket::response::{self, Responder, Response};
     use rocket::Request;
     use thiserror::Error;
 
@@ -30,7 +27,8 @@ mod error {
             let error_message = format!(r#"{{ "error": "{self}" }}"#);
             Response::build().status(Status::InternalServerError)
                              .header(rocket::http::ContentType::JSON)
-                             .sized_body(error_message.len(), std::io::Cursor::new(error_message))
+                             .sized_body(error_message.len(),
+                                         std::io::Cursor::new(error_message))
                              .ok()
         }
     }
@@ -49,12 +47,8 @@ mod routes {
     use crate::DB;
     use faker_rand::en_us::names::FirstName;
     use rocket::serde::json::Json;
-    use rocket::{delete,
-                 get,
-                 post,
-                 put};
-    use serde::{Deserialize,
-                Serialize};
+    use rocket::{delete, get, post, put};
+    use serde::{Deserialize, Serialize};
     use surrealdb::opt::auth::Record;
     use surrealdb::RecordId;
     const PERSON: &str = "person";
@@ -117,7 +111,8 @@ mod routes {
     }
 
     #[get("/person/<id>")]
-    pub async fn read_person(id: String) -> Result<Json<Option<Person>>, Error> {
+    pub async fn read_person(id: String)
+                             -> Result<Json<Option<Person>>, Error> {
         let person = DB.select((PERSON, &*id))
                        .await?;
         Ok(Json(person))
@@ -134,7 +129,8 @@ mod routes {
     }
 
     #[delete("/person/<id>")]
-    pub async fn delete_person(id: String) -> Result<Json<Option<Person>>, Error> {
+    pub async fn delete_person(id: String)
+                               -> Result<Json<Option<Person>>, Error> {
         let person = DB.delete((PERSON, &*id))
                        .await?;
         Ok(Json(person))

@@ -11,7 +11,9 @@ pub fn SuspenseComponent() -> impl IntoView {
     let (name, set_name) = create_signal("Bill".to_string());
 
     // this will reload every time `name` changes
-    let async_data = create_resource(name, |name| async move { important_api_call(name).await });
+    let async_data =
+        create_resource(name,
+                        |name| async move { important_api_call(name).await });
 
     view! {
         <main>

@@ -1,8 +1,7 @@
 mod diesel_schema;
 mod graphql_schema;
 
-use crate::graphql_schema::{create_schema,
-                            Schema};
+use crate::graphql_schema::{create_schema, Schema};
 
 async fn graphiql() -> actix_web::HttpResponse {
     actix_web::HttpResponse::Ok()

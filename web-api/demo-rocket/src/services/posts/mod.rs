@@ -1,13 +1,9 @@
-use crate::{database,
-            schema};
+use crate::{database, schema};
 use diesel::prelude::*;
-use diesel::{result,
-             Insertable,
-             Queryable};
+use diesel::{result, Insertable, Queryable};
 use rocket::response::Debug;
 use rocket::serde::json::Json;
-use rocket::serde::{Deserialize,
-                    Serialize};
+use rocket::serde::{Deserialize, Serialize};
 
 #[derive(Queryable, Serialize, Deserialize)]
 #[diesel(table_name = crate::schema::posts)]
@@ -43,7 +39,8 @@ pub fn create_post(post: Json<NewPost>) -> Json<NewPost> {
 pub fn list_posts(offset: i64,
                   limit: i64)
                   -> Vec<Post> {
-    let connection: &mut PgConnection = &mut database::establish_connection_pg();
+    let connection: &mut PgConnection =
+        &mut database::establish_connection_pg();
     schema::posts::dsl::posts.limit(limit)
                              .offset(offset)
                              .load::<Post>(connection)

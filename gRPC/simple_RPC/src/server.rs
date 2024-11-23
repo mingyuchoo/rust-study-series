@@ -1,18 +1,14 @@
 use std::error::Error;
 use std::net::SocketAddr;
 use tonic::transport::Server;
-use tonic::{Request,
-            Response,
-            Status};
+use tonic::{Request, Response, Status};
 
 pub mod product_info_proto {
     tonic::include_proto!("ecommerce"); // proto package
 }
 
-use product_info_proto::product_info_server::{ProductInfo,
-                                              ProductInfoServer};
-use product_info_proto::{Product,
-                         ProductId};
+use product_info_proto::product_info_server::{ProductInfo, ProductInfoServer};
+use product_info_proto::{Product, ProductId};
 
 #[derive(Default)]
 pub struct MyProductInfo {}

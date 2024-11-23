@@ -1,5 +1,4 @@
-use std::sync::{Arc,
-                Mutex};
+use std::sync::{Arc, Mutex};
 use std::thread;
 
 pub fn call1() -> Result<(), std::io::Error> {

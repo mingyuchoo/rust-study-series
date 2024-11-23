@@ -14,8 +14,15 @@ pub fn GettingAndSetting() -> impl IntoView {
     let (middle, _) = create_signal("J.".to_string());
     let (last, _) = create_signal("Smith".to_string());
 
-    let name1 = move || first.with(|first| middle.with(|middle| last.with(|last| format!("{first} {middle} {last}"))));
-    let name2 = move || with!(|first, middle, last| format!("{first} {middle} {last}"));
+    let name1 = move || {
+        first.with(|first| {
+                 middle.with(|middle| {
+                           last.with(|last| format!("{first} {middle} {last}"))
+                       })
+             })
+    };
+    let name2 =
+        move || with!(|first, middle, last| format!("{first} {middle} {last}"));
 
     view! {
         <div>

@@ -1,10 +1,7 @@
 mod handle_builder;
 mod handle_fetcher;
 
-use notify::{Config,
-             RecommendedWatcher,
-             RecursiveMode,
-             Watcher};
+use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
 use std::sync::mpsc::channel;
 use std::thread;
@@ -15,7 +12,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let (tx, rx) = channel();
 
-    let mut watcher: RecommendedWatcher = Watcher::new(tx, Config::default()).unwrap();
+    let mut watcher: RecommendedWatcher =
+        Watcher::new(tx, Config::default()).unwrap();
     watcher.watch(repo_path, RecursiveMode::Recursive)
            .unwrap();
 

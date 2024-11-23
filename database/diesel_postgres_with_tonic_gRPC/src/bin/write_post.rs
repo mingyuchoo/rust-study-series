@@ -1,7 +1,6 @@
 use diesel::prelude::*;
 use diesel_postgres_init::*;
-use std::io::{stdin,
-              Read};
+use std::io::{stdin, Read};
 
 fn main() -> () {
     let connection: &mut PgConnection = &mut establish_connection();

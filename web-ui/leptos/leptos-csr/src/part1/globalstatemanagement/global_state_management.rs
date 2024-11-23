@@ -156,12 +156,14 @@ fn GlobalStateCounter() -> impl IntoView {
     let state = use_context::<RwSignal<GlobalState>>().expect("state to hae been provided");
 
     // `create_slice` lets us create a "lens" into the data
-    let (count, set_count) = create_slice(// we take a slice *from* `state`
-                                          state,
-                                          // our getter returns a "slice" of the data
-                                          |state| state.count,
-                                          // our setter describes how to mutate that slice, given a new value
-                                          |state, n| state.count = n);
+    let (count, set_count) =
+        create_slice(// we take a slice *from* `state`
+                     state,
+                     // our getter returns a "slice" of the data
+                     |state| state.count,
+                     // our setter describes how to mutate that slice, given a
+                     // new value
+                     |state, n| state.count = n);
     view! {
         <div class="consumer blue">
             <button on:click=move |_| {
@@ -186,12 +188,14 @@ fn GlobalStateInput() -> impl IntoView {
     // neither of them will cause the other to rerun
     let (name, set_name) = create_slice(// we take a slice *from* `state`
                                         state,
-                                        // our getter returns a "slice" of the data
+                                        // our getter returns a "slice" of the
+                                        // data
                                         |state| {
                                             state.name
                                                  .clone()
                                         },
-                                        // our setter describes how to mutate that slice, given a new vlaue
+                                        // our setter describes how to mutate
+                                        // that slice, given a new vlaue
                                         |state, n| state.name = n);
 
     view! {

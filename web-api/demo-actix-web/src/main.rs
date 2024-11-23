@@ -1,10 +1,4 @@
-use actix_web::{get,
-                post,
-                web,
-                App,
-                HttpResponse,
-                HttpServer,
-                Responder};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use clap::Parser;
 
 #[derive(Parser, Debug)]

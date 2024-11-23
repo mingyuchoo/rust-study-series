@@ -16,7 +16,9 @@ pub fn TransitionComponent() -> impl IntoView {
     let (tab, set_tab) = create_signal(0);
 
     // this will reload every time `tab` changes
-    let user_data = create_resource(tab, |tab| async move { important_api_call(tab).await });
+    let user_data =
+        create_resource(tab,
+                        |tab| async move { important_api_call(tab).await });
 
     view! {
         <main>

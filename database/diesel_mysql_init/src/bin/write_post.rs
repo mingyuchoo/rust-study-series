@@ -1,6 +1,5 @@
 use diesel_mysql_init::*;
-use std::io::{stdin,
-              Read};
+use std::io::{stdin, Read};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection: &mut diesel::MysqlConnection = &mut establish_connection();
@@ -13,7 +12,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
            .unwrap();
     let title: &str = title.trim_end();
 
-    println!("\nOk! Let's write {} (Press {}) when finished\n", title, EOF);
+    println!("\nOk! Let's write {} (Press {}) when finished\n",
+             title, EOF);
     stdin().read_to_string(&mut body)
            .unwrap();
 

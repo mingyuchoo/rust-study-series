@@ -1,8 +1,7 @@
 pub mod models;
 pub mod schema;
 
-use self::models::{NewPost,
-                   Post};
+use self::models::{NewPost, Post};
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
 use dotenvy::dotenv;
@@ -11,7 +10,8 @@ use std::env;
 pub fn establish_connection() -> PgConnection {
     dotenv().ok();
 
-    let database_url: String = env::var("DATABASE_URL").expect("DATBASE_URL must be set");
+    let database_url: String =
+        env::var("DATABASE_URL").expect("DATBASE_URL must be set");
     PgConnection::establish(&database_url).unwrap_or_else(|_| panic!("Error connection to {database_url}"))
 }
 

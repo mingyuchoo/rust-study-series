@@ -37,7 +37,8 @@ pub fn CreateResource() -> impl IntoView {
     let async_data = create_resource(// the first is the "source signal"
                                      count,
                                      // the second is the "fetcher function"
-                                     // it takes the source signal's value as its argument
+                                     // it takes the source signal's value as
+                                     // its argument
                                      // and does some async work
                                      |value| async move { load_data(value).await });
     // whenever the "source signal" changes, the "fetcher function" reloads

@@ -4,8 +4,7 @@ use diesel_postgres_init::*;
 use std::env::args;
 
 fn main() -> () {
-    use self::schema::posts::dsl::{posts,
-                                   published};
+    use self::schema::posts::dsl::{posts, published};
 
     let id: i32 = args().nth(1)
                         .expect("publish_post requires a post id")

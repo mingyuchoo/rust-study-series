@@ -10,7 +10,9 @@ impl QueryRoot {
     }
 }
 
-pub type Schema = async_graphql::Schema<QueryRoot, async_graphql::EmptyMutation, async_graphql::EmptySubscription>;
+pub type Schema = async_graphql::Schema<QueryRoot,
+                                        async_graphql::EmptyMutation,
+                                        async_graphql::EmptySubscription>;
 
 pub fn create_schema() -> Schema {
     async_graphql::Schema::new(QueryRoot,

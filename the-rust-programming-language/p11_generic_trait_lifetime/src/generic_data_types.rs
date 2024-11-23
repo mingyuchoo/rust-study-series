@@ -74,7 +74,8 @@ pub fn call4() {
 
     print!("both_integer: ({},{}), ", both_integer.x, both_integer.y);
     print!("both_float: ({},{}), ", both_float.x, both_float.y);
-    println!("integer_and_float: ({},{})", integer_and_float.y, integer_and_float.y);
+    println!("integer_and_float: ({},{})",
+             integer_and_float.y, integer_and_float.y);
 }
 
 pub fn call5() {
@@ -122,7 +123,8 @@ pub fn call6() {
         fn mixup<V, W>(self,
                        other: Point<V, W>)
                        -> Point<T, W> {
-            Point { x: self.x, y: other.y, }
+            Point { x: self.x,
+                    y: other.y, }
         }
     }
 

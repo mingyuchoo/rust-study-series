@@ -19,7 +19,8 @@ mod tests {
     fn case_insensitive() {
         let query = "rUsT";
         let contents = "Rust:\nsafe, fast, productive.\nPick three.\nTrust me.";
-        assert_eq!(vec!["Rust:", "Trust me."], search_case_insensitive(query, contents));
+        assert_eq!(vec!["Rust:", "Trust me."],
+                   search_case_insensitive(query, contents));
     }
 }
 

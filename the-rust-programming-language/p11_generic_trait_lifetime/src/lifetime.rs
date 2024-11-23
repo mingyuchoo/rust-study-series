@@ -73,6 +73,7 @@ pub fn call4() {
     }
     let string1 = String::from("abcd");
     let string2 = "xyz";
-    let result = longest_with_an_announcement(string1.as_str(), string2, "World");
+    let result =
+        longest_with_an_announcement(string1.as_str(), string2, "World");
     println!("더 긴 문자열은 {result} 입니다.");
 }

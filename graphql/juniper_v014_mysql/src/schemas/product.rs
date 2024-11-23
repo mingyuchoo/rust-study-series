@@ -1,8 +1,7 @@
 use crate::schemas::root::Context;
 use crate::schemas::user::User;
 use mysql::prelude::*;
-use mysql::{from_row,
-            params};
+use mysql::{from_row, params};
 
 /// Product
 #[derive(Default, Debug)]
@@ -37,7 +36,8 @@ impl Product {
         let mut conn = context.dbpool
                               .get_conn()
                               .unwrap();
-        let user = conn.exec_first("SELECT * FROM user WHERE id=:id", params! {"id" => &self.user_id});
+        let user = conn.exec_first("SELECT * FROM user WHERE id=:id",
+                                   params! {"id" => &self.user_id});
         if let Err(err) = user {
             None
         }

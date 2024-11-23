@@ -4,10 +4,7 @@ extern crate r2d2;
 extern crate r2d2_mysql;
 extern crate serde_json;
 
-use actix_web::{middleware,
-                web,
-                App,
-                HttpServer};
+use actix_web::{middleware, web, App, HttpServer};
 
 mod db;
 mod handlers;

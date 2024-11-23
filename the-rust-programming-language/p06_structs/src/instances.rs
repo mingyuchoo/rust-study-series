@@ -16,7 +16,8 @@ pub fn create_instance() {
                            sign_in_count: 1,
                            active:        true, };
 
-    let user2 = build_user(String::from("newone@example.com"), String::from("newone"));
+    let user2 =
+        build_user(String::from("newone@example.com"), String::from("newone"));
 
     let user3 = User { email: String::from("another@example.com"),
                        username: String::from("anotherusername567"),

@@ -107,7 +107,9 @@ fn do_select_bills(bills: &Bills) {
 
     bills.select_all()
          .iter()
-         .for_each(|bill| println!("- name: {:<10} amount: {:>10}", bill.name, bill.amount));
+         .for_each(|bill| {
+             println!("- name: {:<10} amount: {:>10}", bill.name, bill.amount)
+         });
 }
 
 fn do_insert_bill(bills: &mut Bills) {

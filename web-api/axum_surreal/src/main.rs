@@ -1,11 +1,7 @@
-use axum::routing::{delete,
-                    get,
-                    post,
-                    put};
+use axum::routing::{delete, get, post, put};
 use axum::Router;
 use std::sync::LazyLock;
-use surrealdb::engine::remote::ws::{Client,
-                                    Ws};
+use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 use tokio::net::TcpListener;
@@ -14,8 +10,7 @@ static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 mod error {
     use axum::http::StatusCode;
-    use axum::response::{IntoResponse,
-                         Response};
+    use axum::response::{IntoResponse, Response};
     use axum::Json;
     use thiserror::Error;
 
@@ -45,8 +40,7 @@ mod routes {
     use axum::extract::Path;
     use axum::Json;
     use faker_rand::en_us::names::FirstName;
-    use serde::{Deserialize,
-                Serialize};
+    use serde::{Deserialize, Serialize};
     use surrealdb::opt::auth::Record;
     use surrealdb::RecordId;
 
@@ -99,7 +93,8 @@ mod routes {
         Ok(Json(person))
     }
 
-    pub async fn read_person(id: Path<String>) -> Result<Json<Option<Person>>, Error> {
+    pub async fn read_person(id: Path<String>)
+                             -> Result<Json<Option<Person>>, Error> {
         let person = DB.select((PERSON, &*id))
                        .await?;
         Ok(Json(person))
@@ -114,7 +109,8 @@ mod routes {
         Ok(Json(person))
     }
 
-    pub async fn delete_person(id: Path<String>) -> Result<Json<Option<Person>>, Error> {
+    pub async fn delete_person(id: Path<String>)
+                               -> Result<Json<Option<Person>>, Error> {
         let person = DB.delete((PERSON, &*id))
                        .await?;
         Ok(Json(person))
@@ -183,15 +179,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       .await?;
 
     let listener = TcpListener::bind("localhost:8080").await?;
-    let router = Router::new().route("/", get(routes::paths))
-                              .route("/person/:id", post(routes::create_person))
-                              .route("/person/:id", get(routes::read_person))
-                              .route("/person/:id", put(routes::update_person))
-                              .route("/person/:id", delete(routes::delete_person))
-                              .route("/people", get(routes::list_people))
-                              .route("/session", get(routes::session))
-                              .route("/new_user", get(routes::make_new_user))
-                              .route("/new_token", get(routes::get_new_token));
+    let router =
+        Router::new().route("/", get(routes::paths))
+                     .route("/person/:id", post(routes::create_person))
+                     .route("/person/:id", get(routes::read_person))
+                     .route("/person/:id", put(routes::update_person))
+                     .route("/person/:id", delete(routes::delete_person))
+                     .route("/people", get(routes::list_people))
+                     .route("/session", get(routes::session))
+                     .route("/new_user", get(routes::make_new_user))
+                     .route("/new_token", get(routes::get_new_token));
     axum::serve(listener, router).await?;
     Ok(())
 }

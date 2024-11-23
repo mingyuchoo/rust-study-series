@@ -6,8 +6,7 @@ pub struct Response {
     body:        Option<String>,
 }
 
-use std::io::{Result as IoResult,
-              Write};
+use std::io::{Result as IoResult, Write};
 
 impl Response {
     pub fn new(status_code: StatusCode,

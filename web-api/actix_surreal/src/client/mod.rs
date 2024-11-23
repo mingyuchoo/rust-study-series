@@ -1,3 +1,3 @@
-pub mod web;
-pub mod pages;
 pub mod config;
+pub mod pages;
+pub mod web;

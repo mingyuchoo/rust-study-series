@@ -16,12 +16,13 @@ pub fn Api() -> impl IntoView {
     let (loading, set_loading) = create_signal(false);
     let fetch_todos = create_action(move |_: &()| async move {
         set_loading.set(true);
-        let fetched_todos: Vec<Todo> = Request::get("https://jsonplaceholder.typicode.com/todos").send()
-                                                                                                 .await
-                                                                                                 .unwrap()
-                                                                                                 .json()
-                                                                                                 .await
-                                                                                                 .unwrap();
+        let fetched_todos: Vec<Todo> =
+            Request::get("https://jsonplaceholder.typicode.com/todos").send()
+                                                                      .await
+                                                                      .unwrap()
+                                                                      .json()
+                                                                      .await
+                                                                      .unwrap();
         set_loading.set(false);
         fetched_todos
     });

@@ -52,7 +52,8 @@ impl Team {
 
 fn establish_connection() -> diesel::pg::PgConnection {
     dotenv::dotenv().ok();
-    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url =
+        std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     diesel::pg::PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
 }
 
@@ -72,7 +73,9 @@ impl QueryRoot {
     }
 }
 
-pub type Schema = async_graphql::Schema<QueryRoot, async_graphql::EmptyMutation, async_graphql::EmptySubscription>;
+pub type Schema = async_graphql::Schema<QueryRoot,
+                                        async_graphql::EmptyMutation,
+                                        async_graphql::EmptySubscription>;
 
 pub fn create_schema() -> Schema {
     async_graphql::Schema::new(QueryRoot,

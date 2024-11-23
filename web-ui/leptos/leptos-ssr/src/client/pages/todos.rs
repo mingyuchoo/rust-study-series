@@ -19,7 +19,8 @@ pub fn TodosPage() -> impl IntoView {
 }
 
 #[component]
-fn TodoList(todos: Resource<(), Result<Vec<Todo>, ServerFnError>>) -> impl IntoView {
+fn TodoList(todos: Resource<(), Result<Vec<Todo>, ServerFnError>>)
+            -> impl IntoView {
     move || {
         todos.get()
              .map(|result| match result {

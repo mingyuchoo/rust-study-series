@@ -3,8 +3,7 @@ enum List {
     Nil,
 }
 
-use crate::boxes::List::{Cons,
-                         Nil};
+use crate::boxes::List::{Cons, Nil};
 
 pub fn call1() {
     let b = Box::new(5);

@@ -3,14 +3,14 @@ pub mod schema;
 
 use diesel::prelude::*;
 use dotenvy::dotenv;
-use models::{NewPost,
-             Post};
+use models::{NewPost, Post};
 use std::env;
 
 pub fn establish_connection() -> SqliteConnection {
     dotenv().ok();
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let database_url =
+        env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     SqliteConnection::establish(&database_url).unwrap_or_else(|_| {
                                                   panic!("Error connecting to \
                                                           {}",
@@ -37,8 +37,7 @@ pub fn create_post(connection: &mut SqliteConnection,
 pub fn select_post(connection: &mut SqliteConnection,
                    is_published: bool)
                    -> Result<Vec<Post>, diesel::result::Error> {
-    use self::schema::posts::dsl::{posts,
-                                   published};
+    use self::schema::posts::dsl::{posts, published};
 
     posts.filter(published.eq(is_published))
          .limit(5)
@@ -49,8 +48,7 @@ pub fn select_post(connection: &mut SqliteConnection,
 pub fn update_post(connection: &mut SqliteConnection,
                    id: i32)
                    -> Result<Post, diesel::result::Error> {
-    use self::schema::posts::dsl::{posts,
-                                   published};
+    use self::schema::posts::dsl::{posts, published};
 
     diesel::update(posts.find(id)).set(published.eq(true))
                                   .returning(Post::as_returning())

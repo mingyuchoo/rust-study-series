@@ -1,7 +1,5 @@
 use rocket::fs::FileServer;
-use rocket::{routes,
-             Build,
-             Rocket};
+use rocket::{routes, Build, Rocket};
 
 pub fn build() -> Rocket<Build> {
     use crate::controllers;

@@ -84,8 +84,7 @@ enum List {
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use List::{Cons,
-           Nil};
+use List::{Cons, Nil};
 
 pub fn call1() {
     let value = Rc::new(RefCell::new(5));

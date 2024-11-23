@@ -61,8 +61,7 @@ impl Todos {
 
 #[cfg(test)]
 mod tests {
-    use super::{Todo,
-                Todos};
+    use super::{Todo, Todos};
 
     #[test]
     fn test_remaining() {

@@ -1,10 +1,10 @@
 use aws_config::meta::region::RegionProviderChain;
-use aws_sdk_dynamodb::{Client,
-                       Error};
+use aws_sdk_dynamodb::{Client, Error};
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let region_provider = RegionProviderChain::default_provider().or_else("ap-northeast-2");
+    let region_provider =
+        RegionProviderChain::default_provider().or_else("ap-northeast-2");
     let config = aws_config::from_env().region(region_provider)
                                        .load()
                                        .await;

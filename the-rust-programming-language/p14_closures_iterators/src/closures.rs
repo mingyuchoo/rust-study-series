@@ -98,15 +98,18 @@ fn generate_workout_2(intensity: u32,
     };
 
     if intensity < 25 {
-        println!("오늘은 {}번의 팔 굽혀펴기를 하세요!", expensive_closure(intensity));
-        println!("다음에는 {}번의 윗몸 일으키기를 하세요!", expensive_closure(intensity));
+        println!("오늘은 {}번의 팔 굽혀펴기를 하세요!",
+                 expensive_closure(intensity));
+        println!("다음에는 {}번의 윗몸 일으키기를 하세요!",
+                 expensive_closure(intensity));
     }
     else {
         if random_number == 3 {
             println!("오늘은 수분을 충분히 섭취하며 쉬세요!");
         }
         else {
-            println!("오늘은 {}분간 달리기를 하세요!", expensive_closure(intensity));
+            println!("오늘은 {}분간 달리기를 하세요!",
+                     expensive_closure(intensity));
         }
     }
 }
@@ -148,7 +151,8 @@ fn generate_workout_3(intensity: u32,
     });
 
     if intensity < 25 {
-        println!("오늘은 {}번의 팔 굽혀펴기를 하세요!", expensive_result.value(intensity));
+        println!("오늘은 {}번의 팔 굽혀펴기를 하세요!",
+                 expensive_result.value(intensity));
         println!("다음에는 {}번의 윗몸 일으키기를 하세요!",
                  expensive_result.value(intensity));
     }
@@ -157,7 +161,8 @@ fn generate_workout_3(intensity: u32,
             println!("오늘은 수분을 충분히 섭취하며 쉬세요!");
         }
         else {
-            println!("오늘은 {}분간 달리기를 하세요!", expensive_result.value(intensity));
+            println!("오늘은 {}분간 달리기를 하세요!",
+                     expensive_result.value(intensity));
         }
     }
 }

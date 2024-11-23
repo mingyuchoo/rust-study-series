@@ -5,8 +5,7 @@ async fn main() -> std::io::Result<()> {
     use actix_files::Files;
     use actix_web::*;
     use leptos::*;
-    use leptos_actix::{generate_route_list,
-                       LeptosRoutes};
+    use leptos_actix::{generate_route_list, LeptosRoutes};
     use leptos_ssr::app::*;
 
     let conf = get_configuration(None).await
@@ -23,7 +22,9 @@ async fn main() -> std::io::Result<()> {
         App::new().service(Files::new("/pkg", format!("{site_root}/pkg")))
                   .service(Files::new("/assets", site_root))
                   .service(favicon)
-                  .leptos_routes(leptos_options.to_owned(), routes.to_owned(), App)
+                  .leptos_routes(leptos_options.to_owned(),
+                                 routes.to_owned(),
+                                 App)
                   .app_data(web::Data::new(leptos_options.to_owned()))
                   .wrap(middleware::Compress::default())
     }).bind(&addr)?

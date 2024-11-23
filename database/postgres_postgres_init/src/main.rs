@@ -1,7 +1,5 @@
 use dotenv;
-use postgres::{Client,
-               Error,
-               NoTls};
+use postgres::{Client, Error, NoTls};
 use std::collections::HashMap;
 
 struct Author {

@@ -1,8 +1,6 @@
 use std::collections::HashMap;
-use std::fs::{File,
-              OpenOptions};
-use std::io::{Read,
-              Write};
+use std::fs::{File, OpenOptions};
+use std::io::{Read, Write};
 use std::path::PathBuf;
 use structopt::StructOpt;
 use thiserror::Error;
@@ -223,7 +221,10 @@ fn parse_records(records: String,
                 | Ok(record) => new_records.add(record),
                 | Err(e) => {
                     if verbose {
-                        println!("error on line number {}: {}\n > \"{}\"\n", num + 1, e, record);
+                        println!("error on line number {}: {}\n > \"{}\"\n",
+                                 num + 1,
+                                 e,
+                                 record);
                     }
                 },
             }

@@ -48,7 +48,9 @@ fn CIsAFunctionOfAAndSomeOtherThingB() -> impl IntoView {
     // B
     let (last_name, set_last_name) = create_signal("Jones".to_string());
     // C is a function of A and B
-    let full_name = move || with!(|first_name, last_name| format!("{first_name} {last_name}"));
+    let full_name = move || {
+        with!(|first_name, last_name| format!("{first_name} {last_name}"))
+    };
     view! {
         <div>
             <h2>"C is as function of A and some other thing B"</h2>
@@ -63,7 +65,10 @@ fn CIsAFunctionOfAAndSomeOtherThingB() -> impl IntoView {
 
 // A and B are independent signals, but sometimes updated at the same time.
 #[component]
-fn AAndBAreIndependentSignalsButSometimesUpdatedAtTheSameTime() -> impl IntoView {
+fn AAndBAreIndependentSignalsButSometimesUpdatedAtTheSameTime(
+    )
+    -> impl IntoView
+{
     // A
     let (age, set_age) = create_signal(32);
     // B

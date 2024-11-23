@@ -1,7 +1,6 @@
 use crate::models::Post;
 use diesel_postgres_init::*;
-use std::io::{stdin,
-              Read};
+use std::io::{stdin, Read};
 
 fn main() -> () {
     let connection: &mut diesel::PgConnection = &mut establish_connection();

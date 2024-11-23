@@ -1,5 +1,4 @@
-use notify::{Error,
-             Event};
+use notify::{Error, Event};
 use std::process::Command;
 use std::sync::mpsc::Receiver;
 
@@ -25,10 +24,11 @@ pub fn run(rx: Receiver<Result<Event, Error>>,
                 }
 
                 println!("File change detected! Running 'git pull'...");
-                let output = Command::new("git").arg("pull")
-                                                .current_dir(&repo_dir)
-                                                .output()
-                                                .expect("Failed to execute git pull");
+                let output =
+                    Command::new("git").arg("pull")
+                                       .current_dir(&repo_dir)
+                                       .output()
+                                       .expect("Failed to execute git pull");
                 println!("{}", String::from_utf8_lossy(&output.stdout));
             },
             | Ok(Err(e)) => println!("watch error: {:?}", e),

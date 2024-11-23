@@ -1,10 +1,4 @@
-use lambda_http::{run,
-                  service_fn,
-                  Body,
-                  Error,
-                  Request,
-                  RequestExt,
-                  Response};
+use lambda_http::{run, service_fn, Body, Error, Request, RequestExt, Response};
 
 /// This is the main body for the function.
 /// Write your code inside it.
