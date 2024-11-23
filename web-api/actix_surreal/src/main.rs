@@ -1,4 +1,3 @@
-//mod config;
 mod server;
 
 use actix_files::Files;
