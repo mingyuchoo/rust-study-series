@@ -1,10 +1,10 @@
-mod config;
+//mod config;
 mod server;
 
 use actix_files::Files;
 use actix_surreal::client::web::App;
+use actix_surreal::client::config::AppConfig;
 use actix_web::*;
-use config::AppConfig;
 use leptos::*;
 use leptos_actix::{generate_route_list, LeptosRoutes};
 use server::db::DB;
