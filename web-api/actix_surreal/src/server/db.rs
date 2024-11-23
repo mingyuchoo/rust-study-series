@@ -1,7 +1,6 @@
 use crate::server::error::ServerError;
 use std::sync::LazyLock;
-use surrealdb::engine::remote::ws::{Client,
-                                    Ws};
+use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::Surreal;
 

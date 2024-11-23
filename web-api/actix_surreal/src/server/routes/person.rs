@@ -1,13 +1,8 @@
 use crate::server::db::DB;
 use crate::server::error::ServerError;
-use actix_web::web::{Json,
-                     Path};
-use actix_web::{delete,
-                get,
-                post,
-                put};
-use serde::{Deserialize,
-            Serialize};
+use actix_web::web::{Json, Path};
+use actix_web::{delete, get, post, put};
+use serde::{Deserialize, Serialize};
 use surrealdb::RecordId;
 
 const PERSON: &str = "person";
@@ -34,7 +29,8 @@ pub async fn create_person(id: Path<String>,
 }
 
 #[get("/person/{id}")]
-pub async fn read_person(id: Path<String>) -> Result<Json<Option<Person>>, ServerError> {
+pub async fn read_person(id: Path<String>)
+                         -> Result<Json<Option<Person>>, ServerError> {
     let person = DB.select((PERSON, &*id))
                    .await?;
     Ok(Json(person))
@@ -51,7 +47,8 @@ pub async fn update_person(id: Path<String>,
 }
 
 #[delete("/person/{id}")]
-pub async fn delete_person(id: Path<String>) -> Result<Json<Option<Person>>, ServerError> {
+pub async fn delete_person(id: Path<String>)
+                           -> Result<Json<Option<Person>>, ServerError> {
     let person = DB.delete((PERSON, &*id))
                    .await?;
     Ok(Json(person))

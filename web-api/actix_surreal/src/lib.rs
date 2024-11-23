@@ -1,7 +1,5 @@
 pub mod client;
 
-use crate::client::app::App;
-
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn hydrate() {
@@ -10,5 +8,5 @@ pub fn hydrate() {
 
     console_error_panic_hook::set_once();
 
-    mount_to_body(App);
+    mount_to_body(app::App);
 }

@@ -2,8 +2,7 @@ use crate::server::error::ServerError;
 use crate::DB;
 use actix_web::get;
 use faker_rand::en_us::names::FirstName;
-use serde::{Deserialize,
-            Serialize};
+use serde::{Deserialize, Serialize};
 use surrealdb::opt::auth::Record;
 
 #[derive(Serialize, Deserialize)]
