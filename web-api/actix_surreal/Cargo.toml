@@ -5,6 +5,7 @@
 
 [lib]
   crate-type = ["cdylib", "rlib"]
+  proc-macro = true
 
 [dependencies]
   actix-files              = {version = "0.6", optional = true}
