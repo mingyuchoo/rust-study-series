@@ -6,23 +6,42 @@ use actix_surreal::client::web::App;
 use actix_web::*;
 use leptos::*;
 use leptos_actix::{generate_route_list, LeptosRoutes};
-use server::{db::DB, routes::routes_config};
+use leptos_router::RouteListing;
+use log::{error, info};
+use server::db::DB;
+use server::routes::routes_config;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    env_logger::init();
+    info!("Starting server...");
+
+    setup_database().await?;
+
     let app_config = AppConfig::new().await?;
     let addr = app_config.leptos_options
-                     .site_addr;
-    let routes = generate_route_list(App);
-
+                         .site_addr;
     println!("listening on http://{}", &addr);
 
-    if let Err(err) = server::db::setup_database().await {
-        eprintln!("Failed to set up database: {:?}", err);
+    start_server(app_config, generate_route_list(App)).await
+}
+
+pub async fn setup_database() -> std::io::Result<()> {
+    use crate::server::db;
+
+    if let Err(err) = db::setup_database().await {
+        error!("Failed to set up database: {:?}", err);
         return Err(std::io::Error::new(std::io::ErrorKind::Other,
                                        "Database setup failed"));
     }
+    Ok(())
+}
 
+async fn start_server(app_config: AppConfig,
+                      routes: Vec<RouteListing>)
+                      -> std::io::Result<()> {
+    let addr = app_config.leptos_options
+                         .site_addr;
     HttpServer::new(move || {
         let leptos_options = &app_config.leptos_options;
         let site_root = &leptos_options.site_root;

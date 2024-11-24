@@ -11,12 +11,14 @@
   actix-files              = {version = "0.6", optional = true}
   actix-web                = {version = "4.9", optional = true, features = ["macros"]}
   console_error_panic_hook = "0.1"
+  env_logger               = "0.10"
   faker_rand               = "0.1.1"
   http                     = {version = "1.0.0", optional = true}
   leptos                   = {version = "0.6.15", features = ["nightly"]}
   leptos_actix             = {version = "0.6.15", optional = true}
   leptos_meta              = {version = "0.6.15", features = ["nightly"]}
   leptos_router            = {version = "0.6.15", features = ["nightly"]}
+  log                      = "0.4"
   rand                     = "0.8.5"
   serde                    = {version = "1.0.214", features = ["derive"]}
   surrealdb                = "2.0.4"

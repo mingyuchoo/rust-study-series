@@ -12,20 +12,16 @@ pub fn App() -> impl IntoView {
         <Title text="Welcome to Leptos"/>
         <Router>
         <nav class="bg-gray-800 p-4">
-        <div class="container mx-auto flex gap-6">
-            <A href="" class="text-white hover:text-gray-300 transition-colors" >
-                "Home"
-            </A>
-            <A href="/srdb" class="text-white hover:text-gray-300 transition-colors" >
-                "SurrealDB"
-            </A>
-        </div>
-    </nav>
+            <div class="container mx-auto flex gap-6">
+                <A href="" class="text-white hover:text-gray-300 transition-colors" >"Home"</A>
+                <A href="/srdb" class="text-white hover:text-gray-300 transition-colors" >"SurrealDB"</A>
+            </div>
+        </nav>
             <main>
                 <Routes>
                     <Route path="" view=HomePage/>
                     <Route path="/srdb" view=SrdbPage>
-                        <Route path="/" view=SrdbIndexPage/>
+                        <Route path="/" view=SrdbRoutesPage/>
                         <Route path="person/:id" view=PersonPage/>
                         <Route path="people" view=PeoplePage/>
                     </Route>
