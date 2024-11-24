@@ -6,12 +6,12 @@ use actix_surreal::client::web::App;
 use actix_web::*;
 use leptos::*;
 use leptos_actix::{generate_route_list, LeptosRoutes};
-use server::db::DB;
+use server::{db::DB, routes::routes_config};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let config = AppConfig::new().await?;
-    let addr = config.leptos_options
+    let app_config = AppConfig::new().await?;
+    let addr = app_config.leptos_options
                      .site_addr;
     let routes = generate_route_list(App);
 
@@ -24,12 +24,12 @@ async fn main() -> std::io::Result<()> {
     }
 
     HttpServer::new(move || {
-        let leptos_options = &config.leptos_options;
+        let leptos_options = &app_config.leptos_options;
         let site_root = &leptos_options.site_root;
         App::new().service(Files::new("/pkg", format!("{site_root}/pkg")))
                   .service(Files::new("/assets", site_root))
                   .service(favicon)
-                  .configure(server::routes::config)
+                  .configure(routes_config)
                   .leptos_routes(leptos_options.to_owned(),
                                  routes.to_owned(),
                                  App)

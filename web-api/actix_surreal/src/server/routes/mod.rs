@@ -4,7 +4,7 @@ mod token;
 
 use actix_web::web;
 
-pub fn config(cfg: &mut web::ServiceConfig) {
+pub fn routes_config(cfg: &mut web::ServiceConfig) {
     cfg.service(person::create_person)
        .service(person::read_person)
        .service(person::update_person)
