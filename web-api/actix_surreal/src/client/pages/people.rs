@@ -5,8 +5,11 @@ use std::sync::LazyLock;
 #[component]
 pub fn PeoplePage() -> impl IntoView {
     let people_resource = Resource::new(|| (), |_| get_people());
-    let people = move || people_resource.get();
-
+    let people = move || match people_resource.get() {
+        | Some(Ok(people)) => people,
+        | Some(Err(_)) => vec![],
+        | None => vec![],
+    };
     view! {
         <div class="bg-gradient-to-tl from-blue-800 to-blue-500 text-white font-mono flex flex-col min-h-screen">
             <h2 class="text-xl font-bold mb-4">"People List"</h2>
