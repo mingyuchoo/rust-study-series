@@ -1,0 +1,9 @@
+[package]
+  edition = "2021"
+  name    = "mainer"
+  version = "0.1.0"
+
+[dependencies]
+  library_one   = {path = "../library_one"}
+  library_three = {path = "../library_three"}
+  library_two   = {path = "../library_two"}

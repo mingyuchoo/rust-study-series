@@ -1,0 +1,3 @@
+[workspace]
+  members  = ["library_one", "library_three", "library_two", "mainer"]
+  resolver = "2"
