@@ -1,0 +1,7 @@
+[workspace]
+  members = [
+    "server",
+    "actix_lib",
+    "surrealdb_lib",
+  ]
+  resolver = "2"
