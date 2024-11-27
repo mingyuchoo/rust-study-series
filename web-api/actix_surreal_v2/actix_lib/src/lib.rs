@@ -9,12 +9,15 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting HTTP server...");
     HttpServer::new(|| {
-        App::new()
-            .service(routes::session)
-    })
-    .bind(("localhost", 4000))?
-    .run()
-    .await?;
+        App::new().service(routes::session)
+                  .service(routes::list_people)
+                  .service(routes::create_person)
+                  .service(routes::read_person)
+                  .service(routes::update_person)
+                  .service(routes::delete_person)
+    }).bind(("localhost", 4000))?
+      .run()
+      .await?;
 
     Ok(())
 }
