@@ -1,0 +1,12 @@
+* Iced Counter
+** How to create this project
+#+begin_src shell
+  cargo new {project-name}
+  cd {project-name}
+  cargo add iced
+#+end_src
+** How to run this project
+#+begin_src shell
+  cargo run
+#+end_src
+** How to fix errors
