@@ -36,6 +36,9 @@ cargo install cargo-dist
 cargo install cargo-expand
 cargo install cargo-lambda
 cargo install cargo-modules
+cargo install cargo-udepts
+cargo install cargo-deps
+cargo install cargo-tree
 cargo install cargo-watch
 ```
 
