@@ -2,7 +2,7 @@ use crate::error::Error;
 use actix_web::web::{Json, Path};
 use actix_web::{delete, get, post, put};
 use serde::{Deserialize, Serialize};
-use surrealdb_lib::{Id, DB};
+use lib_db::{Id, DB};
 
 #[derive(Serialize, Deserialize)]
 pub struct Person {

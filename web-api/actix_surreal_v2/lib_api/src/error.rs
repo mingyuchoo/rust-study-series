@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, ResponseError};
-use surrealdb_lib::SurrealDbError;
+use lib_db::SurrealDbError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

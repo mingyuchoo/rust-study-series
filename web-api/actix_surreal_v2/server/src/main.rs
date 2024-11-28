@@ -1,4 +1,4 @@
-use actix_lib::run_server;
+use lib_api::run_server;
 use actix_web::*;
 
 #[actix_web::main]

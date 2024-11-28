@@ -1,0 +1,95 @@
+* Workspace project
+How to create a workspace project
+** List
+1. Create a workspace
+2. Create a main project
+3. Implement the three libraries
+4. Add dependencies main project
+5. Use three libraries main project
+6. Run the workspace
+** In details
+*** 1. Create a workspace
+#+begin_src shell
+  mkdir actix_surreal_v2
+  cd actix_surreal_v2
+  touch Cargo.toml
+#+end_src
+Edit ~Cargo.toml~
+#+begin_src toml
+  [workspace]
+  members = []
+  resolver = "2"
+#+end_src
+*** 2. Create a main project
+#+begin_src shell
+  cargo new server --bin
+#+end_src
+The project name will be added to =members= of ~Cargo.toml~ automatically.
+#+begin_src toml
+  [workspace]
+  members = ["server"]
+  resolver = "2"
+#+end_src
+Create three library projects
+#+begin_src shell
+  cargo new lib_api   --lib
+  cargo new lib_db   --lib
+#+end_src
+The project name will be added to =members= of ~Cargo.toml~ automatically.
+#+begin_src toml
+  [workspace]
+  members = [
+    "lib_api",
+    "lib_db",
+    "server"
+  ]
+  resolver = "2"
+#+end_src
+*** 3. Implement the three libraries
+Let's implement the three libraries
+- ~lib_api/src/lib.rs~
+#+begin_src rust
+  pub fn add_one(x: i32) -> i32 {
+    x + 1
+  }
+#+end_src
+- ~lib_db/src/lib.rs~
+#+begin_src rust
+  pub fn add_two(x: i32) -> i32 {
+    x + 2
+  }
+#+end_src
+*** 4. Add dependencies main project
+Add dependencies in ~Cargo.toml~ file of =server= project
+#+begin_src toml
+  [package]
+  name = "server"
+  version = "0.1.0"
+  edition = "2021"
+
+  [dependencies]
+  lib_api   = { path = "../lib_api"}
+  lib_db   = { path = "../lib_db"}
+#+end_src
+*** 5. Use three libraries main project
+Use three libraries in =server= project
+- ~server/src/main.rs~
+#+begin_src rust
+  fn main() {
+    let num = 10;
+    println!("{num} plus one is {}!", lib_api::add_one(num));
+    println!("{num} plus two is {}!", lib_db::add_two(num));
+    println!("{num} plus three is {}!", library_three::add_three(num));
+  }
+#+end_src
+*** 6. Run the workspace
+Run the workspace
+#+begin_src shell
+  $ cd workspace
+  $ cargo run
+      Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+     Running `target/debug/server`
+  10 plus one is 11!
+  10 plus two is 12!
+  10 plus three is 13!
+#+end_src
