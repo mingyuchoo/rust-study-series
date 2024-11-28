@@ -4,8 +4,6 @@
   version = "0.1.0"
 
 [dependencies]
-  actix-web = "4.9.0"
   log       = "0.4.22"
-serde = { version = "1.0.215", features = ["derive"] }
   surrealdb = "2.1.2"
-  thiserror = "2.0.3"
+  # thiserror = "2.0.3"

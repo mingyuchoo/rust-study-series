@@ -1,6 +1,10 @@
+pub mod error;
+pub mod routes;
+
 use actix_web::{App, HttpServer, *};
 use log::{error, info};
-use surrealdb_lib::{routes, setup_database};
+// use surrealdb_lib::{routes, setup_database};
+use surrealdb_lib::setup_database;
 
 pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     info!("Initializing database...");
