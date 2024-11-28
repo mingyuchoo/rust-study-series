@@ -1,4 +1,4 @@
-use crate::client::pages::*;
+use crate::pages::*;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -19,13 +19,13 @@ pub fn App() -> impl IntoView {
         </nav>
             <main>
                 <Routes>
-                    <Route path="" view=HomePage/>
-                    <Route path="/srdb" view=SrdbPage>
-                        <Route path="/" view=SrdbRoutesPage/>
-                        <Route path="person/:id" view=PersonPage/>
-                        <Route path="people" view=PeoplePage/>
+                    <Route path="" view=home::HomePage/>
+                    <Route path="/srdb" view=srdb::SrdbPage>
+                        <Route path="/" view=srdb_routes::SrdbRoutesPage/>
+                        <Route path="person/:id" view=person::PersonPage/>
+                        <Route path="people" view=people::PeoplePage/>
                     </Route>
-                    <Route path="/*any" view=NotFound/>
+                    <Route path="/*any" view=not_found::NotFound/>
                 </Routes>
             </main>
         </Router>

@@ -1,4 +1,3 @@
-use crate::server::error::ServerError;
 use std::sync::LazyLock;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
@@ -6,7 +5,7 @@ use surrealdb::Surreal;
 
 pub static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
-pub async fn setup_database() -> Result<(), ServerError> {
+pub async fn setup_database() -> Result<(), Box<dyn std::error::Error>> {
     DB.connect::<Ws>("localhost:8000")
       .await?;
     DB.signin(Root { username: "root",

@@ -1,22 +1,24 @@
-mod server;
+mod db;
+mod pages;
+mod routes;
 
 use actix_files::Files;
-use actix_surreal::client::config::AppConfig;
-use actix_surreal::client::web::App;
+use actix_surreal::config::AppConfig;
+use actix_surreal::web::App;
 use actix_web::*;
+use db::{setup_database, DB};
 use leptos::*;
 use leptos_actix::{generate_route_list, LeptosRoutes};
 use leptos_router::RouteListing;
 use log::{error, info};
-use server::db::DB;
-use server::routes::routes_config;
+use routes::routes_config;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
     info!("Starting server...");
 
-    setup_database().await?;
+    init_database().await?;
 
     let app_config = AppConfig::new().await?;
     let addr = app_config.leptos_options
@@ -26,10 +28,8 @@ async fn main() -> std::io::Result<()> {
     start_server(app_config, generate_route_list(App)).await
 }
 
-pub async fn setup_database() -> std::io::Result<()> {
-    use crate::server::db;
-
-    if let Err(err) = db::setup_database().await {
+pub async fn init_database() -> std::io::Result<()> {
+    if let Err(err) = setup_database().await {
         error!("Failed to set up database: {:?}", err);
         return Err(std::io::Error::new(std::io::ErrorKind::Other,
                                        "Database setup failed"));

@@ -1,5 +1,5 @@
-use crate::server::db::DB;
-use crate::server::error::ServerError;
+use crate::db::DB;
+use crate::routes::ServerError;
 use actix_web::web::{Json, Path};
 use actix_web::{delete, get, post, put};
 use serde::{Deserialize, Serialize};
