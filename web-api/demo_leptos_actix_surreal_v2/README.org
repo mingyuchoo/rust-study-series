@@ -2,3 +2,11 @@
 ** Info
 - project type: workspace project
 - tech: leptos ssr, actix_web + surrealdb
+** How to run locally
+#+begin_src shell
+  cargo leptos watch
+#+end_src
+** How to build
+#+begin_src shell
+  cargo build
+#+end_src
