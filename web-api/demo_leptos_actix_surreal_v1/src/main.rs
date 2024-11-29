@@ -1,9 +1,9 @@
 mod routes;
 
 use actix_files::Files;
-use actix_surreal::config::AppConfig;
-use actix_surreal::db::setup_database;
-use actix_surreal::web::App;
+use memo_leptos_actix_surreal_v1::config::AppConfig;
+use memo_leptos_actix_surreal_v1::db::setup_database;
+use memo_leptos_actix_surreal_v1::web::App;
 use actix_web::*;
 use leptos::*;
 use leptos_actix::{generate_route_list, LeptosRoutes};

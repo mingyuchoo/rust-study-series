@@ -8,7 +8,7 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
-        <Stylesheet id="leptos" href="/pkg/actix_surreal.css"/>
+        <Stylesheet id="leptos" href="/pkg/memo_leptos_actix_surreal_v1.css"/>
         <Title text="Welcome to Leptos"/>
         <Router>
         <nav class="bg-gray-800 p-4">

@@ -10,8 +10,8 @@ How to create a workspace project
 ** In details
 *** 1. Create a workspace
 #+begin_src shell
-  mkdir actix_surreal_v2
-  cd actix_surreal_v2
+  mkdir demo_actix_surreal_v1
+  cd demo_actix_surreal_v1
   touch Cargo.toml
 #+end_src
 Edit ~Cargo.toml~

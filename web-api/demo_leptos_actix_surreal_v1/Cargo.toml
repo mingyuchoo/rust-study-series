@@ -1,0 +1,72 @@
+[package]
+  edition = "2021"
+  name    = "memo_leptos_actix_surreal_v1"
+  version = "0.1.0"
+
+[lib]
+  crate-type = ["cdylib", "rlib"]
+  #proc-macro = true
+
+[dependencies]
+  actix-files              = {version = "0.6", optional = true}
+  actix-web                = {version = "4.9", optional = true, features = ["macros"]}
+  console_error_panic_hook = "0.1"
+  env_logger               = "0.10"
+  faker_rand               = "0.1.1"
+  http                     = {version = "1.0.0", optional = true}
+  leptos                   = {version = "0.6.15", features = ["nightly"]}
+  leptos_actix             = {version = "0.6.15", optional = true}
+  leptos_meta              = {version = "0.6.15", features = ["nightly"]}
+  leptos_router            = {version = "0.6.15", features = ["nightly"]}
+  log                      = "0.4"
+  rand                     = "0.8.5"
+  serde                    = {version = "1.0.214", features = ["derive"]}
+  surrealdb                = "2.0.4"
+  thiserror                = "2.0.2"
+  wasm-bindgen             = "0.2.95"
+
+[features]
+  csr = [
+    "leptos/csr",
+    "leptos_meta/csr",
+    "leptos_router/csr",
+  ]
+  hydrate = [
+    "leptos/hydrate",
+    "leptos_meta/hydrate",
+    "leptos_router/hydrate",
+  ]
+  ssr = [
+    "dep:actix-files",
+    "dep:actix-web",
+    "dep:leptos_actix",
+    "leptos/ssr",
+    "leptos_meta/ssr",
+    "leptos_router/ssr",
+  ]
+
+[profile.wasm-release]
+  codegen-units = 1
+  inherits      = "release"
+  lto           = true
+  opt-level     = 'z'
+  panic         = "abort"
+
+  [package.metadata.leptos]
+    assets-dir           = "assets"
+    bin-default-features = false
+    bin-features         = ["ssr"]
+    # bin-target-triple    = "aarch64-unknown-linux-gnu"
+    browserquery         = "defaults"
+    end2end-cmd          = "npx playwright test"
+    end2end-dir          = "end2end"
+    env                  = "DEV"
+    lib-default-features = false
+    lib-features         = ["hydrate"]
+    lib-profile-release  = "wasm-release"
+    output-name          = "memo_leptos_actix_surreal_v1"
+    reload-port          = 3001
+    site-addr            = "127.0.0.1:3000"
+    site-pkg-dir         = "pkg"
+    site-root            = "target/site"
+    tailwind-input-file  = "style/tailwind.css"

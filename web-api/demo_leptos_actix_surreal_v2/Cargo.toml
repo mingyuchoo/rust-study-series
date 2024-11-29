@@ -1,0 +1,8 @@
+[workspace]
+  members  = ["bin_web", "lib_adder", "lib_repo"]
+  resolver = "2"
+
+  [workspace.dependencies]
+    env_logger = "0.10"
+    log        = "0.4"
+    serde      = {version = "1.0.214", features = ["derive"]}

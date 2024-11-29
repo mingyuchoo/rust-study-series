@@ -1,0 +1,4 @@
+* Demo for Leptos + Actix + Surreal
+** Info
+- project type: workspace project
+- tech: leptos ssr, actix_web + surrealdb

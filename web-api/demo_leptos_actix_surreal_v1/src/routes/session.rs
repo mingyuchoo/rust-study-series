@@ -1,5 +1,5 @@
 use crate::routes::ServerError;
-use actix_surreal::db::DB;
+use memo_leptos_actix_surreal_v1::db::DB;
 use actix_web::get;
 use actix_web::web::Json;
 

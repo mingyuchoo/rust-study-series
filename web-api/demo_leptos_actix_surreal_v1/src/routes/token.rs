@@ -1,5 +1,5 @@
 use crate::routes::ServerError;
-use actix_surreal::db::DB;
+use memo_leptos_actix_surreal_v1::db::DB;
 use actix_web::get;
 use faker_rand::en_us::names::FirstName;
 use serde::{Deserialize, Serialize};

@@ -1,0 +1,9 @@
+[package]
+  edition = "2021"
+  name    = "lib_repo"
+  version = "0.1.0"
+
+[dependencies]
+  env_logger = {workspace = true}
+  log        = {workspace = true}
+  surrealdb  = "2.1.2"

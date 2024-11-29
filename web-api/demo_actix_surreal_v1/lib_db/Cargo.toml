@@ -6,4 +6,3 @@
 [dependencies]
   log       = "0.4.22"
   surrealdb = "2.1.2"
-  # thiserror = "2.0.3"

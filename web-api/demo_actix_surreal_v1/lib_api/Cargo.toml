@@ -1,0 +1,11 @@
+[package]
+  edition = "2021"
+  name    = "lib_api"
+  version = "0.1.0"
+
+[dependencies]
+  actix-web = "4.9.0"
+  lib_db    = {version = "0.1.0", path = "../lib_db"}
+  log       = "0.4.22"
+  serde     = {version = "1.0.215", features = ["derive"]}
+  thiserror = "2.0.3"
