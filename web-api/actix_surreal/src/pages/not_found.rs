@@ -1,7 +1,7 @@
 use leptos::*;
 
 #[component]
-pub fn NotFound() -> impl IntoView {
+pub fn NotFoundPage() -> impl IntoView {
     #[cfg(feature = "ssr")]
     {
         let resp = expect_context::<leptos_actix::ResponseOptions>();

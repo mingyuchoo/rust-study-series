@@ -1,7 +1,8 @@
 pub mod config;
-// pub mod error;
-pub mod pages;
+pub mod db;
 pub mod web;
+
+mod pages;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

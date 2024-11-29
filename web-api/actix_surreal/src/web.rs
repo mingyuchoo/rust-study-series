@@ -25,7 +25,7 @@ pub fn App() -> impl IntoView {
                         <Route path="person/:id" view=person::PersonPage/>
                         <Route path="people" view=people::PeoplePage/>
                     </Route>
-                    <Route path="/*any" view=not_found::NotFound/>
+                    <Route path="/*any" view=not_found::NotFoundPage/>
                 </Routes>
             </main>
         </Router>

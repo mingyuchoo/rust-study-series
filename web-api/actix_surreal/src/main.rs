@@ -1,12 +1,10 @@
-mod db;
-mod pages;
 mod routes;
 
 use actix_files::Files;
 use actix_surreal::config::AppConfig;
+use actix_surreal::db::setup_database;
 use actix_surreal::web::App;
 use actix_web::*;
-use db::{setup_database, DB};
 use leptos::*;
 use leptos_actix::{generate_route_list, LeptosRoutes};
 use leptos_router::RouteListing;

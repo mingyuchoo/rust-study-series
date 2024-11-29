@@ -1,5 +1,5 @@
 use crate::routes::ServerError;
-use crate::DB;
+use actix_surreal::db::DB;
 use actix_web::get;
 use faker_rand::en_us::names::FirstName;
 use serde::{Deserialize, Serialize};
