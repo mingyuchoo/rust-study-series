@@ -102,3 +102,15 @@ Run the workspace
   10 plus two is 12!
   10 plus three is 13!
 #+end_src
+*** Add dependencies globally
+Add ~[workspace.dependencies]~ to ~Cargo.toml~ of =workspace= automatically.
+#+begin_src toml
+  [workspace.dependencies]
+    log = "0.4"
+#+end_src
+*** Add dependencies sub-project
+Add dependencies in ~Cargo.toml~ file of each project *without version*
+#+begin_src toml
+  [dependencies]
+    log = { workspace = true }
+#+end_src
