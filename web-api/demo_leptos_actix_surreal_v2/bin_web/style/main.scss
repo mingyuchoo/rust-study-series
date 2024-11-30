@@ -43,6 +43,7 @@ body {
   margin: 1rem;
   padding: 0;
   font-family: 'IBM Plex Sans KR', 'Arial', sans-serif;
+  font-weight: bold;
   @include dark-theme;
 }
 
@@ -65,61 +66,86 @@ nav {
   align-items: center;
 
   a {
-    color: $dark-red;
-    font-weight: bold;
+    color: $dark-green;
     text-decoration: none;
     padding: 0.5rem 1rem;
     transition: color 0.3s ease, background-color 0.3s ease;
 
     &:hover {
       color: $dark-bg;
-      background-color: $dark-green;
+      background-color: $dark-yellow;
       text-decoration: none;
     }
   }
 }
 
 button {
-  background-color: $dark-green;
+  background-color: $dark-yellow;
   color: $dark-bg;
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 1rem;
+  font-weight: bold;
 
   &:hover {
-    background-color: $light-green;
+    background-color: $light-yellow;
   }
 }
 
 h1,
 h2,
 h3,
-h4 {
+h4,
+h5 {
   margin-bottom: 0.5rem;
-  font-weight: bold;
 
 }
 
 h1 {
   font-size: 2.5rem;
   color: $dark-blue;
+
+  &::before {
+    content: "● ";
+  }
 }
 
 h2 {
   font-size: 2rem;
   color: $dark-purple;
+
+  &::before {
+    content: "⦿ ";
+  }
 }
 
 h3 {
   font-size: 1.75rem;
   color: $dark-aqua;
+
+  &::before {
+    content: "◉ ";
+  }
 }
 
 h4 {
   font-size: 1.5rem;
   color: $dark-gray;
+
+  &::before {
+    content: "◎ ";
+  }
+}
+
+h5 {
+  font-size: 1.25rem;
+  color: $dark-gray;
+
+  &::before {
+    content: "○ ";
+  }
 }
 
 a {
@@ -128,6 +154,23 @@ a {
 
   &:hover {
     text-decoration: none;
+  }
+}
+
+ul {
+  list-style: none;
+  padding-left: 20px;
+
+  li {
+    position: relative;
+
+    &::before {
+      color: $dark-gray;
+      content: "✔ ";
+      font-size: 1rem;
+      position: absolute;
+      left: -1rem;
+    }
   }
 }
 
