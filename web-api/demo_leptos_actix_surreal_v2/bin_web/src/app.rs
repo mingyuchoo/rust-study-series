@@ -9,12 +9,26 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
+        <Link
+            rel="preload"
+            href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans:400,600,700"
+            as_="font"
+            type_="font/woff2"
+            crossorigin="anonymous"
+        />
         <Stylesheet id="leptos" href="/pkg/bin_web.css"/>
         <Title text="Welcome to Leptos"/>
         <Router>
+            <nav>
+                <div>
+                    <A href="">"Home"</A>
+                    <A href="/people">"People"</A>
+                </div>
+            </nav>
             <main>
                 <Routes>
                     <Route path="" view=HomePage/>
+                    <Route path="/people" view=PeoplePage/>
                     <Route path="/*any" view=NotFound/>
                 </Routes>
             </main>
@@ -31,13 +45,6 @@ fn HomePage() -> impl IntoView {
                                            add_left_right(current_count,
                                                           current_count + 1)
                                        });
-    let people_resource = create_resource(|| (), |_| get_people());
-    let people = move || match people_resource.get() {
-        | Some(Ok(people)) => people,
-        | Some(Err(_)) => vec![],
-        | None => vec![],
-    };
-
     view! {
         <h1>"Welcome to Leptos!"</h1>
         <h2>"Counter"</h2>
@@ -49,6 +56,20 @@ fn HomePage() -> impl IntoView {
                                .unwrap_or_else(|| "Loading...".to_string())
             }
         </p>
+    }
+}
+
+#[component]
+fn PeoplePage() -> impl IntoView {
+    let people_resource = create_resource(|| (), |_| get_people());
+    let people = move || match people_resource.get() {
+        | Some(Ok(people)) => people,
+        | Some(Err(_)) => vec![],
+        | None => vec![],
+    };
+
+    view! {
+        <h1>"People"</h1>
         <h2>"People List"</h2>
         <Suspense fallback=move || view! { <p>"Loading ..."</p>}>
             <ErrorBoundary fallback=|_errors| {view! {<p>"Something went wrong."</p>}}>
