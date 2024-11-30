@@ -49,7 +49,7 @@ fn HomePage() -> impl IntoView {
         <h1>"Welcome to Leptos!"</h1>
         <h2>"Counter"</h2>
         <button on:click=on_click>"Click Me: " {count}</button>
-        <h2>"Adding counter value"</h2>
+        <h3>"The result value"</h3>
         <p>
             {move || add_resource.get()
                                .map(|result| result.to_string())
@@ -76,7 +76,7 @@ fn PeoplePage() -> impl IntoView {
                 <ul>
                     <For each=people key=|person| person.id.clone() let:person>
                         <li>
-                            {person.name}
+                            {format!("{} - {}", person.id, person.name)}
                         </li>
                     </For>
                 </ul>
