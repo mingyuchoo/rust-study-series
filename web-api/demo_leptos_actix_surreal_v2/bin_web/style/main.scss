@@ -1,4 +1,116 @@
+// Gruvbox Color Palette
+
+// Background Colour
+$bg-dark: #282828;
+$bg-light: #fbf1c7;
+
+// Foreground Colour
+$fg-dark: #ebdbb2;
+$fg-light: #3c3836;
+
+// Dark theme
+$red: #cc241d;
+$green: #98971a;
+$yellow: #d79921;
+$blue: #458588;
+$purple: #b16286;
+$aqua: #689d6a;
+$orange: #d65d0e;
+
+// Light theme
+$bright-red: #fb4934;
+$bright-green: #b8bb26;
+$bright-yellow: #fabd2f;
+$bright-blue: #83a598;
+$bright-purple: #d3869b;
+$bright-aqua: #8ec07c;
+$bright-orange: #fe8019;
+
+// Gray Colour
+$gray: #928374;
+$light-gray: #a89984;
+
+// Mixins
+@mixin dark-theme {
+  background-color: $bg-dark;
+  color: $fg-dark;
+}
+
+@mixin light-theme {
+  background-color: $bg-light;
+  color: $fg-light;
+}
+
 body {
-	font-family: sans-serif;
-	text-align: center;
+  margin: 1rem;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  @include dark-theme;
+}
+
+// Responsive container
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+header {
+  background-color: $bright-orange;
+  padding: 1rem;
+  text-align: center;
+
+  h1 {
+    margin: 0;
+    color: $fg-dark;
+  }
+}
+
+.highlight {
+  color: $yellow;
+}
+
+button {
+  background-color: $green;
+  color: $bg-dark;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+
+  &:hover {
+    background-color: $bright-green;
+  }
+}
+
+// Link styles
+a {
+  color: $red;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Responsive typography
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .button {
+    width: 100%;
+  }
+}
+
+.alert {
+  background-color: $red;
+  color: $fg-dark;
+}
+
+.info {
+  background-color: $blue;
+  color: $fg-dark;
 }
