@@ -33,5 +33,3 @@ query {
 - https://async-graphql.github.io/async-graphql/en/quickstart.html
 - https://github.com/async-graphql/examples
 - https://github.com/async-graphql/async-graphql
-
-

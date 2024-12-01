@@ -1,0 +1,20 @@
+[package]
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "async_graphql_v7_with_diesel_v2"
+  version = "0.1.0"
+
+[dependencies]
+  actix-web               = "4.9"
+  async-graphql           = "7.0"
+  async-graphql-actix-web = "7.0"
+  diesel                  = {version = "2.2.5", features = ["postgres"]}
+  dotenv                  = "0.15.0"
+
+[profile.dev]
+  debug     = true
+  opt-level = 0
+
+[profile.release]
+  debug     = false
+  opt-level = 3
