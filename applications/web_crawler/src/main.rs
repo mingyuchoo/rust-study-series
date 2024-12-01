@@ -4,11 +4,14 @@ use select::predicate::Name;
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let url = "http://jsonplaceholder.typicode.com";
+    static URL: &str = "http://jsonplaceholder.typicode.com";
+
     let client = Client::new();
-    let res = client.get(url)
+
+    let res = client.get(URL)
                     .send()?
                     .text();
+
     let document = Document::from(res?.as_str());
 
     for node in document.find(Name("a")) {
@@ -16,5 +19,6 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!("{}", href);
         }
     }
+
     Ok(())
 }
