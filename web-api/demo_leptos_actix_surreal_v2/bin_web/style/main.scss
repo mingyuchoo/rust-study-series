@@ -159,7 +159,6 @@ a {
 
 ul {
   list-style: none;
-  padding-left: 3rem;
 
   li {
     position: relative;
@@ -169,7 +168,7 @@ ul {
       content: "✔ ";
       font-size: 1rem;
       position: absolute;
-      left: -1rem;
+      left: -1.5rem;
     }
   }
 }

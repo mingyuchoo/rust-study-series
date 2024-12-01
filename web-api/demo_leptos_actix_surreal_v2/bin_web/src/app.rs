@@ -53,15 +53,21 @@ fn HomePage() -> impl IntoView {
                                        });
     view! {
         <h1>"Welcome to Leptos!"</h1>
-        <h2>"Counter"</h2>
-        <button on:click=on_click>"Click Me: " {count}</button>
-        <h3>"The result value"</h3>
-        <p>
-            {move || add_resource.get()
-                               .map(|result| result.to_string())
-                               .unwrap_or_else(|| "Loading...".to_string())
-            }
-        </p>
+        <div>
+            <h2>"Counter"</h2>
+            <div>
+                <button on:click=on_click>"Click Me: " {count}</button>
+                <h3>"The result value"</h3>
+                <div>
+                    <p>
+                        {move || add_resource.get()
+                                           .map(|result| result.to_string())
+                                           .unwrap_or_else(|| "Loading...".to_string())
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
     }
 }
 
@@ -81,22 +87,6 @@ fn PeoplePage() -> impl IntoView {
         people_resource.refetch();
         set_selected_person.set(None);
     });
-    let (error_message, set_error_message) = create_signal(String::new());
-    let handle_submit = move |event: ev::SubmitEvent| {
-        event.prevent_default();
-        let name = new_name.get();
-        if name.trim()
-               .is_empty()
-        {
-            set_error_message.set("Please input a name".to_string());
-        }
-        else {
-            set_error_message.set(String::new());
-            add_person_action.dispatch(AddPerson { name: name.clone(), });
-            set_new_name.set(String::new());
-        }
-    };
-
     create_effect(move |_| {
         if add_person_action.version()
                             .get()
@@ -108,59 +98,57 @@ fn PeoplePage() -> impl IntoView {
 
     view! {
         <h1>"People"</h1>
-        <Suspense fallback=move || view! { <p>"Loading ..."</p>}>
-            <p>
-                {move || {
-                    let count = people().len();
-                    format!("There are {} people.", count)
-                }}
-            </p>
-        </Suspense>
-        <h2>"Add a person"</h2>
-        <form on:submit=move |event| {
-          event.prevent_default();
-          add_person_action.dispatch(AddPerson { name: new_name.get() });
-          set_new_name.set(String::new());
-        }>
-            <input
-                type="text"
-                placeholder="Enter name"
-                prop:value=new_name
-                on:input=move |event| set_new_name.set(event_target_value(&event))
-            />
-            <button type="submit">
-                "Add Person"
-            </button>
-        </form>
-        <Show
-            when=move || !error_message.get().is_empty()
-            fallback=|| view! { <span></span>}
-        >
-            <p class="alert">{error_message}</p>
-        </Show>
-        <h2>"People List"</h2>
-        <Suspense fallback=move || view! { <p>"Loading ..."</p>}>
-            <ErrorBoundary fallback=|_errors| {view! {<p>"Something went wrong."</p>}}>
-                <ul>
-                    <For each=people key=|person| person.uuid.clone() let:person>
-                        <li>
-                        {let person_clone = person.clone();
-                            view! {
-                                <a on:click=move |_| set_selected_person(Some(person_clone.clone()))
-                                    href="#"
-                                >
-                                    {format!("{} - {}", person.uuid, person.name)}
-                                </a>
-                            }}
-                        </li>
-                    </For>
-                </ul>
-            </ErrorBoundary>
-        </Suspense>
-        <PersonDetails
-            person=selected_person
-            on_delete=refresh_people
-        />
+        <div>
+            <Suspense fallback=move || view! { <p>"Loading ..."</p>}>
+                <p>
+                    {move || {
+                        let count = people().len();
+                        format!("There are {} people.", count)
+                    }}
+                </p>
+            </Suspense>
+            <h2>"Add a person"</h2>
+            <form on:submit=move |event| {
+              event.prevent_default();
+              add_person_action.dispatch(AddPerson { name: new_name.get() });
+              set_new_name.set(String::new());
+            }>
+                <input
+                    type="text"
+                    placeholder="Enter name"
+                    prop:value=new_name
+                    on:input=move |event| set_new_name.set(event_target_value(&event))
+                />
+                <button type="submit">
+                    "Add Person"
+                </button>
+            </form>
+            <h2>"People List"</h2>
+            <div>
+                <Suspense fallback=move || view! { <p>"Loading ..."</p>}>
+                    <ErrorBoundary fallback=|_errors| {view! {<p>"Something went wrong."</p>}}>
+                        <ul>
+                            <For each=people key=|person| person.uuid.clone() let:person>
+                                <li>
+                                {let person_clone = person.clone();
+                                    view! {
+                                        <a on:click=move |_| set_selected_person(Some(person_clone.clone()))
+                                            href="#"
+                                        >
+                                            {format!("{} - {}", person.uuid, person.name)}
+                                        </a>
+                                    }}
+                                </li>
+                            </For>
+                        </ul>
+                    </ErrorBoundary>
+                </Suspense>
+                <PersonDetails
+                    person=selected_person
+                    on_delete=refresh_people
+                />
+            </div>
+        </div>
     }
 }
 
@@ -176,20 +164,24 @@ fn PersonDetails(person: ReadSignal<Option<Person>>,
     view! {
         <Show
             when=move || person.get().is_some()
-            fallback=|| view! {<p>"Select a person to view details"</p>}
+            fallback=|| view! {<div><p>"Select a person to view details"</p></div>}
         >
             {move || {
                 let person = person.get().unwrap();
                 view! {
                     <h3>"Person Details"</h3>
-                    <p>"UUID: " {person.uuid.to_string()}</p>
-                    <p>"Name: " {person.name}</p>
-                    <button on:click=move |_| {
-                        delete_person_action.dispatch(DeletePerson { uuid: person.uuid.clone(), });
-                        handle_delete(person.uuid.to_string())
-                    }>
-                        "Delete Person"
-                    </button>
+                    <div>
+                        <p>"UUID: " {person.uuid.to_string()}</p>
+                        <p>"Name: " {person.name}</p>
+                    </div>
+                    <div>
+                        <button on:click=move |_| {
+                            delete_person_action.dispatch(DeletePerson { uuid: person.uuid.clone(), });
+                            handle_delete(person.uuid.to_string())
+                        }>
+                            "Delete Person"
+                        </button>
+                    </div>
                 }
             }}
         </Show>

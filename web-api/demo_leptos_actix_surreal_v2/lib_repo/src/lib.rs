@@ -1,7 +1,7 @@
 use std::sync::LazyLock;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
-use surrealdb::{Error, RecordId, Surreal};
+use surrealdb::{Error, Surreal};
 
 pub type SurrealDBError = Error;
 
