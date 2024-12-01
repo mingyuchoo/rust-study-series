@@ -7,15 +7,14 @@
   crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-  actix-files              = {version = "0.6", optional = true}
-  actix-web                = {version = "4", optional = true, features = ["macros"]}
-  console_error_panic_hook = "0.1"
+  actix-files              = {version = "0.6.6", optional = true}
+  actix-web                = {version = "4.9.0", optional = true, features = ["macros"]}
+  console_error_panic_hook = "0.1.7"
   env_logger               = {workspace = true}
-  http                     = {version = "1.0.0", optional = true}
-  leptos                   = {version = "0.6", features = ["nightly"]}
-  leptos_actix             = {version = "0.6", optional = true}
-  leptos_meta              = {version = "0.6", features = ["nightly"]}
-  leptos_router            = {version = "0.6", features = ["nightly"]}
+  leptos                   = {version = "0.6.5", features = ["nightly"]}
+  leptos_actix             = {version = "0.6.5", optional = true}
+  leptos_meta              = {version = "0.6.5", features = ["nightly"]}
+  leptos_router            = {version = "0.6.5", features = ["nightly"]}
   lib_adder                = {path = "../lib_adder"}
   lib_repo                 = {path = "../lib_repo"}
   log                      = {workspace = true}
