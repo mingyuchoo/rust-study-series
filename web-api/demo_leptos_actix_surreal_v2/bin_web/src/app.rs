@@ -2,17 +2,11 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 use lib_adder::add_left_right;
-use lib_repo::Id;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Person {
-    id:   Id,
-    name: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct PersonParam {
+    uuid: String,
     name: String,
 }
 
@@ -81,16 +75,11 @@ fn PeoplePage() -> impl IntoView {
     };
 
     let (selected_person, set_selected_person) = create_signal(None::<Person>);
-
     let (new_name, set_new_name) = create_signal(String::new());
     let add_person_action = create_server_action::<AddPerson>();
-    create_effect(move |_| {
-        if add_person_action.version()
-                            .get()
-           > 0
-        {
-            people_resource.refetch();
-        }
+    let refresh_people = Callback::new(move |_: String| {
+        people_resource.refetch();
+        set_selected_person.set(None);
     });
     let (error_message, set_error_message) = create_signal(String::new());
     let handle_submit = move |event: ev::SubmitEvent| {
@@ -107,6 +96,15 @@ fn PeoplePage() -> impl IntoView {
             set_new_name.set(String::new());
         }
     };
+
+    create_effect(move |_| {
+        if add_person_action.version()
+                            .get()
+           > 0
+        {
+            people_resource.refetch();
+        }
+    });
 
     view! {
         <h1>"People"</h1>
@@ -144,14 +142,14 @@ fn PeoplePage() -> impl IntoView {
         <Suspense fallback=move || view! { <p>"Loading ..."</p>}>
             <ErrorBoundary fallback=|_errors| {view! {<p>"Something went wrong."</p>}}>
                 <ul>
-                    <For each=people key=|person| person.id.clone() let:person>
+                    <For each=people key=|person| person.uuid.clone() let:person>
                         <li>
                         {let person_clone = person.clone();
                             view! {
                                 <a on:click=move |_| set_selected_person(Some(person_clone.clone()))
                                     href="#"
                                 >
-                                    {format!("{} - {}", person.id, person.name)}
+                                    {format!("{} - {}", person.uuid, person.name)}
                                 </a>
                             }}
                         </li>
@@ -159,12 +157,22 @@ fn PeoplePage() -> impl IntoView {
                 </ul>
             </ErrorBoundary>
         </Suspense>
-        <PersonDetails person=selected_person/>
+        <PersonDetails
+            person=selected_person
+            on_delete=refresh_people
+        />
     }
 }
 
 #[component]
-fn PersonDetails(person: ReadSignal<Option<Person>>) -> impl IntoView {
+fn PersonDetails(person: ReadSignal<Option<Person>>,
+                 on_delete: Callback<String>)
+                 -> impl IntoView {
+    let delete_person_action = create_server_action::<DeletePerson>();
+    let handle_delete = move |uuid: String| {
+        delete_person_action.dispatch(DeletePerson { uuid: uuid.clone(), });
+        on_delete.call(uuid);
+    };
     view! {
         <Show
             when=move || person.get().is_some()
@@ -174,8 +182,14 @@ fn PersonDetails(person: ReadSignal<Option<Person>>) -> impl IntoView {
                 let person = person.get().unwrap();
                 view! {
                     <h3>"Person Details"</h3>
-                    <p>"ID: " {person.id.to_string()}</p>
+                    <p>"UUID: " {person.uuid.to_string()}</p>
                     <p>"Name: " {person.name}</p>
+                    <button on:click=move |_| {
+                        delete_person_action.dispatch(DeletePerson { uuid: person.uuid.clone(), });
+                        handle_delete(person.uuid.to_string())
+                    }>
+                        "Delete Person"
+                    </button>
                 }
             }}
         </Show>
@@ -203,15 +217,29 @@ pub async fn get_people() -> Result<Vec<Person>, ServerFnError> {
     Ok(people)
 }
 
-#[server]
+#[server(AddPerson, "/api")]
 pub async fn add_person(name: String) -> Result<Option<Person>, ServerFnError> {
     use lib_repo::DB;
+    use uuid::Uuid;
 
-    let new_person = PersonParam { name };
+    let new_person = Person { uuid: Uuid::new_v4().to_string(),
+                              name };
 
-    let created: Option<Person> = DB.create("person")
+    let created: Option<Person> = DB.create(("person",
+                                             new_person.uuid
+                                                       .clone()))
                                     .content(new_person)
                                     .await?;
 
     Ok(created)
+}
+
+#[server(DeletePerson, "/api")]
+pub async fn delete_person(uuid: String)
+                           -> Result<Option<Person>, ServerFnError> {
+    use lib_repo::DB;
+    let deleted: Option<Person> = DB.delete(("person", uuid))
+                                    .await?;
+
+    Ok(deleted)
 }

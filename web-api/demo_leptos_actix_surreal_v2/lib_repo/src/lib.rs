@@ -3,7 +3,6 @@ use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::{Error, RecordId, Surreal};
 
-pub type Id = RecordId;
 pub type SurrealDBError = Error;
 
 pub static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
