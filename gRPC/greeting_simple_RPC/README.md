@@ -1,4 +1,14 @@
 # README
+
+## Prerequisites
+
+On Ubuntu Linux
+
+```bssh
+sudo apt-get install protobuf-compiler
+```
+
+
 ## working process
 
 ```bash
@@ -12,4 +22,17 @@ cargo add tonic
 cargo add prost
 cargo add prost-types
 touch build.rs
+```
+## How to run
+
+### Run Server
+
+```bash
+cargo run --bin server
+```
+
+### Run Client
+
+```bash
+cargo run --bin client
 ```
