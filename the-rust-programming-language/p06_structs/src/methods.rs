@@ -12,7 +12,7 @@ impl Rectangle {
 
     // Associated function:
     //   - are associated with the type named after the `impl`.
-    //   - don'tneed an instance of the type ot work with.
+    //   - DO NOT need an instance of the type ot work with.
     fn square(size: u32) -> Rectangle {
         Rectangle { width:  size,
                     height: size, }
