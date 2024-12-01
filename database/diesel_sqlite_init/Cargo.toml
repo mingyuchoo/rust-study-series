@@ -1,25 +1,13 @@
-[profile.dev]
-  debug     = true
-  opt-level = 0
-
-[profile.release]
-  debug     = false
-  opt-level = 3
-
 [package]
   authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
   edition = "2021"
   name    = "diesel_sqlite_init"
   version = "0.1.0"
 
-
 [dependencies]
-  diesel  = {version = "2.2.4", features = ["returning_clauses_for_sqlite_3_35", "sqlite"]}
-  dotenvy = "0.15.7"
-
-  [dependencies.rusqlite]
-    features = ["bundled"]
-    version  = "0.29.0"
+  diesel     = {version = "2.2.5", features = ["returning_clauses_for_sqlite_3_35", "sqlite"]}
+  dotenvy    = "0.15.7"
+  rustsqlite = {version = "0.32.1", features = ["bundled"]}
 
 [[bin]]
   name = "show_posts"
@@ -40,3 +28,11 @@
 [[bin]]
   name = "delete_post"
   path = "src/bin/delete_post.rs"
+
+[profile.dev]
+  debug     = true
+  opt-level = 0
+
+[profile.release]
+  debug     = false
+  opt-level = 3

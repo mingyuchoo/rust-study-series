@@ -1,3 +1,13 @@
+[package]
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2021"
+  name    = "mysql_mysql_init"
+  version = "0.1.0"
+
+[dependencies]
+  dotenv = "0.15.0"
+  mysql  = "25.0.1"
+
 [profile.dev]
   debug     = true
   opt-level = 0
@@ -5,14 +15,3 @@
 [profile.release]
   debug     = false
   opt-level = 3
-
-[package]
-  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-  edition = "2021"
-  name    = "mysql_mysql_init"
-  version = "0.1.0"
-
-
-[dependencies]
-  dotenv = "0.15.0"
-  mysql  = "25.0.1"
