@@ -159,7 +159,7 @@ a {
 
 ul {
   list-style: none;
-  padding-left: 20px;
+  padding-left: 3rem;
 
   li {
     position: relative;
@@ -171,6 +171,44 @@ ul {
       position: absolute;
       left: -1rem;
     }
+  }
+}
+
+p {
+  padding-left: 2rem;
+}
+
+input {
+  background-color: $dark-bg;
+  color: $dark-fg;
+  border: 0.175rem solid $dark-aqua;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: $dark-aqua;
+    box-shadow: 0 0 0 3px rgba($dark-aqua, 0.3);
+  }
+
+  &::placeholder {
+    color: $dark-gray;
+  }
+}
+
+form {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  input {
+    flex-grow: 1;
+  }
+
+  button {
+    flex-shrink: 0;
   }
 }
 

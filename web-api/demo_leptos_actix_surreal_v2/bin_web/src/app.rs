@@ -2,7 +2,19 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 use lib_adder::add_left_right;
+use lib_repo::Id;
 use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Person {
+    id:   Id,
+    name: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct PersonParam {
+    name: String,
+}
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -68,23 +80,107 @@ fn PeoplePage() -> impl IntoView {
         | None => vec![],
     };
 
+    let (selected_person, set_selected_person) = create_signal(None::<Person>);
+
+    let (new_name, set_new_name) = create_signal(String::new());
+    let add_person_action = create_server_action::<AddPerson>();
+    create_effect(move |_| {
+        if add_person_action.version()
+                            .get()
+           > 0
+        {
+            people_resource.refetch();
+        }
+    });
+    let (error_message, set_error_message) = create_signal(String::new());
+    let handle_submit = move |event: ev::SubmitEvent| {
+        event.prevent_default();
+        let name = new_name.get();
+        if name.trim()
+               .is_empty()
+        {
+            set_error_message.set("Please input a name".to_string());
+        }
+        else {
+            set_error_message.set(String::new());
+            add_person_action.dispatch(AddPerson { name: name.clone(), });
+            set_new_name.set(String::new());
+        }
+    };
+
     view! {
         <h1>"People"</h1>
+        <Suspense fallback=move || view! { <p>"Loading ..."</p>}>
+            <p>
+                {move || {
+                    let count = people().len();
+                    format!("There are {} people.", count)
+                }}
+            </p>
+        </Suspense>
+        <h2>"Add a person"</h2>
+        <form on:submit=move |event| {
+          event.prevent_default();
+          add_person_action.dispatch(AddPerson { name: new_name.get() });
+          set_new_name.set(String::new());
+        }>
+            <input
+                type="text"
+                placeholder="Enter name"
+                prop:value=new_name
+                on:input=move |event| set_new_name.set(event_target_value(&event))
+            />
+            <button type="submit">
+                "Add Person"
+            </button>
+        </form>
+        <Show
+            when=move || !error_message.get().is_empty()
+            fallback=|| view! { <span></span>}
+        >
+            <p class="alert">{error_message}</p>
+        </Show>
         <h2>"People List"</h2>
         <Suspense fallback=move || view! { <p>"Loading ..."</p>}>
             <ErrorBoundary fallback=|_errors| {view! {<p>"Something went wrong."</p>}}>
                 <ul>
                     <For each=people key=|person| person.id.clone() let:person>
                         <li>
-                            {format!("{} - {}", person.id, person.name)}
+                        {let person_clone = person.clone();
+                            view! {
+                                <a on:click=move |_| set_selected_person(Some(person_clone.clone()))
+                                    href="#"
+                                >
+                                    {format!("{} - {}", person.id, person.name)}
+                                </a>
+                            }}
                         </li>
                     </For>
                 </ul>
             </ErrorBoundary>
         </Suspense>
+        <PersonDetails person=selected_person/>
     }
 }
 
+#[component]
+fn PersonDetails(person: ReadSignal<Option<Person>>) -> impl IntoView {
+    view! {
+        <Show
+            when=move || person.get().is_some()
+            fallback=|| view! {<p>"Select a person to view details"</p>}
+        >
+            {move || {
+                let person = person.get().unwrap();
+                view! {
+                    <h3>"Person Details"</h3>
+                    <p>"ID: " {person.id.to_string()}</p>
+                    <p>"Name: " {person.name}</p>
+                }
+            }}
+        </Show>
+    }
+}
 #[component]
 fn NotFound() -> impl IntoView {
     #[cfg(feature = "ssr")]
@@ -104,16 +200,18 @@ pub async fn get_people() -> Result<Vec<Person>, ServerFnError> {
 
     let people = DB.select("person")
                    .await?;
-
-    println!("{:?}", people);
-
     Ok(people)
 }
 
-use lib_repo::Id;
+#[server]
+pub async fn add_person(name: String) -> Result<Option<Person>, ServerFnError> {
+    use lib_repo::DB;
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Person {
-    id:   Id,
-    name: String,
+    let new_person = PersonParam { name };
+
+    let created: Option<Person> = DB.create("person")
+                                    .content(new_person)
+                                    .await?;
+
+    Ok(created)
 }
