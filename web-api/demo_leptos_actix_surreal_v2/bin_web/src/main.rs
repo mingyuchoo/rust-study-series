@@ -11,7 +11,7 @@ async fn main() -> std::io::Result<()> {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
     info!("Starting server...");
 
-    init_database().await?;
+    // init_database().await?;
 
     let conf = get_configuration(None).await
                                       .unwrap();

@@ -235,3 +235,10 @@ pub async fn delete_person(uuid: String)
 
     Ok(deleted)
 }
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "ssr")] {
+        use lib_repo::DB;
+        use uuid::Uuid;
+    }
+}
