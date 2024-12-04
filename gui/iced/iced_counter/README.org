@@ -9,4 +9,5 @@
 #+begin_src shell
   cargo run
 #+end_src
-** How to fix errors
+** References
+- [[https://redandgreen.co.uk/iced-rs-example-snippets/rust-programming/][Example snippets]]
