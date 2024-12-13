@@ -137,13 +137,16 @@ cargo watch -x check -x test
 # Watch changes in on the `src` and clear the console and then run
 cargo watch -c -w src -x run
 
-# Run run current application
+# Run current application
 cargo watch -x 'run --bin app'
 
-# Run run with arguments
+# Run with arguments
 cargo watch -x 'run -- --some-arg'
 
-# run an arbitrary command
+# Run with example file 
+cargo watch -q -c -x "run -q --example c01-simple"
+
+# Run an arbitrary command
 cargo watch -- echo Hello world
 
 # Run with features passed to carg
