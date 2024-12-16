@@ -1,0 +1,5 @@
+* genai-ollama-demo
+** How to build
+#+begin_src bash
+  cargo make run
+#+end_src
