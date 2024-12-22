@@ -27,6 +27,6 @@
   dependencies = ["format"]
 
 [tasks.run]
-  args         = ["run"]
+  args         = ["run", "--example", "main"]
   command      = "cargo"
   dependencies = ["format"]

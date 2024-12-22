@@ -5,6 +5,11 @@ fn main() {
     let name = "Alice";
     let age = 30;
 
+    #[cfg(not(feature = "json"))]
+    {
+        println!("Simple output: Name: {}, Age: {}", name, age);
+    }
+
     #[cfg(feature = "json")]
     {
         let person = json!({
@@ -13,9 +18,5 @@ fn main() {
         });
 
         println!("JSON output: {}", person.to_string());
-    }
-    #[cfg(not(feature = "json"))]
-    {
-        println!("Simple output: Name: {}, Age: {}", name, age);
     }
 }

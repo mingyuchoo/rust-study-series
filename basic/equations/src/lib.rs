@@ -1,11 +1,5 @@
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    what_value_of_s_balances_the_scale();
-
-    Ok(())
-}
-
 /// 2s + 10 = s + 15
-fn what_value_of_s_balances_the_scale() -> () {
+pub fn what_value_of_s_balances_the_scale() {
     let max = 100;
 
     // FIXED: NOT idiomatic code
