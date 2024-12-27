@@ -6,15 +6,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("What would you like your title to be?");
     let mut title = String::new();
-    stdin().read_line(&mut title)
-           .unwrap();
+    stdin().read_line(&mut title).unwrap();
 
     let title = &title[.. (title.len() - 1)]; // Drop the newline character
     println!("\nOk! Let's write {title} (Press {EOF} when finished)\n");
 
     let mut body = String::new();
-    stdin().read_to_string(&mut body)
-           .unwrap();
+    stdin().read_to_string(&mut body).unwrap();
 
     let post =
         create_post(connection, title, &body).expect("Error saving new post");
