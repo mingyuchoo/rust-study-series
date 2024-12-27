@@ -22,7 +22,7 @@ Edit ~Cargo.toml~
 #+end_src
 *** 2. Create a main project
 #+begin_src shell
-  cargo new {mainer} --bin
+  cargo new --bin {mainer}
 #+end_src
 The project name will be added to =members= of ~Cargo.toml~ automatically.
 #+begin_src toml
@@ -32,9 +32,9 @@ The project name will be added to =members= of ~Cargo.toml~ automatically.
 #+end_src
 Create three library projects
 #+begin_src shell
-  cargo new {library_one}   --lib
-  cargo new {library_two}   --lib
-  cargo new {library_three} --lib
+  cargo new --lib {library_one}
+  cargo new --lib {library_two}
+  cargo new --lib {library_three}
 #+end_src
 The project name will be added to =members= of ~Cargo.toml~ automatically.
 #+begin_src toml
