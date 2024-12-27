@@ -1,6 +1,5 @@
 binop_separator                = "Front"
 color                          = "Always"
-control_brace_style            = "ClosingNextLine"
 doc_comment_code_block_width   = 80
 edition                        = "2021"
 enum_discrim_align_threshold   = 40
@@ -25,6 +24,7 @@ struct_lit_single_line         = false
 use_try_shorthand              = true
 wrap_comments                  = true
 #chain_width                    = 0
+#control_brace_style            = "ClosingNextLine"
 #fn_params_layout               = "Vertical"
 #indent_style                   = "Visual"
 #trailing_comma                 = "Always"
