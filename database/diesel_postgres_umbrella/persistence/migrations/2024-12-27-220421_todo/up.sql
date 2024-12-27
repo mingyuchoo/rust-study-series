@@ -1,0 +1,5 @@
+-- Your SQL goes here
+CREATE TABLE todo (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR DEFAULT 'NEW TODO' NOT NULL
+)
