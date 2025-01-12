@@ -48,9 +48,7 @@ enum LoginError {
     #[error("invalid password")]
     InvalidPassword,
 }
-fn do_login(email: &str,
-            password: &str)
-            -> Result<(), LoginError> {
+fn do_login(email: &str, password: &str) -> Result<(), LoginError> {
     match email {
         | "david@email.com" => match password {
             | "password" => Ok(()),

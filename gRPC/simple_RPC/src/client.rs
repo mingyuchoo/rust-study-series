@@ -11,14 +11,16 @@ use product_info_proto::{Product, ProductId};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let mut client: ProductInfoClient<Channel> =
-        ProductInfoClient::connect("http://[::1]:50051").await
-                                                        .unwrap();
+        ProductInfoClient::connect("http://[::1]:50051")
+            .await
+            .unwrap();
 
-    let request: Request<_> = Request::new(ProductId { id: 1, });
+    let request: Request<_> = Request::new(ProductId {
+        id: 1
+    });
 
-    let response: Response<Product> = client.get_product(request)
-                                            .await
-                                            .unwrap();
+    let response: Response<Product> =
+        client.get_product(request).await.unwrap();
 
     println!("{:?}", response);
 

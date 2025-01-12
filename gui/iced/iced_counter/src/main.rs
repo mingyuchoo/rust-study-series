@@ -13,13 +13,14 @@ struct Counter {
 
 impl Counter {
     fn view(&self) -> Column<Message> {
-        column![button("Increment").on_press(Message::Increment),
-                text(self.value).size(50),
-                button("Decrement").on_press(Message::Decrement)]
+        column![
+            button("Increment").on_press(Message::Increment),
+            text(self.value).size(50),
+            button("Decrement").on_press(Message::Decrement)
+        ]
     }
 
-    fn update(&mut self,
-              message: Message) {
+    fn update(&mut self, message: Message) {
         match message {
             | Message::Increment => {
                 self.value += 1;

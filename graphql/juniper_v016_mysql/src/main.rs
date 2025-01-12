@@ -21,11 +21,13 @@ async fn main() -> std::io::Result<()> {
     let pool = get_db_pool();
 
     HttpServer::new(move || {
-        App::new().data(pool.clone())
-                  .wrap(middleware::Logger::default())
-                  .configure(register)
-                  .default_service(web::to(|| async { "404" }))
-    }).bind("127.0.0.1:4000")?
-      .run()
-      .await
+        App::new()
+            .data(pool.clone())
+            .wrap(middleware::Logger::default())
+            .configure(register)
+            .default_service(web::to(|| async { "404" }))
+    })
+    .bind("127.0.0.1:4000")?
+    .run()
+    .await
 }

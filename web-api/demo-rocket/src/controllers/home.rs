@@ -11,7 +11,9 @@ pub struct IndexTemplate {
 
 #[get("/")]
 pub fn index() -> IndexTemplate {
-    IndexTemplate { title:      "Index".to_string(),
-                    first_name: "John".to_string(),
-                    last_name:  "Doe".to_string(), }
+    IndexTemplate {
+        title:      "Index".to_string(),
+        first_name: "John".to_string(),
+        last_name:  "Doe".to_string(),
+    }
 }

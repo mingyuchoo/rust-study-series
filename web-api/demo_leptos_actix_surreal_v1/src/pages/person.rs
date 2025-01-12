@@ -5,11 +5,7 @@ use leptos_router::*;
 pub fn PersonPage() -> impl IntoView {
     let params = use_params_map();
     let id = move || {
-        params.with(|params| {
-                  params.get("id")
-                        .cloned()
-                        .unwrap_or_default()
-              })
+        params.with(|params| params.get("id").cloned().unwrap_or_default())
     };
 
     view! {

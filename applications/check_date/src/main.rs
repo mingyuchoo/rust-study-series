@@ -52,16 +52,20 @@ mod tests_check_date {
         // "2023-07-05" is stored in code section (a.k.a. text section)
         let date: &str = "2023-07-05";
 
-        assert_eq!(true,
-                   check_date(date).expect("Error!"),
-                   "should be match YYYY-MM-DD");
+        assert_eq!(
+            true,
+            check_date(date).expect("Error!"),
+            "should be match YYYY-MM-DD"
+        );
     }
 
     #[test]
     fn unhappy_path_1() {
         let date: &str = "20230705";
-        assert_eq!(false,
-                   check_date(date).expect("Error!"),
-                   "should NOT be match YYYYMMDD");
+        assert_eq!(
+            false,
+            check_date(date).expect("Error!"),
+            "should NOT be match YYYYMMDD"
+        );
     }
 }

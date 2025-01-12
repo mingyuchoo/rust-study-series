@@ -1,5 +1,5 @@
-use lib_api::run_server;
 use actix_web::*;
+use lib_api::run_server;
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

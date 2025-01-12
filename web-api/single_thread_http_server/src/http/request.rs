@@ -17,8 +17,7 @@ impl<'buf> Request<'buf> {
     }
 
     pub fn query_string(&self) -> Option<&QueryString> {
-        self.query_string
-            .as_ref()
+        self.query_string.as_ref()
     }
 }
 
@@ -52,16 +51,16 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
             path = &path[.. i];
         }
 
-        Ok(Self { path,
-                  query_string,
-                  method })
+        Ok(Self {
+            path,
+            query_string,
+            method,
+        })
     }
 }
 
 fn get_next_word(request: &str) -> Option<(&str, &str)> {
-    for (i, c) in request.chars()
-                         .enumerate()
-    {
+    for (i, c) in request.chars().enumerate() {
         if c == ' ' || c == '\r' {
             return Some((&request[.. i], &&request[i + 1 ..]));
         }
@@ -90,18 +89,14 @@ impl ParseError {
 
 use std::fmt::{Debug, Formatter, Result as FmtResult};
 impl Debug for ParseError {
-    fn fmt(&self,
-           f: &mut Formatter)
-           -> FmtResult {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }
 
 use std::fmt::Display;
 impl Display for ParseError {
-    fn fmt(&self,
-           f: &mut Formatter)
-           -> FmtResult {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         write!(f, "{}", self.message())
     }
 }

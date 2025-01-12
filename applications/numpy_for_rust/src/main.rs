@@ -18,8 +18,6 @@ fn main() -> Result<(), ShapeError> {
     println!("a + b {}", &a + &b);
     println!("a * b {}", &a * &b);
     println!("average(a) {}", a.sum() / a.len() as f64);
-    println!("mean(b) {}",
-             b.mean()
-              .unwrap());
+    println!("mean(b) {}", b.mean().unwrap());
     Ok(())
 }

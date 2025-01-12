@@ -15,8 +15,7 @@ impl Member {
     }
 
     pub async fn name(&self) -> &str {
-        self.name
-            .as_str()
+        self.name.as_str()
     }
 
     pub async fn knockouts(&self) -> i32 {
@@ -41,8 +40,7 @@ impl Team {
     }
 
     pub async fn name(&self) -> &str {
-        self.name
-            .as_str()
+        self.name.as_str()
     }
 
     pub async fn members(&self) -> Vec<Member> {
@@ -54,7 +52,8 @@ fn establish_connection() -> diesel::pg::PgConnection {
     dotenv::dotenv().ok();
     let database_url =
         std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    diesel::pg::PgConnection::establish(&database_url).expect(&format!("Error connection to {}", database_url))
+    diesel::pg::PgConnection::establish(&database_url)
+        .expect(&format!("Error connection to {}", database_url))
 }
 
 pub struct QueryRoot;
@@ -66,19 +65,26 @@ impl QueryRoot {
         use diesel::RunQueryDsl;
 
         let connection = &mut establish_connection();
-        crate::diesel_schema::members::dsl::members.limit(100)
-                                                   .load::<Member>(connection)
-                                                   .expect("Error loading \
-                                                            members")
+        crate::diesel_schema::members::dsl::members
+            .limit(100)
+            .load::<Member>(connection)
+            .expect(
+                "Error loading \
+                                                            members",
+            )
     }
 }
 
-pub type Schema = async_graphql::Schema<QueryRoot,
-                                        async_graphql::EmptyMutation,
-                                        async_graphql::EmptySubscription>;
+pub type Schema = async_graphql::Schema<
+    QueryRoot,
+    async_graphql::EmptyMutation,
+    async_graphql::EmptySubscription,
+>;
 
 pub fn create_schema() -> Schema {
-    async_graphql::Schema::new(QueryRoot,
-                               async_graphql::EmptyMutation,
-                               async_graphql::EmptySubscription)
+    async_graphql::Schema::new(
+        QueryRoot,
+        async_graphql::EmptyMutation,
+        async_graphql::EmptySubscription,
+    )
 }

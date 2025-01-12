@@ -22,7 +22,8 @@ mod error {
 
     impl IntoResponse for Error {
         fn into_response(self) -> Response {
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(self.to_string())).into_response()
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(self.to_string()))
+                .into_response()
         }
     }
 
@@ -77,48 +78,44 @@ mod routes {
     }
 
     pub async fn session() -> Result<Json<String>, Error> {
-        let res: Option<String> = DB.query("RETURN <string>$session")
-                                    .await?
-                                    .take(0)?;
+        let res: Option<String> =
+            DB.query("RETURN <string>$session").await?.take(0)?;
 
         Ok(Json(res.unwrap_or("No session data found!".into())))
     }
 
-    pub async fn create_person(id: Path<String>,
-                               Json(person): Json<PersonData>)
-                               -> Result<Json<Option<Person>>, Error> {
-        let person = DB.create((PERSON, &*id))
-                       .content(person)
-                       .await?;
+    pub async fn create_person(
+        id: Path<String>,
+        Json(person): Json<PersonData>,
+    ) -> Result<Json<Option<Person>>, Error> {
+        let person = DB.create((PERSON, &*id)).content(person).await?;
         Ok(Json(person))
     }
 
-    pub async fn read_person(id: Path<String>)
-                             -> Result<Json<Option<Person>>, Error> {
-        let person = DB.select((PERSON, &*id))
-                       .await?;
+    pub async fn read_person(
+        id: Path<String>,
+    ) -> Result<Json<Option<Person>>, Error> {
+        let person = DB.select((PERSON, &*id)).await?;
         Ok(Json(person))
     }
 
-    pub async fn update_person(id: Path<String>,
-                               Json(person): Json<PersonData>)
-                               -> Result<Json<Option<Person>>, Error> {
-        let person = DB.update((PERSON, &*id))
-                       .content(person)
-                       .await?;
+    pub async fn update_person(
+        id: Path<String>,
+        Json(person): Json<PersonData>,
+    ) -> Result<Json<Option<Person>>, Error> {
+        let person = DB.update((PERSON, &*id)).content(person).await?;
         Ok(Json(person))
     }
 
-    pub async fn delete_person(id: Path<String>)
-                               -> Result<Json<Option<Person>>, Error> {
-        let person = DB.delete((PERSON, &*id))
-                       .await?;
+    pub async fn delete_person(
+        id: Path<String>,
+    ) -> Result<Json<Option<Person>>, Error> {
+        let person = DB.delete((PERSON, &*id)).await?;
         Ok(Json(person))
     }
 
     pub async fn list_people() -> Result<Json<Vec<Person>>, Error> {
-        let people = DB.select(PERSON)
-                       .await?;
+        let people = DB.select(PERSON).await?;
         Ok(Json(people))
     }
 
@@ -131,13 +128,18 @@ mod routes {
     pub async fn make_new_user() -> Result<String, Error> {
         let name = rand::random::<FirstName>().to_string();
         let pass = rand::random::<FirstName>().to_string();
-        let jwt = DB.signup(Record { access:    "account",
-                                     namespace: "test",
-                                     database:  "test",
-                                     params:    Params { name: &name,
-                                                         pass: &pass, }, })
-                    .await?
-                    .into_insecure_token();
+        let jwt = DB
+            .signup(Record {
+                access:    "account",
+                namespace: "test",
+                database:  "test",
+                params:    Params {
+                    name: &name,
+                    pass: &pass,
+                },
+            })
+            .await?
+            .into_insecure_token();
         Ok(format!(
             "New user created!\n\nName: {name}\nPassword: {pass}\nToken: {jwt}\n\nTo log in, use this command:\n\nsurreal sql --ns test --db test --pretty --token \"{jwt}\""
         ))
@@ -151,16 +153,15 @@ mod routes {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    DB.connect::<Ws>("localhost:8000")
-      .await?;
+    DB.connect::<Ws>("localhost:8000").await?;
 
-    DB.signin(Root { username: "root",
-                     password: "root", })
-      .await?;
+    DB.signin(Root {
+        username: "root",
+        password: "root",
+    })
+    .await?;
 
-    DB.use_ns("test")
-      .use_db("test")
-      .await?;
+    DB.use_ns("test").use_db("test").await?;
 
     DB.query(
              "DEFINE TABLE IF NOT EXISTS person SCHEMALESS
@@ -179,16 +180,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
       .await?;
 
     let listener = TcpListener::bind("localhost:8080").await?;
-    let router =
-        Router::new().route("/", get(routes::paths))
-                     .route("/person/:id", post(routes::create_person))
-                     .route("/person/:id", get(routes::read_person))
-                     .route("/person/:id", put(routes::update_person))
-                     .route("/person/:id", delete(routes::delete_person))
-                     .route("/people", get(routes::list_people))
-                     .route("/session", get(routes::session))
-                     .route("/new_user", get(routes::make_new_user))
-                     .route("/new_token", get(routes::get_new_token));
+    let router = Router::new()
+        .route("/", get(routes::paths))
+        .route("/person/:id", post(routes::create_person))
+        .route("/person/:id", get(routes::read_person))
+        .route("/person/:id", put(routes::update_person))
+        .route("/person/:id", delete(routes::delete_person))
+        .route("/people", get(routes::list_people))
+        .route("/session", get(routes::session))
+        .route("/new_user", get(routes::make_new_user))
+        .route("/new_token", get(routes::get_new_token));
     axum::serve(listener, router).await?;
     Ok(())
 }

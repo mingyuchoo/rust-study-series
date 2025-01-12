@@ -17,8 +17,10 @@ pub fn return_value() {
     println!("{s2}");
 
     fn change(some_string: &mut String) {
-        println!("some_string: {some_string}, address of some_string: \
-                  {some_string:p}");
+        println!(
+            "some_string: {some_string}, address of some_string: \
+                  {some_string:p}"
+        );
         some_string.push_str(", world");
     }
 }

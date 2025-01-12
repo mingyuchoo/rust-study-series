@@ -1,13 +1,9 @@
 use crate::http::{ParseError, Request, Response, StatusCode};
 
 pub trait Handler {
-    fn handle_request(&mut self,
-                      request: &Request)
-                      -> Response;
+    fn handle_request(&mut self, request: &Request) -> Response;
 
-    fn handle_bad_request(&mut self,
-                          e: &ParseError)
-                          -> Response {
+    fn handle_bad_request(&mut self, e: &ParseError) -> Response {
         println!("Failed to parse request: {}", e);
         Response::new(StatusCode::BadRequest, None)
     }
@@ -19,11 +15,12 @@ pub struct Server {
 
 impl Server {
     pub fn new(addr: String) -> Self {
-        Self { addr }
+        Self {
+            addr,
+        }
     }
 
-    pub fn run(self,
-               mut handler: impl Handler) {
+    pub fn run(self, mut handler: impl Handler) {
         println!("Listening on {}", self.addr);
 
         use std::net::TcpListener;
@@ -36,8 +33,10 @@ impl Server {
                     use std::io::Read;
                     match stream.read(&mut buffer) {
                         | Ok(_) => {
-                            println!("Received a request: {}",
-                                     String::from_utf8_lossy(&buffer));
+                            println!(
+                                "Received a request: {}",
+                                String::from_utf8_lossy(&buffer)
+                            );
 
                             let response = match Request::try_from(&buffer[..])
                             {
@@ -47,8 +46,10 @@ impl Server {
                                 | Err(e) => handler.handle_bad_request(&e),
                             };
                             if let Err(e) = response.send(&mut stream) {
-                                println!("Failed to read from connection: {}",
-                                         e);
+                                println!(
+                                    "Failed to read from connection: {}",
+                                    e
+                                );
                             }
                         },
                         | Err(e) => {

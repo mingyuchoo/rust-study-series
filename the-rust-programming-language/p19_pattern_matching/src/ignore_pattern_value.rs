@@ -1,5 +1,4 @@
-fn foo(_: i32,
-       y: i32) {
+fn foo(_: i32, y: i32) {
     println!("이 함수 y 매개변수 사용한다:  {y}");
 }
 
@@ -56,10 +55,14 @@ pub fn call6() {
         z: i32,
     }
 
-    let origin = Point { x: 0, y: 0, z: 0, };
+    let origin = Point {
+        x: 0, y: 0, z: 0
+    };
 
     match origin {
-        | Point { x, .. } => println!("x={x}"),
+        | Point {
+            x, ..
+        } => println!("x={x}"),
     }
 }
 

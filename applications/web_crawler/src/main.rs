@@ -8,9 +8,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let client = Client::new();
 
-    let res = client.get(URL)
-                    .send()?
-                    .text();
+    let res = client.get(URL).send()?.text();
 
     let document = Document::from(res?.as_str());
 

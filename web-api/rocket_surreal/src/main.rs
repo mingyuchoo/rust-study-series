@@ -21,15 +21,16 @@ mod error {
     }
 
     impl<'r> Responder<'r, 'static> for Error {
-        fn respond_to(self,
-                      _: &'r Request<'_>)
-                      -> response::Result<'static> {
+        fn respond_to(self, _: &'r Request<'_>) -> response::Result<'static> {
             let error_message = format!(r#"{{ "error": "{self}" }}"#);
-            Response::build().status(Status::InternalServerError)
-                             .header(rocket::http::ContentType::JSON)
-                             .sized_body(error_message.len(),
-                                         std::io::Cursor::new(error_message))
-                             .ok()
+            Response::build()
+                .status(Status::InternalServerError)
+                .header(rocket::http::ContentType::JSON)
+                .sized_body(
+                    error_message.len(),
+                    std::io::Cursor::new(error_message),
+                )
+                .ok()
         }
     }
 
@@ -93,53 +94,55 @@ mod routes {
 
     #[get("/session")]
     pub async fn session() -> Result<Json<String>, Error> {
-        let res: Option<String> = DB.query("RETURN <string>$session")
-                                    .await?
-                                    .take(0)?;
+        let res: Option<String> =
+            DB.query("RETURN <string>$session").await?.take(0)?;
 
         Ok(Json(res.unwrap_or("No session data found!".into())))
     }
 
     #[post("/person/<id>", data = "<person>")]
-    pub async fn create_person(id: String,
-                               person: Json<PersonData>)
-                               -> Result<Json<Option<Person>>, Error> {
-        let person = DB.create((PERSON, &*id))
-                       .content(person.into_inner())
-                       .await?;
+    pub async fn create_person(
+        id: String,
+        person: Json<PersonData>,
+    ) -> Result<Json<Option<Person>>, Error> {
+        let person = DB
+            .create((PERSON, &*id))
+            .content(person.into_inner())
+            .await?;
         Ok(Json(person))
     }
 
     #[get("/person/<id>")]
-    pub async fn read_person(id: String)
-                             -> Result<Json<Option<Person>>, Error> {
-        let person = DB.select((PERSON, &*id))
-                       .await?;
+    pub async fn read_person(
+        id: String,
+    ) -> Result<Json<Option<Person>>, Error> {
+        let person = DB.select((PERSON, &*id)).await?;
         Ok(Json(person))
     }
 
     #[put("/person/<id>", data = "<person>")]
-    pub async fn update_person(id: String,
-                               person: Json<PersonData>)
-                               -> Result<Json<Option<Person>>, Error> {
-        let person = DB.update((PERSON, &*id))
-                       .content(person.into_inner())
-                       .await?;
+    pub async fn update_person(
+        id: String,
+        person: Json<PersonData>,
+    ) -> Result<Json<Option<Person>>, Error> {
+        let person = DB
+            .update((PERSON, &*id))
+            .content(person.into_inner())
+            .await?;
         Ok(Json(person))
     }
 
     #[delete("/person/<id>")]
-    pub async fn delete_person(id: String)
-                               -> Result<Json<Option<Person>>, Error> {
-        let person = DB.delete((PERSON, &*id))
-                       .await?;
+    pub async fn delete_person(
+        id: String,
+    ) -> Result<Json<Option<Person>>, Error> {
+        let person = DB.delete((PERSON, &*id)).await?;
         Ok(Json(person))
     }
 
     #[get("/people")]
     pub async fn list_people() -> Result<Json<Vec<Person>>, Error> {
-        let people = DB.select(PERSON)
-                       .await?;
+        let people = DB.select(PERSON).await?;
         Ok(Json(people))
     }
 
@@ -147,13 +150,18 @@ mod routes {
     pub async fn make_new_user() -> Result<String, Error> {
         let name = rand::random::<FirstName>().to_string();
         let pass = rand::random::<FirstName>().to_string();
-        let jwt = DB.signup(Record { access:    "account",
-                                     namespace: "namespace",
-                                     database:  "database",
-                                     params:    Params { name: &name,
-                                                         pass: &pass, }, })
-                    .await?
-                    .into_insecure_token();
+        let jwt = DB
+            .signup(Record {
+                access:    "account",
+                namespace: "namespace",
+                database:  "database",
+                params:    Params {
+                    name: &name,
+                    pass: &pass,
+                },
+            })
+            .await?
+            .into_insecure_token();
         Ok(format!(
             "New user created!\n\nName: {name}\nPassword: {pass}\nToken: {jwt}\n\nTo log in, use this command:\n\nsurreal sql --namespace namespace --database database --pretty --token \"{jwt}\""
         ))
@@ -167,16 +175,15 @@ mod routes {
 }
 
 async fn init() -> Result<(), surrealdb::Error> {
-    DB.connect::<Ws>("localhost:8000")
-      .await?;
+    DB.connect::<Ws>("localhost:8000").await?;
 
-    DB.signin(Root { username: "root",
-                     password: "root", })
-      .await?;
+    DB.signin(Root {
+        username: "root",
+        password: "root",
+    })
+    .await?;
 
-    DB.use_ns("namespace")
-      .use_db("database")
-      .await?;
+    DB.use_ns("namespace").use_db("database").await?;
 
     DB.query(
              "DEFINE TABLE person SCHEMALESS
@@ -199,16 +206,19 @@ async fn init() -> Result<(), surrealdb::Error> {
 #[launch]
 pub async fn rocket() -> _ {
     std::env::set_var("ROCKET_PORT", "8080");
-    init().await
-          .expect("Something went wrong, shutting down");
-    rocket::build().mount("/",
-                          routes![routes::create_person,
-                                  routes::read_person,
-                                  routes::update_person,
-                                  routes::delete_person,
-                                  routes::list_people,
-                                  routes::paths,
-                                  routes::make_new_user,
-                                  routes::get_new_token,
-                                  routes::session])
+    init().await.expect("Something went wrong, shutting down");
+    rocket::build().mount(
+        "/",
+        routes![
+            routes::create_person,
+            routes::read_person,
+            routes::update_person,
+            routes::delete_person,
+            routes::list_people,
+            routes::paths,
+            routes::make_new_user,
+            routes::get_new_token,
+            routes::session
+        ],
+    )
 }

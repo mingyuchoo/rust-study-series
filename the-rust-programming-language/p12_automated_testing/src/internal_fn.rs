@@ -13,8 +13,6 @@ pub fn add_two(a: i32) -> i32 {
     internal_addr(a, 2)
 }
 
-fn internal_addr(a: i32,
-                 b: i32)
-                 -> i32 {
+fn internal_addr(a: i32, b: i32) -> i32 {
     a + b
 }

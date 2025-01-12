@@ -12,21 +12,22 @@ async fn graphiql() -> actix_web::HttpResponse {
         )
 }
 
-async fn graphql(schema: actix_web::web::Data<Schema>,
-                 req: async_graphql_actix_web::GraphQLRequest)
-                 -> async_graphql_actix_web::GraphQLResponse {
-    schema.execute(req.into_inner())
-          .await
-          .into()
+async fn graphql(
+    schema: actix_web::web::Data<Schema>,
+    req: async_graphql_actix_web::GraphQLRequest,
+) -> async_graphql_actix_web::GraphQLResponse {
+    schema.execute(req.into_inner()).await.into()
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     actix_web::HttpServer::new(move || {
-        actix_web::App::new().app_data(actix_web::web::Data::new(create_schema()))
-                             .route("/", actix_web::web::get().to(graphiql))
-                             .route("/", actix_web::web::post().to(graphql))
-    }).bind("127.0.0.1:4000")?
-      .run()
-      .await
+        actix_web::App::new()
+            .app_data(actix_web::web::Data::new(create_schema()))
+            .route("/", actix_web::web::get().to(graphiql))
+            .route("/", actix_web::web::post().to(graphql))
+    })
+    .bind("127.0.0.1:4000")?
+    .run()
+    .await
 }

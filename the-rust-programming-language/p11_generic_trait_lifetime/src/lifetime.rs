@@ -15,13 +15,10 @@ pub fn call1() {
     // }
     // }
 
-    fn longest<'a>(x: &'a str,
-                   y: &'a str)
-                   -> &'a str {
+    fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
         if x.len() > y.len() {
             x
-        }
-        else {
+        } else {
             y
         }
     }
@@ -33,19 +30,20 @@ pub fn call2() {
     }
 
     let novel = String::from("스타워즈. 오래 전 멀고 먼 은하계...");
-    let first_sentence = novel.split('.')
-                              .next()
-                              .expect("문장에서 마침포'.'를 찾을 수 없습니다.");
-    let i = ImportantExcerpt { part: first_sentence, };
+    let first_sentence = novel
+        .split('.')
+        .next()
+        .expect("문장에서 마침포'.'를 찾을 수 없습니다.");
+    let i = ImportantExcerpt {
+        part: first_sentence,
+    };
 }
 
 pub fn call3() {
     // fn first_word<'a>(s: &'a str) -> &'a str {
     fn first_word(s: &str) -> &str {
         let bytes = s.as_bytes();
-        for (i, &item) in bytes.iter()
-                               .enumerate()
-        {
+        for (i, &item) in bytes.iter().enumerate() {
             if item == b' ' {
                 return &s[0 .. i];
             }
@@ -57,17 +55,18 @@ pub fn call3() {
 }
 
 pub fn call4() {
-    fn longest_with_an_announcement<'a, T>(x: &'a str,
-                                           y: &'a str,
-                                           ann: T)
-                                           -> &'a str
-        where T: Display,
+    fn longest_with_an_announcement<'a, T>(
+        x: &'a str,
+        y: &'a str,
+        ann: T,
+    ) -> &'a str
+    where
+        T: Display,
     {
         println!("주목하세요: {ann}");
         if x.len() > y.len() {
             x
-        }
-        else {
+        } else {
             y
         }
     }

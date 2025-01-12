@@ -29,10 +29,12 @@ async fn main() -> std::io::Result<()> {
     println!("Starting server on port {}", args.port);
 
     HttpServer::new(|| {
-        App::new().service(hello)
-                  .service(echo)
-                  .route("/hey", web::get().to(manual_hello))
-    }).bind(("0.0.0.0", args.port))?
-      .run()
-      .await
+        App::new()
+            .service(hello)
+            .service(echo)
+            .route("/hey", web::get().to(manual_hello))
+    })
+    .bind(("0.0.0.0", args.port))?
+    .run()
+    .await
 }

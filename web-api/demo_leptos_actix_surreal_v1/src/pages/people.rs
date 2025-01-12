@@ -30,19 +30,25 @@ pub fn PeoplePage() -> impl IntoView {
 
 #[server]
 pub async fn get_people() -> Result<Vec<Person>, ServerFnError> {
-    Ok(PEOPLE.iter()
-             .cloned()
-             .collect())
+    Ok(PEOPLE.iter().cloned().collect())
 }
 
 // Dummy API
 static PEOPLE: LazyLock<[Person; 3]> = LazyLock::new(|| {
-    [Person { id:   1,
-              name: "Adam".to_string(), },
-     Person { id:   2,
-              name: "Bob".to_string(), },
-     Person { id:   3,
-              name: "Chris".to_string(), }]
+    [
+        Person {
+            id:   1,
+            name: "Adam".to_string(),
+        },
+        Person {
+            id:   2,
+            name: "Bob".to_string(),
+        },
+        Person {
+            id:   3,
+            name: "Chris".to_string(),
+        },
+    ]
 });
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

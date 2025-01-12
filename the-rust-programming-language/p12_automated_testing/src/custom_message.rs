@@ -8,9 +8,11 @@ mod tests {
     #[ignore]
     fn greeting_contains_name() {
         let result = greeting("캐롤");
-        assert!(result.contains("캐롤"),
-                "Greeting 함수의 결과에 이름이 없어요. 결괏값: '{}'",
-                result);
+        assert!(
+            result.contains("캐롤"),
+            "Greeting 함수의 결과에 이름이 없어요. 결괏값: '{}'",
+            result
+        );
     }
 }
 

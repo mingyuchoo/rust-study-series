@@ -7,8 +7,10 @@ mod back_of_house {
 
     impl Breakfast {
         pub fn summer(toast: &str) -> Breakfast {
-            Breakfast { toast:          String::from(toast),
-                        seasonal_fruit: String::from("복숭아"), }
+            Breakfast {
+                toast:          String::from(toast),
+                seasonal_fruit: String::from("복숭아"),
+            }
         }
     }
 

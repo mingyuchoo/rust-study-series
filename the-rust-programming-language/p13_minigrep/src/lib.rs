@@ -19,8 +19,10 @@ mod tests {
     fn case_insensitive() {
         let query = "rUsT";
         let contents = "Rust:\nsafe, fast, productive.\nPick three.\nTrust me.";
-        assert_eq!(vec!["Rust:", "Trust me."],
-                   search_case_insensitive(query, contents));
+        assert_eq!(
+            vec!["Rust:", "Trust me."],
+            search_case_insensitive(query, contents)
+        );
     }
 }
 
@@ -38,9 +40,11 @@ impl Config {
         let query = args[1].clone();
         let filename = args[2].clone();
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
-        Ok(Config { query,
-                    filename,
-                    case_sensitive })
+        Ok(Config {
+            query,
+            filename,
+            case_sensitive,
+        })
     }
 }
 
@@ -52,8 +56,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
 
     let results = if config.case_sensitive {
         search(&config.query, &contents)
-    }
-    else {
+    } else {
         search_case_insensitive(&config.query, &contents)
     };
 
@@ -63,9 +66,7 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn search<'a>(query: &str,
-                  contents: &'a str)
-                  -> Vec<&'a str> {
+pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut results = Vec::new();
 
     for line in contents.lines() {
@@ -77,16 +78,15 @@ pub fn search<'a>(query: &str,
     results
 }
 
-pub fn search_case_insensitive<'a>(query: &str,
-                                   contents: &'a str)
-                                   -> Vec<&'a str> {
+pub fn search_case_insensitive<'a>(
+    query: &str,
+    contents: &'a str,
+) -> Vec<&'a str> {
     let mut results = Vec::new();
     let query = query.to_lowercase();
 
     for line in contents.lines() {
-        if line.to_lowercase()
-               .contains(&query)
-        {
+        if line.to_lowercase().contains(&query) {
             results.push(line);
         }
     }

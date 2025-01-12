@@ -33,7 +33,9 @@ pub fn call2() {
         Text(String),
     }
 
-    let row = vec![SpreadsheetCell::Int(3),
-                   SpreadsheetCell::Text(String::from("블루")),
-                   SpreadsheetCell::Float(10.12),];
+    let row = vec![
+        SpreadsheetCell::Int(3),
+        SpreadsheetCell::Text(String::from("블루")),
+        SpreadsheetCell::Float(10.12),
+    ];
 }

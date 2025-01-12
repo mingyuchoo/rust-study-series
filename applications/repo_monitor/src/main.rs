@@ -14,8 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut watcher: RecommendedWatcher =
         Watcher::new(tx, Config::default()).unwrap();
-    watcher.watch(repo_path, RecursiveMode::Recursive)
-           .unwrap();
+    watcher.watch(repo_path, RecursiveMode::Recursive).unwrap();
 
     let repo_dir_clone = repo_dir.clone();
     let handle1 = thread::spawn(move || {
@@ -25,10 +24,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         handle_builder::run(repo_dir);
     });
 
-    handle1.join()
-           .unwrap();
-    handle2.join()
-           .unwrap();
+    handle1.join().unwrap();
+    handle2.join().unwrap();
 
     Ok(())
 }

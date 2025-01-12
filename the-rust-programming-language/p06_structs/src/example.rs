@@ -11,9 +11,7 @@ pub fn program1() {
 
     println!("사각형의 면적: {} 제곱 픽셀", area(width1, height1));
 
-    fn area(width: u32,
-            height: u32)
-            -> u32 {
+    fn area(width: u32, height: u32) -> u32 {
         width * height
     }
 }
@@ -31,8 +29,10 @@ pub fn program2() {
 
 /// 3. using a structure
 pub fn program3() {
-    let rect1 = Rectangle { width:  30,
-                            height: 50, };
+    let rect1 = Rectangle {
+        width:  30,
+        height: 50,
+    };
 
     println!("사각형의 면적: {} 제곱 픽셀", area(&rect1));
 
@@ -42,8 +42,10 @@ pub fn program3() {
 }
 
 pub fn print_rectangle() {
-    let rect1 = Rectangle { width:  30,
-                            height: 50, };
+    let rect1 = Rectangle {
+        width:  30,
+        height: 50,
+    };
     println!("rect1: {rect1:?}");
     println!("rect1: {rect1:#?}");
 }

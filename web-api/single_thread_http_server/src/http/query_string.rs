@@ -10,11 +10,8 @@ pub struct QueryString<'buf> {
 }
 
 impl<'buf> QueryString<'buf> {
-    pub fn get(&self,
-               key: &str)
-               -> Option<&Value> {
-        self.data
-            .get(key)
+    pub fn get(&self, key: &str) -> Option<&Value> {
+        self.data.get(key)
     }
 }
 
@@ -42,6 +39,8 @@ impl<'buf> From<&'buf str> for QueryString<'buf> {
                 .or_insert(Value::Single(val));
         }
 
-        QueryString { data }
+        QueryString {
+            data,
+        }
     }
 }

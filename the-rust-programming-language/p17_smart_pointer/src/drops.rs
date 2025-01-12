@@ -9,15 +9,21 @@ impl Drop for CustomSmartPointer {
 }
 
 pub fn call1() {
-    let c = CustomSmartPointer { data: String::from("내 데이터"), };
+    let c = CustomSmartPointer {
+        data: String::from("내 데이터"),
+    };
 
-    let d = CustomSmartPointer { data: String::from("남 데이터"), };
+    let d = CustomSmartPointer {
+        data: String::from("남 데이터"),
+    };
 
     println!("CustomSmartPointer를 생성했습니다.");
 }
 
 pub fn call2() {
-    let c = CustomSmartPointer { data: String::from("내 데이터"), };
+    let c = CustomSmartPointer {
+        data: String::from("내 데이터"),
+    };
 
     println!("CustomSmartPointer를 생성했습니다.");
 

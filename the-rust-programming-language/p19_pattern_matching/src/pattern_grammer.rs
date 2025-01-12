@@ -57,18 +57,26 @@ struct Point {
 }
 
 pub fn call6() {
-    let p = Point { x: 0, y: 7, };
-    let Point { x: a,
-                y: b, } = p;
+    let p = Point {
+        x: 0, y: 7
+    };
+    let Point {
+        x: a,
+        y: b,
+    } = p;
 
     assert_eq!(0, a);
     assert_eq!(7, b);
 }
 
 pub fn call7() {
-    let p = Point { x: 0, y: 7, };
-    let Point { x,
-                y, } = p;
+    let p = Point {
+        x: 0, y: 7
+    };
+    let Point {
+        x,
+        y,
+    } = p;
 
     assert_eq!(0, x);
     assert_eq!(7, y);
@@ -81,7 +89,7 @@ enum Color {
 
 enum Message {
     Quit,
-    Move { x: i32, y: i32, },
+    Move { x: i32, y: i32 },
     Write(String),
     ChangeColor(Color),
 }

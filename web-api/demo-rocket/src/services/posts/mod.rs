@@ -26,23 +26,23 @@ pub type ServiceError = Debug<result::Error>;
 pub fn create_post(post: Json<NewPost>) -> Json<NewPost> {
     use schema::posts::dsl::posts;
     let mut connection = database::establish_connection_pg();
-    let new_post = NewPost { title: post.title
-                                        .to_owned(),
-                             body:  post.body
-                                        .to_owned(), };
-    diesel::insert_into(posts).values(&new_post)
-                              .execute(&mut connection)
-                              .expect("Error saving new post");
+    let new_post = NewPost {
+        title: post.title.to_owned(),
+        body:  post.body.to_owned(),
+    };
+    diesel::insert_into(posts)
+        .values(&new_post)
+        .execute(&mut connection)
+        .expect("Error saving new post");
     post
 }
 
-pub fn list_posts(offset: i64,
-                  limit: i64)
-                  -> Vec<Post> {
+pub fn list_posts(offset: i64, limit: i64) -> Vec<Post> {
     let connection: &mut PgConnection =
         &mut database::establish_connection_pg();
-    schema::posts::dsl::posts.limit(limit)
-                             .offset(offset)
-                             .load::<Post>(connection)
-                             .expect("Error loading posts")
+    schema::posts::dsl::posts
+        .limit(limit)
+        .offset(offset)
+        .load::<Post>(connection)
+        .expect("Error loading posts")
 }

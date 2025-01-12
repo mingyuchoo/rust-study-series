@@ -24,9 +24,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let chat_req = ChatRequest::new(vec![
         // -- Messages (de/activate to see the differences)
-        ChatMessage::system("Answer in one sentence",),
-        ChatMessage::user(question,),
-    ],);
+        ChatMessage::system("Answer in one sentence"),
+        ChatMessage::user(question),
+    ]);
 
     let client = Client::default();
 
@@ -35,27 +35,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (model, env_name) in MODEL_AND_KEY_ENV_NAME_LIST {
         // Skip if does not have the environment name set
         if !env_name.is_empty() && std::env::var(env_name).is_err() {
-            println!("===== Skipping model: {model} (env var not set: {env_name})");
+            println!(
+                "===== Skipping model: {model} (env var not set: {env_name})"
+            );
             continue;
         }
 
-        let adapter_kind = client.resolve_service_target(model)?
-                                 .model
-                                 .adapter_kind;
+        let adapter_kind =
+            client.resolve_service_target(model)?.model.adapter_kind;
         println!("\n===== MODEL: {model} ({adapter_kind}) =====");
 
         println!("\n--- Question:\n{question}");
 
         println!("\n--- Answer:");
-        let chat_res = client.exec_chat(model, chat_req.clone(), None)
-                             .await?;
-        println!("{}",
-                 chat_res.content_text_as_str()
-                         .unwrap_or("NO ANSWER"));
+        let chat_res = client.exec_chat(model, chat_req.clone(), None).await?;
+        println!("{}", chat_res.content_text_as_str().unwrap_or("NO ANSWER"));
 
         println!("\n--- Answer: (streaming)");
-        let chat_res = client.exec_chat_stream(model, chat_req.clone(), None)
-                             .await?;
+        let chat_res = client
+            .exec_chat_stream(model, chat_req.clone(), None)
+            .await?;
         print_chat_stream(chat_res, Some(&print_options)).await?;
 
         println!();

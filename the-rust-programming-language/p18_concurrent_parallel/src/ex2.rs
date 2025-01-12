@@ -13,8 +13,7 @@ pub fn call1() -> Result<(), std::io::Error> {
         println!("주 스레드: {i}");
         thread::sleep(Duration::from_millis(1));
     }
-    handle.join()
-          .unwrap();
+    handle.join().unwrap();
 
     Ok(())
 }

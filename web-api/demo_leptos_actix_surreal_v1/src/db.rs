@@ -6,17 +6,16 @@ use surrealdb::Surreal;
 pub static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 pub async fn setup_database() -> Result<(), Box<dyn std::error::Error>> {
-    DB.connect::<Ws>("localhost:8000")
-      .await?;
-    DB.signin(Root { username: "root",
-                     password: "root", })
-      .await?;
-    DB.use_ns("namespace")
-      .use_db("database")
-      .await?;
+    DB.connect::<Ws>("localhost:8000").await?;
+    DB.signin(Root {
+        username: "root",
+        password: "root",
+    })
+    .await?;
+    DB.use_ns("namespace").use_db("database").await?;
 
     DB.query(
-             "DEFINE TABLE person SCHEMALESS
+        "DEFINE TABLE person SCHEMALESS
         PERMISSIONS FOR
             CREATE, SELECT WHERE $auth,
             FOR UPDATE, DELETE WHERE created_by = $auth;
@@ -31,7 +30,7 @@ pub async fn setup_database() -> Result<(), Box<dyn std::error::Error>> {
         DURATION FOR TOKEN 15m, FOR SESSION 12h
         ;",
     )
-      .await?;
+    .await?;
 
     Ok(())
 }

@@ -6,12 +6,10 @@ pub fn call1() -> Result<(), std::io::Error> {
 
     thread::spawn(move || {
         let val = String::from("안녕하세요");
-        tx.send(val)
-          .unwrap();
+        tx.send(val).unwrap();
     });
 
-    let received = rx.recv()
-                     .unwrap();
+    let received = rx.recv().unwrap();
 
     println!("수신: {received}");
 

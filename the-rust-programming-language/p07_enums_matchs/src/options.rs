@@ -71,8 +71,7 @@ pub fn call3() {
 
     if let Coin::Quarter(state) = coin {
         println!("{state:?}주의  25센트 동전!");
-    }
-    else {
+    } else {
         count += 1;
     }
 

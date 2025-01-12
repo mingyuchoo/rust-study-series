@@ -12,16 +12,15 @@ pub static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 pub async fn setup_database() -> Result<(), Box<dyn std::error::Error>> {
     info!("Connecting to SurrealDB...");
 
-    DB.connect::<Ws>("localhost:8000")
-      .await?;
+    DB.connect::<Ws>("localhost:8000").await?;
 
-    DB.signin(Root { username: "root",
-                     password: "root", })
-      .await?;
+    DB.signin(Root {
+        username: "root",
+        password: "root",
+    })
+    .await?;
 
-    DB.use_ns("namespace")
-      .use_db("database")
-      .await?;
+    DB.use_ns("namespace").use_db("database").await?;
 
     info!("Connected to SurrealDB");
 

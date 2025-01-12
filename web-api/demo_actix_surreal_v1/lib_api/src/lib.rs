@@ -2,8 +2,8 @@ pub mod error;
 pub mod routes;
 
 use actix_web::{App, HttpServer, *};
-use log::{error, info};
 use lib_db::setup_database;
+use log::{error, info};
 
 pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     info!("Initializing database...");
@@ -12,15 +12,17 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting HTTP server...");
     HttpServer::new(|| {
-        App::new().service(routes::session)
-                  .service(routes::list_people)
-                  .service(routes::create_person)
-                  .service(routes::read_person)
-                  .service(routes::update_person)
-                  .service(routes::delete_person)
-    }).bind(("localhost", 4000))?
-      .run()
-      .await?;
+        App::new()
+            .service(routes::session)
+            .service(routes::list_people)
+            .service(routes::create_person)
+            .service(routes::read_person)
+            .service(routes::update_person)
+            .service(routes::delete_person)
+    })
+    .bind(("localhost", 4000))?
+    .run()
+    .await?;
 
     Ok(())
 }
@@ -28,8 +30,10 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 pub async fn init_db() -> std::io::Result<()> {
     if let Err(err) = setup_database().await {
         error!("Failed to set up database: {:?}", err);
-        return Err(std::io::Error::new(std::io::ErrorKind::Other,
-                                       "Database setup failed"));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Database setup failed",
+        ));
     }
     Ok(())
 }

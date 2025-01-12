@@ -30,9 +30,7 @@ pub mod utils {
     use crate::kinds::*; // 절대경로로 모듈 을 현재 범위 안으로 가져오기
 
     /// 두 개의 주 색상을 조합해서 보조 색상을 생성합니다.
-    pub fn mix(c1: PrimaryColor,
-               c2: PrimaryColor)
-               -> SecondaryColor {
+    pub fn mix(c1: PrimaryColor, c2: PrimaryColor) -> SecondaryColor {
         // TODO: change here
         SecondaryColor::Green
     }

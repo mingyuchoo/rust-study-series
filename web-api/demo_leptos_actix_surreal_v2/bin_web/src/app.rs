@@ -46,11 +46,12 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     let (count, set_count) = create_signal(0);
     let on_click = move |_| set_count.update(|count| *count += 1);
-    let add_resource = create_resource(move || count.get(),
-                                       |current_count| async move {
-                                           add_left_right(current_count,
-                                                          current_count + 1)
-                                       });
+    let add_resource = create_resource(
+        move || count.get(),
+        |current_count| async move {
+            add_left_right(current_count, current_count + 1)
+        },
+    );
     view! {
         <h1>"Welcome to Leptos!"</h1>
         <div>
@@ -88,10 +89,7 @@ fn PeoplePage() -> impl IntoView {
         set_selected_person.set(None);
     });
     create_effect(move |_| {
-        if add_person_action.version()
-                            .get()
-           > 0
-        {
+        if add_person_action.version().get() > 0 {
             people_resource.refetch();
         }
     });
@@ -153,12 +151,15 @@ fn PeoplePage() -> impl IntoView {
 }
 
 #[component]
-fn PersonDetails(person: ReadSignal<Option<Person>>,
-                 on_delete: Callback<String>)
-                 -> impl IntoView {
+fn PersonDetails(
+    person: ReadSignal<Option<Person>>,
+    on_delete: Callback<String>,
+) -> impl IntoView {
     let delete_person_action = create_server_action::<DeletePerson>();
     let handle_delete = move |uuid: String| {
-        delete_person_action.dispatch(DeletePerson { uuid: uuid.clone(), });
+        delete_person_action.dispatch(DeletePerson {
+            uuid: uuid.clone()
+        });
         on_delete.call(uuid);
     };
     view! {
@@ -204,8 +205,7 @@ fn NotFound() -> impl IntoView {
 pub async fn get_people() -> Result<Vec<Person>, ServerFnError> {
     use lib_repo::DB;
 
-    let people = DB.select("person")
-                   .await?;
+    let people = DB.select("person").await?;
     Ok(people)
 }
 
@@ -214,24 +214,25 @@ pub async fn add_person(name: String) -> Result<Option<Person>, ServerFnError> {
     use lib_repo::DB;
     use uuid::Uuid;
 
-    let new_person = Person { uuid: Uuid::new_v4().to_string(),
-                              name };
+    let new_person = Person {
+        uuid: Uuid::new_v4().to_string(),
+        name,
+    };
 
-    let created: Option<Person> = DB.create(("person",
-                                             new_person.uuid
-                                                       .clone()))
-                                    .content(new_person)
-                                    .await?;
+    let created: Option<Person> = DB
+        .create(("person", new_person.uuid.clone()))
+        .content(new_person)
+        .await?;
 
     Ok(created)
 }
 
 #[server(DeletePerson, "/api")]
-pub async fn delete_person(uuid: String)
-                           -> Result<Option<Person>, ServerFnError> {
+pub async fn delete_person(
+    uuid: String,
+) -> Result<Option<Person>, ServerFnError> {
     use lib_repo::DB;
-    let deleted: Option<Person> = DB.delete(("person", uuid))
-                                    .await?;
+    let deleted: Option<Person> = DB.delete(("person", uuid)).await?;
 
     Ok(deleted)
 }
