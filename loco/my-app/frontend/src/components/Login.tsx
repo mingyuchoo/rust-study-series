@@ -16,7 +16,7 @@ export const Login: React.FC = () => {
 
     try {
       await login(email, password);
-      navigate("/home");
+      navigate("/");
     } catch (err) {
       setError("Invalid email or password. Please try again.");
     } finally {

@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-d
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Login } from "./components/Login";
 import { Home } from "./components/Home";
+import { UserDetail } from "./components/UserDetail";
+import { UserForm } from "./components/UserForm";
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -20,6 +22,30 @@ export const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/:id"
+            element={
+              <ProtectedRoute>
+                <UserDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/new"
+            element={
+              <ProtectedRoute>
+                <UserForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/edit/:id"
+            element={
+              <ProtectedRoute>
+                <UserForm />
               </ProtectedRoute>
             }
           />
