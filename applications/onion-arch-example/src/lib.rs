@@ -2,8 +2,6 @@
 
 // Domain layer (innermost layer)
 pub mod domain {
-    pub mod models;
-    pub mod repositories;
     pub mod services;
 }
 

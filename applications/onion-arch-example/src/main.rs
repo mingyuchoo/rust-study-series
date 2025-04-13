@@ -4,10 +4,12 @@
 // Import the crate itself
 use onion_arch_example::{
     // Domain layer
-    domain::{
-        models::User,
-        repositories::UserRepository,
-        services::UserService,
+    domain::services::{
+        repositories::{
+            models::User,
+            UserRepository,
+        },
+        UserService,
     },
     // Application layer
     application::services::{UserApplicationService, UserDto},

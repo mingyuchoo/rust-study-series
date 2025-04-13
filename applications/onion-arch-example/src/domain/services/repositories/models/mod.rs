@@ -1,5 +1,5 @@
 //
-// domain/models.rs - 도메인 엔티티 (가장 내부 계층)
+// domain/services/repositories/models.rs - 도메인 엔티티 (가장 내부 계층)
 //
 
 #[derive(Clone, Debug)]

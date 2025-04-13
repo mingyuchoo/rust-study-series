@@ -1,8 +1,10 @@
 //
-// domain/repositories.rs - 저장소 인터페이스 (내부 계층이 정의)
+// domain/services/repositories/mod.rs - 저장소 인터페이스 (내부 계층이 정의)
 //
 
-use crate::domain::models::User;
+pub mod models;
+
+use self::models::User;
 
 pub trait UserRepository {
     fn find_by_id(&self, id: &str) -> Option<User>;

@@ -2,8 +2,8 @@
 // infrastructure/api.rs - REST API 구현 (예시)
 //
 
-use crate::application::services::{UserApplicationService, UserDto};
-use crate::domain::repositories::UserRepository;
+use crate::application::services::UserApplicationService;
+use crate::domain::services::repositories::UserRepository;
 pub struct UserApiController<R: UserRepository> {
     application_service: UserApplicationService<R>,
 }
