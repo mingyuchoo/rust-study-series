@@ -4,6 +4,9 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+use crate::domain::models::User;
+use crate::domain::repositories::UserRepository;
+
 pub struct InMemoryUserRepository {
     users: Arc<Mutex<HashMap<String, User>>>,
 }

@@ -1,5 +1,23 @@
 // main.rs - 애플리케이션 진입점
 //
+
+// Import the crate itself
+use onion_arch_example::{
+    // Domain layer
+    domain::{
+        models::User,
+        repositories::UserRepository,
+        services::UserService,
+    },
+    // Application layer
+    application::services::{UserApplicationService, UserDto},
+    // Infrastructure layer
+    infrastructure::{
+        repositories::InMemoryUserRepository,
+        api::UserApiController,
+    },
+};
+
 fn main() {
     // 인프라스트럭처 계층 초기화
     let repository = InMemoryUserRepository::new();
