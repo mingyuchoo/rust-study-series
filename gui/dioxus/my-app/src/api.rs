@@ -15,6 +15,7 @@ pub async fn fetch_users() -> Result<Vec<User>, Box<dyn Error>> {
     Ok(users)
 }
 
+#[allow(dead_code)]
 pub async fn fetch_user(id: i32) -> Result<User, Box<dyn Error>> {
     let user = Client::new()
         .get(format!("{}/users/{}", API_BASE_URL, id))
@@ -66,6 +67,7 @@ pub async fn fetch_todos() -> Result<Vec<Todo>, Box<dyn Error>> {
     Ok(todos)
 }
 
+#[allow(dead_code)]
 pub async fn fetch_todo(id: i32) -> Result<Todo, Box<dyn Error>> {
     let todo = Client::new()
         .get(format!("{}/todos/{}", API_BASE_URL, id))
@@ -117,6 +119,7 @@ pub async fn fetch_posts() -> Result<Vec<Post>, Box<dyn Error>> {
     Ok(posts)
 }
 
+#[allow(dead_code)]
 pub async fn fetch_post(id: i32) -> Result<Post, Box<dyn Error>> {
     let post = Client::new()
         .get(format!("{}/posts/{}", API_BASE_URL, id))

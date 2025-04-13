@@ -117,7 +117,7 @@ pub fn TodosTab() -> Element {
         is_editing.set(false);
     };
     
-    let mut toggle_completed = move |todo: Todo| {
+    let toggle_completed = move |todo: Todo| {
         let mut todos_clone = todos.clone();
         let mut error_clone = error.clone();
         

@@ -28,6 +28,7 @@ pub struct Geo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[allow(non_snake_case)]
 pub struct Company {
     pub name: String,
     pub catchPhrase: String,
@@ -35,6 +36,7 @@ pub struct Company {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[allow(non_snake_case)]
 pub struct Todo {
     pub id: i32,
     pub userId: i32,
@@ -43,6 +45,7 @@ pub struct Todo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[allow(non_snake_case)]
 pub struct Post {
     pub id: i32,
     pub userId: i32,
@@ -61,6 +64,7 @@ pub struct UserForm {
 
 // New todo form data
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[allow(non_snake_case)]
 pub struct TodoForm {
     pub userId: i32,
     pub title: String,
@@ -69,6 +73,7 @@ pub struct TodoForm {
 
 // New post form data
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[allow(non_snake_case)]
 pub struct PostForm {
     pub userId: i32,
     pub title: String,
