@@ -2,23 +2,10 @@
 //
 
 // Import the crate itself
-use onion_arch_example::{
-    // Domain layer
-    domain::services::{
-        repositories::{
-            models::User,
-            UserRepository,
-        },
-        UserService,
-    },
-    // Application layer
-    application::services::{UserApplicationService, UserDto},
-    // Infrastructure layer
-    infrastructure::{
-        repositories::InMemoryUserRepository,
-        api::UserApiController,
-    },
-};
+use onion_arch_example::{// Application layer
+                         application::services::UserApplicationService,
+                         // Infrastructure layer
+                         infrastructure::{api::UserApiController, api::repositories::InMemoryUserRepository}};
 
 fn main() {
     // 인프라스트럭처 계층 초기화

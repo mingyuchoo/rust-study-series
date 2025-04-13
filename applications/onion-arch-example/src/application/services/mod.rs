@@ -1,10 +1,9 @@
-//
 // application/services.rs - 애플리케이션 서비스 (유스케이스)
 //
 
-use crate::domain::services::repositories::models::User;
-use crate::domain::services::repositories::UserRepository;
 use crate::domain::services::UserService;
+use crate::domain::services::repositories::UserRepository;
+use crate::domain::services::repositories::models::User;
 
 pub struct UserApplicationService<R: UserRepository> {
     user_service: UserService<R>,
@@ -17,12 +16,7 @@ impl<R: UserRepository> UserApplicationService<R> {
         }
     }
 
-    pub fn register_user(
-        &self,
-        id: String,
-        username: String,
-        email: String,
-    ) -> Result<UserDto, String> {
+    pub fn register_user(&self, id: String, username: String, email: String) -> Result<UserDto, String> {
         // 비즈니스 규칙 적용
         if username.len() < 3 {
             return Err("Username must be at least 3 characters".to_string());
@@ -35,9 +29,7 @@ impl<R: UserRepository> UserApplicationService<R> {
         Ok(UserDto::from(user))
     }
 
-    pub fn get_user_details(&self, id: &str) -> Option<UserDto> {
-        self.user_service.get_user(id).map(UserDto::from)
-    }
+    pub fn get_user_details(&self, id: &str) -> Option<UserDto> { self.user_service.get_user(id).map(UserDto::from) }
 
     pub fn deactivate_user(&self, id: &str) -> Result<UserDto, String> {
         let user = self.user_service.deactivate_user(id)?;

@@ -1,4 +1,3 @@
-//
 // domain/services/repositories/mod.rs - 저장소 인터페이스 (내부 계층이 정의)
 //
 

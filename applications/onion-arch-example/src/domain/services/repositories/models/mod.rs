@@ -1,4 +1,3 @@
-//
 // domain/services/repositories/models.rs - 도메인 엔티티 (가장 내부 계층)
 //
 
@@ -20,11 +19,7 @@ impl User {
         }
     }
 
-    pub fn deactivate(&mut self) {
-        self.active = false;
-    }
+    pub fn deactivate(&mut self) { self.active = false; }
 
-    pub fn activate(&mut self) {
-        self.active = true;
-    }
+    pub fn activate(&mut self) { self.active = true; }
 }
