@@ -1,4 +1,4 @@
-use iced::widget::{button, column, text, Column};
+use iced::widget::{Column, button, column, text};
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
@@ -32,6 +32,4 @@ impl Counter {
     }
 }
 
-pub fn main() -> iced::Result {
-    iced::run("A cool counter", Counter::update, Counter::view)
-}
+pub fn main() -> iced::Result { iced::run("A cool counter", Counter::update, Counter::view) }

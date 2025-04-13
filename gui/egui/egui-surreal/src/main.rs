@@ -3,7 +3,7 @@ use egui::RichText;
 use faker_rand::en_us::names::FirstName;
 use serde::{Deserialize, Serialize};
 use std::ops::Deref;
-use std::sync::mpsc::{channel, Receiver, Sender};
+use std::sync::mpsc::{Receiver, Sender, channel};
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::{Record, Root};
 use surrealdb::{RecordId, RecordIdKey, Surreal};
@@ -19,13 +19,13 @@ struct Params<'a> {
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct PersonData {
     name: String,
-    id:   Option<String>,
+    id: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Person {
-    name:       String,
-    id:         RecordId,
+    name: String,
+    id: RecordId,
     created_by: Option<RecordId>,
 }
 
@@ -42,17 +42,15 @@ enum Command {
 }
 
 struct Database {
-    client:           Surreal<Client>,
+    client: Surreal<Client>,
     command_receiver: Receiver<Command>,
-    response_sender:  Sender<String>,
+    response_sender: Sender<String>,
 }
 
 impl Deref for Database {
     type Target = Surreal<Client>;
 
-    fn deref(&self) -> &Self::Target {
-        &self.client
-    }
+    fn deref(&self) -> &Self::Target { &self.client }
 }
 
 trait StringIt {
@@ -73,20 +71,16 @@ impl Database {
         match command {
             | Command::CreatePerson(s) => {
                 let person_data: PersonData = serde_json::from_str(&s)?;
-                self.create::<Option<Person>>(PERSON)
-                    .content(person_data)
-                    .await?
-                    .string()
+                self.create::<Option<Person>>(PERSON).content(person_data).await?.string()
             },
-            | Command::DeletePerson(s) => {
+            | Command::DeletePerson(s) =>
                 if s.is_empty() {
                     let res: Vec<Person> = self.delete(PERSON).await?;
                     Ok(format!("{res:?}"))
                 } else {
                     let key = RecordIdKey::from(s);
                     self.delete::<Option<Person>>((PERSON, key)).await?.string()
-                }
-            },
+                },
             | Command::ListPeople => {
                 let person: Vec<Person> = self.select(PERSON).await?;
                 Ok(format!("{person:?}"))
@@ -95,10 +89,10 @@ impl Database {
                 let name = rand::random::<FirstName>().to_string();
                 let pass = rand::random::<FirstName>().to_string();
                 self.signup(Record {
-                    access:    "account",
+                    access: "account",
                     namespace: "test",
-                    database:  "test",
-                    params:    Params {
+                    database: "test",
+                    params: Params {
                         name: &name,
                         pass: &pass,
                     },
@@ -122,10 +116,10 @@ impl Database {
                     return Ok("Params don't work!".to_string());
                 };
                 self.signin(Record {
-                    access:    "account",
+                    access: "account",
                     namespace: "test",
-                    database:  "test",
-                    params:    Params {
+                    database: "test",
+                    params: Params {
                         name,
                         pass,
                     },
@@ -151,9 +145,9 @@ impl Database {
 }
 
 struct SurrealDbApp {
-    input:             String,
-    results:           String,
-    command_sender:    Sender<Command>,
+    input: String,
+    results: String,
+    command_sender: Sender<Command>,
     response_receiver: Receiver<String>,
 }
 
@@ -271,10 +265,6 @@ fn main() -> Result<(), Error> {
     };
 
     let native_options = eframe::NativeOptions::default();
-    let _ = eframe::run_native(
-        "SurrealDB App",
-        native_options,
-        Box::new(|_cc| Ok(Box::new(app))),
-    );
+    let _ = eframe::run_native("SurrealDB App", native_options, Box::new(|_cc| Ok(Box::new(app))));
     Ok(())
 }
