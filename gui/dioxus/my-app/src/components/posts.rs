@@ -9,45 +9,45 @@ pub fn PostsTab() -> Element {
     let mut form = use_signal(PostForm::default);
     let mut is_editing = use_signal(|| false);
     let mut error = use_signal(|| None::<String>);
-    
+
     // Load posts on component mount
     use_effect(move || {
         spawn(async move {
             match api::fetch_posts().await {
-                Ok(fetched_posts) => {
+                | Ok(fetched_posts) => {
                     // Limit to first 20 posts for better performance
                     posts.set(fetched_posts.into_iter().take(20).collect());
                 },
-                Err(err) => {
+                | Err(err) => {
                     error.set(Some(format!("Error loading posts: {}", err)));
-                }
+                },
             }
         });
-        
+
         // Return empty cleanup function
         ()
     });
-    
+
     let handle_create = move |_| {
         let form_data = form();
         let mut form_clone = form.clone();
         let mut posts_clone = posts.clone();
         let mut error_clone = error.clone();
-        
+
         spawn(async move {
             match api::create_post(form_data).await {
-                Ok(new_post) => {
+                | Ok(new_post) => {
                     posts_clone.write().push(new_post.clone());
                     form_clone.set(PostForm::default());
                     error_clone.set(None);
                 },
-                Err(err) => {
+                | Err(err) => {
                     error_clone.set(Some(format!("Error creating post: {}", err)));
-                }
+                },
             }
         });
     };
-    
+
     let handle_update = move |_| {
         if let Some(post) = selected_post() {
             let form_data = form();
@@ -56,10 +56,10 @@ pub fn PostsTab() -> Element {
             let mut selected_post_clone = selected_post.clone();
             let mut is_editing_clone = is_editing.clone();
             let mut error_clone = error.clone();
-            
+
             spawn(async move {
                 match api::update_post(post.id, form_data).await {
-                    Ok(updated_post) => {
+                    | Ok(updated_post) => {
                         let mut posts_write = posts_clone.write();
                         if let Some(index) = posts_write.iter().position(|item| item.id == updated_post.id) {
                             posts_write[index] = updated_post.clone();
@@ -69,24 +69,24 @@ pub fn PostsTab() -> Element {
                         is_editing_clone.set(false);
                         error_clone.set(None);
                     },
-                    Err(err) => {
+                    | Err(err) => {
                         error_clone.set(Some(format!("Error updating post: {}", err)));
-                    }
+                    },
                 }
             });
         }
     };
-    
+
     let handle_delete = move |id: i32| {
         let mut posts_clone = posts.clone();
         let mut selected_post_clone = selected_post.clone();
         let mut form_clone = form.clone();
         let mut is_editing_clone = is_editing.clone();
         let mut error_clone = error.clone();
-        
+
         spawn(async move {
             match api::delete_post(id).await {
-                Ok(_) => {
+                | Ok(_) => {
                     posts_clone.write().retain(|post| post.id != id);
                     if selected_post_clone().map_or(false, |p| p.id == id) {
                         selected_post_clone.set(None);
@@ -95,13 +95,13 @@ pub fn PostsTab() -> Element {
                     }
                     error_clone.set(None);
                 },
-                Err(err) => {
+                | Err(err) => {
                     error_clone.set(Some(format!("Error deleting post: {}", err)));
-                }
+                },
             }
         });
     };
-    
+
     let mut handle_edit = move |post: Post| {
         selected_post.set(Some(post.clone()));
         form.set(PostForm {
@@ -111,29 +111,29 @@ pub fn PostsTab() -> Element {
         });
         is_editing.set(true);
     };
-    
+
     let handle_cancel = move |_| {
         form.set(PostForm::default());
         is_editing.set(false);
     };
-    
+
     rsx! {
         div { class: "p-4",
             h2 { class: "text-2xl font-bold mb-4", "Posts Management" }
-            
+
             // Error message
             {error().map(|err| rsx!(
                 div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4",
                     p { {err} }
                 }
             ))}
-            
+
             // Post form
             div { class: "mb-6 p-4 border rounded",
-                h3 { class: "text-xl font-semibold mb-2", 
+                h3 { class: "text-xl font-semibold mb-2",
                     {if is_editing() { "Edit Post" } else { "Add New Post" }}
                 }
-                
+
                 div { class: "grid grid-cols-1 gap-4",
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "User ID" }
@@ -149,7 +149,7 @@ pub fn PostsTab() -> Element {
                             }
                         }
                     }
-                    
+
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "Title" }
                         input {
@@ -161,7 +161,7 @@ pub fn PostsTab() -> Element {
                             }
                         }
                     }
-                    
+
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "Body" }
                         textarea {
@@ -175,7 +175,7 @@ pub fn PostsTab() -> Element {
                         }
                     }
                 }
-                
+
                 div { class: "flex space-x-2",
                     {if is_editing() {
                         rsx! {
@@ -201,7 +201,7 @@ pub fn PostsTab() -> Element {
                     }}
                 }
             }
-            
+
             // Posts list
             div { class: "overflow-x-auto",
                 table { class: "min-w-full bg-white border border-gray-300",
@@ -242,7 +242,7 @@ pub fn PostsTab() -> Element {
                     }
                 }
             }
-            
+
             // Post detail view
             {selected_post().map(|post| rsx!(
                 div { class: "mt-6 p-4 border rounded bg-gray-50",

@@ -9,44 +9,44 @@ pub fn UsersTab() -> Element {
     let mut form = use_signal(UserForm::default);
     let mut is_editing = use_signal(|| false);
     let mut error = use_signal(|| None::<String>);
-    
+
     // Load users on component mount
     use_effect(move || {
         spawn(async move {
             match api::fetch_users().await {
-                Ok(fetched_users) => {
+                | Ok(fetched_users) => {
                     users.set(fetched_users);
                 },
-                Err(err) => {
+                | Err(err) => {
                     error.set(Some(format!("Error loading users: {}", err)));
-                }
+                },
             }
         });
-        
+
         // Return empty cleanup function
         ()
     });
-    
+
     let handle_create = move |_| {
         let form_data = form();
         let mut form_clone = form.clone();
         let mut users_clone = users.clone();
         let mut error_clone = error.clone();
-        
+
         spawn(async move {
             match api::create_user(form_data).await {
-                Ok(new_user) => {
+                | Ok(new_user) => {
                     users_clone.write().push(new_user.clone());
                     form_clone.set(UserForm::default());
                     error_clone.set(None);
                 },
-                Err(err) => {
+                | Err(err) => {
                     error_clone.set(Some(format!("Error creating user: {}", err)));
-                }
+                },
             }
         });
     };
-    
+
     let handle_update = move |_| {
         if let Some(user) = selected_user() {
             let form_data = form();
@@ -55,10 +55,10 @@ pub fn UsersTab() -> Element {
             let mut selected_user_clone = selected_user.clone();
             let mut is_editing_clone = is_editing.clone();
             let mut error_clone = error.clone();
-            
+
             spawn(async move {
                 match api::update_user(user.id, form_data).await {
-                    Ok(updated_user) => {
+                    | Ok(updated_user) => {
                         let mut users_write = users_clone.write();
                         if let Some(index) = users_write.iter().position(|item| item.id == updated_user.id) {
                             users_write[index] = updated_user.clone();
@@ -68,24 +68,24 @@ pub fn UsersTab() -> Element {
                         is_editing_clone.set(false);
                         error_clone.set(None);
                     },
-                    Err(err) => {
+                    | Err(err) => {
                         error_clone.set(Some(format!("Error updating user: {}", err)));
-                    }
+                    },
                 }
             });
         }
     };
-    
+
     let handle_delete = move |id: i32| {
         let mut users_clone = users.clone();
         let mut selected_user_clone = selected_user.clone();
         let mut form_clone = form.clone();
         let mut is_editing_clone = is_editing.clone();
         let mut error_clone = error.clone();
-        
+
         spawn(async move {
             match api::delete_user(id).await {
-                Ok(_) => {
+                | Ok(_) => {
                     users_clone.write().retain(|user| user.id != id);
                     if selected_user_clone().map_or(false, |u| u.id == id) {
                         selected_user_clone.set(None);
@@ -94,13 +94,13 @@ pub fn UsersTab() -> Element {
                     }
                     error_clone.set(None);
                 },
-                Err(err) => {
+                | Err(err) => {
                     error_clone.set(Some(format!("Error deleting user: {}", err)));
-                }
+                },
             }
         });
     };
-    
+
     let mut handle_edit = move |user: User| {
         selected_user.set(Some(user.clone()));
         form.set(UserForm {
@@ -111,29 +111,29 @@ pub fn UsersTab() -> Element {
         });
         is_editing.set(true);
     };
-    
+
     let handle_cancel = move |_| {
         form.set(UserForm::default());
         is_editing.set(false);
     };
-    
+
     rsx! {
         div { class: "p-4",
             h2 { class: "text-2xl font-bold mb-4", "Users Management" }
-            
+
             // Error message
             {error().map(|err| rsx!(
                 div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4",
                     p { {err} }
                 }
             ))}
-            
+
             // User form
             div { class: "mb-6 p-4 border rounded",
-                h3 { class: "text-xl font-semibold mb-2", 
+                h3 { class: "text-xl font-semibold mb-2",
                     {if is_editing() { "Edit User" } else { "Add New User" }}
                 }
-                
+
                 div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "Name" }
@@ -146,7 +146,7 @@ pub fn UsersTab() -> Element {
                             }
                         }
                     }
-                    
+
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "Username" }
                         input {
@@ -158,7 +158,7 @@ pub fn UsersTab() -> Element {
                             }
                         }
                     }
-                    
+
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "Email" }
                         input {
@@ -170,7 +170,7 @@ pub fn UsersTab() -> Element {
                             }
                         }
                     }
-                    
+
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "Phone" }
                         input {
@@ -183,7 +183,7 @@ pub fn UsersTab() -> Element {
                         }
                     }
                 }
-                
+
                 div { class: "flex space-x-2",
                     {if is_editing() {
                         rsx! {
@@ -209,7 +209,7 @@ pub fn UsersTab() -> Element {
                     }}
                 }
             }
-            
+
             // Users list
             div { class: "overflow-x-auto",
                 table { class: "min-w-full bg-white border border-gray-300",

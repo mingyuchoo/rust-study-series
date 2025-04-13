@@ -1,7 +1,7 @@
 use dioxus::prelude::*;
-mod models;
 mod api;
 mod components;
+mod models;
 
 use components::{PostsTab, TodosTab, UsersTab};
 
@@ -23,15 +23,13 @@ const FAVICON: Asset = asset!("/assets/favicon.ico");
 const MAIN_CSS: Asset = asset!("/assets/main.css");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
-fn main() {
-    dioxus::launch(App);
-}
+fn main() { dioxus::launch(App); }
 
 #[component]
 fn App() -> Element {
     rsx! {
         document::Link { rel: "icon", href: FAVICON }
-        document::Link { rel: "stylesheet", href: MAIN_CSS } 
+        document::Link { rel: "stylesheet", href: MAIN_CSS }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         Router::<Route> {}
     }
@@ -45,20 +43,20 @@ fn Home() -> Element {
             h1 { class: "text-3xl font-bold mb-6", "JSONPlaceholder API Manager" }
             p { class: "mb-4", "Welcome to the JSONPlaceholder API Manager. This application allows you to manage users, todos, and posts using the JSONPlaceholder API." }
             p { class: "mb-4", "Use the navigation tabs above to access different sections of the application." }
-            
+
             div { class: "mt-8 grid grid-cols-1 md:grid-cols-3 gap-6",
                 div { class: "border rounded-lg p-6 shadow-md",
                     h2 { class: "text-xl font-bold mb-2", "Users" }
                     p { "Manage user accounts with CRUD operations." }
                     Link { class: "mt-4 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded", to: Route::Users {}, "Go to Users" }
                 }
-                
+
                 div { class: "border rounded-lg p-6 shadow-md",
                     h2 { class: "text-xl font-bold mb-2", "Todos" }
                     p { "Create, read, update, and delete todo items." }
                     Link { class: "mt-4 inline-block bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded", to: Route::Todos {}, "Go to Todos" }
                 }
-                
+
                 div { class: "border rounded-lg p-6 shadow-md",
                     h2 { class: "text-xl font-bold mb-2", "Posts" }
                     p { "Manage blog posts with full CRUD functionality." }
@@ -102,7 +100,7 @@ fn Navbar() -> Element {
                 div { class: "flex items-center flex-shrink-0 mr-6",
                     span { class: "font-semibold text-xl tracking-tight", "JSONPlaceholder API Manager" }
                 }
-                
+
                 div { class: "w-full block flex-grow lg:flex lg:items-center lg:w-auto",
                     div { class: "text-sm lg:flex-grow",
                         Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Home {}, "Home" }
@@ -113,7 +111,7 @@ fn Navbar() -> Element {
                 }
             }
         }
-        
+
         div { class: "container mx-auto",
             Outlet::<Route> {}
         }

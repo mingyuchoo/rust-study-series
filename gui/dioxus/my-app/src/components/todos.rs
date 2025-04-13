@@ -9,45 +9,45 @@ pub fn TodosTab() -> Element {
     let mut form = use_signal(TodoForm::default);
     let mut is_editing = use_signal(|| false);
     let mut error = use_signal(|| None::<String>);
-    
+
     // Load todos on component mount
     use_effect(move || {
         spawn(async move {
             match api::fetch_todos().await {
-                Ok(fetched_todos) => {
+                | Ok(fetched_todos) => {
                     // Limit to first 20 todos for better performance
                     todos.set(fetched_todos.into_iter().take(20).collect());
                 },
-                Err(err) => {
+                | Err(err) => {
                     error.set(Some(format!("Error loading todos: {}", err)));
-                }
+                },
             }
         });
-        
+
         // Return empty cleanup function
         ()
     });
-    
+
     let handle_create = move |_| {
         let form_data = form();
         let mut form_clone = form.clone();
         let mut todos_clone = todos.clone();
         let mut error_clone = error.clone();
-        
+
         spawn(async move {
             match api::create_todo(form_data).await {
-                Ok(new_todo) => {
+                | Ok(new_todo) => {
                     todos_clone.write().push(new_todo.clone());
                     form_clone.set(TodoForm::default());
                     error_clone.set(None);
                 },
-                Err(err) => {
+                | Err(err) => {
                     error_clone.set(Some(format!("Error creating todo: {}", err)));
-                }
+                },
             }
         });
     };
-    
+
     let handle_update = move |_| {
         if let Some(todo) = selected_todo() {
             let form_data = form();
@@ -56,10 +56,10 @@ pub fn TodosTab() -> Element {
             let mut selected_todo_clone = selected_todo.clone();
             let mut is_editing_clone = is_editing.clone();
             let mut error_clone = error.clone();
-            
+
             spawn(async move {
                 match api::update_todo(todo.id, form_data).await {
-                    Ok(updated_todo) => {
+                    | Ok(updated_todo) => {
                         let mut todos_write = todos_clone.write();
                         if let Some(index) = todos_write.iter().position(|item| item.id == updated_todo.id) {
                             todos_write[index] = updated_todo.clone();
@@ -69,24 +69,24 @@ pub fn TodosTab() -> Element {
                         is_editing_clone.set(false);
                         error_clone.set(None);
                     },
-                    Err(err) => {
+                    | Err(err) => {
                         error_clone.set(Some(format!("Error updating todo: {}", err)));
-                    }
+                    },
                 }
             });
         }
     };
-    
+
     let handle_delete = move |id: i32| {
         let mut todos_clone = todos.clone();
         let mut selected_todo_clone = selected_todo.clone();
         let mut form_clone = form.clone();
         let mut is_editing_clone = is_editing.clone();
         let mut error_clone = error.clone();
-        
+
         spawn(async move {
             match api::delete_todo(id).await {
-                Ok(_) => {
+                | Ok(_) => {
                     todos_clone.write().retain(|todo| todo.id != id);
                     if selected_todo_clone().map_or(false, |t| t.id == id) {
                         selected_todo_clone.set(None);
@@ -95,13 +95,13 @@ pub fn TodosTab() -> Element {
                     }
                     error_clone.set(None);
                 },
-                Err(err) => {
+                | Err(err) => {
                     error_clone.set(Some(format!("Error deleting todo: {}", err)));
-                }
+                },
             }
         });
     };
-    
+
     let mut handle_edit = move |todo: Todo| {
         selected_todo.set(Some(todo.clone()));
         form.set(TodoForm {
@@ -111,55 +111,55 @@ pub fn TodosTab() -> Element {
         });
         is_editing.set(true);
     };
-    
+
     let handle_cancel = move |_| {
         form.set(TodoForm::default());
         is_editing.set(false);
     };
-    
+
     let toggle_completed = move |todo: Todo| {
         let mut todos_clone = todos.clone();
         let mut error_clone = error.clone();
-        
+
         spawn(async move {
             let updated_form = TodoForm {
                 userId: todo.userId,
                 title: todo.title.clone(),
                 completed: !todo.completed,
             };
-            
+
             match api::update_todo(todo.id, updated_form).await {
-                Ok(updated_todo) => {
+                | Ok(updated_todo) => {
                     let mut todos_write = todos_clone.write();
                     if let Some(index) = todos_write.iter().position(|item| item.id == updated_todo.id) {
                         todos_write[index] = updated_todo.clone();
                     }
                     error_clone.set(None);
                 },
-                Err(err) => {
+                | Err(err) => {
                     error_clone.set(Some(format!("Error updating todo: {}", err)));
-                }
+                },
             }
         });
     };
-    
+
     rsx! {
         div { class: "p-4",
             h2 { class: "text-2xl font-bold mb-4", "Todos Management" }
-            
+
             // Error message
             {error().map(|err| rsx!(
                 div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4",
                     p { {err} }
                 }
             ))}
-            
+
             // Todo form
             div { class: "mb-6 p-4 border rounded",
-                h3 { class: "text-xl font-semibold mb-2", 
+                h3 { class: "text-xl font-semibold mb-2",
                     {if is_editing() { "Edit Todo" } else { "Add New Todo" }}
                 }
-                
+
                 div { class: "grid grid-cols-1 gap-4",
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "User ID" }
@@ -175,7 +175,7 @@ pub fn TodosTab() -> Element {
                             }
                         }
                     }
-                    
+
                     div { class: "mb-4",
                         label { class: "block text-sm font-medium text-gray-700", "Title" }
                         input {
@@ -187,7 +187,7 @@ pub fn TodosTab() -> Element {
                             }
                         }
                     }
-                    
+
                     div { class: "mb-4 flex items-center",
                         input {
                             id: "completed",
@@ -202,7 +202,7 @@ pub fn TodosTab() -> Element {
                         label { class: "ml-2 block text-sm text-gray-900", r#for: "completed", "Completed" }
                     }
                 }
-                
+
                 div { class: "flex space-x-2",
                     {if is_editing() {
                         rsx! {
@@ -228,7 +228,7 @@ pub fn TodosTab() -> Element {
                     }}
                 }
             }
-            
+
             // Todos list
             div { class: "overflow-x-auto",
                 table { class: "min-w-full bg-white border border-gray-300",
@@ -259,7 +259,7 @@ pub fn TodosTab() -> Element {
                                                 checked: todo.completed,
                                                 onclick: move |_| toggle_completed(todo_for_toggle.clone())
                                             }
-                                            span { class: "ml-2", 
+                                            span { class: "ml-2",
                                                 {if todo.completed { "Completed" } else { "Pending" }}
                                             }
                                         }

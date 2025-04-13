@@ -6,23 +6,13 @@ const API_BASE_URL: &str = "https://jsonplaceholder.typicode.com";
 
 // User API functions
 pub async fn fetch_users() -> Result<Vec<User>, Box<dyn Error>> {
-    let users = Client::new()
-        .get(format!("{}/users", API_BASE_URL))
-        .send()
-        .await?
-        .json::<Vec<User>>()
-        .await?;
+    let users = Client::new().get(format!("{}/users", API_BASE_URL)).send().await?.json::<Vec<User>>().await?;
     Ok(users)
 }
 
 #[allow(dead_code)]
 pub async fn fetch_user(id: i32) -> Result<User, Box<dyn Error>> {
-    let user = Client::new()
-        .get(format!("{}/users/{}", API_BASE_URL, id))
-        .send()
-        .await?
-        .json::<User>()
-        .await?;
+    let user = Client::new().get(format!("{}/users/{}", API_BASE_URL, id)).send().await?.json::<User>().await?;
     Ok(user)
 }
 
@@ -49,32 +39,19 @@ pub async fn update_user(id: i32, user: UserForm) -> Result<User, Box<dyn Error>
 }
 
 pub async fn delete_user(id: i32) -> Result<(), Box<dyn Error>> {
-    Client::new()
-        .delete(format!("{}/users/{}", API_BASE_URL, id))
-        .send()
-        .await?;
+    Client::new().delete(format!("{}/users/{}", API_BASE_URL, id)).send().await?;
     Ok(())
 }
 
 // Todo API functions
 pub async fn fetch_todos() -> Result<Vec<Todo>, Box<dyn Error>> {
-    let todos = Client::new()
-        .get(format!("{}/todos", API_BASE_URL))
-        .send()
-        .await?
-        .json::<Vec<Todo>>()
-        .await?;
+    let todos = Client::new().get(format!("{}/todos", API_BASE_URL)).send().await?.json::<Vec<Todo>>().await?;
     Ok(todos)
 }
 
 #[allow(dead_code)]
 pub async fn fetch_todo(id: i32) -> Result<Todo, Box<dyn Error>> {
-    let todo = Client::new()
-        .get(format!("{}/todos/{}", API_BASE_URL, id))
-        .send()
-        .await?
-        .json::<Todo>()
-        .await?;
+    let todo = Client::new().get(format!("{}/todos/{}", API_BASE_URL, id)).send().await?.json::<Todo>().await?;
     Ok(todo)
 }
 
@@ -101,32 +78,19 @@ pub async fn update_todo(id: i32, todo: TodoForm) -> Result<Todo, Box<dyn Error>
 }
 
 pub async fn delete_todo(id: i32) -> Result<(), Box<dyn Error>> {
-    Client::new()
-        .delete(format!("{}/todos/{}", API_BASE_URL, id))
-        .send()
-        .await?;
+    Client::new().delete(format!("{}/todos/{}", API_BASE_URL, id)).send().await?;
     Ok(())
 }
 
 // Post API functions
 pub async fn fetch_posts() -> Result<Vec<Post>, Box<dyn Error>> {
-    let posts = Client::new()
-        .get(format!("{}/posts", API_BASE_URL))
-        .send()
-        .await?
-        .json::<Vec<Post>>()
-        .await?;
+    let posts = Client::new().get(format!("{}/posts", API_BASE_URL)).send().await?.json::<Vec<Post>>().await?;
     Ok(posts)
 }
 
 #[allow(dead_code)]
 pub async fn fetch_post(id: i32) -> Result<Post, Box<dyn Error>> {
-    let post = Client::new()
-        .get(format!("{}/posts/{}", API_BASE_URL, id))
-        .send()
-        .await?
-        .json::<Post>()
-        .await?;
+    let post = Client::new().get(format!("{}/posts/{}", API_BASE_URL, id)).send().await?.json::<Post>().await?;
     Ok(post)
 }
 
@@ -153,9 +117,6 @@ pub async fn update_post(id: i32, post: PostForm) -> Result<Post, Box<dyn Error>
 }
 
 pub async fn delete_post(id: i32) -> Result<(), Box<dyn Error>> {
-    Client::new()
-        .delete(format!("{}/posts/{}", API_BASE_URL, id))
-        .send()
-        .await?;
+    Client::new().delete(format!("{}/posts/{}", API_BASE_URL, id)).send().await?;
     Ok(())
 }
