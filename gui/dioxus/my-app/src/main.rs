@@ -1,9 +1,10 @@
 use dioxus::prelude::*;
-mod api;
-mod components;
-mod models;
 
-use components::{PostsTab, TodosTab, UsersTab};
+mod api;
+mod presentation;
+mod domain;
+
+use presentation::components::{PostsTab, TodosTab, UsersTab};
 
 #[derive(Debug, Clone, Routable, PartialEq)]
 #[rustfmt::skip]

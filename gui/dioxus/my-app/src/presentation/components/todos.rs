@@ -1,5 +1,5 @@
 use crate::api;
-use crate::models::{Todo, TodoForm};
+use crate::domain::entities::todo::{Todo, TodoForm};
 use dioxus::prelude::*;
 
 #[component]

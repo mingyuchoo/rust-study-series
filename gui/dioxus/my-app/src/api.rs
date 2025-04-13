@@ -1,4 +1,4 @@
-use crate::models::{Post, PostForm, Todo, TodoForm, User, UserForm};
+use crate::domain::entities::{Post, PostForm, Todo, TodoForm, User, UserForm};
 use reqwest::Client;
 use std::error::Error;
 

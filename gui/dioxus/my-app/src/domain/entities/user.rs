@@ -35,24 +35,6 @@ pub struct Company {
     pub bs: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[allow(non_snake_case)]
-pub struct Todo {
-    pub id: i32,
-    pub userId: i32,
-    pub title: String,
-    pub completed: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[allow(non_snake_case)]
-pub struct Post {
-    pub id: i32,
-    pub userId: i32,
-    pub title: String,
-    pub body: String,
-}
-
 // New user form data
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UserForm {
@@ -60,22 +42,4 @@ pub struct UserForm {
     pub username: String,
     pub email: String,
     pub phone: String,
-}
-
-// New todo form data
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[allow(non_snake_case)]
-pub struct TodoForm {
-    pub userId: i32,
-    pub title: String,
-    pub completed: bool,
-}
-
-// New post form data
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[allow(non_snake_case)]
-pub struct PostForm {
-    pub userId: i32,
-    pub title: String,
-    pub body: String,
 }
