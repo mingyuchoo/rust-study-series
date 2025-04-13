@@ -1,6 +1,6 @@
 use axum::http::{HeaderName, HeaderValue};
 use loco_rs::{app::AppContext, TestServer};
-use my_test_app::{models::users, views::auth::LoginResponse};
+use my_app::{models::users, views::auth::LoginResponse};
 
 const USER_EMAIL: &str = "test@loco.com";
 const USER_PASSWORD: &str = "1234";

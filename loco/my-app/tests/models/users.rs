@@ -1,7 +1,7 @@
 use chrono::{offset::Local, Duration};
 use insta::assert_debug_snapshot;
 use loco_rs::testing::prelude::*;
-use my_test_app::{
+use my_app::{
     app::App,
     models::users::{self, Model, RegisterParams},
 };

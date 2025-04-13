@@ -5,7 +5,7 @@ name = "my-app"
 version = "0.1.0"
 edition = "2021"
 publish = false
-default-run = "my_test_app-cli"
+default-run = "my_app-cli"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -38,7 +38,7 @@ include_dir = { version = "0.7" }
 axum-extra = { version = "0.10", features = ["form"] }
 
 [[bin]]
-name = "my_test_app-cli"
+name = "my_app-cli"
 path = "src/bin/main.rs"
 required-features = []
 
