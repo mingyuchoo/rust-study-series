@@ -1,4 +1,4 @@
-use crate::api;
+use crate::infrastructure::api::json_placeholder_api;
 use crate::domain::entities::user::{User, UserForm};
 use dioxus::prelude::*;
 
@@ -13,7 +13,7 @@ pub fn UsersTab() -> Element {
     // Load users on component mount
     use_effect(move || {
         spawn(async move {
-            match api::fetch_users().await {
+            match json_placeholder_api::fetch_users().await {
                 | Ok(fetched_users) => {
                     users.set(fetched_users);
                 },
@@ -34,7 +34,7 @@ pub fn UsersTab() -> Element {
         let mut error_clone = error.clone();
 
         spawn(async move {
-            match api::create_user(form_data).await {
+            match json_placeholder_api::create_user(form_data).await {
                 | Ok(new_user) => {
                     users_clone.write().push(new_user.clone());
                     form_clone.set(UserForm::default());
@@ -57,7 +57,7 @@ pub fn UsersTab() -> Element {
             let mut error_clone = error.clone();
 
             spawn(async move {
-                match api::update_user(user.id, form_data).await {
+                match json_placeholder_api::update_user(user.id, form_data).await {
                     | Ok(updated_user) => {
                         let mut users_write = users_clone.write();
                         if let Some(index) = users_write.iter().position(|item| item.id == updated_user.id) {
@@ -84,7 +84,7 @@ pub fn UsersTab() -> Element {
         let mut error_clone = error.clone();
 
         spawn(async move {
-            match api::delete_user(id).await {
+            match json_placeholder_api::delete_user(id).await {
                 | Ok(_) => {
                     users_clone.write().retain(|user| user.id != id);
                     if selected_user_clone().map_or(false, |u| u.id == id) {

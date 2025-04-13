@@ -1,4 +1,4 @@
-use crate::api;
+use crate::infrastructure::api::json_placeholder_api;
 use crate::domain::entities::post::{Post, PostForm};
 use dioxus::prelude::*;
 
@@ -13,7 +13,7 @@ pub fn PostsTab() -> Element {
     // Load posts on component mount
     use_effect(move || {
         spawn(async move {
-            match api::fetch_posts().await {
+            match json_placeholder_api::fetch_posts().await {
                 | Ok(fetched_posts) => {
                     // Limit to first 20 posts for better performance
                     posts.set(fetched_posts.into_iter().take(20).collect());
@@ -35,7 +35,7 @@ pub fn PostsTab() -> Element {
         let mut error_clone = error.clone();
 
         spawn(async move {
-            match api::create_post(form_data).await {
+            match json_placeholder_api::create_post(form_data).await {
                 | Ok(new_post) => {
                     posts_clone.write().push(new_post.clone());
                     form_clone.set(PostForm::default());
@@ -58,7 +58,7 @@ pub fn PostsTab() -> Element {
             let mut error_clone = error.clone();
 
             spawn(async move {
-                match api::update_post(post.id, form_data).await {
+                match json_placeholder_api::update_post(post.id, form_data).await {
                     | Ok(updated_post) => {
                         let mut posts_write = posts_clone.write();
                         if let Some(index) = posts_write.iter().position(|item| item.id == updated_post.id) {
@@ -85,7 +85,7 @@ pub fn PostsTab() -> Element {
         let mut error_clone = error.clone();
 
         spawn(async move {
-            match api::delete_post(id).await {
+            match json_placeholder_api::delete_post(id).await {
                 | Ok(_) => {
                     posts_clone.write().retain(|post| post.id != id);
                     if selected_post_clone().map_or(false, |p| p.id == id) {

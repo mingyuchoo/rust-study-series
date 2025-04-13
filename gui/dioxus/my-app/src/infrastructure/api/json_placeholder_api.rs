@@ -6,6 +6,70 @@ use crate::infrastructure::api::constants::API_BASE_URL;
 use reqwest::Client;
 use std::error::Error;
 
+// Wrapper functions for direct access
+// User functions
+pub async fn fetch_users() -> Result<Vec<User>, Box<dyn Error>> {
+    let repo = JsonPlaceholderUserRepository::new();
+    repo.fetch_all().await
+}
+
+pub async fn create_user(user: UserForm) -> Result<User, Box<dyn Error>> {
+    let repo = JsonPlaceholderUserRepository::new();
+    repo.create(user).await
+}
+
+pub async fn update_user(id: i32, user: UserForm) -> Result<User, Box<dyn Error>> {
+    let repo = JsonPlaceholderUserRepository::new();
+    repo.update(id, user).await
+}
+
+pub async fn delete_user(id: i32) -> Result<(), Box<dyn Error>> {
+    let repo = JsonPlaceholderUserRepository::new();
+    repo.delete(id).await
+}
+
+// Todo functions
+pub async fn fetch_todos() -> Result<Vec<Todo>, Box<dyn Error>> {
+    let repo = JsonPlaceholderTodoRepository::new();
+    repo.fetch_all().await
+}
+
+pub async fn create_todo(todo: TodoForm) -> Result<Todo, Box<dyn Error>> {
+    let repo = JsonPlaceholderTodoRepository::new();
+    repo.create(todo).await
+}
+
+pub async fn update_todo(id: i32, todo: TodoForm) -> Result<Todo, Box<dyn Error>> {
+    let repo = JsonPlaceholderTodoRepository::new();
+    repo.update(id, todo).await
+}
+
+pub async fn delete_todo(id: i32) -> Result<(), Box<dyn Error>> {
+    let repo = JsonPlaceholderTodoRepository::new();
+    repo.delete(id).await
+}
+
+// Post functions
+pub async fn fetch_posts() -> Result<Vec<Post>, Box<dyn Error>> {
+    let repo = JsonPlaceholderPostRepository::new();
+    repo.fetch_all().await
+}
+
+pub async fn create_post(post: PostForm) -> Result<Post, Box<dyn Error>> {
+    let repo = JsonPlaceholderPostRepository::new();
+    repo.create(post).await
+}
+
+pub async fn update_post(id: i32, post: PostForm) -> Result<Post, Box<dyn Error>> {
+    let repo = JsonPlaceholderPostRepository::new();
+    repo.update(id, post).await
+}
+
+pub async fn delete_post(id: i32) -> Result<(), Box<dyn Error>> {
+    let repo = JsonPlaceholderPostRepository::new();
+    repo.delete(id).await
+}
+
 // User Repository Implementation
 pub struct JsonPlaceholderUserRepository {
     client: Client,

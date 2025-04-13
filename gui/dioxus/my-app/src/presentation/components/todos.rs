@@ -1,4 +1,4 @@
-use crate::api;
+use crate::infrastructure::api::json_placeholder_api;
 use crate::domain::entities::todo::{Todo, TodoForm};
 use dioxus::prelude::*;
 
@@ -13,7 +13,7 @@ pub fn TodosTab() -> Element {
     // Load todos on component mount
     use_effect(move || {
         spawn(async move {
-            match api::fetch_todos().await {
+            match json_placeholder_api::fetch_todos().await {
                 | Ok(fetched_todos) => {
                     // Limit to first 20 todos for better performance
                     todos.set(fetched_todos.into_iter().take(20).collect());
@@ -35,7 +35,7 @@ pub fn TodosTab() -> Element {
         let mut error_clone = error.clone();
 
         spawn(async move {
-            match api::create_todo(form_data).await {
+            match json_placeholder_api::create_todo(form_data).await {
                 | Ok(new_todo) => {
                     todos_clone.write().push(new_todo.clone());
                     form_clone.set(TodoForm::default());
@@ -58,7 +58,7 @@ pub fn TodosTab() -> Element {
             let mut error_clone = error.clone();
 
             spawn(async move {
-                match api::update_todo(todo.id, form_data).await {
+                match json_placeholder_api::update_todo(todo.id, form_data).await {
                     | Ok(updated_todo) => {
                         let mut todos_write = todos_clone.write();
                         if let Some(index) = todos_write.iter().position(|item| item.id == updated_todo.id) {
@@ -85,7 +85,7 @@ pub fn TodosTab() -> Element {
         let mut error_clone = error.clone();
 
         spawn(async move {
-            match api::delete_todo(id).await {
+            match json_placeholder_api::delete_todo(id).await {
                 | Ok(_) => {
                     todos_clone.write().retain(|todo| todo.id != id);
                     if selected_todo_clone().map_or(false, |t| t.id == id) {
@@ -128,7 +128,7 @@ pub fn TodosTab() -> Element {
                 completed: !todo.completed,
             };
 
-            match api::update_todo(todo.id, updated_form).await {
+            match json_placeholder_api::update_todo(todo.id, updated_form).await {
                 | Ok(updated_todo) => {
                     let mut todos_write = todos_clone.write();
                     if let Some(index) = todos_write.iter().position(|item| item.id == updated_todo.id) {

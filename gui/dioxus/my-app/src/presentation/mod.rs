@@ -1,2 +1,3 @@
-// Export components module
+// Export modules
 pub mod components;
+pub mod pages;

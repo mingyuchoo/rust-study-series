@@ -1,4 +1,4 @@
 pub mod json_placeholder_api;
 pub mod constants;
 
-pub use json_placeholder_api::{JsonPlaceholderUserRepository, JsonPlaceholderTodoRepository, JsonPlaceholderPostRepository};
+// Components import directly from the json_placeholder_api module
