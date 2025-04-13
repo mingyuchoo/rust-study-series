@@ -1,7 +1,7 @@
 use crate::domain::entities::user::{User, UserForm};
 use std::error::Error;
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 pub trait UserRepository {
     async fn fetch_all(&self) -> Result<Vec<User>, Box<dyn Error>>;
     #[allow(dead_code)]

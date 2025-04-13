@@ -1,7 +1,7 @@
 use crate::domain::entities::todo::{Todo, TodoForm};
 use std::error::Error;
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 pub trait TodoRepository {
     async fn fetch_all(&self) -> Result<Vec<Todo>, Box<dyn Error>>;
     #[allow(dead_code)]

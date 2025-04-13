@@ -83,7 +83,7 @@ impl JsonPlaceholderUserRepository {
     }
 }
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 impl UserRepository for JsonPlaceholderUserRepository {
     async fn fetch_all(&self) -> Result<Vec<User>, Box<dyn Error>> {
         let users = self.client.get(format!("{}/users", API_BASE_URL))
@@ -144,7 +144,7 @@ impl JsonPlaceholderTodoRepository {
     }
 }
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 impl TodoRepository for JsonPlaceholderTodoRepository {
     async fn fetch_all(&self) -> Result<Vec<Todo>, Box<dyn Error>> {
         let todos = self.client.get(format!("{}/todos", API_BASE_URL))
@@ -205,7 +205,7 @@ impl JsonPlaceholderPostRepository {
     }
 }
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 impl PostRepository for JsonPlaceholderPostRepository {
     async fn fetch_all(&self) -> Result<Vec<Post>, Box<dyn Error>> {
         let posts = self.client.get(format!("{}/posts", API_BASE_URL))

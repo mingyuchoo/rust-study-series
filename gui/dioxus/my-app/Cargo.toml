@@ -15,7 +15,7 @@ futures = "0.3"
 async-trait = "0.1.74"
 
 [features]
-default = ["desktop"]
+default = ["web"]
 web = ["dioxus/web"]
 desktop = ["dioxus/desktop"]
 mobile = ["dioxus/mobile"]

@@ -1,7 +1,7 @@
 use crate::domain::entities::post::{Post, PostForm};
 use std::error::Error;
 
-#[async_trait::async_trait]
+#[async_trait::async_trait(?Send)]
 pub trait PostRepository {
     async fn fetch_all(&self) -> Result<Vec<Post>, Box<dyn Error>>;
     #[allow(dead_code)]
