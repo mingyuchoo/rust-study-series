@@ -4,7 +4,7 @@ use crate::domain::services::repositories::entities::user::{User, UserForm};
 use crate::domain::services::repositories::post_repository::PostRepository;
 use crate::domain::services::repositories::todo_repository::TodoRepository;
 use crate::domain::services::repositories::user_repository::UserRepository;
-use crate::infrastructure::api::constants::API_BASE_URL;
+use crate::infrastructure::api::repositories::constants::API_BASE_URL;
 use reqwest::Client;
 use std::error::Error;
 

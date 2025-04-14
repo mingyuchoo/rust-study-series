@@ -1,5 +1,4 @@
 pub mod repositories;
-pub mod constants;
 
 use crate::application::services::PostApplicationService;
 use crate::application::services::TodoApplicationService;
