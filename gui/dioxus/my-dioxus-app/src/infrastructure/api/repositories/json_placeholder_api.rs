@@ -1,6 +1,6 @@
-use crate::domain::services::entities::post::{Post, PostForm};
-use crate::domain::services::entities::todo::{Todo, TodoForm};
-use crate::domain::services::entities::user::{User, UserForm};
+use crate::domain::services::repositories::entities::post::{Post, PostForm};
+use crate::domain::services::repositories::entities::todo::{Todo, TodoForm};
+use crate::domain::services::repositories::entities::user::{User, UserForm};
 use crate::domain::services::{PostRepository, TodoRepository, UserRepository};
 use crate::infrastructure::api::constants::API_BASE_URL;
 use reqwest::Client;
