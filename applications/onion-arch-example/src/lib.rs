@@ -13,5 +13,5 @@ pub mod application {
 
 // Infrastructure layer (outermost layer)
 pub mod infrastructure {
-    pub mod api;
+    pub mod db;
 }

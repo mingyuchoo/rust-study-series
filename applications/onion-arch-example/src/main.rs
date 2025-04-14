@@ -2,7 +2,7 @@
 //
 
 // Import the crate itself
-use onion_arch_example::infrastructure::api::user_api_controller::UserApiController;
+use onion_arch_example::infrastructure::db::user_db_controller::UserApiController;
 
 fn main() -> Result<(), String> {
     // SQLite DB 파일 경로

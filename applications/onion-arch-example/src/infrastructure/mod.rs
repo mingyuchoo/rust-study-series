@@ -2,4 +2,4 @@
 // infrastructure.rs - Export modules
 //
 
-pub mod api;
+pub mod db;

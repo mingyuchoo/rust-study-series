@@ -7,11 +7,11 @@ use rusqlite::{Connection, params};
 use std::sync::{Arc, Mutex};
 
 // SQLite 저장소 구현 (추가)
-pub struct SqliteUserRepository {
+pub struct UserDbRepository {
     conn: Arc<Mutex<Connection>>,
 }
 
-impl SqliteUserRepository {
+impl UserDbRepository {
     pub fn new(db_path: &str) -> Result<Self, String> {
         let conn = Connection::open(db_path).map_err(|e| format!("Failed to open database: {}", e))?;
 
@@ -40,7 +40,7 @@ impl SqliteUserRepository {
     }
 }
 
-impl UserRepository for SqliteUserRepository {
+impl UserRepository for UserDbRepository {
     fn find_by_id(&self, id: &str) -> Option<User> {
         let conn = self.conn.lock().unwrap();
         let mut stmt = conn.prepare("SELECT id, username, email, active FROM users WHERE id = ?").ok()?;

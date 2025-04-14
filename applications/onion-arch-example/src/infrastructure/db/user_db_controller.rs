@@ -1,4 +1,4 @@
-// infrastructure/api.rs - REST API 구현 (예시)
+// infrastructure/db/user_db_controller.rs - REST API 구현 (예시)
 //
 
 use crate::application::services::user_application_service::UserApplicationService;
@@ -8,9 +8,9 @@ pub struct UserApiController<R: UserRepository> {
     application_service: UserApplicationService<R>,
 }
 
-impl UserApiController<crate::infrastructure::api::repositories::sqlite_user_repository::SqliteUserRepository> {
+impl UserApiController<crate::infrastructure::db::repositories::user_db_repository::UserDbRepository> {
     pub fn new_with_db_path(db_path: &str) -> Result<Self, String> {
-        let repo = crate::infrastructure::api::repositories::sqlite_user_repository::SqliteUserRepository::new(db_path)?;
+        let repo = crate::infrastructure::db::repositories::user_db_repository::UserDbRepository::new(db_path)?;
         Ok(UserApiController::new_with_repository(repo))
     }
 }
