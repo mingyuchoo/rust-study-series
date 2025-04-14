@@ -5,26 +5,8 @@ pub mod infrastructure;
 pub mod presentation;
 
 // Import what we need
-use crate::presentation::pages::{Home, Navbar, Posts, Todos, Users};
 use dioxus::prelude::*;
-
-#[derive(Debug, Clone, Routable, PartialEq)]
-#[rustfmt::skip]
-pub enum Route {
-    #[layout(Navbar)]
-    #[route("/")]
-    Home {},
-    #[route("/users")]
-    Users {},
-    #[route("/todos")]
-    Todos {},
-    #[route("/posts")]
-    Posts {},
-}
-
-pub const FAVICON: Asset = asset!("/assets/favicon.ico");
-pub const MAIN_CSS: Asset = asset!("/assets/main.css");
-pub const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
+use crate::application::use_cases::{Route, FAVICON, MAIN_CSS, TAILWIND_CSS};
 
 #[component]
 pub fn App() -> Element {
