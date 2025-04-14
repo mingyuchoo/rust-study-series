@@ -3,8 +3,8 @@
 
 pub mod repositories;
 
-use self::repositories::UserRepository;
-use self::repositories::models::User;
+use crate::domain::services::repositories::user_repository::UserRepository;
+use crate::domain::services::repositories::models::user::User;
 
 pub struct UserService<R: UserRepository> {
     repository: R,

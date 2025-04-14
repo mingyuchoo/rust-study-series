@@ -3,8 +3,8 @@
 
 pub mod repositories;
 
-use crate::application::services::UserApplicationService;
-use crate::domain::services::repositories::UserRepository;
+use crate::application::services::user_application_service::UserApplicationService;
+use crate::domain::services::repositories::user_repository::UserRepository;
 
 pub struct UserApiController<R: UserRepository> {
     application_service: UserApplicationService<R>,

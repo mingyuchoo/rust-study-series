@@ -1,8 +1,8 @@
 // infrastructure/repositories.rs - 저장소 구현
 //
 
-use crate::domain::services::repositories::UserRepository;
-use crate::domain::services::repositories::models::User;
+use crate::domain::services::repositories::user_repository::UserRepository;
+use crate::domain::services::repositories::models::user::User;
 use rusqlite::{Connection, params};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};

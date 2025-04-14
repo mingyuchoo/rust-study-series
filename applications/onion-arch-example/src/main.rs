@@ -3,7 +3,7 @@
 
 // Import the crate itself
 use onion_arch_example::{// Application layer
-                         application::services::UserApplicationService,
+                         application::services::user_application_service::UserApplicationService,
                          // Infrastructure layer
                          infrastructure::{api::UserApiController, api::repositories::SqliteUserRepository}};
 use uuid::Uuid;
