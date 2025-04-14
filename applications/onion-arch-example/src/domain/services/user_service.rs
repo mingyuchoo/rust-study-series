@@ -9,6 +9,9 @@ pub struct UserService<R: UserRepository> {
 }
 
 impl<R: UserRepository> UserService<R> {
+    pub fn delete_user(&self, id: &str) -> Result<(), String> {
+        self.repository.delete(id)
+    }
     pub fn new(repository: R) -> Self {
         Self {
             repository,

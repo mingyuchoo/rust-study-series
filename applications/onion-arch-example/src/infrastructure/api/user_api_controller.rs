@@ -10,6 +10,10 @@ pub struct UserApiController<R: UserRepository> {
 }
 
 impl<R: UserRepository> UserApiController<R> {
+    pub fn delete_user(&self, id: &str) -> Result<String, String> {
+        self.application_service.delete_user(id)?;
+        Ok(format!("User {} deleted", id))
+    }
     pub fn new(application_service: UserApplicationService<R>) -> Self {
         Self {
             application_service,
