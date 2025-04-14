@@ -1,7 +1,6 @@
 // infrastructure/api.rs - REST API 구현 (예시)
 //
 
-
 use crate::application::services::user_application_service::UserApplicationService;
 use crate::domain::services::repositories::user_repository::UserRepository;
 
@@ -9,21 +8,27 @@ pub struct UserApiController<R: UserRepository> {
     application_service: UserApplicationService<R>,
 }
 
+impl UserApiController<crate::infrastructure::api::repositories::sqlite_user_repository::SqliteUserRepository> {
+    pub fn new_with_db_path(db_path: &str) -> Result<Self, String> {
+        let repo = crate::infrastructure::api::repositories::sqlite_user_repository::SqliteUserRepository::new(db_path)?;
+        Ok(UserApiController::new_with_repository(repo))
+    }
+}
+
 impl<R: UserRepository> UserApiController<R> {
     pub fn delete_user(&self, id: &str) -> Result<String, String> {
         self.application_service.delete_user(id)?;
         Ok(format!("User {} deleted", id))
     }
+
     pub fn new(application_service: UserApplicationService<R>) -> Self {
         Self {
             application_service,
         }
     }
-    
-    pub fn new_with_repository(repository: R) -> Self {
-        Self::new(UserApplicationService::new(repository))
-    }
-    
+
+    pub fn new_with_repository(repository: R) -> Self { Self::new(UserApplicationService::new(repository)) }
+
     pub fn register_user(&self, id: String, username: String, email: String) -> Result<String, String> {
         match self.application_service.register_user(id, username, email) {
             | Ok(user_dto) => Ok(format!("User created: {}", user_dto.username)),

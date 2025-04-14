@@ -2,26 +2,20 @@
 //
 
 // Import the crate itself
-use onion_arch_example::{
-    // Application layer
-    application::services::user_application_service::UserApplicationService,
-    // Infrastructure layer
-    infrastructure::api::user_api_controller::UserApiController,
-    infrastructure::api::repositories::sqlite_user_repository::SqliteUserRepository,
-};
-
+use onion_arch_example::infrastructure::api::user_api_controller::UserApiController;
 
 fn main() -> Result<(), String> {
     // SQLite DB 파일 경로
     let db_path = "users.db";
 
-    // 저장소 생성
-    let repo = SqliteUserRepository::new(db_path)?;
-    // 컨트롤러 생성
-    let controller = UserApiController::new_with_repository(repo);
+    // 컨트롤러 생성 (db_path만 넘김)
+    let controller = UserApiController::new_with_db_path(db_path)?;
 
     // 1. CREATE
-    println!("{}", controller.register_user("1".to_string(), "alice".to_string(), "alice@email.com".to_string())?);
+    println!(
+        "{}",
+        controller.register_user("1".to_string(), "alice".to_string(), "alice@email.com".to_string())?
+    );
     println!("{}", controller.register_user("2".to_string(), "bob".to_string(), "bob@email.com".to_string())?);
 
     // 2. READ (전체)
