@@ -25,14 +25,13 @@ pub fn TodosTab() -> Element {
         });
 
         // Return empty cleanup function
-        ()
     });
 
     let handle_create = move |_| {
         let form_data = form();
-        let mut form_clone = form.clone();
-        let mut todos_clone = todos.clone();
-        let mut error_clone = error.clone();
+        let mut form_clone = form;
+        let mut todos_clone = todos;
+        let mut error_clone = error;
 
         spawn(async move {
             match json_placeholder_api::create_todo(form_data).await {

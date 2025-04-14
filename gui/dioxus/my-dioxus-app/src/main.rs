@@ -1,6 +1,6 @@
 // Import what we need
 use dioxus::prelude::*;
-use my_dioxus_app::application::services::{Route, FAVICON, MAIN_CSS, TAILWIND_CSS};
+use my_dioxus_app::presentation::{FAVICON, MAIN_CSS, Route, TAILWIND_CSS};
 
 #[component]
 pub fn App() -> Element {

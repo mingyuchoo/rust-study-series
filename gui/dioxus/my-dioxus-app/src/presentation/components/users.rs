@@ -24,7 +24,6 @@ pub fn UsersTab() -> Element {
         });
 
         // Return empty cleanup function
-        ()
     });
 
     let handle_create = move |_| {
@@ -50,11 +49,11 @@ pub fn UsersTab() -> Element {
     let handle_update = move |_| {
         if let Some(user) = selected_user() {
             let form_data = form();
-            let mut form_clone = form.clone();
-            let mut users_clone = users.clone();
-            let mut selected_user_clone = selected_user.clone();
-            let mut is_editing_clone = is_editing.clone();
-            let mut error_clone = error.clone();
+            let mut users_clone = users;
+            let mut selected_user_clone = selected_user;
+            let mut form_clone = form;
+            let mut is_editing_clone = is_editing;
+            let mut error_clone = error;
 
             spawn(async move {
                 match json_placeholder_api::update_user(user.id, form_data).await {
@@ -77,17 +76,17 @@ pub fn UsersTab() -> Element {
     };
 
     let handle_delete = move |id: i32| {
-        let mut users_clone = users.clone();
-        let mut selected_user_clone = selected_user.clone();
-        let mut form_clone = form.clone();
-        let mut is_editing_clone = is_editing.clone();
-        let mut error_clone = error.clone();
+        let mut users_clone = users;
+        let mut selected_user_clone = selected_user;
+        let mut form_clone = form;
+        let mut is_editing_clone = is_editing;
+        let mut error_clone = error;
 
         spawn(async move {
             match json_placeholder_api::delete_user(id).await {
                 | Ok(_) => {
                     users_clone.write().retain(|user| user.id != id);
-                    if selected_user_clone().map_or(false, |u| u.id == id) {
+                    if selected_user_clone().is_some_and(|u| u.id == id) {
                         selected_user_clone.set(None);
                         form_clone.set(UserForm::default());
                         is_editing_clone.set(false);

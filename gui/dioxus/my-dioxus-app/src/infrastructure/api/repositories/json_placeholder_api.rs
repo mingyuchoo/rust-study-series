@@ -76,6 +76,10 @@ pub struct JsonPlaceholderUserRepository {
     client: Client,
 }
 
+impl Default for JsonPlaceholderUserRepository {
+    fn default() -> Self { Self::new() }
+}
+
 impl JsonPlaceholderUserRepository {
     pub fn new() -> Self {
         Self {
@@ -131,6 +135,10 @@ pub struct JsonPlaceholderTodoRepository {
     client: Client,
 }
 
+impl Default for JsonPlaceholderTodoRepository {
+    fn default() -> Self { Self::new() }
+}
+
 impl JsonPlaceholderTodoRepository {
     pub fn new() -> Self {
         Self {
@@ -184,6 +192,10 @@ impl TodoRepository for JsonPlaceholderTodoRepository {
 // Post Repository Implementation
 pub struct JsonPlaceholderPostRepository {
     client: Client,
+}
+
+impl Default for JsonPlaceholderPostRepository {
+    fn default() -> Self { Self::new() }
 }
 
 impl JsonPlaceholderPostRepository {

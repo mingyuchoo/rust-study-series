@@ -25,14 +25,13 @@ pub fn PostsTab() -> Element {
         });
 
         // Return empty cleanup function
-        ()
     });
 
     let handle_create = move |_| {
         let form_data = form();
-        let mut form_clone = form.clone();
-        let mut posts_clone = posts.clone();
-        let mut error_clone = error.clone();
+        let mut form_clone = form;
+        let mut posts_clone = posts;
+        let mut error_clone = error;
 
         spawn(async move {
             match json_placeholder_api::create_post(form_data).await {
