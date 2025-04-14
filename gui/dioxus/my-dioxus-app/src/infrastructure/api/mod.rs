@@ -1,8 +1,16 @@
 pub mod repositories;
+pub mod constants;
 
 use crate::application::services::PostApplicationService;
 use crate::application::services::TodoApplicationService;
 use crate::application::services::UserApplicationService;
+use crate::domain::services::repositories::post_repository::PostRepository;
+use crate::domain::services::repositories::todo_repository::TodoRepository;
+use crate::domain::services::repositories::user_repository::UserRepository;
+use crate::domain::services::repositories::entities::post::{Post, PostForm};
+use crate::domain::services::repositories::entities::todo::{Todo, TodoForm};
+use crate::domain::services::repositories::entities::user::{User, UserForm};
+use std::error::Error;
 
 pub struct PostApiController<R: PostRepository> {
     application_service: PostApplicationService<R>,
@@ -13,24 +21,24 @@ impl<R: PostRepository> PostApiController<R> {
         Self { application_service }
     }
 
-    pub fn create(&self, post: Post) -> Result<Post, R::Error> {
-        self.application_service.create(post)
+    pub async fn create(&self, post_form: PostForm) -> Result<Post, Box<dyn Error>> {
+        self.application_service.create(post_form).await
     }
 
-    pub fn update(&self, post: Post) -> Result<Post, R::Error> {
-        self.application_service.update(post)
+    pub async fn update(&self, id: i32, post_form: PostForm) -> Result<Post, Box<dyn Error>> {
+        self.application_service.update(id, post_form).await
     }
 
-    pub fn delete(&self, post: Post) -> Result<(), R::Error> {
-        self.application_service.delete(post)
+    pub async fn delete(&self, id: i32) -> Result<(), Box<dyn Error>> {
+        self.application_service.delete(id).await
     }
 
-    pub fn find_by_id(&self, id: i32) -> Result<Post, R::Error> {
-        self.application_service.find_by_id(id)
+    pub async fn find_by_id(&self, id: i32) -> Result<Post, Box<dyn Error>> {
+        self.application_service.find_by_id(id).await
     }
 
-    pub fn find_all(&self) -> Result<Vec<Post>, R::Error> {
-        self.application_service.find_all()
+    pub async fn find_all(&self) -> Result<Vec<Post>, Box<dyn Error>> {
+        self.application_service.find_all().await
     }
 }
 
@@ -43,24 +51,24 @@ impl<R: TodoRepository> TodoApiController<R> {
         Self { application_service }
     }
 
-    pub fn create(&self, todo: Todo) -> Result<Todo, R::Error> {
-        self.application_service.create(todo)
+    pub async fn create(&self, todo_form: TodoForm) -> Result<Todo, Box<dyn Error>> {
+        self.application_service.create(todo_form).await
     }
 
-    pub fn update(&self, todo: Todo) -> Result<Todo, R::Error> {
-        self.application_service.update(todo)
+    pub async fn update(&self, id: i32, todo_form: TodoForm) -> Result<Todo, Box<dyn Error>> {
+        self.application_service.update(id, todo_form).await
     }
 
-    pub fn delete(&self, todo: Todo) -> Result<(), R::Error> {
-        self.application_service.delete(todo)
+    pub async fn delete(&self, id: i32) -> Result<(), Box<dyn Error>> {
+        self.application_service.delete(id).await
     }
 
-    pub fn find_by_id(&self, id: i32) -> Result<Todo, R::Error> {
-        self.application_service.find_by_id(id)
+    pub async fn find_by_id(&self, id: i32) -> Result<Todo, Box<dyn Error>> {
+        self.application_service.find_by_id(id).await
     }
 
-    pub fn find_all(&self) -> Result<Vec<Todo>, R::Error> {
-        self.application_service.find_all()
+    pub async fn find_all(&self) -> Result<Vec<Todo>, Box<dyn Error>> {
+        self.application_service.find_all().await
     }
 }
 
@@ -73,23 +81,23 @@ impl<R: UserRepository> UserApiController<R> {
         Self { application_service }
     }
 
-    pub fn create(&self, user: User) -> Result<User, R::Error> {
-        self.application_service.create(user)
+    pub async fn create(&self, user_form: UserForm) -> Result<User, Box<dyn Error>> {
+        self.application_service.create(user_form).await
     }
 
-    pub fn update(&self, user: User) -> Result<User, R::Error> {
-        self.application_service.update(user)
+    pub async fn update(&self, id: i32, user_form: UserForm) -> Result<User, Box<dyn Error>> {
+        self.application_service.update(id, user_form).await
     }
 
-    pub fn delete(&self, user: User) -> Result<(), R::Error> {
-        self.application_service.delete(user)
+    pub async fn delete(&self, id: i32) -> Result<(), Box<dyn Error>> {
+        self.application_service.delete(id).await
     }
 
-    pub fn find_by_id(&self, id: i32) -> Result<User, R::Error> {
-        self.application_service.find_by_id(id)
+    pub async fn find_by_id(&self, id: i32) -> Result<User, Box<dyn Error>> {
+        self.application_service.find_by_id(id).await
     }
 
-    pub fn find_all(&self) -> Result<Vec<User>, R::Error> {
-        self.application_service.find_all()
+    pub async fn find_all(&self) -> Result<Vec<User>, Box<dyn Error>> {
+        self.application_service.find_all().await
     }
 }

@@ -1,12 +1,12 @@
 pub mod repositories;
 
-use self::repositories::PostRepository;
-use self::repositories::TodoRepository;
-use self::repositories::UserRepository;
+use self::repositories::post_repository::PostRepository;
+use self::repositories::todo_repository::TodoRepository;
+use self::repositories::user_repository::UserRepository;
 
-use self::repositories::entities::Post;
-use self::repositories::entities::Todo;
-use self::repositories::entities::User;
+use self::repositories::entities::post::{Post, PostForm};
+use self::repositories::entities::todo::{Todo, TodoForm};
+use self::repositories::entities::user::{User, UserForm};
 
 pub struct PostService<R: PostRepository> {
     repository: R,
@@ -17,24 +17,24 @@ impl<R: PostRepository> PostService<R> {
         Self { repository }
     }
 
-    pub fn create(&self, post: Post) -> Result<Post, R::Error> {
-        self.repository.create(post)
+    pub async fn create(&self, post_form: PostForm) -> Result<Post, Box<dyn std::error::Error>> {
+        self.repository.create(post_form).await
     }
 
-    pub fn update(&self, post: Post) -> Result<Post, R::Error> {
-        self.repository.update(post)
+    pub async fn update(&self, id: i32, post_form: PostForm) -> Result<Post, Box<dyn std::error::Error>> {
+        self.repository.update(id, post_form).await
     }
 
-    pub fn delete(&self, post: Post) -> Result<(), R::Error> {
-        self.repository.delete(post)
+    pub async fn delete(&self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+        self.repository.delete(id).await
     }
 
-    pub fn find_by_id(&self, id: i32) -> Result<Post, R::Error> {
-        self.repository.find_by_id(id)
+    pub async fn find_by_id(&self, id: i32) -> Result<Post, Box<dyn std::error::Error>> {
+        self.repository.fetch_by_id(id).await
     }
 
-    pub fn find_all(&self) -> Result<Vec<Post>, R::Error> {
-        self.repository.find_all()
+    pub async fn find_all(&self) -> Result<Vec<Post>, Box<dyn std::error::Error>> {
+        self.repository.fetch_all().await
     }
 }
 
@@ -47,24 +47,24 @@ impl<R: TodoRepository> TodoService<R> {
         Self { repository }
     }
 
-    pub fn create(&self, todo: Todo) -> Result<Todo, R::Error> {
-        self.repository.create(todo)
+    pub async fn create(&self, todo_form: TodoForm) -> Result<Todo, Box<dyn std::error::Error>> {
+        self.repository.create(todo_form).await
     }
 
-    pub fn update(&self, todo: Todo) -> Result<Todo, R::Error> {
-        self.repository.update(todo)
+    pub async fn update(&self, id: i32, todo_form: TodoForm) -> Result<Todo, Box<dyn std::error::Error>> {
+        self.repository.update(id, todo_form).await
     }
 
-    pub fn delete(&self, todo: Todo) -> Result<(), R::Error> {
-        self.repository.delete(todo)
+    pub async fn delete(&self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+        self.repository.delete(id).await
     }
 
-    pub fn find_by_id(&self, id: i32) -> Result<Todo, R::Error> {
-        self.repository.find_by_id(id)
+    pub async fn find_by_id(&self, id: i32) -> Result<Todo, Box<dyn std::error::Error>> {
+        self.repository.fetch_by_id(id).await
     }
 
-    pub fn find_all(&self) -> Result<Vec<Todo>, R::Error> {
-        self.repository.find_all()
+    pub async fn find_all(&self) -> Result<Vec<Todo>, Box<dyn std::error::Error>> {
+        self.repository.fetch_all().await
     }
 }
 
@@ -77,24 +77,24 @@ impl<R: UserRepository> UserService<R> {
         Self { repository }
     }
 
-    pub fn create(&self, user: User) -> Result<User, R::Error> {
-        self.repository.create(user)
+    pub async fn create(&self, user_form: UserForm) -> Result<User, Box<dyn std::error::Error>> {
+        self.repository.create(user_form).await
     }
 
-    pub fn update(&self, user: User) -> Result<User, R::Error> {
-        self.repository.update(user)
+    pub async fn update(&self, id: i32, user_form: UserForm) -> Result<User, Box<dyn std::error::Error>> {
+        self.repository.update(id, user_form).await
     }
 
-    pub fn delete(&self, user: User) -> Result<(), R::Error> {
-        self.repository.delete(user)
+    pub async fn delete(&self, id: i32) -> Result<(), Box<dyn std::error::Error>> {
+        self.repository.delete(id).await
     }
 
-    pub fn find_by_id(&self, id: i32) -> Result<User, R::Error> {
-        self.repository.find_by_id(id)
+    pub async fn find_by_id(&self, id: i32) -> Result<User, Box<dyn std::error::Error>> {
+        self.repository.fetch_by_id(id).await
     }
 
-    pub fn find_all(&self) -> Result<Vec<User>, R::Error> {
-        self.repository.find_all()
+    pub async fn find_all(&self) -> Result<Vec<User>, Box<dyn std::error::Error>> {
+        self.repository.fetch_all().await
     }
 }
     

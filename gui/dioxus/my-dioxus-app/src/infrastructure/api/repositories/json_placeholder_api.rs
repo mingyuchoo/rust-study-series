@@ -1,12 +1,12 @@
 use crate::domain::services::repositories::entities::post::{Post, PostForm};
 use crate::domain::services::repositories::entities::todo::{Todo, TodoForm};
 use crate::domain::services::repositories::entities::user::{User, UserForm};
-use crate::domain::services::{PostRepository, TodoRepository, UserRepository};
+use crate::domain::services::repositories::post_repository::PostRepository;
+use crate::domain::services::repositories::todo_repository::TodoRepository;
+use crate::domain::services::repositories::user_repository::UserRepository;
 use crate::infrastructure::api::constants::API_BASE_URL;
 use reqwest::Client;
 use std::error::Error;
-
-// Wrapper functions for direct access
 
 // User functions
 pub async fn fetch_users() -> Result<Vec<User>, Box<dyn Error>> {
