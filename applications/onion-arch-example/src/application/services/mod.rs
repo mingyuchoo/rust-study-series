@@ -35,6 +35,11 @@ impl<R: UserRepository> UserApplicationService<R> {
         let user = self.user_service.deactivate_user(id)?;
         Ok(UserDto::from(user))
     }
+
+    pub fn list_all_users(&self) -> Result<Vec<UserDto>, String> {
+        let users = self.user_service.list_all_users()?;
+        Ok(users.into_iter().map(UserDto::from).collect())
+    }
 }
 
 // DTO (Data Transfer Object)

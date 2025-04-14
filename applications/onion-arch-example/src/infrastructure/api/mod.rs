@@ -1,6 +1,5 @@
 // infrastructure/api.rs - REST API 구현 (예시)
 //
-
 pub mod repositories;
 
 use crate::application::services::UserApplicationService;
@@ -25,10 +24,11 @@ impl<R: UserRepository> UserApiController<R> {
     }
 
     pub fn get_user(&self, id: &str) -> Result<String, String> {
-        match self.application_service.get_user_details(id) {
-            | Some(user) => Ok(format!("User: {}, Email: {}, Active: {}", user.username, user.email, user.active)),
-            | None => Err(format!("User with id {} not found", id)),
-        }
+        let user = self
+            .application_service
+            .get_user_details(id)
+            .ok_or_else(|| format!("User with id {} not found", id))?;
+        Ok(format!("User: {}, Email: {}, Active: {}", user.username, user.email, user.active))
     }
 
     pub fn deactivate_user(&self, id: &str) -> Result<String, String> {
@@ -36,5 +36,24 @@ impl<R: UserRepository> UserApiController<R> {
             | Ok(_) => Ok(format!("User {} deactivated", id)),
             | Err(e) => Err(e),
         }
+    }
+
+    pub fn list_all_users(&self) -> Result<String, String> {
+        let users = self.application_service.list_all_users()?;
+        if users.is_empty() {
+            return Ok("No users found".to_string());
+        }
+
+        let mut result = String::from("Users:\n");
+        for user in users {
+            result.push_str(&format!(
+                "- {} ({}): {}\n",
+                user.username,
+                user.email,
+                if user.active { "active" } else { "inactive" }
+            ));
+        }
+
+        Ok(result)
     }
 }

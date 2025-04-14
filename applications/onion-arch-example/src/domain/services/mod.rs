@@ -30,6 +30,8 @@ impl<R: UserRepository> UserService<R> {
         Ok(user)
     }
 
+    pub fn list_all_users(&self) -> Result<Vec<User>, String> { Ok(self.repository.find_all()) }
+
     pub fn deactivate_user(&self, id: &str) -> Result<User, String> {
         let mut user = self.repository.find_by_id(id).ok_or_else(|| format!("User with id {} not found", id))?;
 
