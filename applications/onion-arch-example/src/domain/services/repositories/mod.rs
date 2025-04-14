@@ -1,2 +1,2 @@
-pub mod user_repository;
 pub mod models;
+pub mod user_repository;

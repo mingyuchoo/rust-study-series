@@ -1,9 +1,9 @@
 // application/services.rs - 애플리케이션 서비스 (유스케이스)
 //
 
-use crate::domain::services::UserService;
-use crate::domain::services::repositories::user_repository::UserRepository;
 use crate::domain::services::repositories::models::user::User;
+use crate::domain::services::repositories::user_repository::UserRepository;
+use crate::domain::services::user_service::UserService;
 
 pub struct UserApplicationService<R: UserRepository> {
     user_service: UserService<R>,
