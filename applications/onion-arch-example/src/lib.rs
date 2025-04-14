@@ -1,4 +1,5 @@
 // lib.rs - Export modules
+//
 
 // Domain layer (innermost layer)
 pub mod domain {
