@@ -1,4 +1,4 @@
-use crate::domain::entities::todo::{Todo, TodoForm};
+use crate::domain::services::entities::todo::{Todo, TodoForm};
 use std::error::Error;
 
 #[async_trait::async_trait(?Send)]

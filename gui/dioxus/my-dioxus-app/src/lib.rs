@@ -1,3 +1,10 @@
+// Declare all modules
+pub mod application;
+pub mod domain;
+pub mod infrastructure;
+pub mod presentation;
+
+// Import what we need
 use crate::presentation::pages::{Home, Navbar, Posts, Todos, Users};
 use dioxus::prelude::*;
 

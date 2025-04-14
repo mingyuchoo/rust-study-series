@@ -1,4 +1,4 @@
-use crate::domain::entities::post::{Post, PostForm};
+use crate::domain::services::entities::post::{Post, PostForm};
 use crate::infrastructure::api::json_placeholder_api;
 use dioxus::prelude::*;
 

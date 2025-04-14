@@ -1,6 +1,7 @@
 pub mod post_repository;
 pub mod todo_repository;
 pub mod user_repository;
+pub mod entities;
 
 pub use post_repository::PostRepository;
 pub use todo_repository::TodoRepository;

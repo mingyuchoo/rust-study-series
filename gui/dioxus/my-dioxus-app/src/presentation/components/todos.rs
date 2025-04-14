@@ -1,4 +1,4 @@
-use crate::domain::entities::todo::{Todo, TodoForm};
+use crate::domain::services::entities::todo::{Todo, TodoForm};
 use crate::infrastructure::api::json_placeholder_api;
 use dioxus::prelude::*;
 

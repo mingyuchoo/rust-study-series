@@ -1,4 +1,4 @@
-use crate::domain::entities::user::{User, UserForm};
+use crate::domain::services::entities::user::{User, UserForm};
 use std::error::Error;
 
 #[async_trait::async_trait(?Send)]

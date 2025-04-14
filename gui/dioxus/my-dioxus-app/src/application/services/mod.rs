@@ -1,3 +1,1 @@
-mod lib;
-
-pub use lib::{App, Route};
+pub use crate::Route;

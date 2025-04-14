@@ -1,4 +1,4 @@
-use crate::domain::entities::user::{User, UserForm};
+use crate::domain::services::entities::user::{User, UserForm};
 use crate::infrastructure::api::json_placeholder_api;
 use dioxus::prelude::*;
 

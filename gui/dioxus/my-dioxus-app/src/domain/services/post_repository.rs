@@ -1,4 +1,4 @@
-use crate::domain::entities::post::{Post, PostForm};
+use crate::domain::services::entities::post::{Post, PostForm};
 use std::error::Error;
 
 #[async_trait::async_trait(?Send)]
