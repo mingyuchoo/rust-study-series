@@ -2,7 +2,7 @@
 pub mod components;
 pub mod pages;
 
-use crate::presentation::pages::{Home, Navbar, Posts, Todos, Users};
+use crate::presentation::pages::{Documents, Home, Navbar, Posts, Todos, Users};
 use dioxus::prelude::*;
 
 pub const FAVICON: Asset = asset!("/assets/favicon.ico");
@@ -21,4 +21,6 @@ pub enum Route {
     Todos {},
     #[route("/posts")]
     Posts {},
+    #[route("/documents")]
+    Documents {},
 }

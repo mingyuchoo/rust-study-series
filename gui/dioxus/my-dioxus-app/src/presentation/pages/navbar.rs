@@ -16,7 +16,8 @@ pub fn Navbar() -> Element {
                         Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Home {}, "Home" }
                         Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Users {}, "Users" }
                         Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Todos {}, "Todos" }
-                        Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white", to: Route::Posts {}, "Posts" }
+                        Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Posts {}, "Posts" }
+                        Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white", to: Route::Documents {}, "Documents" }
                     }
                 }
             }
