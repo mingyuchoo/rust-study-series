@@ -18,9 +18,9 @@ rusqlite = { version = "0.30", optional = true }
 
 
 [features]
-  default = ["web", "native-db"]
-  desktop = ["dioxus/desktop"]
-  mobile  = ["dioxus/mobile"]
+  default = ["web"]
+  desktop = ["dioxus/desktop", "native-db"]
+  mobile  = ["dioxus/mobile", "native-db"]
   web     = ["dioxus/web"]
   native-db = ["rusqlite"]
 
