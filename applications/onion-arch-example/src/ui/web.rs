@@ -23,8 +23,8 @@ pub struct UserInput {
 
 async fn list_users(State(controller): State<SharedController>) -> Response {
     let ctrl = controller.lock().await;
-    match ctrl.list_all_users() {
-        | Ok(list) => Html(format!("<pre>{}</pre>", list)).into_response(),
+    match ctrl.list_all_users_json() {
+        | Ok(users) => axum::Json::<Vec<crate::application::services::user_application_service::UserDto>>(users).into_response(),
         | Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
     }
 }
