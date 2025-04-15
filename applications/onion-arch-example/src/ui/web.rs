@@ -1,7 +1,7 @@
 // src/ui/web.rs - Web server for User CRUD UI
 //
 
-use crate::infrastructure::db::user_db_controller::UserApiController;
+use crate::infrastructure::db::user_db_controller::UserDbController;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
@@ -12,7 +12,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 // Shared controller type
-pub type SharedController = Arc<Mutex<UserApiController<crate::infrastructure::db::repositories::user_db_repository::UserDbRepository>>>;
+pub type SharedController = Arc<Mutex<UserDbController<crate::infrastructure::db::repositories::user_db_repository::UserDbRepository>>>;
 
 #[derive(Serialize, Deserialize)]
 pub struct UserInput {
@@ -64,7 +64,7 @@ async fn index() -> Html<&'static str> { Html(include_str!("./static/index.html"
 
 pub async fn main() {
     let db_path = "users.db";
-    let controller = UserApiController::new_with_db_path(db_path).expect("Failed to init controller");
+    let controller = UserDbController::new_with_db_path(db_path).expect("Failed to init controller");
     let shared = Arc::new(Mutex::new(controller));
 
     // Create the router with the shared state

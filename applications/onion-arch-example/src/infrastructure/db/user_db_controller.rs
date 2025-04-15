@@ -4,18 +4,18 @@
 use crate::application::services::user_application_service::UserApplicationService;
 use crate::domain::services::repositories::user_repository::UserRepository;
 
-pub struct UserApiController<R: UserRepository> {
+pub struct UserDbController<R: UserRepository> {
     application_service: UserApplicationService<R>,
 }
 
-impl UserApiController<crate::infrastructure::db::repositories::user_db_repository::UserDbRepository> {
+impl UserDbController<crate::infrastructure::db::repositories::user_db_repository::UserDbRepository> {
     pub fn new_with_db_path(db_path: &str) -> Result<Self, String> {
         let repo = crate::infrastructure::db::repositories::user_db_repository::UserDbRepository::new(db_path)?;
-        Ok(UserApiController::new_with_repository(repo))
+        Ok(UserDbController::new_with_repository(repo))
     }
 }
 
-impl<R: UserRepository> UserApiController<R> {
+impl<R: UserRepository> UserDbController<R> {
     pub fn delete_user(&self, id: &str) -> Result<String, String> {
         self.application_service.delete_user(id)?;
         Ok(format!("User {} deleted", id))
