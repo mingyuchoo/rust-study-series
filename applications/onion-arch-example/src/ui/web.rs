@@ -1,4 +1,6 @@
 // src/ui/web.rs - Web server for User CRUD UI
+//
+
 use crate::infrastructure::db::user_db_controller::UserApiController;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
