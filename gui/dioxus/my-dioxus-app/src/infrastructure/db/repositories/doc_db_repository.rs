@@ -25,6 +25,16 @@ pub struct DocDbRepository {
 #[cfg(feature = "native-db")]
 impl DocDbRepository {
     pub fn new(db_path: &str) -> Result<Self, String> {
+        // Print the database path for debugging
+        println!("Opening SQLite database at: {}", db_path);
+
+        // Ensure the directory exists
+        if let Some(parent) = std::path::Path::new(db_path).parent() {
+            if !parent.exists() {
+                std::fs::create_dir_all(parent).map_err(|e| format!("Failed to create directory for database: {}", e))?;
+            }
+        }
+
         let conn = Connection::open(db_path).map_err(|e| format!("Failed to open database: {}", e))?;
 
         // 테이블 생성
@@ -38,6 +48,8 @@ impl DocDbRepository {
             [],
         )
         .map_err(|e| format!("Failed to create table: {}", e))?;
+
+        println!("Successfully created/opened database and table");
 
         Ok(Self {
             conn: Arc::new(Mutex::new(conn)),

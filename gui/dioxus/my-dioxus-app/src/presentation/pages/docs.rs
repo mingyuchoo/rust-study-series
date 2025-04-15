@@ -10,53 +10,67 @@ pub fn Documents() -> Element {
     // State for the document form
     let mut title = use_signal(|| String::new());
     let mut contents = use_signal(|| String::new());
-    
+
     // State for the document list
     let mut documents = use_signal(Vec::new);
     let mut error = use_signal(|| Option::<String>::None);
-    
+
     // State for editing
     let mut editing_id = use_signal(|| Option::<String>::None);
-    
+
     // Initialize the repository and service
-    let db_path = "docs.db";
-    let _repo_result = DocDbRepository::new(db_path);
-    
+    // Create a proper absolute path for the database in the user's home directory
+    let db_path = use_signal(|| match dirs::home_dir() {
+        | Some(mut path) => {
+            path.push(".local");
+            path.push("share");
+            path.push("my-dioxus-app");
+            std::fs::create_dir_all(&path).unwrap_or_default();
+            path.push("docs.db");
+            path.to_str().unwrap_or("docs.db").to_string()
+        },
+        | None => "docs.db".to_string(),
+    });
+
     // Function to load documents
     let mut load_documents = move || {
-        if let Ok(repo) = DocDbRepository::new(db_path) {
+        let db_path_str = db_path();
+        println!("Loading documents from database: {}", db_path_str);
+        if let Ok(repo) = DocDbRepository::new(&db_path_str) {
             let doc_service = DocService::new(repo);
             let app_service = DocApplicationService::new(doc_service);
-            
+
             match app_service.list_all_docs() {
-                Ok(docs) => {
+                | Ok(docs) => {
                     documents.set(docs);
                     error.set(None);
-                }
-                Err(err) => {
+                },
+                | Err(err) => {
                     error.set(Some(format!("Error loading documents: {}", err)));
-                }
+                },
             }
         } else {
             error.set(Some(format!("Failed to connect to database at {}", db_path)));
         }
     };
-    
+
     // Load documents when component mounts
     use_effect(move || {
         load_documents();
         // Return empty cleanup function
         (|| {})()
     });
-    
+
     // Handle form submission
     let handle_submit = move |event: FormEvent| {
         event.prevent_default();
-        
-        if let Ok(repo) = DocDbRepository::new(db_path) {
+        let db_path_str = db_path();
+        println!("Submitting form to database: {}", db_path_str);
+
+        if let Ok(repo) = DocDbRepository::new(&db_path_str) {
             let doc_service = DocService::new(repo);
             let app_service = DocApplicationService::new(doc_service);
-            
+
             if let Some(id) = editing_id() {
                 // Update existing document
                 if let Some(doc) = app_service.get_doc_details(&id) {
@@ -65,13 +79,13 @@ pub fn Documents() -> Element {
                         contents: contents().clone(),
                         archived: doc.archived,
                     };
-                    
+
                     if futures::executor::block_on(app_service.update(doc.id, updated_form)).is_ok() {
                         // Reset form
                         title.set(String::new());
                         contents.set(String::new());
                         editing_id.set(None);
-                        
+
                         // Reload documents
                         load_documents();
                     } else {
@@ -81,30 +95,31 @@ pub fn Documents() -> Element {
             } else {
                 // Create new document
                 match app_service.register_doc(title().clone(), contents().clone()) {
-                    Ok(_) => {
+                    | Ok(_) => {
                         // Reset form
                         title.set(String::new());
                         contents.set(String::new());
-                        
+
                         // Reload documents
                         load_documents();
-                    }
-                    Err(err) => {
+                    },
+                    | Err(err) => {
                         error.set(Some(format!("Error creating document: {}", err)));
-                    }
+                    },
                 }
             }
         } else {
             error.set(Some(format!("Failed to connect to database at {}", db_path)));
         }
     };
-    
+
     // Handle document deletion
-    let mut handle_delete = move |id: String| {
-        if let Ok(repo) = DocDbRepository::new(db_path) {
+    let handle_delete = move |id: String| {
+        let db_path_str = db_path();
+        if let Ok(repo) = DocDbRepository::new(&db_path_str) {
             let doc_service = DocService::new(repo);
             let app_service = DocApplicationService::new(doc_service);
-            
+
             if app_service.delete_doc(&id).is_ok() {
                 // Reload documents
                 load_documents();
@@ -113,13 +128,14 @@ pub fn Documents() -> Element {
             }
         }
     };
-    
+
     // Handle document editing
-    let mut handle_edit = move |id: String| {
-        if let Ok(repo) = DocDbRepository::new(db_path) {
+    let handle_edit = move |id: String| {
+        let db_path_str = db_path();
+        if let Ok(repo) = DocDbRepository::new(&db_path_str) {
             let doc_service = DocService::new(repo);
             let app_service = DocApplicationService::new(doc_service);
-            
+
             if let Some(doc) = app_service.get_doc_details(&id) {
                 // Set form values
                 title.set(doc.title.clone());
@@ -128,28 +144,28 @@ pub fn Documents() -> Element {
             }
         }
     };
-    
+
     // Handle form cancellation
     let handle_cancel = move |_| {
         title.set(String::new());
         contents.set(String::new());
         editing_id.set(None);
     };
-    
+
     // Check if DB exists and show appropriate message
-    let db_exists = Path::new(db_path).exists();
-    
+    let db_exists = Path::new(&db_path()).exists();
+
     rsx! {
         div { class: "container mx-auto p-4",
             h1 { class: "text-2xl font-bold mb-4", "Document Management" }
-            
+
             // Error message
             {error().map(|err| rsx! {
                 div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4",
                     p { "{err}" }
                 }
             })}
-            
+
             // DB status message
             {if !db_exists {
                 rsx! {
@@ -158,14 +174,14 @@ pub fn Documents() -> Element {
                     }
                 }
             } else { rsx!{} }}
-            
+
             // Document form
             div { class: "bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4",
                 form { onsubmit: handle_submit,
-                    h2 { class: "text-xl font-semibold mb-4", 
+                    h2 { class: "text-xl font-semibold mb-4",
                         if editing_id().is_some() { "Edit Document" } else { "Add New Document" }
                     }
-                    
+
                     div { class: "mb-4",
                         label { class: "block text-gray-700 text-sm font-bold mb-2", "Title" }
                         input {
@@ -177,7 +193,7 @@ pub fn Documents() -> Element {
                             required: true
                         }
                     }
-                    
+
                     div { class: "mb-4",
                         label { class: "block text-gray-700 text-sm font-bold mb-2", "Contents" }
                         textarea {
@@ -189,14 +205,14 @@ pub fn Documents() -> Element {
                             required: true
                         }
                     }
-                    
+
                     div { class: "flex items-center justify-between",
                         button {
                             class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline",
                             "type": "submit",
                             if editing_id().is_some() { "Update Document" } else { "Add Document" }
                         }
-                        
+
                         if editing_id().is_some() {
                             button {
                                 class: "bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline",
@@ -208,11 +224,11 @@ pub fn Documents() -> Element {
                     }
                 }
             }
-            
+
             // Document list
             div { class: "bg-white shadow-md rounded px-8 pt-6 pb-8",
                 h2 { class: "text-xl font-semibold mb-4", "Documents List" }
-                
+
                 if documents().is_empty() {
                     p { class: "text-gray-500 italic", "No documents found." }
                 } else {
@@ -230,7 +246,7 @@ pub fn Documents() -> Element {
                                 tr { class: "hover:bg-gray-50",
                                     td { class: "py-2 px-4 border-b", "{doc.id}" }
                                     td { class: "py-2 px-4 border-b", "{doc.title}" }
-                                    td { class: "py-2 px-4 border-b", 
+                                    td { class: "py-2 px-4 border-b",
                                         if doc.archived {
                                             span { class: "text-red-500", "Archived" }
                                         } else {
@@ -241,12 +257,12 @@ pub fn Documents() -> Element {
                                         div { class: "flex space-x-2",
                                             button {
                                                 class: "bg-blue-500 hover:bg-blue-700 text-white text-sm py-1 px-2 rounded",
-                                                onclick: move |_| handle_edit(doc.id.to_string()),
+                                                onclick: move |_| handle_edit.clone()(doc.id.to_string()),
                                                 "Edit"
                                             }
                                             button {
                                                 class: "bg-red-500 hover:bg-red-700 text-white text-sm py-1 px-2 rounded",
-                                                onclick: move |_| handle_delete(doc.id.to_string()),
+                                                onclick: move |_| handle_delete.clone()(doc.id.to_string()),
                                                 "Delete"
                                             }
                                         }
