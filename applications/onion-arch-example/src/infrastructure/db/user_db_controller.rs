@@ -70,7 +70,6 @@ impl<R: UserRepository> UserApiController<R> {
         Ok(result)
     }
 
-    // --- ADDED: JSON API for web UI ---
     pub fn list_all_users_json(&self) -> Result<Vec<crate::application::services::user_application_service::UserDto>, String> {
         self.application_service.list_all_users()
     }

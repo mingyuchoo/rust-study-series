@@ -4,8 +4,8 @@
   version = "0.1.0"
 
 [dependencies]
+  # Core dependencies 
   rusqlite = "0.29"
-  uuid     = {version = "1", features = ["v4"]}
 
   # Web UI dependencies
   axum       = {version = "0.7", features = ["macros"]}

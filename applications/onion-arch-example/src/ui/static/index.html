@@ -385,8 +385,33 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, username, email })
                 });
-                const txt = await r.text();
-                setFeedback('create-feedback', txt, r.ok ? 'success' : 'error');
+                const feedbackDiv = document.getElementById('create-feedback');
+                feedbackDiv.className = 'feedback ' + (r.ok ? 'success' : 'error');
+                if (r.ok) {
+                    try {
+                        const data = await r.clone().json();
+                        // UserDto 형태라면 카드로 출력
+                        if (data && data.id && data.username) {
+                            feedbackDiv.innerHTML = `
+                                <div class="user-detail-card">
+                                    <div><b>ID:</b> ${data.id}</div>
+                                    <div><b>Username:</b> ${data.username}</div>
+                                    <div><b>Email:</b> ${data.email}</div>
+                                    <div><b>Status:</b> <span style=\"color:${data.active ? '#388e3c' : '#d32f2f'}\">${data.active ? 'Active' : 'Inactive'}</span></div>
+                                </div>
+                            `;
+                        } else {
+                            feedbackDiv.textContent = data.message || JSON.stringify(data);
+                        }
+                    } catch {
+                        // fallback to text
+                        const msg = await r.text();
+                        feedbackDiv.textContent = msg;
+                    }
+                } else {
+                    const msg = await r.text();
+                    feedbackDiv.textContent = msg;
+                }
                 fetchUsers();
             } catch (e) {
                 setFeedback('create-feedback', 'Failed to create user.', 'error');

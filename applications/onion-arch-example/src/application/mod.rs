@@ -1,4 +1,3 @@
-//
 // application.rs - Export modules
 //
 
