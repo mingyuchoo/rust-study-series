@@ -31,9 +31,9 @@ async fn list_users(State(controller): State<SharedController>) -> Response {
 
 async fn get_user(Path(id): Path<String>, State(controller): State<SharedController>) -> Response {
     let ctrl = controller.lock().await;
-    match ctrl.get_user(&id) {
-        | Ok(user) => Html(format!("<pre>{}</pre>", user)).into_response(),
-        | Err(e) => (StatusCode::NOT_FOUND, e.to_string()).into_response(),
+    match ctrl.get_user_details_json(&id) {
+        Some(user_dto) => axum::Json::<crate::application::services::user_application_service::UserDto>(user_dto).into_response(),
+        None => (StatusCode::NOT_FOUND, "User not found").into_response(),
     }
 }
 

@@ -74,4 +74,8 @@ impl<R: UserRepository> UserApiController<R> {
     pub fn list_all_users_json(&self) -> Result<Vec<crate::application::services::user_application_service::UserDto>, String> {
         self.application_service.list_all_users()
     }
+
+    pub fn get_user_details_json(&self, id: &str) -> Option<crate::application::services::user_application_service::UserDto> {
+        self.application_service.get_user_details(id)
+    }
 }
