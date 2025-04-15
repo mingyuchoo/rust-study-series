@@ -1,5 +1,8 @@
+use crate::application::services::todo_application_service::TodoApplicationService;
 use crate::domain::services::repositories::entities::todo::{Todo, TodoForm};
-use crate::infrastructure::api::repositories::json_placeholder_api;
+use crate::domain::services::todo_service::TodoService;
+use crate::infrastructure::api::jsonplaceholder_api_controller::TodoApiController;
+use crate::infrastructure::api::repositories::jsonplaceholder_api_repository::JsonPlaceholderTodoRepository;
 use dioxus::prelude::*;
 
 #[component]
@@ -13,7 +16,15 @@ pub fn TodosTab() -> Element {
     // Load todos on component mount
     use_effect(move || {
         spawn(async move {
-            match json_placeholder_api::fetch_todos().await {
+            match {
+                let repo = JsonPlaceholderTodoRepository::new();
+                let service = TodoService::new(repo);
+                let app_service = TodoApplicationService::new(service);
+                TodoApiController::new(app_service)
+            }
+            .find_all()
+            .await
+            {
                 | Ok(fetched_todos) => {
                     // Limit to first 20 todos for better performance
                     todos.set(fetched_todos.into_iter().take(20).collect());
@@ -34,7 +45,15 @@ pub fn TodosTab() -> Element {
         let mut error_clone = error;
 
         spawn(async move {
-            match json_placeholder_api::create_todo(form_data).await {
+            match {
+                let repo = JsonPlaceholderTodoRepository::new();
+                let service = TodoService::new(repo);
+                let app_service = TodoApplicationService::new(service);
+                TodoApiController::new(app_service)
+            }
+            .create(form_data)
+            .await
+            {
                 | Ok(new_todo) => {
                     todos_clone.write().push(new_todo.clone());
                     form_clone.set(TodoForm::default());
@@ -57,7 +76,15 @@ pub fn TodosTab() -> Element {
             let mut error_clone = error.clone();
 
             spawn(async move {
-                match json_placeholder_api::update_todo(todo.id, form_data).await {
+                match {
+                    let repo = JsonPlaceholderTodoRepository::new();
+                    let service = TodoService::new(repo);
+                    let app_service = TodoApplicationService::new(service);
+                    TodoApiController::new(app_service)
+                }
+                .update(todo.id, form_data)
+                .await
+                {
                     | Ok(updated_todo) => {
                         let mut todos_write = todos_clone.write();
                         if let Some(index) = todos_write.iter().position(|item| item.id == updated_todo.id) {
@@ -84,7 +111,15 @@ pub fn TodosTab() -> Element {
         let mut error_clone = error.clone();
 
         spawn(async move {
-            match json_placeholder_api::delete_todo(id).await {
+            match {
+                let repo = JsonPlaceholderTodoRepository::new();
+                let service = TodoService::new(repo);
+                let app_service = TodoApplicationService::new(service);
+                TodoApiController::new(app_service)
+            }
+            .delete(id)
+            .await
+            {
                 | Ok(_) => {
                     todos_clone.write().retain(|todo| todo.id != id);
                     if selected_todo_clone().map_or(false, |t| t.id == id) {
@@ -127,7 +162,15 @@ pub fn TodosTab() -> Element {
                 completed: !todo.completed,
             };
 
-            match json_placeholder_api::update_todo(todo.id, updated_form).await {
+            match {
+                let repo = JsonPlaceholderTodoRepository::new();
+                let service = TodoService::new(repo);
+                let app_service = TodoApplicationService::new(service);
+                TodoApiController::new(app_service)
+            }
+            .update(todo.id, updated_form)
+            .await
+            {
                 | Ok(updated_todo) => {
                     let mut todos_write = todos_clone.write();
                     if let Some(index) = todos_write.iter().position(|item| item.id == updated_todo.id) {

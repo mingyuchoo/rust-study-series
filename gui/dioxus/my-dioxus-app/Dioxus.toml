@@ -2,20 +2,20 @@
 
 [web.app]
 
-# HTML title tag content
-title = "my-dioxus-app"
+  # HTML title tag content
+  title = "my-dioxus-app"
 
 # include `assets` in web platform
 [web.resource]
 
-# Additional CSS style files
-style = []
+  # Additional CSS style files
+  style = []
 
-# Additional JavaScript files
-script = []
+  # Additional JavaScript files
+  script = []
 
-[web.resource.dev]
+  [web.resource.dev]
 
-# Javascript code file
-# serve: [dev-server] only
-script = []
+    # Javascript code file
+    # serve: [dev-server] only
+    script = []

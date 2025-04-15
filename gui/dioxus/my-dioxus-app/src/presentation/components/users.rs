@@ -1,5 +1,8 @@
+use crate::application::services::user_application_service::UserApplicationService;
 use crate::domain::services::repositories::entities::user::{User, UserForm};
-use crate::infrastructure::api::repositories::json_placeholder_api;
+use crate::domain::services::user_service::UserService;
+use crate::infrastructure::api::jsonplaceholder_api_controller::UserApiController;
+use crate::infrastructure::api::repositories::jsonplaceholder_api_repository::JsonPlaceholderUserRepository;
 use dioxus::prelude::*;
 
 #[component]
@@ -13,7 +16,15 @@ pub fn UsersTab() -> Element {
     // Load users on component mount
     use_effect(move || {
         spawn(async move {
-            match json_placeholder_api::fetch_users().await {
+            match {
+                let repo = JsonPlaceholderUserRepository::new();
+                let service = UserService::new(repo);
+                let app_service = UserApplicationService::new(service);
+                UserApiController::new(app_service)
+            }
+            .find_all()
+            .await
+            {
                 | Ok(fetched_users) => {
                     users.set(fetched_users);
                 },
@@ -33,7 +44,15 @@ pub fn UsersTab() -> Element {
         let mut error_clone = error.clone();
 
         spawn(async move {
-            match json_placeholder_api::create_user(form_data).await {
+            match {
+                let repo = JsonPlaceholderUserRepository::new();
+                let service = UserService::new(repo);
+                let app_service = UserApplicationService::new(service);
+                UserApiController::new(app_service)
+            }
+            .create(form_data)
+            .await
+            {
                 | Ok(new_user) => {
                     users_clone.write().push(new_user.clone());
                     form_clone.set(UserForm::default());
@@ -56,7 +75,15 @@ pub fn UsersTab() -> Element {
             let mut error_clone = error;
 
             spawn(async move {
-                match json_placeholder_api::update_user(user.id, form_data).await {
+                match {
+                    let repo = JsonPlaceholderUserRepository::new();
+                    let service = UserService::new(repo);
+                    let app_service = UserApplicationService::new(service);
+                    UserApiController::new(app_service)
+                }
+                .update(user.id, form_data)
+                .await
+                {
                     | Ok(updated_user) => {
                         let mut users_write = users_clone.write();
                         if let Some(index) = users_write.iter().position(|item| item.id == updated_user.id) {
@@ -83,7 +110,15 @@ pub fn UsersTab() -> Element {
         let mut error_clone = error;
 
         spawn(async move {
-            match json_placeholder_api::delete_user(id).await {
+            match {
+                let repo = JsonPlaceholderUserRepository::new();
+                let service = UserService::new(repo);
+                let app_service = UserApplicationService::new(service);
+                UserApiController::new(app_service)
+            }
+            .delete(id)
+            .await
+            {
                 | Ok(_) => {
                     users_clone.write().retain(|user| user.id != id);
                     if selected_user_clone().is_some_and(|u| u.id == id) {

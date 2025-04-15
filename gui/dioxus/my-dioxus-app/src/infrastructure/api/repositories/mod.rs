@@ -1,2 +1,2 @@
 pub mod constants;
-pub mod json_placeholder_api;
+pub mod jsonplaceholder_api_repository;
