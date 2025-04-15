@@ -4,15 +4,25 @@
 use crate::domain::services::repositories::doc_repository::DocRepository;
 use crate::domain::services::repositories::entities::doc::{Doc, DocForm};
 use async_trait::async_trait;
-use rusqlite::{Connection, params};
 use std::error::Error;
 use std::sync::{Arc, Mutex};
 
+#[cfg(feature = "native-db")]
+use rusqlite::{Connection, params};
+
 // SQLite 저장소 구현 (추가)
+#[cfg(feature = "native-db")]
 pub struct DocDbRepository {
     conn: Arc<Mutex<Connection>>,
 }
 
+#[cfg(not(feature = "native-db"))]
+pub struct DocDbRepository {
+    // Dummy implementation when native-db feature is not enabled
+    _dummy: (),
+}
+
+#[cfg(feature = "native-db")]
 impl DocDbRepository {
     pub fn new(db_path: &str) -> Result<Self, String> {
         let conn = Connection::open(db_path).map_err(|e| format!("Failed to open database: {}", e))?;
@@ -42,6 +52,21 @@ impl DocDbRepository {
     }
 }
 
+#[cfg(not(feature = "native-db"))]
+impl DocDbRepository {
+    pub fn new(_db_path: &str) -> Result<Self, String> {
+        // Dummy implementation when native-db feature is not enabled
+        Ok(Self { _dummy: () })
+    }
+
+    // SQLite 연결 테스트 (dummy)
+    pub fn test_connection(&self) -> Result<(), String> {
+        // Always succeed in dummy implementation
+        Ok(())
+    }
+}
+
+#[cfg(feature = "native-db")]
 #[async_trait(?Send)]
 impl DocRepository for DocDbRepository {
     async fn fetch_all(&self) -> Result<Vec<Doc>, Box<dyn Error>> {
@@ -130,5 +155,34 @@ impl DocRepository for DocDbRepository {
         conn.execute("DELETE FROM docs WHERE id = ?", params![id])?;
 
         Ok(())
+    }
+}
+
+#[cfg(not(feature = "native-db"))]
+#[async_trait(?Send)]
+impl DocRepository for DocDbRepository {
+    async fn fetch_all(&self) -> Result<Vec<Doc>, Box<dyn Error>> {
+        // Return empty vector in dummy implementation
+        Ok(Vec::new())
+    }
+
+    async fn fetch_by_id(&self, _id: i32) -> Result<Doc, Box<dyn Error>> {
+        // Return error in dummy implementation
+        Err("SQLite database feature is not enabled. Use the --features native-db flag".into())
+    }
+
+    async fn create(&self, doc: DocForm) -> Result<Doc, Box<dyn Error>> {
+        // Return error in dummy implementation
+        Err("SQLite database feature is not enabled. Use the --features native-db flag".into())
+    }
+
+    async fn update(&self, id: i32, doc: DocForm) -> Result<Doc, Box<dyn Error>> {
+        // Return error in dummy implementation
+        Err("SQLite database feature is not enabled. Use the --features native-db flag".into())
+    }
+
+    async fn delete(&self, _id: i32) -> Result<(), Box<dyn Error>> {
+        // Return error in dummy implementation
+        Err("SQLite database feature is not enabled. Use the --features native-db flag".into())
     }
 }
