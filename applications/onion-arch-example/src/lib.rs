@@ -15,3 +15,8 @@ pub mod application {
 pub mod infrastructure {
     pub mod db;
 }
+
+// UI layer
+pub mod ui {
+    pub mod web;
+}

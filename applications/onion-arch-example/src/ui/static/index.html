@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User CRUD UI</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        input, button { margin: 0.5em; }
+        pre { background: #f0f0f0; padding: 1em; }
+    </style>
+</head>
+<body>
+    <h1>User CRUD UI</h1>
+    <form id="create-form">
+        <input type="text" id="id" placeholder="ID" required>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <button type="submit">Create User</button>
+    </form>
+    <h2>All Users</h2>
+    <button onclick="fetchUsers()">Refresh</button>
+    <div id="users"></div>
+    <h2>Get User</h2>
+    <input type="text" id="get-id" placeholder="User ID">
+    <button onclick="getUser()">Get User</button>
+    <pre id="user-detail"></pre>
+    <h2>Deactivate User</h2>
+    <input type="text" id="deactivate-id" placeholder="User ID">
+    <button onclick="deactivateUser()">Deactivate</button>
+    <pre id="deactivate-result"></pre>
+    <h2>Delete User</h2>
+    <input type="text" id="delete-id" placeholder="User ID">
+    <button onclick="deleteUser()">Delete</button>
+    <pre id="delete-result"></pre>
+    <script>
+        async function fetchUsers() {
+            const r = await fetch('/api/users');
+            document.getElementById('users').innerHTML = await r.text();
+        }
+        async function getUser() {
+            const id = document.getElementById('get-id').value;
+            const r = await fetch(`/api/users/${id}`);
+            document.getElementById('user-detail').textContent = await r.text();
+        }
+        async function deactivateUser() {
+            const id = document.getElementById('deactivate-id').value;
+            const r = await fetch(`/api/users/${id}`, { method: 'PUT' });
+            document.getElementById('deactivate-result').textContent = await r.text();
+        }
+        async function deleteUser() {
+            const id = document.getElementById('delete-id').value;
+            const r = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+            document.getElementById('delete-result').textContent = await r.text();
+        }
+        document.getElementById('create-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('id').value;
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const r = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, username, email })
+            });
+            alert(await r.text());
+            fetchUsers();
+        };
+        window.onload = fetchUsers;
+    </script>
+</body>
+</html>
