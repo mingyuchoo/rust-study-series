@@ -211,19 +211,20 @@
                 align-items: stretch;
             }
         }
-    .user-detail-card {
-    background: #f8fafc;
-    border-radius: 8px;
-    padding: 1.1em 1.5em;
-    margin: 0.5em 0 0.2em 0;
-    font-size: 1.07em;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-    display: flex;
-    flex-direction: column;
-    gap: 0.3em;
-    max-width: 400px;
-}
-</style>
+
+        .user-detail-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.1em 1.5em;
+            margin: 0.5em 0 0.2em 0;
+            font-size: 1.07em;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 0.3em;
+            max-width: 400px;
+        }
+    </style>
 </head>
 
 <body>
@@ -232,7 +233,6 @@
         <div class="card">
             <h2>Create User</h2>
             <form id="create-form" autocomplete="off">
-                <input type="text" id="id" placeholder="ID" required>
                 <input type="text" id="username" placeholder="Username" required>
                 <input type="email" id="email" placeholder="Email" required>
                 <button type="submit">Create</button>
@@ -322,20 +322,20 @@
             }
         }
         async function getUser() {
-    setFeedback('get-feedback', '', '');
-    const id = document.getElementById('get-id').value;
-    const detailDiv = document.getElementById('user-detail');
-    if (!id) return setFeedback('get-feedback', 'Please enter a User ID.', 'error');
-    showSpinner(detailDiv);
-    try {
-        const r = await fetch(`/api/users/${id}`);
-        if (!r.ok) {
-            detailDiv.innerHTML = '';
-            setFeedback('get-feedback', 'User not found.', 'error');
-            return;
-        }
-        const user = await r.json();
-        detailDiv.innerHTML = `
+            setFeedback('get-feedback', '', '');
+            const id = document.getElementById('get-id').value;
+            const detailDiv = document.getElementById('user-detail');
+            if (!id) return setFeedback('get-feedback', 'Please enter a User ID.', 'error');
+            showSpinner(detailDiv);
+            try {
+                const r = await fetch(`/api/users/${id}`);
+                if (!r.ok) {
+                    detailDiv.innerHTML = '';
+                    setFeedback('get-feedback', 'User not found.', 'error');
+                    return;
+                }
+                const user = await r.json();
+                detailDiv.innerHTML = `
             <div class="user-detail-card">
                 <div><b>ID:</b> ${user.id}</div>
                 <div><b>Username:</b> ${user.username}</div>
@@ -343,11 +343,11 @@
                 <div><b>Status:</b> <span style="color:${user.active ? '#388e3c' : '#d32f2f'}">${user.active ? 'Active' : 'Inactive'}</span></div>
             </div>
         `;
-    } catch (e) {
-        detailDiv.innerHTML = '';
-        setFeedback('get-feedback', 'Failed to get user.', 'error');
-    }
-}
+            } catch (e) {
+                detailDiv.innerHTML = '';
+                setFeedback('get-feedback', 'Failed to get user.', 'error');
+            }
+        }
         async function deactivateUser() {
             setFeedback('deactivate-feedback', '', '');
             const id = document.getElementById('deactivate-id').value;
@@ -375,7 +375,6 @@
         document.getElementById('create-form').onsubmit = async (e) => {
             e.preventDefault();
             setFeedback('create-feedback', '', '');
-            const id = document.getElementById('id').value;
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
             showSpinner(document.getElementById('create-feedback'));
@@ -383,7 +382,7 @@
                 const r = await fetch('/api/users', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, username, email })
+                    body: JSON.stringify({ username, email })
                 });
                 const feedbackDiv = document.getElementById('create-feedback');
                 feedbackDiv.className = 'feedback ' + (r.ok ? 'success' : 'error');

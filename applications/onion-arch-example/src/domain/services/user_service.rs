@@ -19,13 +19,13 @@ impl<R: UserRepository> UserService<R> {
 
     pub fn get_user(&self, id: &str) -> Option<User> { self.repository.find_by_id(id) }
 
-    pub fn create_user(&self, id: String, username: String, email: String) -> Result<User, String> {
+    pub fn create_user(&self, username: String, email: String) -> Result<User, String> {
         // 이메일 형식 검증 등 도메인 로직
         if !email.contains('@') {
             return Err("Invalid email format".to_string());
         }
 
-        let user = User::new(id, username, email);
+        let user = User::new(username, email);
         self.repository.save(&user)?;
         Ok(user)
     }

@@ -3,16 +3,16 @@
 
 #[derive(Clone, Debug)]
 pub struct User {
-    pub id: String,
+    pub id: Option<i64>,
     pub username: String,
     pub email: String,
     pub active: bool,
 }
 
 impl User {
-    pub fn new(id: String, username: String, email: String) -> Self {
+    pub fn new(username: String, email: String) -> Self {
         Self {
-            id,
+            id: None,
             username,
             email,
             active: true,

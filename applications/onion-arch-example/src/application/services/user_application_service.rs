@@ -18,14 +18,14 @@ impl<R: UserRepository> UserApplicationService<R> {
         }
     }
 
-    pub fn register_user(&self, id: String, username: String, email: String) -> Result<UserDto, String> {
+    pub fn register_user(&self, username: String, email: String) -> Result<UserDto, String> {
         // 비즈니스 규칙 적용
         if username.len() < 3 {
             return Err("Username must be at least 3 characters".to_string());
         }
 
         // 도메인 서비스 호출
-        let user = self.user_service.create_user(id, username, email)?;
+        let user = self.user_service.create_user(username, email)?;
 
         // DTO로 변환하여 반환
         Ok(UserDto::from(user))
@@ -48,7 +48,7 @@ impl<R: UserRepository> UserApplicationService<R> {
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UserDto {
-    pub id: String,
+    pub id: Option<i64>,
     pub username: String,
     pub email: String,
     pub active: bool,

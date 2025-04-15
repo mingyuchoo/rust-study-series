@@ -18,7 +18,7 @@ impl UserDbRepository {
         // 테이블 생성
         conn.execute(
             "CREATE TABLE IF NOT EXISTS users (
-                id TEXT PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
                 email TEXT NOT NULL,
                 active INTEGER NOT NULL
@@ -62,14 +62,22 @@ impl UserRepository for UserDbRepository {
     fn save(&self, user: &User) -> Result<(), String> {
         let conn = self.conn.lock().unwrap();
 
-        conn.execute("INSERT OR REPLACE INTO users (id, username, email, active) VALUES (?, ?, ?, ?)", params![
-            user.id,
-            user.username,
-            user.email,
-            if user.active { 1 } else { 0 }
-        ])
-        .map_err(|e| format!("Failed to save user: {}", e))?;
-
+        if let Some(id) = user.id {
+            conn.execute("INSERT OR REPLACE INTO users (id, username, email, active) VALUES (?, ?, ?, ?)", params![
+                id,
+                user.username,
+                user.email,
+                if user.active { 1 } else { 0 }
+            ])
+            .map_err(|e| format!("Failed to save user: {}", e))?;
+        } else {
+            conn.execute("INSERT INTO users (username, email, active) VALUES (?, ?, ?)", params![
+                user.username,
+                user.email,
+                if user.active { 1 } else { 0 }
+            ])
+            .map_err(|e| format!("Failed to save user: {}", e))?;
+        }
         Ok(())
     }
 

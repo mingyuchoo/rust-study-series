@@ -29,8 +29,8 @@ impl<R: UserRepository> UserApiController<R> {
 
     pub fn new_with_repository(repository: R) -> Self { Self::new(UserApplicationService::new(repository)) }
 
-    pub fn register_user(&self, id: String, username: String, email: String) -> Result<String, String> {
-        match self.application_service.register_user(id, username, email) {
+    pub fn register_user(&self, username: String, email: String) -> Result<String, String> {
+        match self.application_service.register_user(username, email) {
             | Ok(user_dto) => Ok(format!("User created: {}", user_dto.username)),
             | Err(e) => Err(format!("Failed to create user: {}", e)),
         }

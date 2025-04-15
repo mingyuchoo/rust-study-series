@@ -16,7 +16,6 @@ pub type SharedController = Arc<Mutex<UserApiController<crate::infrastructure::d
 
 #[derive(Serialize, Deserialize)]
 pub struct UserInput {
-    pub id: String,
     pub username: String,
     pub email: String,
 }
@@ -32,15 +31,15 @@ async fn list_users(State(controller): State<SharedController>) -> Response {
 async fn get_user(Path(id): Path<String>, State(controller): State<SharedController>) -> Response {
     let ctrl = controller.lock().await;
     match ctrl.get_user_details_json(&id) {
-        Some(user_dto) => axum::Json::<crate::application::services::user_application_service::UserDto>(user_dto).into_response(),
-        None => (StatusCode::NOT_FOUND, "User not found").into_response(),
+        | Some(user_dto) => axum::Json::<crate::application::services::user_application_service::UserDto>(user_dto).into_response(),
+        | None => (StatusCode::NOT_FOUND, "User not found").into_response(),
     }
 }
 
 async fn create_user(State(controller): State<SharedController>, Json(user): Json<UserInput>) -> Response {
     let ctrl = controller.lock().await;
-    match ctrl.register_user(user.id, user.username, user.email) {
-        | Ok(msg) => Html(format!("<pre>{}</pre>", msg)).into_response(),
+    match ctrl.register_user(user.username, user.email) {
+        | Ok(msg) => Html(format!("{}", msg)).into_response(),
         | Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
@@ -48,7 +47,7 @@ async fn create_user(State(controller): State<SharedController>, Json(user): Jso
 async fn update_user(Path(id): Path<String>, State(controller): State<SharedController>) -> Response {
     let ctrl = controller.lock().await;
     match ctrl.deactivate_user(&id) {
-        | Ok(msg) => Html(format!("<pre>{}</pre>", msg)).into_response(),
+        | Ok(msg) => Html(format!("{}", msg)).into_response(),
         | Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
@@ -56,7 +55,7 @@ async fn update_user(Path(id): Path<String>, State(controller): State<SharedCont
 async fn delete_user(Path(id): Path<String>, State(controller): State<SharedController>) -> Response {
     let ctrl = controller.lock().await;
     match ctrl.delete_user(&id) {
-        | Ok(msg) => Html(format!("<pre>{}</pre>", msg)).into_response(),
+        | Ok(msg) => Html(format!("{}", msg)).into_response(),
         | Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
