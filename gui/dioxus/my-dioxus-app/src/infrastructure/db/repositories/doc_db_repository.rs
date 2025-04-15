@@ -4,11 +4,11 @@
 use crate::domain::services::repositories::doc_repository::DocRepository;
 use crate::domain::services::repositories::entities::doc::{Doc, DocForm};
 use async_trait::async_trait;
-use std::error::Error;
-use std::sync::{Arc, Mutex};
-
 #[cfg(feature = "native-db")]
 use rusqlite::{Connection, params};
+use std::error::Error;
+#[cfg(feature = "native-db")]
+use std::sync::{Arc, Mutex};
 
 // SQLite 저장소 구현 (추가)
 #[cfg(feature = "native-db")]
@@ -56,7 +56,9 @@ impl DocDbRepository {
 impl DocDbRepository {
     pub fn new(_db_path: &str) -> Result<Self, String> {
         // Dummy implementation when native-db feature is not enabled
-        Ok(Self { _dummy: () })
+        Ok(Self {
+            _dummy: (),
+        })
     }
 
     // SQLite 연결 테스트 (dummy)
@@ -171,12 +173,12 @@ impl DocRepository for DocDbRepository {
         Err("SQLite database feature is not enabled. Use the --features native-db flag".into())
     }
 
-    async fn create(&self, doc: DocForm) -> Result<Doc, Box<dyn Error>> {
+    async fn create(&self, _doc: DocForm) -> Result<Doc, Box<dyn Error>> {
         // Return error in dummy implementation
         Err("SQLite database feature is not enabled. Use the --features native-db flag".into())
     }
 
-    async fn update(&self, id: i32, doc: DocForm) -> Result<Doc, Box<dyn Error>> {
+    async fn update(&self, _id: i32, _doc: DocForm) -> Result<Doc, Box<dyn Error>> {
         // Return error in dummy implementation
         Err("SQLite database feature is not enabled. Use the --features native-db flag".into())
     }
