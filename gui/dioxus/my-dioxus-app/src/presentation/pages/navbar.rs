@@ -1,23 +1,27 @@
 use crate::presentation::Route;
 use dioxus::prelude::*;
 
+const MAIN_CSS: Asset = asset!("/assets/main.css");
+
 /// Shared navbar component.
 #[component]
 pub fn Navbar() -> Element {
     rsx! {
-        div { class: "bg-gray-800 text-white p-4",
-            div { class: "container mx-auto flex flex-wrap items-center justify-between",
-                div { class: "flex items-center flex-shrink-0 mr-6",
-                    span { class: "font-semibold text-xl tracking-tight", "JSONPlaceholder API Manager" }
+        document::Link { rel: "stylesheet", href: MAIN_CSS }
+
+        div {
+            div {
+                div {
+                    span { "JSONPlaceholder API Manager" }
                 }
 
-                div { class: "w-full block flex-grow lg:flex lg:items-center lg:w-auto",
-                    div { class: "text-sm lg:flex-grow",
-                        Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Home {}, "Home" }
-                        Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Users {}, "Users" }
-                        Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Todos {}, "Todos" }
-                        Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white mr-4", to: Route::Posts {}, "Posts" }
-                        Link { class: "block mt-4 lg:inline-block lg:mt-0 text-gray-200 hover:text-white", to: Route::Documents {}, "Documents" }
+                div {
+                    div {
+                        Link { to: Route::Home {}, "Home" }
+                        Link { to: Route::Users {}, "Users" }
+                        Link { to: Route::Todos {}, "Todos" }
+                        Link { to: Route::Posts {}, "Posts" }
+                        Link { to: Route::Documents {}, "Documents" }
                     }
                 }
             }

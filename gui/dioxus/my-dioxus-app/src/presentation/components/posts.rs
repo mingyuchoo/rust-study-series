@@ -152,27 +152,25 @@ pub fn PostsTab() -> Element {
     };
 
     rsx! {
-        div { class: "p-4",
-            h2 { class: "text-2xl font-bold mb-4", "Posts Management" }
+        div {
+            h2 { "Posts Management" }
 
             // Error message
             {error().map(|err| rsx!(
-                div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4",
+                div {
                     p { {err} }
                 }
             ))}
 
             // Post form
-            div { class: "mb-6 p-4 border rounded",
-                h3 { class: "text-xl font-semibold mb-2",
-                    {if is_editing() { "Edit Post" } else { "Add New Post" }}
+            div {
+                h3 { {if is_editing() { "Edit Post" } else { "Add New Post" }}
                 }
 
-                div { class: "grid grid-cols-1 gap-4",
+                div {
                     div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "User ID" }
+                        label { "User ID" }
                         input {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
                             r#type: "number",
                             value: form().userId.to_string(),
                             oninput: move |evt| {
@@ -184,10 +182,9 @@ pub fn PostsTab() -> Element {
                         }
                     }
 
-                    div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "Title" }
+                    div { 
+                        label { "Title" }
                         input {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
                             value: form().title.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
