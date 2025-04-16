@@ -7,7 +7,7 @@ pub mod todos;
 pub mod users;
 
 // Re-export components for easier access
-pub use docs::Documents;
+pub use docs::Docs;
 pub use home::Home;
 pub use navbar::Navbar;
 pub use posts::Posts;
