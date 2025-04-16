@@ -1,7 +1,7 @@
-pub mod posts;
-pub mod todos;
-pub mod users;
+pub mod posts_tab;
+pub mod todos_tab;
+pub mod users_tab;
 
-pub use posts::PostsTab;
-pub use todos::TodosTab;
-pub use users::UsersTab;
+pub use posts_tab::PostsTab;
+pub use todos_tab::TodosTab;
+pub use users_tab::UsersTab;
