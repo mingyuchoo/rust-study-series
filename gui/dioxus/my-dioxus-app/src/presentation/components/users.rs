@@ -152,27 +152,27 @@ pub fn UsersTab() -> Element {
     };
 
     rsx! {
-        div { class: "p-4",
-            h2 { class: "text-2xl font-bold mb-4", "Users Management" }
+        div {
+            h2 {"Users Management" }
 
             // Error message
             {error().map(|err| rsx!(
-                div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4",
+                div {
                     p { {err} }
                 }
             ))}
 
             // User form
-            div { class: "mb-6 p-4 border rounded",
-                h3 { class: "text-xl font-semibold mb-2",
+            div {
+                h3 {
                     {if is_editing() { "Edit User" } else { "Add New User" }}
                 }
 
-                div { class: "grid grid-cols-1 md:grid-cols-2 gap-4",
-                    div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "Name" }
+                div {
+                    div {
+                        label { "Name" }
                         input {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+
                             value: form().name.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -181,10 +181,10 @@ pub fn UsersTab() -> Element {
                         }
                     }
 
-                    div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "Username" }
+                    div {
+                        label { "Username" }
                         input {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+
                             value: form().username.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -193,10 +193,10 @@ pub fn UsersTab() -> Element {
                         }
                     }
 
-                    div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "Email" }
+                    div {
+                        label { "Email" }
                         input {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+
                             value: form().email.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -205,10 +205,10 @@ pub fn UsersTab() -> Element {
                         }
                     }
 
-                    div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "Phone" }
+                    div {
+                        label { "Phone" }
                         input {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+
                             value: form().phone.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -218,16 +218,16 @@ pub fn UsersTab() -> Element {
                     }
                 }
 
-                div { class: "flex space-x-2",
+                div {
                     {if is_editing() {
                         rsx! {
                             button {
-                                class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_update,
                                 "Update User"
                             }
                             button {
-                                class: "bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_cancel,
                                 "Cancel"
                             }
@@ -235,7 +235,7 @@ pub fn UsersTab() -> Element {
                     } else {
                         rsx! {
                             button {
-                                class: "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_create,
                                 "Add User"
                             }
@@ -245,15 +245,15 @@ pub fn UsersTab() -> Element {
             }
 
             // Users list
-            div { class: "overflow-x-auto",
-                table { class: "min-w-full bg-white border border-gray-300",
+            div {
+                table {
                     thead {
                         tr {
-                            th { class: "py-2 px-4 border-b", "ID" }
-                            th { class: "py-2 px-4 border-b", "Name" }
-                            th { class: "py-2 px-4 border-b", "Username" }
-                            th { class: "py-2 px-4 border-b", "Email" }
-                            th { class: "py-2 px-4 border-b", "Actions" }
+                            th {  "ID" }
+                            th {  "Name" }
+                            th {  "Username" }
+                            th {  "Email" }
+                            th {  "Actions" }
                         }
                     }
                     tbody {
@@ -262,19 +262,19 @@ pub fn UsersTab() -> Element {
                             let user_id = user.id;
                             rsx!(
                                 tr { key: user.id.to_string(),
-                                    td { class: "py-2 px-4 border-b", {user.id.to_string()} }
-                                    td { class: "py-2 px-4 border-b", {user.name.clone()} }
-                                    td { class: "py-2 px-4 border-b", {user.username.clone()} }
-                                    td { class: "py-2 px-4 border-b", {user.email.clone()} }
-                                    td { class: "py-2 px-4 border-b",
-                                        div { class: "flex space-x-2",
+                                    td {  {user.id.to_string()} }
+                                    td {  {user.name.clone()} }
+                                    td {  {user.username.clone()} }
+                                    td {  {user.email.clone()} }
+                                    td {
+                                        div {
                                             button {
-                                                class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm",
+
                                                 onclick: move |_| handle_edit(user_clone.clone()),
                                                 "Edit"
                                             }
                                             button {
-                                                class: "bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm",
+
                                                 onclick: move |_| handle_delete(user_id),
                                                 "Delete"
                                             }

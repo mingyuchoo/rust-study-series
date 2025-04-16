@@ -8,26 +8,26 @@ const MAIN_CSS: Asset = asset!("/assets/main.css");
 pub fn Home() -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: MAIN_CSS }
-        
+
         div {
             h1 { "JSONPlaceholder API Manager" }
             p { "Welcome to the JSONPlaceholder API Manager. This application allows you to manage users, todos, and posts using the JSONPlaceholder API." }
             p { "Use the navigation tabs above to access different sections of the application." }
 
             div {
-                div { 
+                div {
                     h2 { "Users" }
                     p { "Manage user accounts with CRUD operations." }
                     Link { to: Route::Users {}, "Go to Users" }
                 }
 
-                div { 
+                div {
                     h2 { "Todos" }
                     p { "Create, read, update, and delete todo items." }
                     Link { to: Route::Todos {}, "Go to Todos" }
                 }
 
-                div { 
+                div {
                     h2 { "Posts" }
                     p { "Manage blog posts with full CRUD functionality." }
                     Link { to: Route::Posts {}, "Go to Posts" }

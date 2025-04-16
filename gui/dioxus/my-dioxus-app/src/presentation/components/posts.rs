@@ -168,7 +168,7 @@ pub fn PostsTab() -> Element {
                 }
 
                 div {
-                    div { class: "mb-4",
+                    div {
                         label { "User ID" }
                         input {
                             r#type: "number",
@@ -182,7 +182,7 @@ pub fn PostsTab() -> Element {
                         }
                     }
 
-                    div { 
+                    div {
                         label { "Title" }
                         input {
                             value: form().title.clone(),
@@ -193,10 +193,10 @@ pub fn PostsTab() -> Element {
                         }
                     }
 
-                    div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "Body" }
+                    div {
+                        label { "Body" }
                         textarea {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+
                             rows: "4",
                             value: form().body.clone(),
                             oninput: move |evt| {
@@ -207,16 +207,16 @@ pub fn PostsTab() -> Element {
                     }
                 }
 
-                div { class: "flex space-x-2",
+                div {
                     {if is_editing() {
                         rsx! {
                             button {
-                                class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_update,
                                 "Update Post"
                             }
                             button {
-                                class: "bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_cancel,
                                 "Cancel"
                             }
@@ -224,7 +224,7 @@ pub fn PostsTab() -> Element {
                     } else {
                         rsx! {
                             button {
-                                class: "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_create,
                                 "Add Post"
                             }
@@ -234,14 +234,14 @@ pub fn PostsTab() -> Element {
             }
 
             // Posts list
-            div { class: "overflow-x-auto",
-                table { class: "min-w-full bg-white border border-gray-300",
+            div {
+                table {
                     thead {
                         tr {
-                            th { class: "py-2 px-4 border-b", "ID" }
-                            th { class: "py-2 px-4 border-b", "User ID" }
-                            th { class: "py-2 px-4 border-b", "Title" }
-                            th { class: "py-2 px-4 border-b", "Actions" }
+                            th {  "ID" }
+                            th {  "User ID" }
+                            th {  "Title" }
+                            th {  "Actions" }
                         }
                     }
                     tbody {
@@ -250,18 +250,18 @@ pub fn PostsTab() -> Element {
                             let post_for_edit = post.clone();
                             rsx!(
                                 tr { key: post.id.to_string(),
-                                    td { class: "py-2 px-4 border-b", {post.id.to_string()} }
-                                    td { class: "py-2 px-4 border-b", {post.userId.to_string()} }
-                                    td { class: "py-2 px-4 border-b", {post.title.clone()} }
-                                    td { class: "py-2 px-4 border-b",
-                                        div { class: "flex space-x-2",
+                                    td {  {post.id.to_string()} }
+                                    td {  {post.userId.to_string()} }
+                                    td {  {post.title.clone()} }
+                                    td {
+                                        div {
                                             button {
-                                                class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm",
+
                                                 onclick: move |_| handle_edit(post_for_edit.clone()),
                                                 "Edit"
                                             }
                                             button {
-                                                class: "bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm",
+
                                                 onclick: move |_| handle_delete(post_id),
                                                 "Delete"
                                             }
@@ -277,7 +277,7 @@ pub fn PostsTab() -> Element {
             // Post detail view
             {selected_post().map(|post| rsx!(
                 div { class: "mt-6 p-4 border rounded bg-gray-50",
-                    h3 { class: "text-xl font-semibold mb-2", "Post Details" }
+                    h3 {  "Post Details" }
                     p { class: "font-bold", "Title: ", span { class: "font-normal", {post.title.clone()} } }
                     p { class: "font-bold", "Body: ", span { class: "font-normal", {post.body.clone()} } }
                 }

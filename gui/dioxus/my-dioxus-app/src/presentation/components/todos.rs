@@ -186,27 +186,27 @@ pub fn TodosTab() -> Element {
     };
 
     rsx! {
-        div { class: "p-4",
-            h2 { class: "text-2xl font-bold mb-4", "Todos Management" }
+        div {
+            h2 {"Todos Management" }
 
             // Error message
             {error().map(|err| rsx!(
-                div { class: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4",
+                div {
                     p { {err} }
                 }
             ))}
 
             // Todo form
-            div { class: "mb-6 p-4 border rounded",
-                h3 { class: "text-xl font-semibold mb-2",
+            div {
+                h3 {
                     {if is_editing() { "Edit Todo" } else { "Add New Todo" }}
                 }
 
-                div { class: "grid grid-cols-1 gap-4",
-                    div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "User ID" }
+                div {
+                    div {
+                        label { "User ID" }
                         input {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+
                             r#type: "number",
                             value: form().userId.to_string(),
                             oninput: move |evt| {
@@ -218,10 +218,10 @@ pub fn TodosTab() -> Element {
                         }
                     }
 
-                    div { class: "mb-4",
-                        label { class: "block text-sm font-medium text-gray-700", "Title" }
+                    div {
+                        label { "Title" }
                         input {
-                            class: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500",
+
                             value: form().title.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -230,10 +230,10 @@ pub fn TodosTab() -> Element {
                         }
                     }
 
-                    div { class: "mb-4 flex items-center",
+                    div {
                         input {
                             id: "completed",
-                            class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded",
+
                             r#type: "checkbox",
                             checked: form().completed,
                             oninput: move |evt| {
@@ -241,20 +241,20 @@ pub fn TodosTab() -> Element {
                                 form_write.completed = evt.value().parse().unwrap_or(false);
                             }
                         }
-                        label { class: "ml-2 block text-sm text-gray-900", r#for: "completed", "Completed" }
+                        label { r#for: "completed", "Completed" }
                     }
                 }
 
-                div { class: "flex space-x-2",
+                div {
                     {if is_editing() {
                         rsx! {
                             button {
-                                class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_update,
                                 "Update Todo"
                             }
                             button {
-                                class: "bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_cancel,
                                 "Cancel"
                             }
@@ -262,7 +262,7 @@ pub fn TodosTab() -> Element {
                     } else {
                         rsx! {
                             button {
-                                class: "bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded",
+
                                 onclick: handle_create,
                                 "Add Todo"
                             }
@@ -272,15 +272,15 @@ pub fn TodosTab() -> Element {
             }
 
             // Todos list
-            div { class: "overflow-x-auto",
-                table { class: "min-w-full bg-white border border-gray-300",
+            div {
+                table {
                     thead {
                         tr {
-                            th { class: "py-2 px-4 border-b", "ID" }
-                            th { class: "py-2 px-4 border-b", "User ID" }
-                            th { class: "py-2 px-4 border-b", "Title" }
-                            th { class: "py-2 px-4 border-b", "Status" }
-                            th { class: "py-2 px-4 border-b", "Actions" }
+                            th {  "ID" }
+                            th {  "User ID" }
+                            th {  "Title" }
+                            th {  "Status" }
+                            th {  "Actions" }
                         }
                     }
                     tbody {
@@ -290,31 +290,31 @@ pub fn TodosTab() -> Element {
                             let todo_for_edit = todo.clone();
                             rsx!(
                                 tr { key: todo.id.to_string(),
-                                    td { class: "py-2 px-4 border-b", {todo.id.to_string()} }
-                                    td { class: "py-2 px-4 border-b", {todo.userId.to_string()} }
-                                    td { class: "py-2 px-4 border-b", {todo.title.clone()} }
-                                    td { class: "py-2 px-4 border-b",
-                                        div { class: "flex items-center",
+                                    td {  {todo.id.to_string()} }
+                                    td {  {todo.userId.to_string()} }
+                                    td {  {todo.title.clone()} }
+                                    td {
+                                        div {
                                             input {
-                                                class: "h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded",
+
                                                 r#type: "checkbox",
                                                 checked: todo.completed,
                                                 onclick: move |_| toggle_completed(todo_for_toggle.clone())
                                             }
-                                            span { class: "ml-2",
+                                            span {
                                                 {if todo.completed { "Completed" } else { "Pending" }}
                                             }
                                         }
                                     }
-                                    td { class: "py-2 px-4 border-b",
-                                        div { class: "flex space-x-2",
+                                    td {
+                                        div {
                                             button {
-                                                class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded text-sm",
+
                                                 onclick: move |_| handle_edit(todo_for_edit.clone()),
                                                 "Edit"
                                             }
                                             button {
-                                                class: "bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-sm",
+
                                                 onclick: move |_| handle_delete(todo_id),
                                                 "Delete"
                                             }

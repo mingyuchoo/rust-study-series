@@ -230,7 +230,7 @@ pub fn Documents() -> Element {
                 if documents().is_empty() {
                     p { "No documents found." }
                 } else {
-                    table { class: "min-w-full bg-white",
+                    table {
                         thead { class: "bg-gray-100",
                             tr {
                                 th { "ID" }
@@ -241,10 +241,10 @@ pub fn Documents() -> Element {
                         }
                         tbody {
                             for doc in documents.peek().iter().cloned() {
-                                tr { 
+                                tr {
                                     td { "{doc.id}" }
                                     td { "{doc.title}" }
-                                    td { class: "py-2 px-4 border-b",
+                                    td {
                                         if doc.archived {
                                             span { "Archived" }
                                         } else {

@@ -130,11 +130,10 @@ impl DocRepository for DocDbRepository {
     async fn create(&self, doc: DocForm) -> Result<Doc, Box<dyn Error>> {
         let conn = self.conn.lock().unwrap();
 
-        conn.execute("INSERT INTO docs (title, contents, archived) VALUES (?, ?, ?)", params![
-            doc.title,
-            doc.contents,
-            if doc.archived { 1 } else { 0 }
-        ])?;
+        conn.execute(
+            "INSERT INTO docs (title, contents, archived) VALUES (?, ?, ?)",
+            params![doc.title, doc.contents, if doc.archived { 1 } else { 0 }],
+        )?;
 
         let id = conn.last_insert_rowid() as i32;
         Ok(Doc {
@@ -148,12 +147,10 @@ impl DocRepository for DocDbRepository {
     async fn update(&self, id: i32, doc: DocForm) -> Result<Doc, Box<dyn Error>> {
         let conn = self.conn.lock().unwrap();
 
-        conn.execute("UPDATE docs SET title = ?, contents = ?, archived = ? WHERE id = ?", params![
-            doc.title,
-            doc.contents,
-            if doc.archived { 1 } else { 0 },
-            id
-        ])?;
+        conn.execute(
+            "UPDATE docs SET title = ?, contents = ?, archived = ? WHERE id = ?",
+            params![doc.title, doc.contents, if doc.archived { 1 } else { 0 }, id],
+        )?;
 
         Ok(Doc {
             id,
