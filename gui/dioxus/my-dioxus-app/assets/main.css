@@ -1,11 +1,11 @@
-* { box-sizing: border-box; }
+* { box-sizing: border-box; margin: 10px; }
 
 :root {
-  --color-1: #0d1117;
-  --color-2: #3d444d;
-  --color-3: #fff;
-  --color-4: #c0d5f2;
-  --color-5: #238636;
+  --color-1: #ffffff;
+  --color-2: #e0e0e0;
+  --color-3: #000000;
+  --color-4: #666666;
+  --color-5: #333333;
 }
 html {
     display: flex;
@@ -54,7 +54,8 @@ input[type=text], textarea {
     font-size: 16px;
     font-weight: 500;
     resize: none;
-    color: #fff;
+    color: var(--color-3);
+    border-radius: 0;
 }
 input[type=text] {
     font-size: 26px;
@@ -66,23 +67,23 @@ textarea {
     flex:1;
 }
 button, .upload-button {
-    background-color: var(--color-5);
+    background-color: var(--color-2);
     border:0px;
-    border-radius: 6px;
+    border-radius: 0;
     width: 100%;
-    color: #fff;
+    color: var(--color-3);
+    padding:10px 20px;
     font-weight: 600;
-    padding:12px 20px;
     text-transform: uppercase;
-    outline: 4px solid #23863650;
+    outline: 1px solid rgba(0, 0, 0, 0.1);
     cursor: pointer;
     font-size: 14px;
     max-width: 200px;
     text-align: center;
 }
 .upload-button {
-    background-color: #888;
-    outline: 4px solid rgba(225, 236, 227, 0.31);
+    background-color: var(--color-2);
+    outline: 1px solid rgba(0, 0, 0, 0.1);
     margin-right: 30px;
 }
 
@@ -120,6 +121,21 @@ button, .upload-button {
     flex-direction: column;
     width: 100%;
 }
+a:link, a:visited {
+    background-color: var(--color-2);
+    color: var(--color-3);
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+  
+  a:hover, a:active {
+    background-color: var(--color-2);
+  }
 
 .input-container{
     display: flex;

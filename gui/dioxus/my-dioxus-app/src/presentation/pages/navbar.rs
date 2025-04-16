@@ -8,7 +8,7 @@ pub fn Navbar() -> Element {
         div {
             div {
                 div {
-                    span { "JSONPlaceholder API Manager" }
+                    h1 { "JSONPlaceholder API Manager" }
                 }
                 div {
                     div {
