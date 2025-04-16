@@ -201,13 +201,11 @@ pub fn TodosTab() -> Element {
                 h3 {
                     {if is_editing() { "Edit Todo" } else { "Add New Todo" }}
                 }
-
                 div {
                     div {
                         label { "User ID" }
                         input {
-
-                            r#type: "number",
+                            type: "number",
                             value: form().userId.to_string(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -217,11 +215,10 @@ pub fn TodosTab() -> Element {
                             }
                         }
                     }
-
                     div {
                         label { "Title" }
                         input {
-
+                            type: "text",
                             value: form().title.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -229,12 +226,10 @@ pub fn TodosTab() -> Element {
                             }
                         }
                     }
-
                     div {
                         input {
                             id: "completed",
-
-                            r#type: "checkbox",
+                            type: "checkbox",
                             checked: form().completed,
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -244,17 +239,16 @@ pub fn TodosTab() -> Element {
                         label { r#for: "completed", "Completed" }
                     }
                 }
-
                 div {
                     {if is_editing() {
                         rsx! {
                             button {
-
+                                type: "submit",
                                 onclick: handle_update,
                                 "Update Todo"
                             }
                             button {
-
+                                type: "button",
                                 onclick: handle_cancel,
                                 "Cancel"
                             }
@@ -262,7 +256,7 @@ pub fn TodosTab() -> Element {
                     } else {
                         rsx! {
                             button {
-
+                                type: "submit",
                                 onclick: handle_create,
                                 "Add Todo"
                             }
@@ -296,8 +290,7 @@ pub fn TodosTab() -> Element {
                                     td {
                                         div {
                                             input {
-
-                                                r#type: "checkbox",
+                                                type: "checkbox",
                                                 checked: todo.completed,
                                                 onclick: move |_| toggle_completed(todo_for_toggle.clone())
                                             }
@@ -309,12 +302,12 @@ pub fn TodosTab() -> Element {
                                     td {
                                         div {
                                             button {
-
+                                                type: "button",
                                                 onclick: move |_| handle_edit(todo_for_edit.clone()),
                                                 "Edit"
                                             }
                                             button {
-
+                                                type: "button",
                                                 onclick: move |_| handle_delete(todo_id),
                                                 "Delete"
                                             }

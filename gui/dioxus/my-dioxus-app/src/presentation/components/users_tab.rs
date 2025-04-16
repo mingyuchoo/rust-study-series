@@ -172,7 +172,7 @@ pub fn UsersTab() -> Element {
                     div {
                         label { "Name" }
                         input {
-
+                            type: "text",
                             value: form().name.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -184,7 +184,7 @@ pub fn UsersTab() -> Element {
                     div {
                         label { "Username" }
                         input {
-
+                            type: "text",
                             value: form().username.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -196,7 +196,7 @@ pub fn UsersTab() -> Element {
                     div {
                         label { "Email" }
                         input {
-
+                            type: "email",
                             value: form().email.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -208,7 +208,7 @@ pub fn UsersTab() -> Element {
                     div {
                         label { "Phone" }
                         input {
-
+                            type: "text",
                             value: form().phone.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -222,12 +222,12 @@ pub fn UsersTab() -> Element {
                     {if is_editing() {
                         rsx! {
                             button {
-
+                                type: "submit",
                                 onclick: handle_update,
                                 "Update User"
                             }
                             button {
-
+                                type: "button",
                                 onclick: handle_cancel,
                                 "Cancel"
                             }
@@ -235,7 +235,7 @@ pub fn UsersTab() -> Element {
                     } else {
                         rsx! {
                             button {
-
+                                type: "submit",
                                 onclick: handle_create,
                                 "Add User"
                             }

@@ -166,12 +166,11 @@ pub fn PostsTab() -> Element {
             div {
                 h3 { {if is_editing() { "Edit Post" } else { "Add New Post" }}
                 }
-
                 div {
                     div {
                         label { "User ID" }
                         input {
-                            r#type: "number",
+                            type: "number",
                             value: form().userId.to_string(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -181,10 +180,10 @@ pub fn PostsTab() -> Element {
                             }
                         }
                     }
-
                     div {
                         label { "Title" }
                         input {
+                            type: "text",
                             value: form().title.clone(),
                             oninput: move |evt| {
                                 let mut form_write = form.write();
@@ -192,11 +191,9 @@ pub fn PostsTab() -> Element {
                             }
                         }
                     }
-
                     div {
                         label { "Body" }
                         textarea {
-
                             rows: "4",
                             value: form().body.clone(),
                             oninput: move |evt| {
@@ -206,17 +203,16 @@ pub fn PostsTab() -> Element {
                         }
                     }
                 }
-
                 div {
                     {if is_editing() {
                         rsx! {
                             button {
-
+                                type: "submit",
                                 onclick: handle_update,
                                 "Update Post"
                             }
                             button {
-
+                                type: "button",
                                 onclick: handle_cancel,
                                 "Cancel"
                             }
@@ -224,7 +220,7 @@ pub fn PostsTab() -> Element {
                     } else {
                         rsx! {
                             button {
-
+                                type: "submit",
                                 onclick: handle_create,
                                 "Add Post"
                             }
@@ -256,12 +252,12 @@ pub fn PostsTab() -> Element {
                                     td {
                                         div {
                                             button {
-
+                                                type: "button",
                                                 onclick: move |_| handle_edit(post_for_edit.clone()),
                                                 "Edit"
                                             }
                                             button {
-
+                                                type: "button",
                                                 onclick: move |_| handle_delete(post_id),
                                                 "Delete"
                                             }
