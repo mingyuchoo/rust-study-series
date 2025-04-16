@@ -5,14 +5,11 @@ use dioxus::prelude::*;
 #[component]
 pub fn Navbar() -> Element {
     rsx! {
-
-
         div {
             div {
                 div {
                     span { "JSONPlaceholder API Manager" }
                 }
-
                 div {
                     div {
                         Link { to: Route::Home {}, "Home" }
@@ -24,7 +21,6 @@ pub fn Navbar() -> Element {
                 }
             }
         }
-
         div {
             Outlet::<Route> {}
         }

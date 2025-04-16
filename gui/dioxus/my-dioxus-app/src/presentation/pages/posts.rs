@@ -5,8 +5,6 @@ use dioxus::prelude::*;
 #[component]
 pub fn Posts() -> Element {
     rsx! {
-
-
         PostsTab {}
     }
 }
