@@ -1,13 +1,11 @@
 use crate::presentation::Route;
 use dioxus::prelude::*;
 
-const MAIN_CSS: Asset = asset!("/assets/main.css");
-
 /// Shared navbar component.
 #[component]
 pub fn Navbar() -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
+
 
         div {
             div {
@@ -27,7 +25,7 @@ pub fn Navbar() -> Element {
             }
         }
 
-        div { class: "container mx-auto",
+        div {
             Outlet::<Route> {}
         }
     }

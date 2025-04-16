@@ -1,13 +1,11 @@
 use crate::presentation::Route;
 use dioxus::prelude::*;
 
-const MAIN_CSS: Asset = asset!("/assets/main.css");
-
 /// Home page
 #[component]
 pub fn Home() -> Element {
     rsx! {
-        document::Link { rel: "stylesheet", href: MAIN_CSS }
+
 
         div {
             h1 { "JSONPlaceholder API Manager" }

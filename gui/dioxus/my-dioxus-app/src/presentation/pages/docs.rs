@@ -5,8 +5,6 @@ use crate::infrastructure::db::repositories::doc_db_repository::DocDbRepository;
 use dioxus::prelude::*;
 use std::path::Path;
 
-const MAIN_CSS: Asset = asset!("/assets/main.css");
-
 #[component]
 pub fn Documents() -> Element {
     // State for the document form
@@ -231,7 +229,7 @@ pub fn Documents() -> Element {
                     p { "No documents found." }
                 } else {
                     table {
-                        thead { class: "bg-gray-100",
+                        thead {
                             tr {
                                 th { "ID" }
                                 th { "Title" }

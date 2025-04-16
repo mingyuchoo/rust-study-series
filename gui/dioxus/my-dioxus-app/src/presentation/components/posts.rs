@@ -276,10 +276,10 @@ pub fn PostsTab() -> Element {
 
             // Post detail view
             {selected_post().map(|post| rsx!(
-                div { class: "mt-6 p-4 border rounded bg-gray-50",
+                div {
                     h3 {  "Post Details" }
-                    p { class: "font-bold", "Title: ", span { class: "font-normal", {post.title.clone()} } }
-                    p { class: "font-bold", "Body: ", span { class: "font-normal", {post.body.clone()} } }
+                    p { "Title: ", span { {post.title.clone()} } }
+                    p { "Body: ", span { {post.body.clone()} } }
                 }
             ))}
         }
