@@ -1,12 +1,12 @@
 #[macro_use]
 extern crate rocket;
 
-use std::sync::LazyLock;
+use once_cell::sync::Lazy;
 use surrealdb::Surreal;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 
-static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
+static DB: Lazy<Surreal<Client>> = Lazy::new(Surreal::init);
 
 mod error {
     use rocket::Request;

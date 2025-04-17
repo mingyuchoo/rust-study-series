@@ -32,6 +32,8 @@ cargo run
 
 ## API 엔드포인트
 
+URL: `http://localhost:8080`
+
 - `GET /`: 정적 파일 제공
 - `GET /session`: 세션 정보 조회
 - `POST /person/<id>`: 새 사용자 생성
