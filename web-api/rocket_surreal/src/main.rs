@@ -2,16 +2,16 @@
 extern crate rocket;
 
 use std::sync::LazyLock;
+use surrealdb::Surreal;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
-use surrealdb::Surreal;
 
 static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 mod error {
+    use rocket::Request;
     use rocket::http::Status;
     use rocket::response::{self, Responder, Response};
-    use rocket::Request;
     use thiserror::Error;
 
     #[derive(Error, Debug)]
@@ -26,10 +26,7 @@ mod error {
             Response::build()
                 .status(Status::InternalServerError)
                 .header(rocket::http::ContentType::JSON)
-                .sized_body(
-                    error_message.len(),
-                    std::io::Cursor::new(error_message),
-                )
+                .sized_body(error_message.len(), std::io::Cursor::new(error_message))
                 .ok()
         }
     }
@@ -44,14 +41,14 @@ mod error {
 
 mod routes {
 
-    use crate::error::Error;
     use crate::DB;
+    use crate::error::Error;
     use faker_rand::en_us::names::FirstName;
     use rocket::serde::json::Json;
     use rocket::{delete, get, post, put};
     use serde::{Deserialize, Serialize};
-    use surrealdb::opt::auth::Record;
     use surrealdb::RecordId;
+    use surrealdb::opt::auth::Record;
     const PERSON: &str = "person";
 
     #[derive(Serialize, Deserialize)]
@@ -68,61 +65,42 @@ mod routes {
     #[derive(Serialize, Deserialize)]
     pub struct Person {
         name: String,
-        id:   RecordId,
+        id: RecordId,
     }
 
     use rocket::fs::NamedFile;
     use std::path::Path;
 
     #[get("/")]
-    pub async fn paths() -> Option<NamedFile> {
-        NamedFile::open(Path::new("static/index.html")).await.ok()
-    }
+    pub async fn paths() -> Option<NamedFile> { NamedFile::open(Path::new("static/index.html")).await.ok() }
 
     #[get("/session")]
     pub async fn session() -> Result<Json<String>, Error> {
-        let res: Option<String> =
-            DB.query("RETURN <string>$session").await?.take(0)?;
+        let res: Option<String> = DB.query("RETURN <string>$session").await?.take(0)?;
 
         Ok(Json(res.unwrap_or("No session data found!".into())))
     }
 
     #[post("/person/<id>", data = "<person>")]
-    pub async fn create_person(
-        id: String,
-        person: Json<PersonData>,
-    ) -> Result<Json<Option<Person>>, Error> {
-        let person = DB
-            .create((PERSON, &*id))
-            .content(person.into_inner())
-            .await?;
+    pub async fn create_person(id: String, person: Json<PersonData>) -> Result<Json<Option<Person>>, Error> {
+        let person = DB.create((PERSON, &*id)).content(person.into_inner()).await?;
         Ok(Json(person))
     }
 
     #[get("/person/<id>")]
-    pub async fn read_person(
-        id: String,
-    ) -> Result<Json<Option<Person>>, Error> {
+    pub async fn read_person(id: String) -> Result<Json<Option<Person>>, Error> {
         let person = DB.select((PERSON, &*id)).await?;
         Ok(Json(person))
     }
 
     #[put("/person/<id>", data = "<person>")]
-    pub async fn update_person(
-        id: String,
-        person: Json<PersonData>,
-    ) -> Result<Json<Option<Person>>, Error> {
-        let person = DB
-            .update((PERSON, &*id))
-            .content(person.into_inner())
-            .await?;
+    pub async fn update_person(id: String, person: Json<PersonData>) -> Result<Json<Option<Person>>, Error> {
+        let person = DB.update((PERSON, &*id)).content(person.into_inner()).await?;
         Ok(Json(person))
     }
 
     #[delete("/person/<id>")]
-    pub async fn delete_person(
-        id: String,
-    ) -> Result<Json<Option<Person>>, Error> {
+    pub async fn delete_person(id: String) -> Result<Json<Option<Person>>, Error> {
         let person = DB.delete((PERSON, &*id)).await?;
         Ok(Json(person))
     }
@@ -139,10 +117,10 @@ mod routes {
         let pass = rand::random::<FirstName>().to_string();
         let jwt = DB
             .signup(Record {
-                access:    "account",
+                access: "account",
                 namespace: "namespace",
-                database:  "database",
-                params:    Params {
+                database: "database",
+                params: Params {
                     name: &name,
                     pass: &pass,
                 },
@@ -157,7 +135,9 @@ mod routes {
     #[get("/new_token")]
     pub async fn get_new_token() -> String {
         let command = r#"curl -X POST -H "Accept: application/json" -d '{"ns":"namespace","db":"database","ac":"account","user":"your_username","pass":"your_password"}' http://localhost:8000/signin"#;
-        format!("Need a new token? Use this command:\n\n{command}\n\nThen log in with surreal sql --namespace namespace --database database --pretty --token YOUR_TOKEN_HERE")
+        format!(
+            "Need a new token? Use this command:\n\n{command}\n\nThen log in with surreal sql --namespace namespace --database database --pretty --token YOUR_TOKEN_HERE"
+        )
     }
 }
 
@@ -173,7 +153,7 @@ async fn init() -> Result<(), surrealdb::Error> {
     DB.use_ns("namespace").use_db("database").await?;
 
     DB.query(
-             "DEFINE TABLE person SCHEMALESS
+        "DEFINE TABLE person SCHEMALESS
             PERMISSIONS FOR 
                 CREATE, SELECT WHERE $auth,
                 FOR UPDATE, DELETE WHERE created_by = $auth;
@@ -186,7 +166,7 @@ async fn init() -> Result<(), surrealdb::Error> {
         DURATION FOR TOKEN 15m, FOR SESSION 12h
         ;",
     )
-      .await?;
+    .await?;
     Ok(())
 }
 
@@ -196,19 +176,16 @@ pub async fn rocket() -> _ {
     init().await.expect("Something went wrong, shutting down");
     use rocket::fs::FileServer;
     rocket::build()
-        .mount(
-            "/",
-            routes![
-                routes::create_person,
-                routes::read_person,
-                routes::update_person,
-                routes::delete_person,
-                routes::list_people,
-                routes::paths,
-                routes::make_new_user,
-                routes::get_new_token,
-                routes::session
-            ],
-        )
+        .mount("/", routes![
+            routes::create_person,
+            routes::read_person,
+            routes::update_person,
+            routes::delete_person,
+            routes::list_people,
+            routes::paths,
+            routes::make_new_user,
+            routes::get_new_token,
+            routes::session
+        ])
         .mount("/", FileServer::from("static"))
 }
