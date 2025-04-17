@@ -71,25 +71,12 @@ mod routes {
         id:   RecordId,
     }
 
+    use rocket::fs::NamedFile;
+    use std::path::Path;
+
     #[get("/")]
-    pub async fn paths() -> &'static str {
-        r#"
-
------------------------------------------------------------------------------------------------------------------------------------------
-        PATH                |           SAMPLE COMMAND                                                                                  
------------------------------------------------------------------------------------------------------------------------------------------
-/session: See session data  |  curl -X GET    -H "Content-Type: application/json"                          http://localhost:8080/session
-                            |
-/person/{id}:               |
-  Create a person           |  curl -X POST   -H "Content-Type: application/json" -d '{"name":"John Doe"}' http://localhost:8080/person/one
-  Get a person              |  curl -X GET    -H "Content-Type: application/json"                          http://localhost:8080/person/one
-  Update a person           |  curl -X PUT    -H "Content-Type: application/json" -d '{"name":"Jane Doe"}' http://localhost:8080/person/one
-  Delete a person           |  curl -X DELETE -H "Content-Type: application/json"                          http://localhost:8080/person/one
-                            |
-/people: List all people    |  curl -X GET    -H "Content-Type: application/json"                          http://localhost:8080/people
-
-/new_user:  Create a new record user
-/new_token: Get instructions for a new token if yours has expired"#
+    pub async fn paths() -> Option<NamedFile> {
+        NamedFile::open(Path::new("static/index.html")).await.ok()
     }
 
     #[get("/session")]
@@ -207,18 +194,21 @@ async fn init() -> Result<(), surrealdb::Error> {
 pub async fn rocket() -> _ {
     std::env::set_var("ROCKET_PORT", "8080");
     init().await.expect("Something went wrong, shutting down");
-    rocket::build().mount(
-        "/",
-        routes![
-            routes::create_person,
-            routes::read_person,
-            routes::update_person,
-            routes::delete_person,
-            routes::list_people,
-            routes::paths,
-            routes::make_new_user,
-            routes::get_new_token,
-            routes::session
-        ],
-    )
+    use rocket::fs::FileServer;
+    rocket::build()
+        .mount(
+            "/",
+            routes![
+                routes::create_person,
+                routes::read_person,
+                routes::update_person,
+                routes::delete_person,
+                routes::list_people,
+                routes::paths,
+                routes::make_new_user,
+                routes::get_new_token,
+                routes::session
+            ],
+        )
+        .mount("/", FileServer::from("static"))
 }
