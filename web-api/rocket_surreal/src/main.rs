@@ -113,6 +113,7 @@ mod routes {
 
     #[get("/new_user")]
     pub async fn make_new_user() -> Result<String, Error> {
+        // Use rand::random with FirstName from faker_rand
         let name = rand::random::<FirstName>().to_string();
         let pass = rand::random::<FirstName>().to_string();
         let jwt = DB
