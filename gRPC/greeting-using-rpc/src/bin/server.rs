@@ -1,7 +1,8 @@
 use greeting_using_rpc::server_service::{parse_socket_address, start_server};
+use greeting_using_rpc::error::AppError;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), AppError> {
     let addr_str = "[::1]:50051";
     
     let addr = parse_socket_address(addr_str).await?;
