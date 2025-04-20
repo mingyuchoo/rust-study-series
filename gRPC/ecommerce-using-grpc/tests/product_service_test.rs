@@ -1,14 +1,13 @@
 use ecommerce_using_grpc::MyProductInfo;
 // Import the server code
-use ecommerce_using_grpc::product_info_proto;
 use ecommerce_using_grpc::product_info_proto::product_info_client::ProductInfoClient;
 use ecommerce_using_grpc::product_info_proto::product_info_server::ProductInfoServer;
 use ecommerce_using_grpc::product_info_proto::{Product, ProductId};
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::time::sleep;
-use tonic::transport::{Channel, Server};
-use tonic::{Request, Response};
+use tonic::transport::Server;
+use tonic::Request;
 
 #[tokio::test]
 async fn test_add_product() {
