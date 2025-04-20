@@ -1,6 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use greeting_using_rpc::client_service::{connect_client, create_and_send_request, process_response};
-use greeting_using_rpc::error::AppResult;
 use tokio::runtime::Runtime;
 
 fn client_request_benchmark(c: &mut Criterion) {

@@ -1,5 +1,5 @@
 use greeting_using_rpc::client_service::{connect_client, create_and_send_request, process_response};
-use greeting_using_rpc::error::{AppError, AppResult};
+use greeting_using_rpc::error::AppResult;
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
