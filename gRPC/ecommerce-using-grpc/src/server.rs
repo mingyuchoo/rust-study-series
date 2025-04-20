@@ -15,10 +15,7 @@ pub struct MyProductInfo {}
 
 #[tonic::async_trait]
 impl ProductInfo for MyProductInfo {
-    async fn add_product(
-        &self,
-        request: Request<Product>,
-    ) -> Result<Response<ProductId>, Status> {
+    async fn add_product(&self, request: Request<Product>) -> Result<Response<ProductId>, Status> {
         let response: ProductId = ProductId {
             id: request.into_inner().id,
         };
@@ -26,15 +23,12 @@ impl ProductInfo for MyProductInfo {
         Ok(Response::new(response))
     }
 
-    async fn get_product(
-        &self,
-        request: Request<ProductId>,
-    ) -> Result<Response<Product>, Status> {
+    async fn get_product(&self, request: Request<ProductId>) -> Result<Response<Product>, Status> {
         let response: Product = Product {
-            id:          request.into_inner().id,
-            name:        String::from("MacBook Air 15"),
+            id: request.into_inner().id,
+            name: String::from("MacBook Air 15"),
             description: String::from("Impressively big. Impossibly thin."),
-            price:       1299.9,
+            price: 1299.9,
         };
 
         Ok(Response::new(response))
@@ -49,11 +43,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     println!("ProductInfoServer listening on {}", addr);
 
-    Server::builder()
-        .add_service(ProductInfoServer::new(product_info))
-        .serve(addr)
-        .await
-        .unwrap();
+    Server::builder().add_service(ProductInfoServer::new(product_info)).serve(addr).await.unwrap();
 
     Ok(())
 }
