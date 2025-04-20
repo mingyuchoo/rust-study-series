@@ -9,7 +9,7 @@
 [package]
   authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
   build   = "build.rs"
-  edition = "2021"
+  edition = "2024"
   name    = "rdkafka_v028_simple"
   version = "0.1.0"
 

@@ -1,6 +1,6 @@
 [package]
   authors = ["my-name <my-email@address.com>"]
-  edition = "2021"
+  edition = "2024"
   name    = "leptos-csr-extern-api"
   version = "0.1.0"
 

@@ -7,7 +7,7 @@
   opt-level = 3
 
 [package]
-  edition = "2021"
+  edition = "2024"
   name    = "check_date"
   version = "1.0.0"
 

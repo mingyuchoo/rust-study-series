@@ -65,7 +65,7 @@ Add dependencies in ~Cargo.toml~ file of =server= project
   [package]
   name = "server"
   version = "0.1.0"
-  edition = "2021"
+  edition = "2024"
 
   [dependencies]
   lib_api   = { path = "../lib_api"}

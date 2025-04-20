@@ -7,7 +7,7 @@
   opt-level = 3
 
 [package]
-  edition = "2021"
+  edition = "2024"
   name    = "p20_custom_error_types"
   version = "0.1.0"
 

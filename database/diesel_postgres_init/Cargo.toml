@@ -1,6 +1,6 @@
 [package]
   authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-  edition = "2021"
+  edition = "2024"
   name    = "diesel_postgres_init"
   version = "0.3.0"
 

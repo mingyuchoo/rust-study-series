@@ -1,6 +1,6 @@
 [package]
   authors = ["mingyuchoo <mingyuchoo@gmail.com>"]
-  edition = "2021"
+  edition = "2024"
   name    = "juniper_v014_mysql"
   version = "2.0.0"
 
