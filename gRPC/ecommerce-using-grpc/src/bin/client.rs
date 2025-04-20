@@ -20,6 +20,7 @@ impl ClientConfig {
     }
 
     /// Create a client with custom server URL
+    #[allow(dead_code)]
     fn with_server_url(server_url: impl Into<String>) -> Self {
         Self {
             server_url: server_url.into(),

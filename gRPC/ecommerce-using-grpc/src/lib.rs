@@ -1,4 +1,3 @@
-use std::fmt;
 use thiserror::Error;
 use tonic::{Request, Response, Status};
 
@@ -6,7 +5,7 @@ pub mod product_info_proto {
     tonic::include_proto!("ecommerce"); // proto package
 }
 
-use product_info_proto::product_info_server::{ProductInfo, ProductInfoServer};
+use product_info_proto::product_info_server::ProductInfo;
 use product_info_proto::{Product, ProductId};
 
 // Define custom error types for Railway Oriented Programming

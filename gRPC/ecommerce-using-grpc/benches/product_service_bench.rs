@@ -5,14 +5,14 @@ extern crate test;
 use ecommerce_using_grpc::product_info_proto::product_info_client::ProductInfoClient;
 use ecommerce_using_grpc::product_info_proto::product_info_server::ProductInfoServer;
 use ecommerce_using_grpc::product_info_proto::{Product, ProductId};
-use ecommerce_using_grpc::{MyProductInfo, product_info_proto};
+use ecommerce_using_grpc::MyProductInfo;
 use std::net::SocketAddr;
 use std::time::Duration;
 use test::Bencher;
 use tokio::runtime::Runtime;
 use tokio::time::sleep;
 use tonic::Request;
-use tonic::transport::{Channel, Server};
+use tonic::transport::Server;
 
 // Helper function to set up the test environment
 fn setup_test_env() -> (Runtime, String) {

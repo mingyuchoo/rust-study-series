@@ -1,5 +1,4 @@
 use std::error::Error;
-use tonic::transport::Channel;
 use tonic::{Request, Response};
 
 // Import the generated proto code
