@@ -15,4 +15,4 @@
 [dependencies]
   aws-config       = "1.5.10"
   aws-sdk-dynamodb = "1.53.0"
-  tokio            = {version = "1.41.1", features = ["full"]}
+  tokio            = {version = "1.44.2", features = ["full"]}
