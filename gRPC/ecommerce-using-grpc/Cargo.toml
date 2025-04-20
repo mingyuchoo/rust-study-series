@@ -6,17 +6,21 @@
 
 [[bin]]
   name = "server"
-  path = "src/server.rs"
+  path = "src/bin/server.rs"
 
 [[bin]]
   name = "client"
-  path = "src/client.rs"
+  path = "src/bin/client.rs"
 
 [dependencies]
+  anyhow      = "1.0.81"
   prost       = "0.13.5"
   prost-types = "0.13.5"
+  thiserror   = "1.0.58"
   tokio       = {version = "1.44.2", features = ["macros", "rt-multi-thread"]}
   tonic       = "0.13.0"
+  tracing     = "0.1.40"
+  tracing-subscriber = "0.3.18"
 
 [build-dependencies]
   tonic-build = "0.13.0"
