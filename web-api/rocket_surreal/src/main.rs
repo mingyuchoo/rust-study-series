@@ -173,10 +173,15 @@ async fn init() -> Result<(), surrealdb::Error> {
 
 #[launch]
 pub async fn rocket() -> _ {
-    std::env::set_var("ROCKET_PORT", "8080");
     init().await.expect("Something went wrong, shutting down");
     use rocket::fs::FileServer;
-    rocket::build()
+    use rocket::config::Config;
+    
+    // Rocket 설정을 코드에서 직접 구성
+    let config = Config::figment()
+        .merge(("port", 8080));
+    
+    rocket::custom(config)
         .mount("/", routes![
             routes::create_person,
             routes::read_person,
