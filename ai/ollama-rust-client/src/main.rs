@@ -117,8 +117,12 @@ struct QuestionForm {
 /// Response for the web API
 #[derive(Serialize)]
 struct ApiResponse {
-    summary: String,
+    intent: String,
+    analysis: String,
     answer: String,
+    summary: String,
+    step: String, // Current processing step
+    done: bool,   // Whether processing is complete
 }
 
 /// Ollama API client for making requests to the Ollama API
@@ -296,15 +300,52 @@ const INDEX_HTML: &str = r#"<!DOCTYPE html>
             background: #f9f9f9;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             margin-top: 30px;
         }
         
-        .summary, .answer {
+        .pipeline-step {
             background-color: #f9f9f9;
             padding: 20px;
             border-radius: 5px;
             margin-bottom: 20px;
+            border-left: 4px solid #ccc;
+        }
+        
+        .pipeline-step.active {
+            border-left-color: #3498db;
+        }
+        
+        .pipeline-step.completed {
+            border-left-color: #2ecc71;
+        }
+        
+        .pipeline-step.error {
+            border-left-color: #e74c3c;
+        }
+        
+        .status {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .status.processing {
+            color: #3498db;
+        }
+        
+        .status.completed {
+            color: #2ecc71;
+        }
+        
+        .status.error {
+            color: #e74c3c;
+        }
+        
+        .content {
+            display: none;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #eee;
         }
         
         .loading {
@@ -314,41 +355,39 @@ const INDEX_HTML: &str = r#"<!DOCTYPE html>
         }
         
         /* Markdown styling */
-        #summaryContent, #answerContent {
+        .content {
             line-height: 1.6;
         }
         
-        #summaryContent h1, #summaryContent h2, #summaryContent h3,
-        #answerContent h1, #answerContent h2, #answerContent h3 {
+        .content h1, .content h2, .content h3 {
             margin-top: 1em;
             margin-bottom: 0.5em;
         }
         
-        #summaryContent p, #answerContent p {
+        .content p {
             margin-bottom: 1em;
         }
         
-        #summaryContent pre, #answerContent pre {
+        .content pre {
             background-color: #f0f0f0;
             padding: 10px;
             border-radius: 4px;
             overflow-x: auto;
         }
         
-        #summaryContent code, #answerContent code {
+        .content code {
             background-color: #f0f0f0;
             padding: 2px 4px;
             border-radius: 3px;
             font-family: monospace;
         }
         
-        #summaryContent ul, #summaryContent ol,
-        #answerContent ul, #answerContent ol {
+        .content ul, .content ol {
             padding-left: 2em;
             margin-bottom: 1em;
         }
         
-        #summaryContent blockquote, #answerContent blockquote {
+        .content blockquote {
             border-left: 4px solid #ddd;
             padding-left: 1em;
             margin-left: 0;
@@ -371,13 +410,25 @@ const INDEX_HTML: &str = r#"<!DOCTYPE html>
     </div>
     
     <div class="result" id="result">
-        <div class="summary">
-            <h2>Summary</h2>
-            <div id="summaryContent"></div>
+        <div class="pipeline-step" id="intentStep">
+            <h2>Step 1: Intent Identification</h2>
+            <div class="status" id="intentStatus">Waiting...</div>
+            <div id="intentContent" class="content"></div>
         </div>
-        <div class="answer">
-            <h2>Detailed Answer</h2>
-            <div id="answerContent"></div>
+        <div class="pipeline-step" id="analysisStep">
+            <h2>Step 2: Analysis</h2>
+            <div class="status" id="analysisStatus">Waiting...</div>
+            <div id="analysisContent" class="content"></div>
+        </div>
+        <div class="pipeline-step" id="answerStep">
+            <h2>Step 3: Detailed Answer</h2>
+            <div class="status" id="answerStatus">Waiting...</div>
+            <div id="answerContent" class="content"></div>
+        </div>
+        <div class="pipeline-step" id="summaryStep">
+            <h2>Step 4: Summary</h2>
+            <div class="status" id="summaryStatus">Waiting...</div>
+            <div id="summaryContent" class="content"></div>
         </div>
     </div>
     
@@ -390,29 +441,16 @@ const INDEX_HTML: &str = r#"<!DOCTYPE html>
             const question = document.getElementById('question').value;
             if (!question.trim()) return;
             
-            // Show loading indicator
+            // Reset UI state
+            resetUI();
+            
+            // Show loading indicator and result container
             document.getElementById('loading').style.display = 'block';
-            document.getElementById('result').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
             
             try {
-                const response = await fetch('/api/question', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ question })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Failed to process question');
-                }
-                
-                const data = await response.json();
-                
-                // Render Markdown content to HTML
-                document.getElementById('summaryContent').innerHTML = marked.parse(data.summary);
-                document.getElementById('answerContent').innerHTML = marked.parse(data.answer);
-                document.getElementById('result').style.display = 'block';
+                // Start the streaming process
+                await processQuestionStream(question);
             } catch (error) {
                 alert('Error: ' + error.message);
                 console.error(error);
@@ -420,6 +458,95 @@ const INDEX_HTML: &str = r#"<!DOCTYPE html>
                 document.getElementById('loading').style.display = 'none';
             }
         });
+        
+        // Reset the UI state for a new question
+        function resetUI() {
+            // Reset all step statuses
+            document.querySelectorAll('.pipeline-step').forEach(step => {
+                step.className = 'pipeline-step';
+            });
+            
+            document.querySelectorAll('.status').forEach(status => {
+                status.className = 'status';
+                status.textContent = 'Waiting...';
+            });
+            
+            document.querySelectorAll('.content').forEach(content => {
+                content.style.display = 'none';
+                content.innerHTML = '';
+            });
+        }
+        
+        // Process a question through the streaming API
+        async function processQuestionStream(question) {
+            // Step 1: Intent Identification
+            updateStepStatus('intent', 'processing', 'Processing...');
+            
+            const response = await fetch('/api/question/stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question })
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to process question');
+            }
+            
+            const data = await response.json();
+            
+            // Display each step's result
+            if (data.intent) {
+                updateStepStatus('intent', 'completed', 'Completed');
+                document.getElementById('intentContent').innerHTML = marked.parse(data.intent);
+                document.getElementById('intentContent').style.display = 'block';
+            }
+            
+            if (data.analysis) {
+                updateStepStatus('analysis', 'completed', 'Completed');
+                document.getElementById('analysisContent').innerHTML = marked.parse(data.analysis);
+                document.getElementById('analysisContent').style.display = 'block';
+            }
+            
+            if (data.answer) {
+                updateStepStatus('answer', 'completed', 'Completed');
+                document.getElementById('answerContent').innerHTML = marked.parse(data.answer);
+                document.getElementById('answerContent').style.display = 'block';
+            }
+            
+            if (data.summary) {
+                updateStepStatus('summary', 'completed', 'Completed');
+                document.getElementById('summaryContent').innerHTML = marked.parse(data.summary);
+                document.getElementById('summaryContent').style.display = 'block';
+            }
+            
+            // Handle errors or incomplete processing
+            if (data.step === 'error') {
+                const stepId = getErrorStep(data);
+                updateStepStatus(stepId, 'error', 'Error');
+            }
+        }
+        
+        // Update the status of a pipeline step
+        function updateStepStatus(stepId, statusClass, statusText) {
+            const step = document.getElementById(stepId + 'Step');
+            const status = document.getElementById(stepId + 'Status');
+            
+            // Remove all classes and add the new one
+            step.className = 'pipeline-step ' + statusClass;
+            status.className = 'status ' + statusClass;
+            status.textContent = statusText;
+        }
+        
+        // Determine which step had an error based on available data
+        function getErrorStep(data) {
+            if (!data.intent) return 'intent';
+            if (!data.analysis) return 'analysis';
+            if (!data.answer) return 'answer';
+            if (!data.summary) return 'summary';
+            return 'unknown';
+        }
     </script>
 </body>
 </html>"#;
@@ -427,22 +554,108 @@ const INDEX_HTML: &str = r#"<!DOCTYPE html>
 /// Handler for the root path
 async fn index() -> Html<&'static str> { Html(INDEX_HTML) }
 
-/// Handler for the API endpoint
+/// Handler for the API endpoint that processes the entire pipeline at once
 async fn process_question(State(pipeline): State<QaPipeline>, Json(form): Json<QuestionForm>) -> Json<ApiResponse> {
     match pipeline.process_question(&form.question).await {
         | Ok((answer, summary)) => Json(ApiResponse {
-            summary: summary.content,
+            intent: "".to_string(),
+            analysis: "".to_string(),
             answer: answer.content,
+            summary: summary.content,
+            step: "complete".to_string(),
+            done: true,
         }),
         | Err(e) => {
             // In a real application, you'd want to handle errors more gracefully
             eprintln!("Error processing question: {}", e);
             Json(ApiResponse {
-                summary: "Error processing your question".to_string(),
+                intent: "".to_string(),
+                analysis: "".to_string(),
                 answer: format!("An error occurred: {}", e),
+                summary: "Error processing your question".to_string(),
+                step: "error".to_string(),
+                done: true,
             })
         },
     }
+}
+
+/// Handler for the streaming API endpoint that processes the pipeline step by
+/// step
+async fn process_question_stream(State(pipeline): State<QaPipeline>, Json(form): Json<QuestionForm>) -> Json<ApiResponse> {
+    // Step 1: Identify intent
+    let intent = match pipeline.identify_intent(&form.question).await {
+        | Ok(intent) => intent,
+        | Err(e) => {
+            eprintln!("Error identifying intent: {}", e);
+            return Json(ApiResponse {
+                intent: "".to_string(),
+                analysis: "".to_string(),
+                answer: format!("Error identifying intent: {}", e),
+                summary: "Error processing your question".to_string(),
+                step: "intent".to_string(),
+                done: true,
+            });
+        },
+    };
+
+    // Step 2: Analyze intent
+    let analysis = match pipeline.analyze_intent(&intent, &form.question).await {
+        | Ok(analysis) => analysis,
+        | Err(e) => {
+            eprintln!("Error analyzing intent: {}", e);
+            return Json(ApiResponse {
+                intent: intent.description,
+                analysis: "".to_string(),
+                answer: format!("Error analyzing intent: {}", e),
+                summary: "Error processing your question".to_string(),
+                step: "analysis".to_string(),
+                done: true,
+            });
+        },
+    };
+
+    // Step 3: Generate answer
+    let answer = match pipeline.generate_answer(&intent, &analysis, &form.question).await {
+        | Ok(answer) => answer,
+        | Err(e) => {
+            eprintln!("Error generating answer: {}", e);
+            return Json(ApiResponse {
+                intent: intent.description,
+                analysis: analysis.details,
+                answer: format!("Error generating answer: {}", e),
+                summary: "Error processing your question".to_string(),
+                step: "answer".to_string(),
+                done: true,
+            });
+        },
+    };
+
+    // Step 4: Summarize answer
+    let summary = match pipeline.summarize_answer(&intent, &analysis, &answer, &form.question).await {
+        | Ok(summary) => summary,
+        | Err(e) => {
+            eprintln!("Error summarizing answer: {}", e);
+            return Json(ApiResponse {
+                intent: intent.description,
+                analysis: analysis.details,
+                answer: answer.content,
+                summary: format!("Error summarizing answer: {}", e),
+                step: "summary".to_string(),
+                done: true,
+            });
+        },
+    };
+
+    // Return the complete response
+    Json(ApiResponse {
+        intent: intent.description,
+        analysis: analysis.details,
+        answer: answer.content,
+        summary: summary.content,
+        step: "complete".to_string(),
+        done: true,
+    })
 }
 
 #[tokio::main]
@@ -460,6 +673,7 @@ async fn main() -> std::result::Result<(), Box<dyn Error>> {
     let app = Router::new()
         .route("/", get(index))
         .route("/api/question", post(process_question))
+        .route("/api/question/stream", post(process_question_stream))
         .with_state(pipeline);
 
     // Run the server
