@@ -4,13 +4,40 @@ use std::error::Error;
 use std::fmt;
 use std::io::{self, Write};
 
+/// Configuration constants
+const OLLAMA_API_URL: &str = "http://localhost:11434/api/generate";
+const DEFAULT_MODEL: &str = "phi4";
+
+/// System prompts for each stage of the QA pipeline
+mod prompts {
+    pub const INTENT: &str = "You are an AI assistant specialized in identifying the user's intent from their question. 
+Your task is to analyze the question and provide a clear, detailed description of what the user is asking for. 
+Consider the subject matter, the type of information requested, and any specific constraints or preferences mentioned. 
+Your response should be comprehensive enough to guide the next stages of analysis.";
+
+    pub const ANALYSIS: &str = "You are an AI assistant specialized in analyzing user intents. 
+Your task is to take the identified intent and provide a detailed analysis of what information would be needed to answer the question comprehensively. 
+Break down the question into its key components, identify relevant topics, concepts, and potential sources of information. 
+Your analysis should be structured and thorough, preparing the groundwork for generating a complete answer.";
+
+    pub const ANSWER: &str = "You are a knowledgeable AI assistant tasked with providing comprehensive answers. 
+Based on the provided intent and analysis, deliver a detailed, accurate, and well-structured response to the user's question. 
+Include relevant facts, examples, and explanations. 
+Ensure your answer directly addresses all aspects identified in the intent and analysis. 
+Your response should be authoritative and educational while remaining accessible.";
+
+    pub const SUMMARY: &str = "You are an AI assistant specialized in creating concise summaries. 
+Your task is to distill the detailed answer into a clear, structured summary that captures all key points. 
+Highlight the most important information, organize it logically, and ensure it directly answers the original question. 
+Your summary should be comprehensive yet concise, allowing the user to quickly grasp the essential information without reading the full detailed answer.";
+}
+
 // Custom error type for the application
 #[derive(Debug)]
 enum AppError {
     Network(ReqwestError),
     Api { status: StatusCode, message: String },
     Io(io::Error),
-    // Removed unused variant: Other(String)
 }
 
 impl fmt::Display for AppError {
@@ -44,8 +71,6 @@ struct GenerateRequest {
     model: String,
     prompt: String,
     stream: bool,
-    // Additional options can be added here as needed
-    // options: Option<serde_json::Value>,
 }
 
 /// Response body from Ollama API generation endpoint
@@ -58,9 +83,6 @@ struct GenerateResponse {
     response: String,
     #[allow(dead_code)]
     done: bool,
-    // Additional fields can be added here as needed
-    // context: Vec<i32>,
-    // total_duration: u64,
 }
 
 /// Represents the identified intent of a user question
@@ -85,34 +107,6 @@ struct Answer {
 #[derive(Debug)]
 struct Summary {
     content: String,
-}
-
-/// Configuration constants
-const OLLAMA_API_URL: &str = "http://localhost:11434/api/generate";
-const DEFAULT_MODEL: &str = "phi4";
-
-/// System prompts for each stage of the QA pipeline
-mod prompts {
-    pub const INTENT: &str = "You are an AI assistant specialized in identifying the user's intent from their question. 
-Your task is to analyze the question and provide a clear, detailed description of what the user is asking for. 
-Consider the subject matter, the type of information requested, and any specific constraints or preferences mentioned. 
-Your response should be comprehensive enough to guide the next stages of analysis.";
-
-    pub const ANALYSIS: &str = "You are an AI assistant specialized in analyzing user intents. 
-Your task is to take the identified intent and provide a detailed analysis of what information would be needed to answer the question comprehensively. 
-Break down the question into its key components, identify relevant topics, concepts, and potential sources of information. 
-Your analysis should be structured and thorough, preparing the groundwork for generating a complete answer.";
-
-    pub const ANSWER: &str = "You are a knowledgeable AI assistant tasked with providing comprehensive answers. 
-Based on the provided intent and analysis, deliver a detailed, accurate, and well-structured response to the user's question. 
-Include relevant facts, examples, and explanations. 
-Ensure your answer directly addresses all aspects identified in the intent and analysis. 
-Your response should be authoritative and educational while remaining accessible.";
-
-    pub const SUMMARY: &str = "You are an AI assistant specialized in creating concise summaries. 
-Your task is to distill the detailed answer into a clear, structured summary that captures all key points. 
-Highlight the most important information, organize it logically, and ensure it directly answers the original question. 
-Your summary should be comprehensive yet concise, allowing the user to quickly grasp the essential information without reading the full detailed answer.";
 }
 
 /// Ollama API client for making requests to the Ollama API
