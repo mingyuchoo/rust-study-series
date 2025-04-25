@@ -76,12 +76,9 @@ struct GenerateRequest {
 /// Response body from Ollama API generation endpoint
 #[derive(Deserialize, Debug)]
 struct GenerateResponse {
-    #[allow(dead_code)]
     model: String,
-    #[allow(dead_code)]
     created_at: String,
     response: String,
-    #[allow(dead_code)]
     done: bool,
 }
 
