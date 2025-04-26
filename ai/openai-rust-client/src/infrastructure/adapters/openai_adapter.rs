@@ -185,13 +185,13 @@ impl ChatGateway for OpenAIAdapter {
                         .map_err(|e| OpenAIAdapterError::StreamProcessingError(e.to_string()))
                         .and_then(|chunk| Self::process_chunk(&chunk))
                 })
+                // Do NOT map errors to strings; propagate them as typed errors
                 .filter(|result| {
                     futures::future::ready(match result {
-                        | Ok(content) => !content.is_empty(),
-                        | Err(_) => true, // Keep errors in the stream
+                        Ok(content) => !content.is_empty(),
+                        Err(_) => true, // Propagate errors down the stream
                     })
                 })
-                .map_ok(|content| content)
                 .boxed();
 
             Ok(stream)

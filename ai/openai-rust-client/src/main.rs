@@ -85,15 +85,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// Chat endpoint handler that delegates to the controller
+// Railway Oriented Programming: propagate errors using combinators, no
+// panics/unwraps
 async fn chat_handler(
     State(controller): State<Arc<ChatController<ChatService<OpenAIAdapter>>>>,
     Json(request): Json<ChatRequest>,
 ) -> Result<Response, axum::http::StatusCode> {
-    match controller.chat(request).await {
-        | Ok(response) => Ok(response),
-        | Err(err) => {
-            eprintln!("Error: {}", err);
-            Err(err.into())
-        },
-    }
+    controller.chat(request).await.map_err(|err| {
+        eprintln!("Error: {}", err);
+        axum::http::StatusCode::from(err)
+    })
 }

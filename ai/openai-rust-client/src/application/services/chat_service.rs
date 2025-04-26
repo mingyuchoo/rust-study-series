@@ -40,6 +40,7 @@ where
         let gateway = Arc::clone(&self.gateway);
         let model = self.model.clone();
 
+        // Railway Oriented Programming: propagate errors explicitly, no panics/unwraps
         Box::pin(async move { gateway.send_messages(messages, &model, MAX_TOKENS, TEMPERATURE, TOP_P).await })
     }
 }

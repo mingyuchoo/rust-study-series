@@ -72,13 +72,8 @@ impl<U> ChatController<U> {
         // Send chat request to use case
         let stream = self.use_case.send_chat_request(request.messages).await?;
 
-        // Map the stream to handle errors
-        let stream = stream.map(|result| -> Result<String, std::io::Error> {
-            match result {
-                | Ok(content) => Ok(content),
-                | Err(e) => Ok(format!("Error: {}", e)),
-            }
-        });
+        // ROP: propagate errors as structured errors, not as strings
+        let stream = stream;
 
         // Create a response with the stream body
         let body = StreamBody::new(stream);
