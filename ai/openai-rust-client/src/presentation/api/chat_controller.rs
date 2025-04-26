@@ -7,7 +7,6 @@ use crate::presentation::api::models::ChatRequest;
 use axum::body::StreamBody;
 use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
-use futures::StreamExt;
 use std::sync::Arc;
 
 /// Chat controller error

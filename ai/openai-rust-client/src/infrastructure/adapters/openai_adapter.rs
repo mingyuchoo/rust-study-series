@@ -5,7 +5,7 @@ use crate::application::ports::output::ChatGateway;
 use crate::domain::entities::message::Message;
 use crate::infrastructure::config::app_config::AppConfig;
 use futures::future::Future;
-use futures::{Stream, StreamExt, TryStreamExt};
+use futures::{Stream, StreamExt};
 use reqwest::header::HeaderMap;
 use reqwest::{Client, Error as ReqwestError};
 use serde::{Deserialize, Serialize};
