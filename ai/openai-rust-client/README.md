@@ -32,7 +32,7 @@ OPENAI_MODEL=gpt-4o
 cargo run
 ```
 
-The application will be available at http://localhost:3000
+The application will be available at http://localhost:8080
 
 ## Project Structure
 

@@ -20,8 +20,8 @@ impl std::fmt::Display for ConfigError {
 impl std::error::Error for ConfigError {}
 
 /// Server configuration constants
-pub const SERVER_PORT: u16 = 3000;
-pub const SERVER_HOST: [u8; 4] = [127, 0, 0, 1];
+pub const SERVER_PORT: u16 = 8080;
+pub const SERVER_HOST: [u8; 4] = [0, 0, 0, 0];
 
 /// Application configuration
 #[derive(Debug, Clone)]

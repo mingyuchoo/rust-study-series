@@ -95,7 +95,7 @@ impl OpenAIAdapter {
             }
 
             // Remove the "data: " prefix if it exists
-            let data = if line.starts_with("data: ") { &line[6 ..] } else { line };
+            let data = line.strip_prefix("data: ").unwrap_or(line);
 
             // Check for the stream end marker
             if data == "[DONE]" {
