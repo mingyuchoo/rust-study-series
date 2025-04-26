@@ -1,0 +1,103 @@
+graph TD
+    %% Main modules
+    subgraph "Onion Architecture"
+        direction TB
+        
+        %% Core layers
+        subgraph Domain["Domain Layer (Core)"]
+            domain_entities["entities"]
+            domain_repositories["repositories"]
+        end
+        
+        subgraph Application["Application Layer"]
+            app_ports["ports"]
+            app_services["services"]
+        end
+        
+        subgraph Infrastructure["Infrastructure Layer"]
+            infra_adapters["adapters"]
+            infra_config["config"]
+        end
+        
+        subgraph Presentation["Presentation Layer"]
+            pres_api["api"]
+            pres_web["web"]
+        end
+        
+        %% Main files
+        lib["lib.rs"]
+        main["main.rs"]
+    end
+    
+    %% Domain layer details
+    subgraph "Domain Details"
+        domain_entities --> entities_message["message.rs"]
+        domain_entities --> entities_role["role.rs"]
+        domain_entities --> entities_error["error.rs"]
+        domain_repositories --> repositories_chat["chat_repository.rs"]
+    end
+    
+    %% Application layer details
+    subgraph "Application Details"
+        app_ports --> ports_input["input.rs (ChatUseCase)"]
+        app_ports --> ports_output["output.rs (ChatGateway)"]
+        app_services --> services_chat["chat_service.rs"]
+    end
+    
+    %% Infrastructure layer details
+    subgraph "Infrastructure Details"
+        infra_adapters --> adapters_openai["openai_adapter.rs"]
+        infra_config --> config_app["app_config.rs"]
+    end
+    
+    %% Presentation layer details
+    subgraph "Presentation Details"
+        pres_api --> api_controller["chat_controller.rs"]
+        pres_api --> api_models["models.rs"]
+        pres_web --> web_handlers["handlers.rs"]
+    end
+    
+    %% Dependencies between layers (strict unidirectional)
+    Domain --> Application
+    Application --> Infrastructure
+    Domain --> Infrastructure
+    Domain --> Presentation
+    Application --> Presentation
+    Infrastructure --> Presentation
+    
+    %% Specific dependencies
+    ports_input -.-> domain_entities
+    ports_output -.-> domain_entities
+    services_chat -.-> ports_input
+    services_chat -.-> ports_output
+    services_chat -.-> domain_entities
+    
+    adapters_openai -.-> ports_output
+    adapters_openai -.-> domain_entities
+    
+    api_controller -.-> ports_input
+    api_models -.-> domain_entities
+    
+    %% Main file dependencies
+    lib --> Domain
+    lib --> Application
+    lib --> Infrastructure
+    lib --> Presentation
+    
+    main --> lib
+    
+    %% Styling
+    classDef domain fill:#f9f,stroke:#333,stroke-width:2px
+    classDef application fill:#bbf,stroke:#333,stroke-width:2px
+    classDef infrastructure fill:#bfb,stroke:#333,stroke-width:2px
+    classDef presentation fill:#fbb,stroke:#333,stroke-width:2px
+    
+    class Domain domain
+    class Application application
+    class Infrastructure infrastructure
+    class Presentation presentation
+    
+    class domain_entities,domain_repositories domain
+    class app_ports,app_services application
+    class infra_adapters,infra_config infrastructure
+    class pres_api,pres_web presentation
