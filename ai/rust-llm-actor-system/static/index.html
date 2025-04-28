@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Agent System</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LLM Agent System</h1>
+        </header>
+        <div class="main-content">
+            <div class="agents-panel">
+                <h2>Active Agents</h2>
+                <div id="agents-list" class="agents-list">
+                    <!-- Agents will be populated here by JavaScript -->
+                </div>
+            </div>
+            <div class="chat-panel">
+                <h2>Chat with Agents</h2>
+                <div id="chat-history" class="chat-history">
+                    <!-- Chat messages will be populated here by JavaScript -->
+                </div>
+                <div class="chat-input">
+                    <form id="prompt-form">
+                        <textarea id="prompt-input" placeholder="Enter your question here..." required></textarea>
+                        <button type="submit" id="submit-btn">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="system-stats">
+            <h2>System Statistics</h2>
+            <div id="stats-container">
+                <!-- Stats will be populated here by JavaScript -->
+            </div>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
