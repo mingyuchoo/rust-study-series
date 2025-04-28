@@ -36,8 +36,8 @@ struct AgentInfo {
     model: String,
     health: String,
     health_class: String,
-    prompts: String,
-    avg_time: String,
+    prompts: usize,
+    avg_time: f64,
 }
 
 // Struct for chat messages
@@ -76,8 +76,8 @@ async fn get_agents(app_state: web::Data<AppState>) -> impl Responder {
             model: agent.get_model().clone(),
             health: format!("{:?}", health_status),
             health_class: health_class.to_string(),
-            prompts: prompts.to_string(),
-            avg_time: format!("{:.2}", avg_time),
+            prompts,
+            avg_time,
         });
     }
 

@@ -511,16 +511,19 @@ document.addEventListener('DOMContentLoaded', () => {
             agentCard.className = `agent-card ${healthClass}`;
             agentCard.setAttribute('data-agent-id', agent.id);
             
-            // Format average time to be more readable
-            const avgTime = typeof agent.avg_time === 'number' ? 
-                (agent.avg_time > 1000 ? `${(agent.avg_time / 1000).toFixed(2)}s` : `${agent.avg_time}ms`) : 
-                agent.avg_time;
-            
+            // Format average time to be more readable (ms/s)
+            let avgTime = '';
+            if (typeof agent.avg_time === 'number') {
+                avgTime = agent.avg_time > 1000 ? `${(agent.avg_time / 1000).toFixed(2)}s` : `${agent.avg_time.toFixed(0)}ms`;
+            } else {
+                avgTime = `${agent.avg_time}`;
+            }
+
             agentCard.innerHTML = `
                 <h3>${agent.id}</h3>
                 <p><strong>Model:</strong> ${agent.model}</p>
                 <p><strong>Health:</strong> <span class="health-status">${agent.health}</span></p>
-                <p><strong>Prompts:</strong> ${agent.prompts}</p>
+                <p><strong>Prompts:</strong> ${Number(agent.prompts)}</p>
                 <p><strong>Avg Time:</strong> ${avgTime}</p>
             `;
             
