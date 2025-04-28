@@ -5,39 +5,68 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LLM Agent System</title>
     <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>LLM Agent System</h1>
+            <h1><i class="fas fa-robot"></i> LLM Agent System</h1>
+            <p class="tagline">Intelligent conversational agents powered by Rust</p>
         </header>
         <div class="main-content">
             <div class="agents-panel">
-                <h2>Active Agents</h2>
+                <div class="panel-header">
+                    <h2><i class="fas fa-microchip"></i> Active Agents</h2>
+                    <button id="refresh-agents" class="refresh-btn" title="Refresh agents"><i class="fas fa-sync-alt"></i></button>
+                </div>
                 <div id="agents-list" class="agents-list">
                     <!-- Agents will be populated here by JavaScript -->
+                    <div class="loading-placeholder">Loading agents...</div>
                 </div>
             </div>
             <div class="chat-panel">
-                <h2>Chat with Agents</h2>
+                <div class="panel-header">
+                    <h2><i class="fas fa-comments"></i> Chat with Agents</h2>
+                    <div class="chat-controls">
+                        <button id="clear-chat" class="control-btn" title="Clear chat"><i class="fas fa-trash"></i></button>
+                        <span id="typing-indicator" class="typing-indicator hidden">Agent is thinking<span class="dots"></span></span>
+                    </div>
+                </div>
                 <div id="chat-history" class="chat-history">
                     <!-- Chat messages will be populated here by JavaScript -->
+                    <div class="welcome-message">
+                        <h3>Welcome to the LLM Agent System</h3>
+                        <p>Ask a question below to interact with our intelligent agents.</p>
+                    </div>
                 </div>
                 <div class="chat-input">
                     <form id="prompt-form">
                         <textarea id="prompt-input" placeholder="Enter your question here..." required></textarea>
-                        <button type="submit" id="submit-btn">Send</button>
+                        <button type="submit" id="submit-btn"><i class="fas fa-paper-plane"></i></button>
                     </form>
                 </div>
             </div>
         </div>
         <div class="system-stats">
-            <h2>System Statistics</h2>
-            <div id="stats-container">
+            <div class="panel-header">
+                <h2><i class="fas fa-chart-line"></i> System Statistics</h2>
+                <button id="refresh-stats" class="refresh-btn" title="Refresh stats"><i class="fas fa-sync-alt"></i></button>
+            </div>
+            <div id="stats-container" class="stats-container">
                 <!-- Stats will be populated here by JavaScript -->
+                <div class="loading-placeholder">Loading statistics...</div>
             </div>
         </div>
     </div>
+    <footer>
+        <p>&copy; 2025 Rust LLM Actor System | <a href="https://github.com/mingyuchoo/rust-study-series" target="_blank"><i class="fab fa-github"></i> GitHub</a></p>
+    </footer>
     <script src="/static/js/main.js"></script>
 </body>
 </html>
