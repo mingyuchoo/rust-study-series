@@ -1,3 +1,4 @@
+/* ====== THEME COLORS ====== */
 :root {
     /* Gruvbox Dark Hard Colors */
     --bg-hard: #1d2021;
@@ -70,6 +71,7 @@ body {
     flex: 1;
 }
 
+/* ====== HEADER & FOOTER ====== */
 header {
     text-align: center;
     margin-bottom: 30px;
@@ -81,6 +83,17 @@ header {
     box-shadow: var(--shadow-md);
     position: relative;
     overflow: hidden;
+}
+
+header__title {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+header__tagline {
+    font-size: 1.1rem;
+    opacity: 0.9;
 }
 
 header::before {
@@ -115,6 +128,7 @@ h1, h2, h3 {
     font-weight: 600;
 }
 
+/* ====== MAIN LAYOUT ====== */
 .main-content {
     display: grid;
     grid-template-columns: 1fr 2fr;
@@ -122,15 +136,15 @@ h1, h2, h3 {
     margin-bottom: 30px;
 }
 
-.agents-panel, .chat-panel, .system-stats {
+/* ====== PANEL (AGENTS, CHAT, SYSTEM STATS) ====== */
+.panel {
     background-color: var(--card-background);
     border-radius: var(--border-radius);
     padding: 20px;
     box-shadow: var(--shadow-sm);
     transition: box-shadow var(--transition-speed);
 }
-
-.agents-panel:hover, .chat-panel:hover, .system-stats:hover {
+.panel:hover {
     box-shadow: var(--shadow-md);
 }
 
@@ -142,15 +156,13 @@ h1, h2, h3 {
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border-color);
 }
-
-.panel-header h2 {
+.panel-header__title {
     margin-bottom: 0;
     display: flex;
     align-items: center;
     gap: 8px;
 }
-
-.panel-header h2 i {
+.panel-header__title i {
     color: var(--primary-color);
 }
 
@@ -169,28 +181,28 @@ h1, h2, h3 {
     align-items: center;
     transition: all var(--transition-speed);
 }
-
 .refresh-btn:hover, .control-btn:hover {
     background-color: rgba(0, 0, 0, 0.05);
     color: var(--primary-color);
 }
-
 .refresh-btn.loading i, .control-btn.loading i {
     animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
+/* ====== AGENTS PANEL ====== */
+.agents-panel {
+    /* extends .panel */
+}
 .agents-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 15px;
     margin-top: 15px;
 }
-
 .agent-card {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -199,7 +211,6 @@ h1, h2, h3 {
     position: relative;
     overflow: hidden;
 }
-
 .agent-card::after {
     content: '';
     position: absolute;
@@ -210,30 +221,18 @@ h1, h2, h3 {
     background-color: var(--primary-color);
     transition: all var(--transition-speed);
 }
-
 .agent-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-md);
 }
-
-.agent-card.healthy::after {
-    background-color: var(--success-color);
-}
-
-.agent-card.degraded::after {
-    background-color: var(--warning-color);
-}
-
-.agent-card.unhealthy::after {
-    background-color: var(--danger-color);
-}
-
+.agent-card.healthy::after { background-color: var(--success-color); }
+.agent-card.degraded::after { background-color: var(--warning-color); }
+.agent-card.unhealthy::after { background-color: var(--danger-color); }
 .agent-card h3 {
     font-size: 1.1rem;
     margin-bottom: 10px;
     color: var(--primary-dark);
 }
-
 .agent-card p {
     margin-bottom: 5px;
     font-size: 0.9rem;

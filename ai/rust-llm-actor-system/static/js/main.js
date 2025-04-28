@@ -1,3 +1,30 @@
+// --- Railway Oriented Programming: Result Type Helpers ---
+const Ok = (value) => ({ ok: true, value });
+const Err = (error) => ({ ok: false, error });
+
+function mapResult(result, fn) {
+    return result.ok ? Ok(fn(result.value)) : result;
+}
+function chainResult(result, fn) {
+    return result.ok ? fn(result.value) : result;
+}
+function mapErr(result, fn) {
+    return result.ok ? result : Err(fn(result.error));
+}
+
+// Async helpers for fetch
+async function fetchResult(url, options) {
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) return Err(`HTTP ${response.status}`);
+        const data = await response.json();
+        return Ok(data);
+    } catch (e) {
+        return Err(e.message || e);
+    }
+}
+
+// --- DOMContentLoaded Main ---
 document.addEventListener('DOMContentLoaded', () => {
     // Configure marked.js
     marked.use({
@@ -48,14 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function initializePage() {
         fetchAgentsStatus();
         fetchSystemStats();
-        
-        // Set up auto-refresh
         startAutoRefresh();
-        
-        // Focus on input
         promptInput.focus();
-        
-        // Enable textarea auto-resize
         promptInput.addEventListener('input', autoResizeTextarea);
     }
     
@@ -83,43 +104,47 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws`;
-        
+        let socket;
         try {
-            const socket = new WebSocket(wsUrl);
-            
-            socket.onopen = () => {
-                console.log('WebSocket connection established');
-                reconnectAttempts = 0;
-            };
-            
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-                handleWebSocketMessage(data);
-            };
-            
-            socket.onclose = () => {
-                console.log('WebSocket connection closed');
-                if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-                    reconnectAttempts++;
-                    const timeout = Math.min(1000 * reconnectAttempts, 5000);
-                    setTimeout(setupWebSocket, timeout);
-                }
-            };
-            
-            socket.onerror = (error) => {
-                console.error('WebSocket error:', error);
-            };
+            socket = new WebSocket(wsUrl);
         } catch (error) {
             console.error('Failed to establish WebSocket connection:', error);
+            return;
         }
+        socket.onopen = () => {
+            console.log('WebSocket connection established');
+            reconnectAttempts = 0;
+        };
+        socket.onmessage = (event) => {
+            let result;
+            try {
+                result = Ok(JSON.parse(event.data));
+            } catch (e) {
+                result = Err('Malformed WebSocket message');
+            }
+            chainResult(result, handleWebSocketMessage);
+            mapErr(result, error => {
+                console.error('WebSocket message error:', error);
+            });
+        };
+        socket.onclose = () => {
+            console.log('WebSocket connection closed');
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                const timeout = Math.min(1000 * reconnectAttempts, 5000);
+                setTimeout(setupWebSocket, timeout);
+            }
+        };
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
     }
     
     /**
      * Handle WebSocket messages
      */
     function handleWebSocketMessage(data) {
-        if (!data || !data.type) return;
-        
+        if (!data || !data.type) return Err('No data or type in WebSocket message');
         switch (data.type) {
             case 'agent_update':
                 updateAgentsList(data.agents);
@@ -133,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
             default:
                 console.log('Unknown message type:', data.type);
         }
+        return Ok();
     }
     
     /**
@@ -214,59 +240,39 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function handlePromptSubmission(e) {
         e.preventDefault();
-        
         const prompt = promptInput.value.trim();
         if (!prompt || isProcessing) return;
-        
         isProcessing = true;
         lastMessageTime = Date.now();
-        
-        // Update UI to show processing state
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         showTypingIndicator();
-        
-        // Add user message to chat
         addMessageToChat('user', prompt);
-        
-        try {
-            // Send prompt to server
-            const response = await fetch('/api/prompt', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ prompt })
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Server responded with status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            // Add agent response to chat
+
+        // --- Railway style: fetchResult, chain, mapErr ---
+        const result = await fetchResult('/api/prompt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
+
+        chainResult(result, data => {
             addMessageToChat('agent', data.response, data.agent_id);
-            
-            // Update stats after response
             fetchAgentsStatus();
             fetchSystemStats();
-            
-        } catch (error) {
-            console.error('Error:', error);
-            addMessageToChat('agent', `Sorry, there was an error processing your request: ${error.message}. Please try again.`);
-        } finally {
-            // Reset UI
-            isProcessing = false;
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-            hideTypingIndicator();
-            
-            // Clear input and reset height
-            promptInput.value = '';
-            promptInput.style.height = 'auto';
-            promptInput.focus();
-        }
+            return Ok();
+        });
+        mapErr(result, error => {
+            addMessageToChat('agent', `Sorry, there was an error processing your request: ${error}. Please try again.`);
+        });
+
+        isProcessing = false;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        hideTypingIndicator();
+        promptInput.value = '';
+        promptInput.style.height = 'auto';
+        promptInput.focus();
     }
     
     /**
@@ -469,21 +475,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (showLoading) {
             document.getElementById('agents-list').innerHTML = '<div class="loading-placeholder">Loading agents...</div>';
         }
-        
-        try {
-            const response = await fetch('/api/agents');
-            if (!response.ok) {
-                throw new Error(`Failed to fetch agents: ${response.status}`);
-            }
-            
-            const agents = await response.json();
+        const result = await fetchResult('/api/agents');
+        chainResult(result, agents => {
             updateAgentsList(agents);
-            return agents;
-        } catch (error) {
-            console.error('Error fetching agents:', error);
-            document.getElementById('agents-list').innerHTML = `<div class="error-message">Failed to load agents: ${error.message}</div>`;
-            return [];
-        }
+            return Ok(agents);
+        });
+        mapErr(result, error => {
+            document.getElementById('agents-list').innerHTML = `<div class="error-message">Failed to load agents: ${error}</div>`;
+        });
+        return result.ok ? result.value : [];
     }
     
     /**
@@ -535,21 +535,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (showLoading) {
             document.getElementById('stats-container').innerHTML = '<div class="loading-placeholder">Loading statistics...</div>';
         }
-        
-        try {
-            const response = await fetch('/api/stats');
-            if (!response.ok) {
-                throw new Error(`Failed to fetch stats: ${response.status}`);
-            }
-            
-            const stats = await response.json();
+        const result = await fetchResult('/api/stats');
+        chainResult(result, stats => {
             updateSystemStats(stats);
-            return stats;
-        } catch (error) {
-            console.error('Error fetching stats:', error);
-            document.getElementById('stats-container').innerHTML = `<div class="error-message">Failed to load statistics: ${error.message}</div>`;
-            return {};
-        }
+            return Ok(stats);
+        });
+        mapErr(result, error => {
+            document.getElementById('stats-container').innerHTML = `<div class="error-message">Failed to load statistics: ${error}</div>`;
+        });
+        return result.ok ? result.value : {};
     }
     
     /**
