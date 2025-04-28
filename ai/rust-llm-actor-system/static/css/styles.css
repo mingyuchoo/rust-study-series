@@ -1,22 +1,47 @@
 :root {
-    --primary-color: #3f51b5;
-    --primary-light: #757de8;
-    --primary-dark: #002984;
-    --secondary-color: #00bcd4;
-    --secondary-light: #62efff;
-    --secondary-dark: #008ba3;
-    --accent-color: #ff4081;
-    --background-color: #f5f7fa;
-    --card-background: #ffffff;
-    --text-color: #333333;
-    --text-light: #666666;
-    --border-color: #e0e0e0;
-    --success-color: #4caf50;
-    --warning-color: #ff9800;
-    --danger-color: #f44336;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+    /* Gruvbox Dark Hard Colors */
+    --bg-hard: #1d2021;
+    --bg: #282828;
+    --bg-soft: #32302f;
+    --bg1: #3c3836;
+    --bg2: #504945;
+    --bg3: #665c54;
+    --bg4: #7c6f64;
+    
+    --fg: #ebdbb2;
+    --fg0: #fbf1c7;
+    --fg2: #d5c4a1;
+    --fg3: #bdae93;
+    --fg4: #a89984;
+    
+    --red: #fb4934;
+    --green: #b8bb26;
+    --yellow: #fabd2f;
+    --blue: #83a598;
+    --purple: #d3869b;
+    --aqua: #8ec07c;
+    --orange: #fe8019;
+    --gray: #928374;
+    
+    /* Theme Variables */
+    --primary-color: var(--blue);
+    --primary-light: var(--aqua);
+    --primary-dark: #5a7b8c;
+    --secondary-color: var(--aqua);
+    --secondary-light: var(--green);
+    --secondary-dark: #6d9e6d;
+    --accent-color: var(--orange);
+    --background-color: var(--bg-hard);
+    --card-background: var(--bg);
+    --text-color: var(--fg);
+    --text-light: var(--fg4);
+    --border-color: var(--bg2);
+    --success-color: var(--green);
+    --warning-color: var(--yellow);
+    --danger-color: var(--red);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
     --transition-speed: 0.3s;
     --border-radius: 8px;
 }
@@ -49,8 +74,9 @@ header {
     text-align: center;
     margin-bottom: 30px;
     padding: 25px;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
+    background: linear-gradient(135deg, var(--bg1), var(--bg-hard));
+    border: 1px solid var(--bg3);
+    color: var(--fg0);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-md);
     position: relative;
@@ -64,7 +90,7 @@ header::before {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    background: radial-gradient(circle, rgba(235,219,178,0.05) 0%, rgba(235,219,178,0) 70%);
     opacity: 0.6;
     z-index: 0;
 }
@@ -257,14 +283,15 @@ h1, h2, h3 {
     border-radius: var(--border-radius);
     padding: 15px;
     margin-bottom: 15px;
-    background-color: #f9f9f9;
+    background-color: var(--bg-soft);
     scroll-behavior: smooth;
 }
 
 .welcome-message {
     text-align: center;
     padding: 20px;
-    background-color: rgba(255, 255, 255, 0.7);
+    background-color: var(--bg1);
+    border: 1px solid var(--bg3);
     border-radius: var(--border-radius);
     margin: 20px 0;
 }
@@ -289,16 +316,17 @@ h1, h2, h3 {
 }
 
 .message.user {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-    color: white;
+    background: linear-gradient(135deg, var(--blue), var(--primary-dark));
+    color: var(--fg0);
     margin-left: auto;
     border-bottom-right-radius: 0;
+    border: 1px solid var(--bg3);
 }
 
 .message.agent {
-    background-color: white;
-    color: var(--text-color);
-    border: 1px solid var(--border-color);
+    background-color: var(--bg1);
+    color: var(--fg);
+    border: 1px solid var(--bg3);
     border-bottom-left-radius: 0;
     box-shadow: var(--shadow-sm);
 }
@@ -364,7 +392,8 @@ h1, h2, h3 {
     padding: 1em;
     overflow: auto;
     border-radius: 6px;
-    background-color: #f6f8fa;
+    background-color: var(--bg-hard);
+    border: 1px solid var(--bg2);
     line-height: 1.45;
 }
 
@@ -373,6 +402,7 @@ h1, h2, h3 {
     background-color: transparent;
     white-space: pre;
     font-size: 90%;
+    color: var(--fg2);
 }
 
 .message-content.markdown a {
@@ -446,27 +476,29 @@ h1, h2, h3 {
 #prompt-input {
     flex-grow: 1;
     padding: 12px 15px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--bg3);
     border-radius: var(--border-radius) 0 0 var(--border-radius);
     resize: none;
     height: 60px;
     font-family: inherit;
     font-size: 1rem;
     transition: border-color var(--transition-speed);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15);
+    background-color: var(--bg);
+    color: var(--fg);
 }
 
 #prompt-input:focus {
     outline: none;
-    border-color: var(--primary-light);
-    box-shadow: 0 0 0 2px rgba(63, 81, 181, 0.2);
+    border-color: var(--blue);
+    box-shadow: 0 0 0 2px rgba(131, 165, 152, 0.3);
 }
 
 #submit-btn {
     padding: 0 20px;
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
+    background-color: var(--blue);
+    color: var(--fg0);
+    border: 1px solid var(--bg4);
     border-radius: 0 var(--border-radius) var(--border-radius) 0;
     cursor: pointer;
     transition: background-color var(--transition-speed);
@@ -480,7 +512,8 @@ h1, h2, h3 {
 }
 
 #submit-btn:disabled {
-    background-color: var(--text-light);
+    background-color: var(--bg3);
+    color: var(--fg4);
     cursor: not-allowed;
 }
 
@@ -496,12 +529,12 @@ h1, h2, h3 {
 
 .stat-item {
     padding: 15px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--bg3);
     border-radius: var(--border-radius);
     transition: all var(--transition-speed);
     display: flex;
     flex-direction: column;
-    background-color: white;
+    background-color: var(--bg1);
 }
 
 .stat-item:hover {
@@ -536,19 +569,20 @@ h1, h2, h3 {
 footer {
     text-align: center;
     padding: 15px;
-    background-color: var(--primary-dark);
-    color: white;
+    background-color: var(--bg-hard);
+    border-top: 1px solid var(--bg2);
+    color: var(--fg);
     margin-top: 30px;
 }
 
 footer a {
-    color: var(--secondary-light);
+    color: var(--blue);
     text-decoration: none;
     transition: color var(--transition-speed);
 }
 
 footer a:hover {
-    color: white;
+    color: var(--aqua);
     text-decoration: underline;
 }
 
