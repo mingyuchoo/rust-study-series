@@ -634,11 +634,7 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
     let agent_configs = vec![
         ("default", "gpt-4o", "You are a helpful, advanced assistant."),
         ("math_specialist", "gpt-4o", "You are a math expert. Only answer math questions in detail."),
-        (
-            "korean_specialist",
-            "gpt-4o",
-            "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics.",
-        ),
+        ("korean_specialist", "gpt-4o", "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics."),
     ];
 
     for (agent_id, model, system_prompt) in agent_configs {
