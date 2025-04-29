@@ -439,7 +439,7 @@ impl AgentRouter {
         let api_url = env::var("OPENAI_API_URL").map_err(|_| anyhow!("OPENAI_API_URL not set"))?;
 
         // Use a simpler model for routing decisions to save costs
-        let model = "gpt-3.5-turbo";
+        let model = "gpt-4o";
 
         let system_prompt = format!(
             "You are a routing assistant. Your job is to analyze the user's prompt and select the most appropriate agent to handle it.
@@ -737,13 +737,19 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
 
     // Add some initial LLM agents
     let agent_configs = vec![
-        ("default", "gpt-4o", "You are a helpful, advanced assistant."),
         ("math_specialist", "gpt-4o", "You are a math expert. Only answer math questions in detail."),
+        (
+            "computer_specialist",
+            "gpt-4o",
+            "You are a computer expert. Only answer computer questions in detail.",
+        ),
+        ("music_specialist", "gpt-4o", "You are a music expert. Only answer music questions in detail."),
         (
             "korean_specialist",
             "gpt-4o",
             "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics.",
         ),
+        ("default", "gpt-4o", "You are a helpful, advanced assistant."),
     ];
 
     for (agent_id, model, system_prompt) in agent_configs {
@@ -756,10 +762,13 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
         .register_rule_with_priority("math".to_string(), "math_specialist".to_string(), 10, 0.6)
         .map_err(std::io::Error::other)?;
     router
-        .register_rule_with_priority("default".to_string(), "default".to_string(), 5, 0.4)
+        .register_rule_with_priority("computer".to_string(), "computer_specialist".to_string(), 10, 0.6)
         .map_err(std::io::Error::other)?;
     router
-        .register_rule_with_priority("한국".to_string(), "korean_specialist".to_string(), 8, 0.5)
+        .register_rule_with_priority("music".to_string(), "music_specialist".to_string(), 10, 0.6)
+        .map_err(std::io::Error::other)?;
+    router
+        .register_rule_with_priority("korean".to_string(), "korean_specialist".to_string(), 8, 0.5)
         .map_err(std::io::Error::other)?;
     router
         .register_rule("default".to_string(), "default".to_string())

@@ -16,7 +16,7 @@
 ### LLMActor
 
 - 실제 LLM 처리 로직 구현
-- 다양한 LLM 모델 지원 (gpt-4, gpt-3.5-turbo 등)
+- 다양한 LLM 모델 지원 (gpt-4, gpt-4o 등)
 - 비동기 프롬프트 처리
 
 ### DynamicSupervisor
