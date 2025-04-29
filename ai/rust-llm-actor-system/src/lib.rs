@@ -145,7 +145,7 @@ impl LLMActor {
     pub async fn process_prompt(&self, prompt: String) -> Result<String> {
         use reqwest::Client;
         use serde_json::json;
-        info!("Lib> Processing prompt with model: {}", self.model);
+        info!("Processing prompt with model: {}", self.model);
         match self.health_status {
             | HealthStatus::Unhealthy => return Err(anyhow!("Agent is unhealthy and cannot process prompts")),
             | _ => {},
@@ -412,8 +412,8 @@ impl AgentRouter {
 
     async fn select_agent_with_openai(&self, prompt: &str) -> Result<&LLMActor> {
         use reqwest::Client;
-        use serde_json::json;
         use serde::Deserialize;
+        use serde_json::json;
 
         #[derive(Deserialize)]
         struct OpenAIResponse {
@@ -432,18 +432,15 @@ impl AgentRouter {
 
         // Get available agent IDs for the system prompt
         let agent_ids: Vec<String> = self.agents.keys().cloned().collect();
-        let agent_descriptions: Vec<String> = self.agents
-            .iter()
-            .map(|(id, agent)| format!("{}: {}", id, agent.get_system_prompt()))
-            .collect();
+        let agent_descriptions: Vec<String> = self.agents.iter().map(|(id, agent)| format!("{}: {}", id, agent.get_system_prompt())).collect();
 
         dotenv().ok();
         let api_key = env::var("OPENAI_API_KEY").map_err(|_| anyhow!("OPENAI_API_KEY not set"))?;
         let api_url = env::var("OPENAI_API_URL").map_err(|_| anyhow!("OPENAI_API_URL not set"))?;
-        
+
         // Use a simpler model for routing decisions to save costs
         let model = "gpt-3.5-turbo";
-        
+
         let system_prompt = format!(
             "You are a routing assistant. Your job is to analyze the user's prompt and select the most appropriate agent to handle it.
 
@@ -476,9 +473,14 @@ Respond ONLY with the ID of the single best agent to handle this prompt. Your re
             .error_for_status()?;
 
         let resp_json: OpenAIResponse = resp.json().await?;
-        let agent_id = resp_json.choices.get(0)
+        let agent_id = resp_json
+            .choices
+            .first()
             .ok_or_else(|| anyhow!("No choices in OpenAI response"))?
-            .message.content.trim().to_string();
+            .message
+            .content
+            .trim()
+            .to_string();
 
         // Validate that the returned agent_id is one of our agents
         match self.agents.contains_key(&agent_id) {
@@ -653,8 +655,9 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
     // Process the prompt
     // Clone the prompt to avoid borrowing issues
     let prompt_clone = prompt.clone();
-    
-    // Get the router with a separate scope to ensure it's released before we use it again
+
+    // Get the router with a separate scope to ensure it's released before we use it
+    // again
     let agent_id = {
         let router_guard = app_state.router.lock().await;
         let result = router_guard.select_best_agent(&prompt_clone).await;
@@ -692,7 +695,7 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
             Ok(HttpResponse::Ok().json(prompt_response))
         },
         | Err(e) => {
-            error!("Main> Error processing prompt: {:?}", e);
+            error!("Error processing prompt: {:?}", e);
 
             // Add error message to chat history
             let error_message = ChatMessage {
@@ -736,7 +739,11 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
     let agent_configs = vec![
         ("default", "gpt-4o", "You are a helpful, advanced assistant."),
         ("math_specialist", "gpt-4o", "You are a math expert. Only answer math questions in detail."),
-        ("korean_specialist", "gpt-4o", "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics."),
+        (
+            "korean_specialist",
+            "gpt-4o",
+            "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics.",
+        ),
     ];
 
     for (agent_id, model, system_prompt) in agent_configs {
