@@ -49,8 +49,11 @@ impl Metrics {
     pub fn record_prompt(&self, duration_ms: u64, is_error: bool) {
         self.prompt_count.fetch_add(1, Ordering::SeqCst);
         self.total_processing_time_ms.fetch_add(duration_ms as usize, Ordering::SeqCst);
-        if is_error {
-            self.error_count.fetch_add(1, Ordering::SeqCst);
+        match is_error {
+            | true => {
+                self.error_count.fetch_add(1, Ordering::SeqCst);
+            },
+            | false => {},
         }
     }
 
@@ -59,7 +62,10 @@ impl Metrics {
         let errors = self.error_count.load(Ordering::SeqCst);
         let total_time = self.total_processing_time_ms.load(Ordering::SeqCst);
 
-        let avg_time = if prompts > 0 { total_time as f64 / prompts as f64 } else { 0.0 };
+        let avg_time = match prompts {
+            | 0 => 0.0,
+            | _ => total_time as f64 / prompts as f64,
+        };
 
         (prompts, errors, total_time, avg_time)
     }
@@ -117,18 +123,19 @@ impl LLMActor {
     }
 
     pub async fn check_health(&mut self) -> HealthStatus {
-        // In a real implementation, this would perform a health check
-        // For now, we'll just simulate a health check
         let now = Instant::now();
-        if now.duration_since(self.last_health_check) > Duration::from_secs(60) {
-            // Simulate random health status for demo purposes
-            let rand_num = (now.elapsed().as_millis() % 10) as u8;
-            let new_status = match rand_num {
-                | 0 ..= 7 => HealthStatus::Healthy,
-                | 8 => HealthStatus::Degraded,
-                | _ => HealthStatus::Unhealthy,
-            };
-            self.update_health_status(new_status);
+        match now.duration_since(self.last_health_check) > Duration::from_secs(60) {
+            | true => {
+                // Simulate random health status for demo purposes
+                let rand_num = (now.elapsed().as_millis() % 10) as u8;
+                let new_status = match rand_num {
+                    | 0 ..= 7 => HealthStatus::Healthy,
+                    | 8 => HealthStatus::Degraded,
+                    | _ => HealthStatus::Unhealthy,
+                };
+                self.update_health_status(new_status);
+            },
+            | false => {},
         }
         self.health_status
     }
@@ -137,8 +144,9 @@ impl LLMActor {
         use reqwest::Client;
         use serde_json::json;
         info!("Lib> Processing prompt with model: {}", self.model);
-        if self.health_status == HealthStatus::Unhealthy {
-            return Err(anyhow!("Agent is unhealthy and cannot process prompts"));
+        match self.health_status {
+            | HealthStatus::Unhealthy => return Err(anyhow!("Agent is unhealthy and cannot process prompts")),
+            | _ => {},
         }
         dotenv().ok();
         let api_key = env::var("OPENAI_API_KEY").map_err(|_| anyhow!("OPENAI_API_KEY not set"))?;
@@ -207,7 +215,7 @@ impl AgentRouter {
     pub fn get_agents(&self) -> &HashMap<String, LLMActor> { &self.agents }
 
     pub fn new() -> Self {
-        dotenv().ok(); // 환경변수 초기화
+        dotenv().ok(); // Initialize dotenv
         Self {
             agents: HashMap::new(),
             routing_rules: Vec::new(),
@@ -224,12 +232,14 @@ impl AgentRouter {
     pub fn get_metrics(&self) -> Arc<Metrics> { self.metrics.clone() }
 
     pub fn set_default_agent(&mut self, agent_id: String) -> Result<()> {
-        if !self.agents.contains_key(&agent_id) {
-            return Err(anyhow!("Agent with ID {} not found", agent_id));
+        match self.agents.contains_key(&agent_id) {
+            | false => Err(anyhow!("Agent with ID {} not found", agent_id)),
+            | true => {
+                info!("Setting default agent to: {}", agent_id);
+                self.default_agent_id = Some(agent_id);
+                Ok(())
+            },
         }
-        info!("Setting default agent to: {}", agent_id);
-        self.default_agent_id = Some(agent_id);
-        Ok(())
     }
 
     pub fn register_rule(&mut self, keyword: String, agent_id: String) -> Result<()> {
@@ -238,13 +248,15 @@ impl AgentRouter {
     }
 
     pub fn register_rule_with_priority(&mut self, keyword: String, agent_id: String, priority: u8, confidence_threshold: f64) -> Result<()> {
-        if !self.agents.contains_key(&agent_id) {
-            return Err(anyhow!("Agent with ID {} not found", agent_id));
+        match self.agents.contains_key(&agent_id) {
+            | false => return Err(anyhow!("Agent with ID {} not found", agent_id)),
+            | true => {},
         }
 
         // Special case for default rule
-        if keyword == "default" {
-            return self.set_default_agent(agent_id);
+        match keyword.as_str() {
+            | "default" => return self.set_default_agent(agent_id),
+            | _ => {},
         }
 
         info!(
@@ -307,53 +319,76 @@ impl AgentRouter {
 
         // Check each rule in priority order
         for rule in &self.routing_rules {
-            if prompt.to_lowercase().contains(&rule.keyword.to_lowercase()) {
-                // Calculate confidence for this match
-                let confidence = self.calculate_confidence(prompt, &rule.keyword);
+            match prompt.to_lowercase().contains(&rule.keyword.to_lowercase()) {
+                | true => {
+                    // Calculate confidence for this match
+                    let confidence = self.calculate_confidence(prompt, &rule.keyword);
 
-                // If confidence meets the threshold and is better than current best match
-                if confidence >= rule.confidence_threshold && (best_match.is_none() || confidence > best_match.unwrap().1) {
-                    best_match = Some((rule, confidence));
-                }
+                    // If confidence meets the threshold and is better than current best match
+                    match (confidence >= rule.confidence_threshold, best_match) {
+                        | (true, None) => best_match = Some((rule, confidence)),
+                        | (true, Some((_, current_best))) if confidence > current_best => best_match = Some((rule, confidence)),
+                        | _ => {},
+                    }
+                },
+                | false => {},
             }
         }
 
         // If we found a match, use that agent
-        if let Some((rule, confidence)) = best_match {
-            info!(
-                "Routing prompt to agent {} based on keyword: {} (confidence: {:.2})",
-                rule.agent_id, rule.keyword, confidence
-            );
+        match best_match {
+            | Some((rule, confidence)) => {
+                info!(
+                    "Routing prompt to agent {} based on keyword: {} (confidence: {:.2})",
+                    rule.agent_id, rule.keyword, confidence
+                );
 
-            if let Some(agent) = self.agents.get(&rule.agent_id) {
-                // Check if agent is healthy
-                if agent.get_health_status() == HealthStatus::Unhealthy {
-                    warn!("Selected agent {} is unhealthy, falling back to default", rule.agent_id);
-                } else {
-                    return Ok(agent);
+                match self.agents.get(&rule.agent_id) {
+                    | Some(agent) => {
+                        // Check if agent is healthy
+                        match agent.get_health_status() {
+                            | HealthStatus::Unhealthy => {
+                                warn!("Selected agent {} is unhealthy, falling back to default", rule.agent_id);
+                            },
+                            | _ => return Ok(agent),
+                        }
+                    },
+                    | None => {},
                 }
-            }
+            },
+            | None => {},
         }
 
         // If no specific rule matches or selected agent is unhealthy, use default agent
         // if available
-        if let Some(default_id) = &self.default_agent_id {
-            info!("Routing prompt to default agent: {}", default_id);
-            if let Some(agent) = self.agents.get(default_id) {
-                // Only use default if it's not unhealthy
-                if agent.get_health_status() != HealthStatus::Unhealthy {
-                    return Ok(agent);
+        match &self.default_agent_id {
+            | Some(default_id) => {
+                info!("Routing prompt to default agent: {}", default_id);
+                match self.agents.get(default_id) {
+                    | Some(agent) => {
+                        // Only use default if it's not unhealthy
+                        match agent.get_health_status() {
+                            | HealthStatus::Unhealthy => {
+                                warn!("Default agent {} is unhealthy", default_id);
+                            },
+                            | _ => return Ok(agent),
+                        }
+                    },
+                    | None => {},
                 }
-                warn!("Default agent {} is unhealthy", default_id);
-            }
+            },
+            | None => {},
         }
 
         // If no default agent is defined or it's unhealthy, try to find any healthy
         // agent
         for (agent_id, agent) in &self.agents {
-            if agent.get_health_status() != HealthStatus::Unhealthy {
-                warn!("No suitable agent found, using available healthy agent: {}", agent_id);
-                return Ok(agent);
+            match agent.get_health_status() {
+                | HealthStatus::Unhealthy => {},
+                | _ => {
+                    warn!("No suitable agent found, using available healthy agent: {}", agent_id);
+                    return Ok(agent);
+                },
             }
         }
 
@@ -621,8 +656,6 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
     router
         .register_rule_with_priority("한국".to_string(), "korean_specialist".to_string(), 8, 0.5)
         .map_err(std::io::Error::other)?;
-
-    // Register default routing rule
     router
         .register_rule("default".to_string(), "default".to_string())
         .map_err(std::io::Error::other)?;
