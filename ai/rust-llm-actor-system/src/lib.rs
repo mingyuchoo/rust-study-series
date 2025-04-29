@@ -112,9 +112,11 @@ impl LLMActor {
 
     pub fn get_health_status(&self) -> HealthStatus { self.health_status }
 
-    pub fn get_id(&self) -> &String { &self.id }
+    pub fn get_id(&self) -> &str { &self.id }
 
     pub fn get_model(&self) -> &String { &self.model }
+
+    pub fn get_system_prompt(&self) -> &str { &self.system_prompt }
 
     pub fn update_health_status(&mut self, status: HealthStatus) {
         self.health_status = status;
@@ -314,7 +316,19 @@ impl AgentRouter {
     }
 
     pub async fn select_best_agent(&self, prompt: &str) -> Result<&LLMActor> {
-        // Track best match so far
+        // First try to use OpenAI to determine the best agent
+        match self.select_agent_with_openai(prompt).await {
+            | Ok(agent) => {
+                info!("Selected agent {} using OpenAI recommendation", agent.get_id());
+                return Ok(agent);
+            },
+            | Err(e) => {
+                warn!("Failed to select agent using OpenAI: {}, falling back to rule-based selection", e);
+                // Continue with the rule-based approach as fallback
+            },
+        }
+
+        // Fallback: Track best match using rule-based approach
         let mut best_match: Option<(&RoutingRule, f64)> = None;
 
         // Check each rule in priority order
@@ -394,6 +408,89 @@ impl AgentRouter {
 
         // If all agents are unhealthy, return an error
         Err(anyhow!("No suitable healthy agent found for the prompt"))
+    }
+
+    async fn select_agent_with_openai(&self, prompt: &str) -> Result<&LLMActor> {
+        use reqwest::Client;
+        use serde_json::json;
+        use serde::Deserialize;
+
+        #[derive(Deserialize)]
+        struct OpenAIResponse {
+            choices: Vec<Choice>,
+        }
+
+        #[derive(Deserialize)]
+        struct Choice {
+            message: Message,
+        }
+
+        #[derive(Deserialize)]
+        struct Message {
+            content: String,
+        }
+
+        // Get available agent IDs for the system prompt
+        let agent_ids: Vec<String> = self.agents.keys().cloned().collect();
+        let agent_descriptions: Vec<String> = self.agents
+            .iter()
+            .map(|(id, agent)| format!("{}: {}", id, agent.get_system_prompt()))
+            .collect();
+
+        dotenv().ok();
+        let api_key = env::var("OPENAI_API_KEY").map_err(|_| anyhow!("OPENAI_API_KEY not set"))?;
+        let api_url = env::var("OPENAI_API_URL").map_err(|_| anyhow!("OPENAI_API_URL not set"))?;
+        
+        // Use a simpler model for routing decisions to save costs
+        let model = "gpt-3.5-turbo";
+        
+        let system_prompt = format!(
+            "You are a routing assistant. Your job is to analyze the user's prompt and select the most appropriate agent to handle it.
+
+Available agents:
+{}
+
+Respond ONLY with the ID of the single best agent to handle this prompt. Your response must be exactly one of these IDs: {}. Do not include any explanation or additional text.",
+            agent_descriptions.join("\n"),
+            agent_ids.join(", ")
+        );
+
+        let client = Client::new();
+        let body = json!({
+            "model": model,
+            "max_tokens": 50,  // Short response is all we need
+            "temperature": 0.3,  // Lower temperature for more deterministic responses
+            "messages": [
+                { "role": "system", "content": system_prompt },
+                { "role": "user", "content": prompt }
+            ]
+        });
+
+        let resp = client
+            .post(&api_url)
+            .header("Content-Type", "application/json")
+            .header("api-key", api_key)
+            .json(&body)
+            .send()
+            .await?
+            .error_for_status()?;
+
+        let resp_json: OpenAIResponse = resp.json().await?;
+        let agent_id = resp_json.choices.get(0)
+            .ok_or_else(|| anyhow!("No choices in OpenAI response"))?
+            .message.content.trim().to_string();
+
+        // Validate that the returned agent_id is one of our agents
+        match self.agents.contains_key(&agent_id) {
+            | true => match self.agents.get(&agent_id) {
+                | Some(agent) => match agent.get_health_status() {
+                    | HealthStatus::Unhealthy => Err(anyhow!("Selected agent is unhealthy")),
+                    | _ => Ok(agent),
+                },
+                | None => Err(anyhow!("Agent not found despite key check")),
+            },
+            | false => Err(anyhow!("OpenAI returned invalid agent ID: {}", agent_id)),
+        }
     }
 
     pub async fn route_prompt(&self, prompt: String) -> Result<String> {
@@ -554,10 +651,15 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
     app_state.chat_history.lock().await.push(user_message);
 
     // Process the prompt
+    // Clone the prompt to avoid borrowing issues
+    let prompt_clone = prompt.clone();
+    
+    // Get the router with a separate scope to ensure it's released before we use it again
     let agent_id = {
-        let router = app_state.router.lock().await;
-        match router.select_best_agent(&prompt).await {
-            | Ok(agent) => agent.get_id().clone(),
+        let router_guard = app_state.router.lock().await;
+        let result = router_guard.select_best_agent(&prompt_clone).await;
+        match result {
+            | Ok(agent) => agent.get_id().to_string(),
             | Err(e) => {
                 warn!("Failed to select agent: {}", e);
                 return Ok(HttpResponse::InternalServerError().body("Failed to select agent"));
