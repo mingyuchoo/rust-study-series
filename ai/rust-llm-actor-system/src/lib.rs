@@ -18,7 +18,6 @@ use uuid::Uuid;
 
 // Message types for LLM Actor
 #[derive(Debug)]
-#[allow(dead_code)]
 pub enum LLMMessage {
     ProcessPrompt { prompt: String, reply: oneshot::Sender<Result<String>> },
     HealthCheck { reply: oneshot::Sender<bool> },
@@ -178,7 +177,6 @@ impl LLMActor {
 
 // Message types for Router
 #[derive(Debug)]
-#[allow(dead_code)]
 pub enum RouterMessage {
     RoutePrompt { prompt: String, reply: oneshot::Sender<Result<String>> },
     RegisterRoutingRule { keyword: String, agent_id: String },
@@ -223,7 +221,6 @@ impl AgentRouter {
         self.agents.insert(agent_id.clone(), LLMActor::new(agent_id, model, system_prompt));
     }
 
-    #[allow(dead_code)]
     pub fn get_metrics(&self) -> Arc<Metrics> { self.metrics.clone() }
 
     pub fn set_default_agent(&mut self, agent_id: String) -> Result<()> {
@@ -269,7 +266,6 @@ impl AgentRouter {
         Ok(())
     }
 
-    #[allow(dead_code)]
     pub fn remove_rule(&mut self, keyword: &str) {
         info!("Removing routing rule for keyword: {}", keyword);
         self.routing_rules.retain(|rule| rule.keyword != keyword);
