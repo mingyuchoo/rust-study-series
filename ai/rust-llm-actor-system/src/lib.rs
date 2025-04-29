@@ -1,4 +1,9 @@
+// Web application imports
+use actix_files::Files;
+use actix_web::web::Data;
+use actix_web::{HttpResponse, Responder, Result as ActixResult, get, post, web};
 use anyhow::{Result, anyhow};
+use chrono::Utc;
 use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -7,7 +12,9 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::oneshot;
-use tracing::{info, warn};
+use tracing::{Level, error, info, warn};
+use tracing_subscriber::FmtSubscriber;
+use uuid::Uuid;
 
 // Message types for LLM Actor
 #[derive(Debug)]
@@ -410,4 +417,230 @@ impl AgentRouter {
 
         info!("All metrics have been reset");
     }
+}
+
+// Web Application Code
+
+// Struct to hold application state
+pub struct AppState {
+    pub router: tokio::sync::Mutex<AgentRouter>,
+    pub chat_history: tokio::sync::Mutex<Vec<ChatMessage>>,
+}
+
+// Struct for incoming prompt requests
+#[derive(Deserialize)]
+pub struct PromptRequest {
+    pub prompt: String,
+}
+
+// Struct for prompt responses
+#[derive(Serialize)]
+pub struct PromptResponse {
+    pub response: String,
+    pub agent_id: String,
+    pub timestamp: String,
+}
+
+// Struct for agent information
+#[derive(Serialize)]
+pub struct AgentInfo {
+    pub id: String,
+    pub model: String,
+    pub health: String,
+    pub health_class: String,
+    pub prompts: usize,
+    pub avg_time: f64,
+}
+
+// Struct for chat messages
+#[derive(Serialize, Clone)]
+pub struct ChatMessage {
+    pub id: String,
+    pub content: String,
+    pub agent_id: Option<String>,
+    pub timestamp: String,
+    #[serde(rename = "type")]
+    pub message_type: String, // "user" or "agent"
+}
+
+// Handler for the root page - redirects to static index.html
+#[get("/")]
+pub async fn index() -> ActixResult<HttpResponse> { Ok(HttpResponse::Found().append_header(("Location", "/static/index.html")).finish()) }
+
+// API handler to get all agents
+#[get("/api/agents")]
+pub async fn get_agents(app_state: web::Data<AppState>) -> impl Responder {
+    let router = app_state.router.lock().await;
+
+    let mut agents = Vec::new();
+    for (agent_id, agent) in router.get_agents() {
+        let (prompts, _errors, _, avg_time) = agent.get_metrics().get_stats();
+        let health_status = agent.get_health_status();
+
+        let health_class = match health_status {
+            | HealthStatus::Healthy => "healthy",
+            | HealthStatus::Degraded => "degraded",
+            | HealthStatus::Unhealthy => "unhealthy",
+        };
+
+        agents.push(AgentInfo {
+            id: agent_id.clone(),
+            model: agent.get_model().clone(),
+            health: format!("{:?}", health_status),
+            health_class: health_class.to_string(),
+            prompts,
+            avg_time,
+        });
+    }
+
+    HttpResponse::Ok().json(agents)
+}
+
+// API handler to get system stats
+#[get("/api/stats")]
+pub async fn get_stats(app_state: web::Data<AppState>) -> impl Responder {
+    let router = app_state.router.lock().await;
+    let stats = router.get_system_stats();
+
+    HttpResponse::Ok().json(stats)
+}
+
+// API handler to process prompts
+#[post("/api/prompt")]
+pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<AppState>) -> ActixResult<HttpResponse> {
+    let prompt = req.prompt.clone();
+    info!("Received prompt: {}", prompt);
+
+    // Add user message to chat history
+    let user_message = ChatMessage {
+        id: Uuid::new_v4().to_string(),
+        content: prompt.clone(),
+        agent_id: None,
+        timestamp: Utc::now().to_rfc3339(),
+        message_type: "user".to_string(),
+    };
+
+    app_state.chat_history.lock().await.push(user_message);
+
+    // Process the prompt
+    let agent_id = {
+        let router = app_state.router.lock().await;
+        match router.select_best_agent(&prompt).await {
+            | Ok(agent) => agent.get_id().clone(),
+            | Err(e) => {
+                warn!("Failed to select agent: {}", e);
+                return Ok(HttpResponse::InternalServerError().body("Failed to select agent"));
+            },
+        }
+    };
+
+    let response = app_state.router.lock().await.route_prompt(prompt.clone()).await;
+    match response {
+        | Ok(response) => {
+            info!("Response from agent {}: {}", agent_id, response);
+
+            // Add agent response to chat history
+            let agent_message = ChatMessage {
+                id: Uuid::new_v4().to_string(),
+                content: response.clone(),
+                agent_id: Some(agent_id.to_string()),
+                timestamp: Utc::now().to_rfc3339(),
+                message_type: "agent".to_string(),
+            };
+
+            app_state.chat_history.lock().await.push(agent_message);
+
+            let prompt_response = PromptResponse {
+                response,
+                agent_id: agent_id.to_string(),
+                timestamp: Utc::now().to_rfc3339(),
+            };
+
+            Ok(HttpResponse::Ok().json(prompt_response))
+        },
+        | Err(e) => {
+            error!("Main> Error processing prompt: {:?}", e);
+
+            // Add error message to chat history
+            let error_message = ChatMessage {
+                id: Uuid::new_v4().to_string(),
+                content: format!("Error: {}", e),
+                agent_id: Some("system".to_string()),
+                timestamp: Utc::now().to_rfc3339(),
+                message_type: "agent".to_string(),
+            };
+
+            app_state.chat_history.lock().await.push(error_message);
+
+            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                "error": format!("{}", e)
+            })))
+        },
+    }
+}
+
+// API handler to check health of all agents
+#[get("/api/health")]
+pub async fn check_health(app_state: web::Data<AppState>) -> impl Responder {
+    let health_statuses = app_state.router.lock().await.check_all_agents_health().await;
+    HttpResponse::Ok().json(health_statuses)
+}
+
+// Function to initialize the application
+pub fn init_logging() {
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
+    let subscriber = FmtSubscriber::builder().with_max_level(Level::INFO).finish();
+    tracing::subscriber::set_global_default(subscriber).expect("Failed to set tracing subscriber");
+}
+
+// Function to create and configure an agent router with default agents and
+// rules
+pub fn create_agent_router() -> std::io::Result<AgentRouter> {
+    // Create the agent router
+    let mut router = AgentRouter::new();
+
+    // Add some initial LLM agents
+    let agent_configs = vec![
+        ("default", "gpt-4o", "You are a helpful, advanced assistant."),
+        ("math_specialist", "gpt-4o", "You are a math expert. Only answer math questions in detail."),
+        (
+            "korean_specialist",
+            "gpt-4o",
+            "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics.",
+        ),
+    ];
+
+    for (agent_id, model, system_prompt) in agent_configs {
+        router.add_agent(agent_id.to_string(), model.to_string(), system_prompt.to_string());
+        info!("Successfully added agent: {} with model: {}", agent_id, model);
+    }
+
+    // Register routing rules with different priorities and confidence thresholds
+    router
+        .register_rule_with_priority("math".to_string(), "math_specialist".to_string(), 10, 0.6)
+        .map_err(std::io::Error::other)?;
+    router
+        .register_rule_with_priority("default".to_string(), "default".to_string(), 5, 0.4)
+        .map_err(std::io::Error::other)?;
+    router
+        .register_rule_with_priority("한국".to_string(), "korean_specialist".to_string(), 8, 0.5)
+        .map_err(std::io::Error::other)?;
+
+    // Register default routing rule
+    router
+        .register_rule("default".to_string(), "default".to_string())
+        .map_err(std::io::Error::other)?;
+
+    Ok(router)
+}
+
+// Function to configure the web application
+pub fn configure_app(cfg: &mut web::ServiceConfig, app_state: Data<AppState>) {
+    cfg.app_data(app_state.clone())
+        .service(index)
+        .service(get_agents)
+        .service(get_stats)
+        .service(process_prompt)
+        .service(check_health)
+        .service(Files::new("/static", "./static").index_file("index.html"));
 }
