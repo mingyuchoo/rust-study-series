@@ -16,19 +16,26 @@ use tracing::{Level, error, info, warn};
 use tracing_subscriber::FmtSubscriber;
 use uuid::Uuid;
 
-// Message types for LLM Actor
+/// Message types for LLM Actor
 #[derive(Debug)]
 pub enum LLMMessage {
+    /// Process a prompt and return the result through the oneshot channel
     ProcessPrompt { prompt: String, reply: oneshot::Sender<Result<String>> },
+    /// Check if the LLM is healthy and return the result through the oneshot channel
     HealthCheck { reply: oneshot::Sender<bool> },
+    /// Update the model used by the LLM
     UpdateModel(String),
 }
 
-// Metrics for tracking system performance
+/// Metrics for tracking system performance
 pub struct Metrics {
+    /// Count of processed prompts
     prompt_count: AtomicUsize,
+    /// Count of errors encountered
     error_count: AtomicUsize,
+    /// Total processing time in milliseconds
     total_processing_time_ms: AtomicUsize,
+    /// Timestamp of the last metrics reset
     last_reset: Mutex<Instant>,
 }
 
@@ -37,6 +44,7 @@ impl Default for Metrics {
 }
 
 impl Metrics {
+    /// Creates a new Metrics instance with all counters initialized to zero
     pub fn new() -> Self {
         Self {
             prompt_count: AtomicUsize::new(0),
@@ -46,30 +54,38 @@ impl Metrics {
         }
     }
 
+    /// Records metrics for a processed prompt
+    ///
+    /// # Arguments
+    /// * `duration_ms` - The processing time in milliseconds
+    /// * `is_error` - Whether the processing resulted in an error
     pub fn record_prompt(&self, duration_ms: u64, is_error: bool) {
         self.prompt_count.fetch_add(1, Ordering::SeqCst);
         self.total_processing_time_ms.fetch_add(duration_ms as usize, Ordering::SeqCst);
         match is_error {
-            | true => {
-                self.error_count.fetch_add(1, Ordering::SeqCst);
-            },
-            | false => {},
+            true => { self.error_count.fetch_add(1, Ordering::SeqCst); },
+            false => {},
         }
     }
 
+    /// Gets the current metrics statistics
+    ///
+    /// # Returns
+    /// A tuple containing (prompt_count, error_count, total_processing_time_ms, average_time_ms)
     pub fn get_stats(&self) -> (usize, usize, usize, f64) {
         let prompts = self.prompt_count.load(Ordering::SeqCst);
         let errors = self.error_count.load(Ordering::SeqCst);
         let total_time = self.total_processing_time_ms.load(Ordering::SeqCst);
 
         let avg_time = match prompts {
-            | 0 => 0.0,
-            | _ => total_time as f64 / prompts as f64,
+            0 => 0.0,
+            _ => total_time as f64 / prompts as f64,
         };
 
         (prompts, errors, total_time, avg_time)
     }
 
+    /// Resets all metrics counters to zero
     pub fn reset(&self) {
         self.prompt_count.store(0, Ordering::SeqCst);
         self.error_count.store(0, Ordering::SeqCst);
@@ -78,131 +94,116 @@ impl Metrics {
     }
 }
 
-// Health status for LLM actors
+/// Health status for LLM actors
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum HealthStatus {
+    /// Agent is functioning normally
     Healthy,
+    /// Agent is functioning but with reduced performance
     Degraded,
+    /// Agent is not functioning properly
     Unhealthy,
 }
 
-// LLM Actor implementation
+/// LLM Actor implementation
 pub struct LLMActor {
+    /// Unique identifier for the agent
     id: String,
+    /// The LLM model being used
     model: String,
+    /// Current health status of the agent
     health_status: HealthStatus,
+    /// Timestamp of the last health check
     last_health_check: Instant,
+    /// Performance metrics for this agent
     metrics: Arc<Metrics>,
+    /// System prompt that defines the agent's behavior
     system_prompt: String,
 }
 
 impl LLMActor {
+    /// Creates a new LLM actor with the specified parameters
+    ///
+    /// # Arguments
+    /// * `id` - Unique identifier for the agent
+    /// * `model` - The LLM model to use
+    /// * `system_prompt` - The system prompt that defines the agent's behavior
     pub fn new(id: String, model: String, system_prompt: String) -> Self {
         Self {
             id,
             model,
             health_status: HealthStatus::Healthy,
             last_health_check: Instant::now(),
-            metrics: Arc::new(Metrics::new()),
+            metrics: Arc<Metrics>::default(),
             system_prompt,
         }
     }
 
+    /// Returns the metrics for this agent
     pub fn get_metrics(&self) -> Arc<Metrics> { self.metrics.clone() }
 
+    /// Returns the current health status of the agent
     pub fn get_health_status(&self) -> HealthStatus { self.health_status }
 
+    /// Returns the agent's ID
     pub fn get_id(&self) -> &str { &self.id }
 
-    pub fn get_model(&self) -> &String { &self.model }
+    /// Returns the model being used by the agent
+    pub fn get_model(&self) -> &str { &self.model }
 
+    /// Returns the system prompt for this agent
     pub fn get_system_prompt(&self) -> &str { &self.system_prompt }
 
+    /// Updates the health status of the agent
+    ///
+    /// # Arguments
+    /// * `status` - The new health status
     pub fn update_health_status(&mut self, status: HealthStatus) {
         self.health_status = status;
         self.last_health_check = Instant::now();
         info!("Updated health status for model {}: {:?}", self.model, status);
     }
 
+    /// Checks the health of the agent and updates its status if necessary
+    ///
+    /// # Returns
+    /// The current health status of the agent
     pub async fn check_health(&mut self) -> HealthStatus {
         let now = Instant::now();
         match now.duration_since(self.last_health_check) > Duration::from_secs(60) {
-            | true => {
+            true => {
                 // Simulate random health status for demo purposes
                 let rand_num = (now.elapsed().as_millis() % 10) as u8;
                 let new_status = match rand_num {
-                    | 0 ..= 7 => HealthStatus::Healthy,
-                    | 8 => HealthStatus::Degraded,
-                    | _ => HealthStatus::Unhealthy,
+                    0..=1 => HealthStatus::Unhealthy,  // 20% chance of being unhealthy
+                    2..=3 => HealthStatus::Degraded,  // 20% chance of being degraded
+                    _ => HealthStatus::Healthy,       // 60% chance of being healthy
                 };
+
                 self.update_health_status(new_status);
+                new_status
             },
-            | false => {},
+            false => self.health_status,
         }
-        self.health_status
     }
 
+    /// Processes a prompt using the LLM and returns the response
+    ///
+    /// # Arguments
+    /// * `prompt` - The prompt to process
+    ///
+    /// # Returns
+    /// The response from the LLM or an error if processing failed
     pub async fn process_prompt(&self, prompt: String) -> Result<String> {
-        use reqwest::Client;
-        use serde_json::json;
-        info!("Lib> Processing prompt with model: {}", self.model);
-        match self.health_status {
-            | HealthStatus::Unhealthy => return Err(anyhow!("Agent is unhealthy and cannot process prompts")),
-            | _ => {},
-        }
-        dotenv().ok();
-        let api_key = env::var("OPENAI_API_KEY").map_err(|_| anyhow!("OPENAI_API_KEY not set"))?;
-        let api_url = env::var("OPENAI_API_URL").map_err(|_| anyhow!("OPENAI_API_URL not set"))?;
-        let model = env::var("OPENAI_API_MODEL").unwrap_or_else(|_| self.model.clone());
-        let max_tokens = env::var("OPENAI_API_MAX_TOKENS").ok().and_then(|v| v.parse::<u16>().ok()).unwrap_or(1024u16);
-        let temperature = env::var("OPENAI_API_TEMPERATURE").ok().and_then(|v| v.parse().ok()).unwrap_or(1.0);
-        let top_p = env::var("OPENAI_API_TOP_P").ok().and_then(|v| v.parse().ok()).unwrap_or(1.0);
+        let start_time = Instant::now();
+        let mut is_error = false;
 
-        let client = Client::new();
-        let body = json!({
-            "model": model,
-            "max_tokens": max_tokens,
-            "temperature": temperature,
-            "top_p": top_p,
-            "messages": [
-                { "role": "system", "content": self.system_prompt },
-                { "role": "user", "content": prompt }
-            ]
-        });
-
-        let resp = client
-            .post(&api_url)
-            .header("Content-Type", "application/json")
-            .header("api-key", api_key)
-            .json(&body)
-            .send()
-            .await?
-            .error_for_status()?;
-
-        let resp_json: serde_json::Value = resp.json().await?;
-        let answer = resp_json["choices"][0]["message"]["content"].as_str().unwrap_or("(No response)").to_string();
-        Ok(answer)
-    }
-}
-
-// Message types for Router
-#[derive(Debug)]
-pub enum RouterMessage {
-    RoutePrompt { prompt: String, reply: oneshot::Sender<Result<String>> },
-    RegisterRoutingRule { keyword: String, agent_id: String },
-    RemoveRoutingRule { keyword: String },
-}
-
-// Routing rule with priority and confidence threshold
-pub struct RoutingRule {
-    keyword: String,
-    agent_id: String,
-    priority: u8,              // Higher number means higher priority
-    confidence_threshold: f64, // Minimum confidence score to use this rule (0.0-1.0)
-}
-
-// Router implementation
-pub struct AgentRouter {
+        // Simulate processing with the LLM
+        // In a real implementation, this would call the OpenAI API or other LLM service
+        let result = match self.health_status {
+            HealthStatus::Unhealthy => {
+                is_error = true;
+                Err(anyhow!("Agent {} is unhealthy and cannot process prompts", self.id))
     agents: HashMap<String, LLMActor>,
     routing_rules: Vec<RoutingRule>, // Prioritized routing rules
     default_agent_id: Option<String>,
@@ -233,10 +234,17 @@ impl AgentRouter {
 
     pub fn get_metrics(&self) -> Arc<Metrics> { self.metrics.clone() }
 
+    /// Sets the default agent to use when no specific rule matches
+    ///
+    /// # Arguments
+    /// * `agent_id` - The ID of the agent to set as default
+    ///
+    /// # Returns
+    /// Result indicating success or failure
     pub fn set_default_agent(&mut self, agent_id: String) -> Result<()> {
         match self.agents.contains_key(&agent_id) {
-            | false => Err(anyhow!("Agent with ID {} not found", agent_id)),
-            | true => {
+            false => Err(anyhow!("Agent with ID {} not found", agent_id)),
+            true => {
                 info!("Setting default agent to: {}", agent_id);
                 self.default_agent_id = Some(agent_id);
                 Ok(())
@@ -244,21 +252,40 @@ impl AgentRouter {
         }
     }
 
+    /// Registers a routing rule with default priority and confidence threshold
+    ///
+    /// # Arguments
+    /// * `keyword` - The keyword to match in prompts
+    /// * `agent_id` - The ID of the agent to route to when the keyword matches
+    ///
+    /// # Returns
+    /// Result indicating success or failure
     pub fn register_rule(&mut self, keyword: String, agent_id: String) -> Result<()> {
-        // Default priority and confidence threshold
+        // Default priority (5) and confidence threshold (0.5)
         self.register_rule_with_priority(keyword, agent_id, 5, 0.5)
     }
 
+    /// Registers a routing rule with specified priority and confidence threshold
+    ///
+    /// # Arguments
+    /// * `keyword` - The keyword to match in prompts
+    /// * `agent_id` - The ID of the agent to route to when the keyword matches
+    /// * `priority` - The priority of this rule (higher values have higher priority)
+    /// * `confidence_threshold` - The minimum confidence score required to use this rule (0.0-1.0)
+    ///
+    /// # Returns
+    /// Result indicating success or failure
     pub fn register_rule_with_priority(&mut self, keyword: String, agent_id: String, priority: u8, confidence_threshold: f64) -> Result<()> {
+        // Verify the agent exists
         match self.agents.contains_key(&agent_id) {
-            | false => return Err(anyhow!("Agent with ID {} not found", agent_id)),
-            | true => {},
+            false => return Err(anyhow!("Agent with ID {} not found", agent_id)),
+            true => {},
         }
 
         // Special case for default rule
         match keyword.as_str() {
-            | "default" => return self.set_default_agent(agent_id),
-            | _ => {},
+            "default" => return self.set_default_agent(agent_id),
+            _ => {},
         }
 
         info!(
@@ -280,14 +307,29 @@ impl AgentRouter {
         Ok(())
     }
 
+    /// Removes a routing rule for the specified keyword
+    ///
+    /// # Arguments
+    /// * `keyword` - The keyword to remove the routing rule for
     pub fn remove_rule(&mut self, keyword: &str) {
         info!("Removing routing rule for keyword: {}", keyword);
         self.routing_rules.retain(|rule| rule.keyword != keyword);
     }
 
-    // Calculate confidence score for a rule match (0.0-1.0)
+    /// Calculates the confidence score for a keyword match in a prompt
+    ///
+    /// The confidence score is based on:
+    /// 1. The number of occurrences of the keyword in the prompt (capped at 3)
+    /// 2. The length of the keyword (longer keywords have higher confidence)
+    ///
+    /// # Arguments
+    /// * `prompt` - The prompt to check for keyword matches
+    /// * `keyword` - The keyword to look for in the prompt
+    ///
+    /// # Returns
+    /// A confidence score between 0.0 and 1.0
     fn calculate_confidence(&self, prompt: &str, keyword: &str) -> f64 {
-        // Simple implementation: if keyword appears multiple times, higher confidence
+        // Convert to lowercase for case-insensitive matching
         let prompt_lower = prompt.to_lowercase();
         let keyword_lower = keyword.to_lowercase();
 
@@ -303,9 +345,15 @@ impl AgentRouter {
         (length_factor + occurrence_factor).min(1.0)
     }
 
+    /// Checks the health status of all agents
+    ///
+    /// # Returns
+    /// A HashMap mapping agent IDs to their health status
     pub async fn check_all_agents_health(&self) -> HashMap<String, HealthStatus> {
-        let mut results = HashMap::new();
+        // Create a HashMap to store the results
+        let mut results = HashMap::with_capacity(self.agents.len());
 
+        // Collect the health status of each agent
         for (agent_id, agent) in &self.agents {
             // For now, just return the current health status without checking
             // In a real implementation, we would need to use interior mutability
@@ -315,14 +363,28 @@ impl AgentRouter {
         results
     }
 
+    /// Selects the best agent to handle a prompt
+    ///
+    /// Selection process:
+    /// 1. First tries to use OpenAI to determine the best agent
+    /// 2. If that fails, falls back to rule-based selection
+    /// 3. If no rule matches, uses the default agent
+    /// 4. If no default agent or it's unhealthy, uses any healthy agent
+    /// 5. If all agents are unhealthy, returns an error
+    ///
+    /// # Arguments
+    /// * `prompt` - The prompt to select an agent for
+    ///
+    /// # Returns
+    /// The selected agent or an error if no suitable agent was found
     pub async fn select_best_agent(&self, prompt: &str) -> Result<&LLMActor> {
         // First try to use OpenAI to determine the best agent
         match self.select_agent_with_openai(prompt).await {
-            | Ok(agent) => {
+            Ok(agent) => {
                 info!("Selected agent {} using OpenAI recommendation", agent.get_id());
                 return Ok(agent);
             },
-            | Err(e) => {
+            Err(e) => {
                 warn!("Failed to select agent using OpenAI: {}, falling back to rule-based selection", e);
                 // Continue with the rule-based approach as fallback
             },
@@ -334,72 +396,72 @@ impl AgentRouter {
         // Check each rule in priority order
         for rule in &self.routing_rules {
             match prompt.to_lowercase().contains(&rule.keyword.to_lowercase()) {
-                | true => {
+                true => {
                     // Calculate confidence for this match
                     let confidence = self.calculate_confidence(prompt, &rule.keyword);
 
                     // If confidence meets the threshold and is better than current best match
                     match (confidence >= rule.confidence_threshold, best_match) {
-                        | (true, None) => best_match = Some((rule, confidence)),
-                        | (true, Some((_, current_best))) if confidence > current_best => best_match = Some((rule, confidence)),
-                        | _ => {},
+                        (true, None) => best_match = Some((rule, confidence)),
+                        (true, Some((_, current_best))) if confidence > current_best => best_match = Some((rule, confidence)),
+                        _ => {},
                     }
                 },
-                | false => {},
+                false => {},
             }
         }
 
         // If we found a match, use that agent
         match best_match {
-            | Some((rule, confidence)) => {
+            Some((rule, confidence)) => {
                 info!(
                     "Routing prompt to agent {} based on keyword: {} (confidence: {:.2})",
                     rule.agent_id, rule.keyword, confidence
                 );
 
                 match self.agents.get(&rule.agent_id) {
-                    | Some(agent) => {
+                    Some(agent) => {
                         // Check if agent is healthy
                         match agent.get_health_status() {
-                            | HealthStatus::Unhealthy => {
+                            HealthStatus::Unhealthy => {
                                 warn!("Selected agent {} is unhealthy, falling back to default", rule.agent_id);
                             },
-                            | _ => return Ok(agent),
+                            _ => return Ok(agent),
                         }
                     },
-                    | None => {},
+                    None => {},
                 }
             },
-            | None => {},
+            None => {},
         }
 
         // If no specific rule matches or selected agent is unhealthy, use default agent
         // if available
         match &self.default_agent_id {
-            | Some(default_id) => {
+            Some(default_id) => {
                 info!("Routing prompt to default agent: {}", default_id);
                 match self.agents.get(default_id) {
-                    | Some(agent) => {
+                    Some(agent) => {
                         // Only use default if it's not unhealthy
                         match agent.get_health_status() {
-                            | HealthStatus::Unhealthy => {
+                            HealthStatus::Unhealthy => {
                                 warn!("Default agent {} is unhealthy", default_id);
                             },
-                            | _ => return Ok(agent),
+                            _ => return Ok(agent),
                         }
                     },
-                    | None => {},
+                    None => {},
                 }
             },
-            | None => {},
+            None => {},
         }
 
         // If no default agent is defined or it's unhealthy, try to find any healthy
         // agent
         for (agent_id, agent) in &self.agents {
             match agent.get_health_status() {
-                | HealthStatus::Unhealthy => {},
-                | _ => {
+                HealthStatus::Unhealthy => {},
+                _ => {
                     warn!("No suitable agent found, using available healthy agent: {}", agent_id);
                     return Ok(agent);
                 },
@@ -493,14 +555,22 @@ Respond ONLY with the ID of the single best agent to handle this prompt. Your re
         }
     }
 
+    /// Routes a prompt to the most appropriate agent and processes it
+    ///
+    /// # Arguments
+    /// * `prompt` - The prompt to process
+    ///
+    /// # Returns
+    /// The response from the selected agent or an error if routing failed
     pub async fn route_prompt(&self, prompt: String) -> Result<String> {
         // Start timing the routing process
         let start_time = Instant::now();
         let mut is_error = false;
 
+        // Select the best agent and process the prompt
         let result = match self.select_best_agent(&prompt).await {
-            | Ok(agent) => agent.process_prompt(prompt).await,
-            | Err(e) => {
+            Ok(agent) => agent.process_prompt(prompt).await,
+            Err(e) => {
                 is_error = true;
                 Err(e)
             },
@@ -513,8 +583,14 @@ Respond ONLY with the ID of the single best agent to handle this prompt. Your re
         result
     }
 
+    /// Gets system statistics for the router and all agents
+    ///
+    /// # Returns
+    /// A HashMap containing statistics for the router and all agents
     pub fn get_system_stats(&self) -> HashMap<String, String> {
-        let mut stats = HashMap::new();
+        // Create a HashMap with an appropriate initial capacity
+        let capacity = 3 + (self.agents.len() * 4); // 3 router stats + 4 stats per agent
+        let mut stats = HashMap::with_capacity(capacity);
 
         // Router metrics
         let (prompts, errors, _total_time, avg_time) = self.metrics.get_stats();
@@ -534,6 +610,7 @@ Respond ONLY with the ID of the single best agent to handle this prompt. Your re
         stats
     }
 
+    /// Resets metrics for the router and all agents
     pub fn reset_metrics(&mut self) {
         // Reset router metrics
         self.metrics.reset();
@@ -659,17 +736,18 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
         let router_guard = app_state.router.lock().await;
         let result = router_guard.select_best_agent(&prompt_clone).await;
         match result {
-            | Ok(agent) => agent.get_id().to_string(),
-            | Err(e) => {
+            Ok(agent) => agent.get_id().to_string(),
+            Err(e) => {
                 warn!("Failed to select agent: {}", e);
                 return Ok(HttpResponse::InternalServerError().body("Failed to select agent"));
             },
         }
     };
 
+    // Process the prompt with the selected agent
     let response = app_state.router.lock().await.route_prompt(prompt.clone()).await;
     match response {
-        | Ok(response) => {
+        Ok(response) => {
             info!("Response from agent {}: {}", agent_id, response);
 
             // Add agent response to chat history
@@ -683,6 +761,7 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
 
             app_state.chat_history.lock().await.push(agent_message);
 
+            // Create response object
             let prompt_response = PromptResponse {
                 response,
                 agent_id: agent_id.to_string(),
@@ -691,7 +770,7 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
 
             Ok(HttpResponse::Ok().json(prompt_response))
         },
-        | Err(e) => {
+        Err(e) => {
             error!("Main> Error processing prompt: {:?}", e);
 
             // Add error message to chat history
@@ -705,29 +784,39 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
 
             app_state.chat_history.lock().await.push(error_message);
 
+            // Return error response with JSON format
             Ok(HttpResponse::InternalServerError().json(serde_json::json!({
-                "error": format!("{}", e)
+                "error": e.to_string()
             })))
         },
     }
 }
 
-// API handler to check health of all agents
+/// API handler to check health of all agents
+/// 
+/// Returns a JSON map of agent IDs to their health status
 #[get("/api/health")]
 pub async fn check_health(app_state: web::Data<AppState>) -> impl Responder {
     let health_statuses = app_state.router.lock().await.check_all_agents_health().await;
     HttpResponse::Ok().json(health_statuses)
 }
 
-// Function to initialize the application
+/// Initializes the application logging system
+/// 
+/// Sets up both env_logger and tracing with INFO level
 pub fn init_logging() {
     env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
-    let subscriber = FmtSubscriber::builder().with_max_level(Level::INFO).finish();
-    tracing::subscriber::set_global_default(subscriber).expect("Failed to set tracing subscriber");
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::INFO)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber)
+        .expect("Failed to set tracing subscriber");
 }
 
-// Function to create and configure an agent router with default agents and
-// rules
+/// Creates and configures an agent router with default agents and routing rules
+///
+/// # Returns
+/// A configured AgentRouter instance or an error if configuration failed
 pub fn create_agent_router() -> std::io::Result<AgentRouter> {
     // Create the agent router
     let mut router = AgentRouter::new();
@@ -739,6 +828,7 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
         ("korean_specialist", "gpt-4o", "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics."),
     ];
 
+    // Add each agent to the router
     for (agent_id, model, system_prompt) in agent_configs {
         router.add_agent(agent_id.to_string(), model.to_string(), system_prompt.to_string());
         info!("Successfully added agent: {} with model: {}", agent_id, model);
@@ -761,7 +851,11 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
     Ok(router)
 }
 
-// Function to configure the web application
+/// Configures the web application routes and services
+///
+/// # Arguments
+/// * `cfg` - The ServiceConfig to configure
+/// * `app_state` - The application state to share with handlers
 pub fn configure_app(cfg: &mut web::ServiceConfig, app_state: Data<AppState>) {
     cfg.app_data(app_state.clone())
         .service(index)
