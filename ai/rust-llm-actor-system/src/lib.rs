@@ -205,7 +205,7 @@ pub struct RoutingRule {
 pub struct AgentRouter {
     agents: HashMap<String, LLMActor>,
     routing_rules: Vec<RoutingRule>, // Prioritized routing rules
-    default_agent_id: Option<String>,
+    manager_agent_id: Option<String>,
     metrics: Arc<Metrics>,
 }
 
@@ -221,7 +221,7 @@ impl AgentRouter {
         Self {
             agents: HashMap::new(),
             routing_rules: Vec::new(),
-            default_agent_id: None,
+            manager_agent_id: None,
             metrics: Arc::new(Metrics::new()),
         }
     }
@@ -233,12 +233,12 @@ impl AgentRouter {
 
     pub fn get_metrics(&self) -> Arc<Metrics> { self.metrics.clone() }
 
-    pub fn set_default_agent(&mut self, agent_id: String) -> Result<()> {
+    pub fn set_manager_agent(&mut self, agent_id: String) -> Result<()> {
         match self.agents.contains_key(&agent_id) {
             | false => Err(anyhow!("Agent with ID {} not found", agent_id)),
             | true => {
-                info!("Setting default agent to: {}", agent_id);
-                self.default_agent_id = Some(agent_id);
+                info!("Setting manager agent to: {}", agent_id);
+                self.manager_agent_id = Some(agent_id);
                 Ok(())
             },
         }
@@ -255,9 +255,9 @@ impl AgentRouter {
             | true => {},
         }
 
-        // Special case for default rule
+        // Special case for manager rule
         match keyword.as_str() {
-            | "default" => return self.set_default_agent(agent_id),
+            | "manager" => return self.set_manager_agent(agent_id),
             | _ => {},
         }
 
@@ -373,17 +373,17 @@ impl AgentRouter {
             | None => {},
         }
 
-        // If no specific rule matches or selected agent is unhealthy, use default agent
+        // If no specific rule matches or selected agent is unhealthy, use manager agent
         // if available
-        match &self.default_agent_id {
-            | Some(default_id) => {
-                info!("Routing prompt to default agent: {}", default_id);
-                match self.agents.get(default_id) {
+        match &self.manager_agent_id {
+            | Some(manager_id) => {
+                info!("Routing prompt to manager agent: {}", manager_id);
+                match self.agents.get(manager_id) {
                     | Some(agent) => {
-                        // Only use default if it's not unhealthy
+                        // Only use manager agent if it's not unhealthy
                         match agent.get_health_status() {
                             | HealthStatus::Unhealthy => {
-                                warn!("Default agent {} is unhealthy", default_id);
+                                warn!("Manager agent {} is unhealthy", manager_id);
                             },
                             | _ => return Ok(agent),
                         }
@@ -394,7 +394,7 @@ impl AgentRouter {
             | None => {},
         }
 
-        // If no default agent is defined or it's unhealthy, try to find any healthy
+        // If no manager agent is defined or it's unhealthy, try to find any healthy
         // agent
         for (agent_id, agent) in &self.agents {
             match agent.get_health_status() {
@@ -523,15 +523,15 @@ Respond ONLY with the ID of the single best agent to handle this prompt. Your re
         let (prompts, errors, _total_time, avg_time) = self.metrics.get_stats();
         stats.insert("router_total_prompts".to_string(), prompts.to_string());
         stats.insert("router_errors".to_string(), errors.to_string());
-        stats.insert("router_avg_processing_time_ms".to_string(), format!("{:.2}", avg_time));
+        stats.insert("router_avg_processing_time_ms".to_string(), format!("{avg_time:.2}"));
 
         // Agent metrics
         for (agent_id, agent) in &self.agents {
             let (prompts, errors, _, avg_time) = agent.get_metrics().get_stats();
-            stats.insert(format!("agent_{}_prompts", agent_id), prompts.to_string());
-            stats.insert(format!("agent_{}_errors", agent_id), errors.to_string());
-            stats.insert(format!("agent_{}_avg_time_ms", agent_id), format!("{:.2}", avg_time));
-            stats.insert(format!("agent_{}_health", agent_id), format!("{:?}", agent.get_health_status()));
+            stats.insert(format!("agent_{agent_id}_prompts"), prompts.to_string());
+            stats.insert(format!("agent_{agent_id}_errors"), errors.to_string());
+            stats.insert(format!("agent_{agent_id}_avg_time_ms"), format!("{avg_time:.2}"));
+            stats.insert(format!("agent_{agent_id}_health"), format!("{:?}", agent.get_health_status()));
         }
 
         stats
@@ -617,7 +617,7 @@ pub async fn get_agents(app_state: web::Data<AppState>) -> impl Responder {
         agents.push(AgentInfo {
             id: agent_id.clone(),
             model: agent.get_model().clone(),
-            health: format!("{:?}", health_status),
+            health: format!("{health_status:?}"),
             health_class: health_class.to_string(),
             prompts,
             avg_time,
@@ -701,7 +701,7 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
             // Add error message to chat history
             let error_message = ChatMessage {
                 id: Uuid::new_v4().to_string(),
-                content: format!("Error: {}", e),
+                content: format!("Error: {e}"),
                 agent_id: Some("system".to_string()),
                 timestamp: Utc::now().to_rfc3339(),
                 message_type: "agent".to_string(),
@@ -730,7 +730,7 @@ pub fn init_logging() {
     tracing::subscriber::set_global_default(subscriber).expect("Failed to set tracing subscriber");
 }
 
-// Function to create and configure an agent router with default agents and
+// Function to create and configure an agent router with manager agent and
 // rules
 pub fn create_agent_router() -> std::io::Result<AgentRouter> {
     // Create the agent router
@@ -759,7 +759,7 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
             model_name.as_str(),
             "You are a software testing expert. Only answer software testing questions in detail.",
         ),
-        ("default", model_name.as_str(), "You are a helpful, advanced assistant."),
+        ("manager", model_name.as_str(), "You are a helpful, advanced assistant."),
     ];
 
     for (agent_id, model, system_prompt) in agent_configs {
@@ -781,7 +781,7 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
         .register_rule_with_priority("testing".to_string(), "testing_agent".to_string(), 8, 0.5)
         .map_err(std::io::Error::other)?;
     router
-        .register_rule("default".to_string(), "default".to_string())
+        .register_rule("manager".to_string(), "manager".to_string())
         .map_err(std::io::Error::other)?;
 
     Ok(router)
