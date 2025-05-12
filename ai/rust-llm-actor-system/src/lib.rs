@@ -143,13 +143,19 @@ impl LLMActor {
     }
 
     pub async fn process_prompt(&self, prompt: String) -> Result<String> {
+        use futures::StreamExt;
         use reqwest::Client;
         use serde_json::json;
+        use std::io::{self, Write};
+
         info!("Processing prompt with model: {}", self.model);
+        info!("Agent {} is processing: {}", self.id, prompt);
+
         match self.health_status {
             | HealthStatus::Unhealthy => return Err(anyhow!("Agent is unhealthy and cannot process prompts")),
             | _ => {},
         }
+
         dotenv().ok();
         let api_key = env::var("OPENAI_API_KEY").map_err(|_| anyhow!("OPENAI_API_KEY not set"))?;
         let api_url = env::var("OPENAI_API_URL").map_err(|_| anyhow!("OPENAI_API_URL not set"))?;
@@ -164,12 +170,23 @@ impl LLMActor {
             "max_tokens": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
+            "stream": true,  // Enable streaming responses
             "messages": [
                 { "role": "system", "content": self.system_prompt },
                 { "role": "user", "content": prompt }
             ]
         });
 
+        // Print agent header to console
+        println!(
+            "
+[{}] 응답 스트리밍 시작:
+",
+            self.id
+        );
+        io::stdout().flush().ok();
+
+        // Send request with streaming enabled
         let resp = client
             .post(&api_url)
             .header("Content-Type", "application/json")
@@ -179,9 +196,53 @@ impl LLMActor {
             .await?
             .error_for_status()?;
 
-        let resp_json: serde_json::Value = resp.json().await?;
-        let answer = resp_json["choices"][0]["message"]["content"].as_str().unwrap_or("(No response)").to_string();
-        Ok(answer)
+        // Process the streaming response
+        let mut stream = resp.bytes_stream();
+        let mut full_response = String::new();
+
+        while let Some(chunk_result) = stream.next().await {
+            let chunk = chunk_result?;
+            let chunk_str = String::from_utf8_lossy(&chunk);
+
+            // Split the chunk by lines (each line is a separate SSE event)
+            for line in chunk_str.lines() {
+                // Skip empty lines and "data: [DONE]" messages
+                if line.is_empty() || !line.starts_with("data:") || line.contains("[DONE]") {
+                    continue;
+                }
+
+                // Parse the JSON data
+                if let Some(json_str) = line.strip_prefix("data: ") {
+                    if let Ok(json) = serde_json::from_str::<serde_json::Value>(json_str) {
+                        // Extract the content delta if it exists
+                        if let Some(content) = json["choices"][0]["delta"]["content"].as_str() {
+                            // Append to the full response
+                            full_response.push_str(content);
+
+                            // Print the content delta to console
+                            print!("{}", content);
+                            io::stdout().flush().ok();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Print newline after streaming is complete
+        println!(
+            "
+[{}] 응답 스트리밍 완료
+",
+            self.id
+        );
+        io::stdout().flush().ok();
+
+        // If we didn't get any response, return a default message
+        if full_response.is_empty() {
+            full_response = "(No response)".to_string();
+        }
+
+        Ok(full_response)
     }
 }
 
@@ -753,12 +814,12 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
         (
             "coding_agent",
             model_name.as_str(),
-            "당신은 소프트웨어 구현 전문가입니다. 소프트웨어 구현 질문에만 자세히 답변하세요.",
+            "당신은 소프트웨어 구현 전문가입니다. 소프트웨어 구현 부분만 프로그래밍 언어로 답변하세요.",
         ),
         (
             "testing_agent",
             model_name.as_str(),
-            "당신은 소프트웨어 테스트 전문가입니다. 소프트웨어 테스트 질문에만 자세히 답변하세요.",
+            "당신은 소프트웨어 테스트 전문가입니다. 소프트웨어 테스트 질문에만 요청받은 프로그래밍 언어에 해당하는 단위테스트 코드로 자세히 답변하세요.",
         ),
         (
             "manager",
