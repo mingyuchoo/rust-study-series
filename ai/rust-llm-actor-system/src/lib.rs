@@ -437,9 +437,10 @@ impl AgentRouter {
         dotenv().ok();
         let api_key = env::var("OPENAI_API_KEY").map_err(|_| anyhow!("OPENAI_API_KEY not set"))?;
         let api_url = env::var("OPENAI_API_URL").map_err(|_| anyhow!("OPENAI_API_URL not set"))?;
+        let api_model = env::var("OPENAI_API_MODEL").map_err(|_| anyhow!("OPENAI_API_MODEL not set"))?;
 
         // Use a simpler model for routing decisions to save costs
-        let model = "gpt-4o";
+        let model = api_model;
 
         let system_prompt = format!(
             "You are a routing assistant. Your job is to analyze the user's prompt and select the most appropriate agent to handle it.
@@ -737,19 +738,19 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
 
     // Add some initial LLM agents
     let agent_configs = vec![
-        ("math_specialist", "gpt-4o", "You are a math expert. Only answer math questions in detail."),
+        ("math_specialist", "gpt-4o-mini", "You are a math expert. Only answer math questions in detail."),
         (
             "computer_specialist",
-            "gpt-4o",
+            "gpt-4o-mini",
             "You are a computer expert. Only answer computer questions in detail.",
         ),
-        ("music_specialist", "gpt-4o", "You are a music expert. Only answer music questions in detail."),
+        ("music_specialist", "gpt-4o-mini", "You are a music expert. Only answer music questions in detail."),
         (
             "korean_specialist",
-            "gpt-4o",
+            "gpt-4o-mini",
             "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics.",
         ),
-        ("default", "gpt-4o", "You are a helpful, advanced assistant."),
+        ("default", "gpt-4o-mini", "You are a helpful, advanced assistant."),
     ];
 
     for (agent_id, model, system_prompt) in agent_configs {
