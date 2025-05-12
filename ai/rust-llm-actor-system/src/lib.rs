@@ -737,20 +737,29 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
     let mut router = AgentRouter::new();
 
     // Add some initial LLM agents
+    let model_name = env::var("OPENAI_API_MODEL").unwrap_or_else(|_| "gpt-4o-mini".to_string());
     let agent_configs = vec![
-        ("math_specialist", "gpt-4o-mini", "You are a math expert. Only answer math questions in detail."),
         (
-            "computer_specialist",
-            "gpt-4o-mini",
-            "You are a computer expert. Only answer computer questions in detail.",
+            "analysis_agent",
+            model_name.as_str(),
+            "You are an requirement analysis expert. Only answer requirement analysis questions in detail.",
         ),
-        ("music_specialist", "gpt-4o-mini", "You are a music expert. Only answer music questions in detail."),
         (
-            "korean_specialist",
-            "gpt-4o-mini",
-            "You are a Korean language specialist. Answer in fluent Korean and focus on Korean language/culture topics.",
+            "design_agent",
+            model_name.as_str(),
+            "You are a computer system design expert. Only answer computer system design questions in detail.",
         ),
-        ("default", "gpt-4o-mini", "You are a helpful, advanced assistant."),
+        (
+            "coding_agent",
+            model_name.as_str(),
+            "You are a software coding expert. Only answer software coding questions in detail.",
+        ),
+        (
+            "testing_agent",
+            model_name.as_str(),
+            "You are a software testing expert. Only answer software testing questions in detail.",
+        ),
+        ("default", model_name.as_str(), "You are a helpful, advanced assistant."),
     ];
 
     for (agent_id, model, system_prompt) in agent_configs {
@@ -760,16 +769,16 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
 
     // Register routing rules with different priorities and confidence thresholds
     router
-        .register_rule_with_priority("math".to_string(), "math_specialist".to_string(), 10, 0.6)
+        .register_rule_with_priority("analysis".to_string(), "analysis_agent".to_string(), 10, 0.6)
         .map_err(std::io::Error::other)?;
     router
-        .register_rule_with_priority("computer".to_string(), "computer_specialist".to_string(), 10, 0.6)
+        .register_rule_with_priority("design".to_string(), "design_agent".to_string(), 10, 0.6)
         .map_err(std::io::Error::other)?;
     router
-        .register_rule_with_priority("music".to_string(), "music_specialist".to_string(), 10, 0.6)
+        .register_rule_with_priority("coding".to_string(), "coding_agent".to_string(), 10, 0.6)
         .map_err(std::io::Error::other)?;
     router
-        .register_rule_with_priority("korean".to_string(), "korean_specialist".to_string(), 8, 0.5)
+        .register_rule_with_priority("testing".to_string(), "testing_agent".to_string(), 8, 0.5)
         .map_err(std::io::Error::other)?;
     router
         .register_rule("default".to_string(), "default".to_string())
