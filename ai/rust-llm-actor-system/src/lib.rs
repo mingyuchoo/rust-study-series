@@ -650,70 +650,71 @@ pub async fn process_prompt(req: web::Json<PromptRequest>, app_state: web::Data<
         timestamp: Utc::now().to_rfc3339(),
         message_type: "user".to_string(),
     };
-
     app_state.chat_history.lock().await.push(user_message);
 
-    // Process the prompt
-    // Clone the prompt to avoid borrowing issues
-    let prompt_clone = prompt.clone();
+    // Sequential agent delegation logic
+    let router = app_state.router.lock().await;
+    let mut current_input = prompt.clone();
+    let mut last_agent_id = String::new();
+    let agent_sequence = ["manager", "analysis_agent", "design_agent", "coding_agent", "testing_agent"];
 
-    // Get the router with a separate scope to ensure it's released before we use it
-    // again
-    let agent_id = {
-        let router_guard = app_state.router.lock().await;
-        let result = router_guard.select_best_agent(&prompt_clone).await;
-        match result {
-            | Ok(agent) => agent.get_id().to_string(),
+    for agent_id in agent_sequence.iter() {
+        let agent = match router.get_agents().get(*agent_id) {
+            | Some(agent) => agent,
+            | None => {
+                let error_msg = format!("Agent '{agent_id}' not found");
+                error!("{error_msg}");
+                let error_message = ChatMessage {
+                    id: Uuid::new_v4().to_string(),
+                    content: error_msg.clone(),
+                    agent_id: Some("system".to_string()),
+                    timestamp: Utc::now().to_rfc3339(),
+                    message_type: "agent".to_string(),
+                };
+                app_state.chat_history.lock().await.push(error_message);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": error_msg
+                })));
+            },
+        };
+        match agent.process_prompt(current_input.clone()).await {
+            | Ok(output) => {
+                last_agent_id = agent_id.to_string();
+                // Log and store each agent's output in chat history
+                let agent_message = ChatMessage {
+                    id: Uuid::new_v4().to_string(),
+                    content: output.clone(),
+                    agent_id: Some(agent_id.to_string()),
+                    timestamp: Utc::now().to_rfc3339(),
+                    message_type: "agent".to_string(),
+                };
+                app_state.chat_history.lock().await.push(agent_message);
+                current_input = output;
+            },
             | Err(e) => {
-                warn!("Failed to select agent: {}", e);
-                return Ok(HttpResponse::InternalServerError().body("Failed to select agent"));
+                error!("Error from agent {}: {:?}", agent_id, e);
+                let error_message = ChatMessage {
+                    id: Uuid::new_v4().to_string(),
+                    content: format!("Error from {agent_id}: {e}"),
+                    agent_id: Some(agent_id.to_string()),
+                    timestamp: Utc::now().to_rfc3339(),
+                    message_type: "agent".to_string(),
+                };
+                app_state.chat_history.lock().await.push(error_message);
+                return Ok(HttpResponse::InternalServerError().json(serde_json::json!({
+                    "error": format!("Error from {agent_id}: {e}")
+                })));
             },
         }
-    };
-
-    let response = app_state.router.lock().await.route_prompt(prompt.clone()).await;
-    match response {
-        | Ok(response) => {
-            info!("Response from agent {}: {}", agent_id, response);
-
-            // Add agent response to chat history
-            let agent_message = ChatMessage {
-                id: Uuid::new_v4().to_string(),
-                content: response.clone(),
-                agent_id: Some(agent_id.to_string()),
-                timestamp: Utc::now().to_rfc3339(),
-                message_type: "agent".to_string(),
-            };
-
-            app_state.chat_history.lock().await.push(agent_message);
-
-            let prompt_response = PromptResponse {
-                response,
-                agent_id: agent_id.to_string(),
-                timestamp: Utc::now().to_rfc3339(),
-            };
-
-            Ok(HttpResponse::Ok().json(prompt_response))
-        },
-        | Err(e) => {
-            error!("Error processing prompt: {:?}", e);
-
-            // Add error message to chat history
-            let error_message = ChatMessage {
-                id: Uuid::new_v4().to_string(),
-                content: format!("Error: {e}"),
-                agent_id: Some("system".to_string()),
-                timestamp: Utc::now().to_rfc3339(),
-                message_type: "agent".to_string(),
-            };
-
-            app_state.chat_history.lock().await.push(error_message);
-
-            Ok(HttpResponse::InternalServerError().json(serde_json::json!({
-                "error": format!("{}", e)
-            })))
-        },
     }
+
+    // Final response from testing_agent
+    let prompt_response = PromptResponse {
+        response: current_input,
+        agent_id: last_agent_id,
+        timestamp: Utc::now().to_rfc3339(),
+    };
+    Ok(HttpResponse::Ok().json(prompt_response))
 }
 
 // API handler to check health of all agents
@@ -742,24 +743,28 @@ pub fn create_agent_router() -> std::io::Result<AgentRouter> {
         (
             "analysis_agent",
             model_name.as_str(),
-            "You are an requirement analysis expert. Only answer requirement analysis questions in detail.",
+            "당신은 요구사항 분석 전문가입니다. 요구사항 분석 질문에만 자세히 답변하세요.",
         ),
         (
             "design_agent",
             model_name.as_str(),
-            "You are a computer system design expert. Only answer computer system design questions in detail.",
+            "당신은 소프트웨어 설계 전문가입니다. 소프트웨어 설계 질문에만 자세히 답변하세요.",
         ),
         (
             "coding_agent",
             model_name.as_str(),
-            "You are a software coding expert. Only answer software coding questions in detail.",
+            "당신은 소프트웨어 구현 전문가입니다. 소프트웨어 구현 질문에만 자세히 답변하세요.",
         ),
         (
             "testing_agent",
             model_name.as_str(),
-            "You are a software testing expert. Only answer software testing questions in detail.",
+            "당신은 소프트웨어 테스트 전문가입니다. 소프트웨어 테스트 질문에만 자세히 답변하세요.",
         ),
-        ("manager", model_name.as_str(), "You are a helpful, advanced assistant."),
+        (
+            "manager",
+            model_name.as_str(),
+            "당신은 도움이 되는, 소프트웨어 개발 프로젝트 관리자입니다. 모든 질문에 대해 의도를 분석하고 각 전문가에게 질문을 전달하세요.",
+        ),
     ];
 
     for (agent_id, model, system_prompt) in agent_configs {
