@@ -1,15 +1,14 @@
 * README
-** How to configure Jupyter Notebook
+** How to configure Jupyter Lab
 *** Option 1. Install Anaconda for Python
-**** Run Jupyter notebook
-You can use Jupyter Notebook immediately
+**** Run Jupyter Lab
+You can use Jupyter Lab immediately
 *** Option 2. Install Python from Python homepage
-You have to install Jupyter Notebook in your virtual environment
+You have to install Jupyter Lab in your virtual environment
 #+begin_src shell
-python -m pip install --upgarade pip
-python -m venv .venv
-source .venv/bin/activate
-pip install notebook
+uv python install 3.13
+uv venv --python 3.13
+uv pip install jupyterlab
 #+end_src
 ** How to configure Rust kernel for Jupyter Notebook
 *** Install Rust
@@ -25,10 +24,10 @@ cargo install evcxr_jupyter
 #+begin_src shell
 evcxr_jupyter --install
 #+end_src
-** Using Rust on Jupyter notebook
-*** Run Jupyter notebook
+** Using Rust on Jupyter Lab
+*** Run Jupyter Lab
 #+begin_src shell
-jupyter notebook
+jupyter lab
 #+end_src
 *** Use Rust Kernel
 Check if the kernel is installed
