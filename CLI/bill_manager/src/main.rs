@@ -4,7 +4,7 @@ use std::io::Write;
 
 #[derive(Debug, Clone)]
 struct Bill {
-    name:   String,
+    name: String,
     amount: f64,
 }
 
@@ -22,16 +22,12 @@ impl Bills {
         }
     }
 
-    fn insert(&mut self, bill: Bill) {
-        self.items.insert(bill.name.clone(), bill);
-    }
+    fn insert(&mut self, bill: Bill) { self.items.insert(bill.name.clone(), bill); }
 
     fn select_all(&self) -> Vec<Bill> {
         let mut bills = Vec::new();
 
-        self.items
-            .values()
-            .for_each(|bill| bills.push(bill.clone()));
+        self.items.values().for_each(|bill| bills.push(bill.clone()));
 
         bills
     }
@@ -46,9 +42,7 @@ impl Bills {
         }
     }
 
-    fn delete(&mut self, name: &str) -> bool {
-        self.items.remove(name).is_some()
-    }
+    fn delete(&mut self, name: &str) -> bool { self.items.remove(name).is_some() }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -94,9 +88,10 @@ fn main_menu() {
 fn do_select_bills(bills: &Bills) {
     println!("-------------------------------------");
 
-    bills.select_all().iter().for_each(|bill| {
-        println!("- name: {:<10} amount: {:>10}", bill.name, bill.amount)
-    });
+    bills
+        .select_all()
+        .iter()
+        .for_each(|bill| println!("- name: {:<10} amount: {:>10}", bill.name, bill.amount));
 }
 
 fn do_insert_bill(bills: &mut Bills) {
@@ -121,10 +116,7 @@ fn do_insert_bill(bills: &mut Bills) {
 }
 
 fn do_update_bill(bills: &mut Bills) {
-    bills
-        .select_all()
-        .iter()
-        .for_each(|bill| println!("{:?}", bill));
+    bills.select_all().iter().for_each(|bill| println!("{:?}", bill));
 
     print!("Enter bill name to update: ");
     let _ = io::stdout().flush();
@@ -146,10 +138,7 @@ fn do_update_bill(bills: &mut Bills) {
 }
 
 fn do_delete_bill(bills: &mut Bills) {
-    bills
-        .select_all()
-        .iter()
-        .for_each(|bill| println!("{:?}", bill));
+    bills.select_all().iter().for_each(|bill| println!("{:?}", bill));
 
     print!("Enter bill name to remove: ");
     let _ = io::stdout().flush();
