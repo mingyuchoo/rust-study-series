@@ -1,4 +1,4 @@
-use ndarray::prelude::{array, Array, Array1, ArrayBase, Dim};
+use ndarray::prelude::{Array, Array1, ArrayBase, Dim, array};
 use ndarray::{OwnedRepr, ShapeError};
 use std::f64::consts::PI;
 
@@ -8,8 +8,7 @@ fn main() -> Result<(), ShapeError> {
     println!("angles {}", a);
     println!("sine(a) {}", (a * PI / 180_f64).map(|x| x.sin()));
 
-    let a: ArrayBase<OwnedRepr<f64>, Dim<[usize; 2]>> =
-        Array::from_shape_vec((3, 3), Array1::range(0., 9., 1.).to_vec())?;
+    let a: ArrayBase<OwnedRepr<f64>, Dim<[usize; 2]>> = Array::from_shape_vec((3, 3), Array1::range(0., 9., 1.).to_vec())?;
     let b: ArrayBase<OwnedRepr<f64>, Dim<[usize; 1]>> = array![10., 10., 10.];
 
     println!("a: {}", &a);
