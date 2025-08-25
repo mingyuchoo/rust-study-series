@@ -2,14 +2,14 @@
 ** Prerequsites for Leptos
 *** Very beginning
 **** Set up toolchains
-#+begin_src shell
+#+BEGIN_SRC shell
   rustup toolchain install nightly
   rustup default nightly
   rustup target add wasm32-unknown-unknown
-#+end_src
+#+END_SRC
 *** Install Leptos and run
 **** For Leptos CSR
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo install cargo-generate
   cargo install trunk
   cargo init <project-name>
@@ -17,41 +17,41 @@
   cargo add leptos --features=csr
   cargo add console_error_panic_hook
   trunk serve --open
-#+end_src
+#+END_SRC
 **** For Leptos SSR
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo install cargo-leptos
   cargo leptos new --git https://github.com/leptos-rs/start
   cd <project-name>
   cargo leptos watch
-#+end_src
+#+END_SRC
 **** For Leptos Code Formatting
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo install leptosfmt
-#+end_src
+#+END_SRC
 ** How to build and run this project
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo install
   trunk serve  # or `trunk serve --port 3000 --open`
-#+end_src
+#+END_SRC
 ** How to start a new project
 *** Creating a new project
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo new {project_name}
   cd {project_name}
   touch Makefile.toml
   touch rust-toolchain.toml
   touch rustfmt.toml
-#+end_src
+#+END_SRC
 Add =rust-toolchain.toml= contents below
-#+begin_src toml
+#+BEGIN_SRC toml
   [toolchain]
     channel    = "nightly"
     components = ["clippy", "rust-analyzer", "rust-src", "rustfmt"]
     profile    = "default"
-#+end_src
+#+END_SRC
 Add =rustfmt.toml= contents below
-#+begin_src toml
+#+BEGIN_SRC toml
   # Stable options
   editon       = "2021"
   max_width    = 80
@@ -60,9 +60,9 @@ Add =rustfmt.toml= contents below
   format_strings              = true
   group_imports               = "One"
   imports_granularity         = "Crate"
-#+end_src
+#+END_SRC
 Add =Makefile.toml= contents below
-#+begin_src toml
+#+BEGIN_SRC toml
   [tasks.build]
     args       = ["build"]
     command    = "cargo"
@@ -82,8 +82,8 @@ Add =Makefile.toml= contents below
       "test",
       "start",
     ]
-#+end_src
-#+begin_src shell
+#+END_SRC
+#+BEGIN_SRC shell
   cargo make
   # or 
   cargo make build
@@ -91,22 +91,22 @@ Add =Makefile.toml= contents below
   cargo make run
   # or
   cargo make test
-#+end_src
+#+END_SRC
 *** Adding crates for =Leptos=
 Add crates
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo add leptos        --features=csr,nightly
   cargo add leptos_meta   --features=csr,nightly
   cargo add leptos_router --features=csr,nightly
   cargo add console_error_panic_hook
-#+end_src
+#+END_SRC
 *** Adding target for =Leptos=
 Add crates
-#+begin_src shell
+#+BEGIN_SRC shell
   rustup target add wasm32-unknown-unknown
-#+end_src
+#+END_SRC
 *** Adding ~index.html~ file in ~$PROJECT_HOME~
-#+begin_src html
+#+BEGIN_SRC html
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -119,9 +119,9 @@ Add crates
     <body>
     </body>
   </html>
-#+end_src
+#+END_SRC
 *** Modify ~src/main.rs~ file
-#+begin_src rust
+#+BEGIN_SRC rust
   use leptos::*;
   fn main() {
     mount_to_body(|| view! {
@@ -130,16 +130,16 @@ Add crates
       </p>
     })
   }
-#+end_src
+#+END_SRC
 *** Create directores and add files to them
-#+begin_src shell
+#+BEGIN_SRC shell
   mkdir public
   cp {somewhere} public/
   mkdir style
   cp {somewhere} style/
   touch tailwind.config.js
-#+end_src
-#+begin_src js
+#+END_SRC
+#+BEGIN_SRC js
   /** @type {import('tailwindcss').Config} */
   module.exports = {
     content: {
@@ -153,7 +153,7 @@ Add crates
     },
     plugins: [],
   }
-#+end_src
+#+END_SRC
 ** References
 - [[brookjeynes.dev][https://brookjeynes.dev/posts/learning-leptos-part1/]]
 

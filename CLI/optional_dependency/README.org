@@ -1,18 +1,18 @@
 * Optional Dependency
 ** How to use
 #+name: Cargo.toml
-#+begin_src toml
+#+BEGIN_SRC toml
   [dependencies]
   some_crate = { version = "1.0", optional = true }
   [features]
   extra_functionality = ["some_crate"]
-#+end_src
+#+END_SRC
 ** How to build
 1. Not activate JSON feature
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo run
-#+end_src
+#+END_SRC
 2. Activate JSON feature
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo run --features json
-#+end_src
+#+END_SRC

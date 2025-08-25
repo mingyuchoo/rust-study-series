@@ -9,35 +9,35 @@ How to create a workspace project
 6. Run the workspace
 ** In details
 *** 1. Create a workspace
-#+begin_src shell
+#+BEGIN_SRC shell
   mkdir {workspace-project-name}
   cd {workspace-project-name}
   touch Cargo.toml
-#+end_src
+#+END_SRC
 Edit ~Cargo.toml~
-#+begin_src toml
+#+BEGIN_SRC toml
   [workspace]
   members = []
   resolver = "2"
-#+end_src
+#+END_SRC
 *** 2. Create a main project
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo new --bin {mainer}
-#+end_src
+#+END_SRC
 The project name will be added to =members= of ~Cargo.toml~ automatically.
-#+begin_src toml
+#+BEGIN_SRC toml
   [workspace]
   members = ["mainer"]
   resolver = "2"
-#+end_src
+#+END_SRC
 Create three library projects
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo new --lib {library_one}
   cargo new --lib {library_two}
   cargo new --lib {library_three}
-#+end_src
+#+END_SRC
 The project name will be added to =members= of ~Cargo.toml~ automatically.
-#+begin_src toml
+#+BEGIN_SRC toml
   [workspace]
   members = [
     "library_one",
@@ -46,30 +46,30 @@ The project name will be added to =members= of ~Cargo.toml~ automatically.
     "mainer"
   ]
   resolver = "2"
-#+end_src
+#+END_SRC
 *** 3. Implement the three libraries
 Let's implement the three libraries
 - ~library_one/src/lib.rs~
-#+begin_src rust
+#+BEGIN_SRC rust
   pub fn add_one(x: i32) -> i32 {
     x + 1
   }
-#+end_src
+#+END_SRC
 - ~library_two/src/lib.rs~
-#+begin_src rust
+#+BEGIN_SRC rust
   pub fn add_two(x: i32) -> i32 {
     x + 2
   }
-#+end_src
+#+END_SRC
 - ~library_three/src/lib.rs~
-#+begin_src rust
+#+BEGIN_SRC rust
   pub fn add_three(x: i32) -> i32 {
     x + 3
   }
-#+end_src
+#+END_SRC
 *** 4. Add dependencies main project
 Add dependencies in ~Cargo.toml~ file of ={mainer}= project
-#+begin_src toml
+#+BEGIN_SRC toml
   [package]
   name = "mainer"
   version = "0.1.0"
@@ -79,21 +79,21 @@ Add dependencies in ~Cargo.toml~ file of ={mainer}= project
   library_one   = { path = "../library_one"}
   library_two   = { path = "../library_two"}
   library_three = { path = "../library_three"}
-#+end_src
+#+END_SRC
 *** 5. Use three libraries main project
 Use three libraries in ={mainer}= project
 - ~mainer/src/main.rs~
-#+begin_src rust
+#+BEGIN_SRC rust
   fn main() {
     let num = 10;
     println!("{num} plus one is {}!", library_one::add_one(num));
     println!("{num} plus two is {}!", library_two::add_two(num));
     println!("{num} plus three is {}!", library_three::add_three(num));
   }
-#+end_src
+#+END_SRC
 *** 6. Run the workspace
 Run the workspace
-#+begin_src shell
+#+BEGIN_SRC shell
   $ cd workspace
   $ cargo run
       Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
@@ -101,16 +101,16 @@ Run the workspace
   10 plus one is 11!
   10 plus two is 12!
   10 plus three is 13!
-#+end_src
+#+END_SRC
 *** Add dependencies globally
 Add ~[workspace.dependencies]~ to ~Cargo.toml~ of =workspace= automatically.
-#+begin_src toml
+#+BEGIN_SRC toml
   [workspace.dependencies]
     log = "0.4"
-#+end_src
+#+END_SRC
 *** Add dependencies sub-project
 Add dependencies in ~Cargo.toml~ file of each project *without version*
-#+begin_src toml
+#+BEGIN_SRC toml
   [dependencies]
     log = { workspace = true }
-#+end_src
+#+END_SRC

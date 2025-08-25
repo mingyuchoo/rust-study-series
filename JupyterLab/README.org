@@ -5,30 +5,30 @@
 You can use Jupyter Lab immediately
 *** Option 2. Install Python from Python homepage
 You have to install Jupyter Lab in your virtual environment
-#+begin_src shell
+#+BEGIN_SRC shell
 uv python install 3.13
 uv venv --python 3.13
 uv pip install jupyterlab
-#+end_src
+#+END_SRC
 ** How to configure Rust kernel for Jupyter Notebook
 *** Install Rust
-#+begin_src shell
+#+BEGIN_SRC shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-#+end_src
+#+END_SRC
 *** Install =evcxr*=
-#+begin_src shell
+#+BEGIN_SRC shell
 cargo install evcxr_repl
 cargo install evcxr_jupyter
-#+end_src
+#+END_SRC
 *** Register Jupyter kernel for Rust
-#+begin_src shell
+#+BEGIN_SRC shell
 evcxr_jupyter --install
-#+end_src
+#+END_SRC
 ** Using Rust on Jupyter Lab
 *** Run Jupyter Lab
-#+begin_src shell
+#+BEGIN_SRC shell
 jupyter lab
-#+end_src
+#+END_SRC
 *** Use Rust Kernel
 Check if the kernel is installed
 - =http://localhost:8888/lab=

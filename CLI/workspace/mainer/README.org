@@ -1,9 +1,9 @@
 * README
 ** How to build
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo build
-#+end_src
+#+END_SRC
 ** How to run
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo run
-#+end_src
+#+END_SRC

@@ -1,16 +1,16 @@
 * Loco
 ** Install Loco
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo install loco
   cargo install sea-orm-cli
-#+end_src
+#+END_SRC
 ** Create a project
-#+begin_src shell
+#+BEGIN_SRC shell
   loco new
-#+end_src
+#+END_SRC
 ** Run the project
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo loco start
-#+end_src
+#+END_SRC
 ** References
 - [[https://loco.rs/][Loco]]

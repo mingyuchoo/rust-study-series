@@ -1,13 +1,13 @@
 * Iced Counter
 ** How to create this project
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo new {project-name}
   cd {project-name}
   cargo add iced
-#+end_src
+#+END_SRC
 ** How to run this project
-#+begin_src shell
+#+BEGIN_SRC shell
   cargo run
-#+end_src
+#+END_SRC
 ** References
 - [[https://redandgreen.co.uk/iced-rs-example-snippets/rust-programming/][Example snippets]]
