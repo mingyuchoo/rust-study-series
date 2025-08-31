@@ -10,7 +10,7 @@ uv python install 3.13
 uv venv --python 3.13
 uv pip install jupyterlab
 #+END_SRC
-** How to configure Rust kernel for Jupyter Notebook
+** How to configure Rust kernel for Jupyter Lab
 *** Install Rust
 #+BEGIN_SRC shell
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
