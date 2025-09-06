@@ -1,0 +1,17 @@
+[profile.dev]
+  debug     = true
+  opt-level = 0
+
+[profile.release]
+  debug     = false
+  opt-level = 3
+
+[package]
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2024"
+  name    = "numpy-for-rust"
+  version = "0.1.0"
+
+
+[dependencies]
+  ndarray = "0.16.1"

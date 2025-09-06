@@ -1,0 +1,21 @@
+[profile.dev]
+  debug     = true
+  opt-level = 0
+
+[profile.release]
+  debug     = false
+  opt-level = 3
+
+[package]
+  authors = ["Mingyu choo <mingyuchoo@gmail.com"]
+  edition = "2024"
+  name    = "contact-manager"
+  version = "0.1.0"
+
+[dependencies]
+  structopt = "0.3.26"
+  thiserror = "2.0.0"
+
+[[bin]]
+  name = "contact-manager"
+  path = "src/main.rs"

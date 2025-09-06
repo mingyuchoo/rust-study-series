@@ -1,0 +1,38 @@
+[package]
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2024"
+  name    = "diesel-sqlite-init"
+  version = "0.1.0"
+
+[dependencies]
+  diesel     = {version = "2.2.5", features = ["returning_clauses_for_sqlite_3_35", "sqlite"]}
+  dotenvy    = "0.15.7"
+  rustsqlite = {version = "0.32.1", features = ["bundled"]}
+
+[[bin]]
+  name = "show_posts"
+  path = "src/bin/show_posts.rs"
+
+[[bin]]
+  name = "show_drafts"
+  path = "src/bin/show_drafts.rs"
+
+[[bin]]
+  name = "write_post"
+  path = "src/bin/write_post.rs"
+
+[[bin]]
+  name = "publish_post"
+  path = "src/bin/publish_post.rs"
+
+[[bin]]
+  name = "delete_post"
+  path = "src/bin/delete_post.rs"
+
+[profile.dev]
+  debug     = true
+  opt-level = 0
+
+[profile.release]
+  debug     = false
+  opt-level = 3

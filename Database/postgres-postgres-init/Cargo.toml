@@ -1,0 +1,17 @@
+[package]
+  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+  edition = "2024"
+  name    = "postgres-postgres-init"
+  version = "0.1.0"
+
+[dependencies]
+  dotenv   = "0.15.0"
+  postgres = "0.19.9"
+
+[profile.dev]
+  debug     = true
+  opt-level = 0
+
+[profile.release]
+  debug     = false
+  opt-level = 3

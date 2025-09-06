@@ -1,0 +1,10 @@
+[package]
+  edition = "2024"
+  name    = "optional-dependency"
+  version = "0.1.0"
+
+[dependencies]
+  serde_json = {version = "1.0.133", optional = true}
+
+[features]
+  json = ["serde_json"]

@@ -1,0 +1,17 @@
+[profile.dev]
+  debug     = true
+  opt-level = 0
+
+[profile.release]
+  debug     = false
+  opt-level = 3
+
+[package]
+  edition = "2024"
+  name    = "check-date"
+  version = "1.0.0"
+
+
+[dependencies]
+  regex = "1.11.1"
+  time  = "0.3.36"
