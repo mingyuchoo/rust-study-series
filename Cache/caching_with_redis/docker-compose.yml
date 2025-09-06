@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Redis 서버
+  redis:
+    image: redis:7-alpine
+    container_name: redis-embedding
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server 
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+      --timeout 300
+      --tcp-keepalive 60
+    volumes:
+      - redis_data:/data
+    networks:
+      - embedding_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Rust 임베딩 캐시 서비스
+  embedding-cache:
+    build: .
+    image: caching_with_redis:latest
+    container_name: embedding-cache-rust
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - CACHE_TTL=3600
+      - RUST_LOG=info
+      # 아래 환경변수는 필요 시 설정 (Azure OpenAI)
+      # - AZURE_OPENAI_ENDPOINT=https://<your>.openai.azure.com
+      # - AZURE_OPENAI_API_KEY=<key>
+      # - AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=<embedding-deployment-name>
+      # - AZURE_OPENAI_CHAT_DEPLOYMENT=<chat-deployment-name>
+      # OpenAI 호환 키(선택): 라이브러리에 따라 사용되지 않을 수 있음
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - embedding_network
+    restart: unless-stopped
+    # Dockerfile에서 ENTRYPOINT가 /usr/local/bin/caching_with_redis 이므로
+    # 여기서는 서브커맨드만 지정
+    command: ["status"]
+
+  # 모니터링 (선택사항)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - embedding_network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+
+networks:
+  embedding_network:
+    driver: bridge
