@@ -14,6 +14,17 @@ pub struct AppState {
     pub azure: AzureOpenAI,
 }
 
+#[utoipa::path(
+    tag = "search",
+    post,
+    path = "/api/search/vector",
+    request_body = VectorSearchRequest,
+    responses(
+        (status = 200, description = "벡터 검색 결과", body = VectorSearchResponse),
+        (status = 400, description = "잘못된 요청"),
+        (status = 500, description = "서버 오류"),
+    )
+)]
 #[post("/api/search/vector")]
 pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<VectorSearchRequest>) -> Result<web::Json<VectorSearchResponse>, Error> {
     let t0 = Instant::now();

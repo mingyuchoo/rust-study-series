@@ -1,14 +1,14 @@
 //! 인증 관련 핸들러 (JWT 기반)
 //! 모든 주석은 한국어로 작성됩니다.
 
-use actix_web::{post, get, web, HttpRequest, HttpResponse};
+use actix_web::{post, get, web, HttpRequest};
 use chrono::{Duration, Utc};
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey, Algorithm};
 use serde::{Deserialize, Serialize};
 
 use crate::config::AppConfig;
 use crate::error::Error;
-use crate::models::{LoginRequest, LoginResponse, RefreshResponse, MessageResponse};
+use crate::models::{LoginRequest, LoginResponse, RefreshResponse, MessageResponse, MeResponse};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -38,6 +38,17 @@ pub fn require_auth(req: &HttpRequest, cfg: &AppConfig) -> std::result::Result<S
     Ok(claims.sub)
 }
 
+#[utoipa::path(
+    tag = "auth",
+    post,
+    path = "/api/auth/login",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "로그인 성공", body = LoginResponse),
+        (status = 400, description = "잘못된 요청"),
+        (status = 500, description = "서버 오류"),
+    )
+)]
 #[post("/api/auth/login")]
 pub async fn login(cfg: web::Data<AppConfig>, payload: web::Json<LoginRequest>) -> Result<web::Json<LoginResponse>, Error> {
     // MVP: 데모용으로 비밀번호 검증을 단순화(실서비스에서는 해시/DB사용)
@@ -58,6 +69,16 @@ pub async fn login(cfg: web::Data<AppConfig>, payload: web::Json<LoginRequest>) 
     }))
 }
 
+#[utoipa::path(
+    tag = "auth",
+    post,
+    path = "/api/auth/refresh",
+    security(("bearer_auth" = [])),
+    responses(
+        (status = 200, description = "토큰 재발급", body = RefreshResponse),
+        (status = 401, description = "인증 실패"),
+    )
+)]
 #[post("/api/auth/refresh")]
 pub async fn refresh(cfg: web::Data<AppConfig>, req: HttpRequest) -> Result<web::Json<RefreshResponse>, Error> {
     let auth = req.headers().get("Authorization").and_then(|v| v.to_str().ok()).unwrap_or("");
@@ -70,14 +91,33 @@ pub async fn refresh(cfg: web::Data<AppConfig>, req: HttpRequest) -> Result<web:
     Ok(web::Json(RefreshResponse { access_token: access, expires_in: cfg.access_token_ttl_secs }))
 }
 
+#[utoipa::path(
+    tag = "auth",
+    post,
+    path = "/api/auth/logout",
+    security(("bearer_auth" = [])),
+    responses(
+        (status = 200, description = "로그아웃 완료", body = MessageResponse),
+        (status = 401, description = "인증 실패"),
+    )
+)]
 #[post("/api/auth/logout")]
 pub async fn logout(_cfg: web::Data<AppConfig>, _req: HttpRequest) -> Result<web::Json<MessageResponse>, Error> {
     // MVP: 서버측 상태 저장을 하지 않으므로 단순 성공 반환
     Ok(web::Json(MessageResponse { message: "Successfully logged out".into() }))
 }
 
+#[utoipa::path(
+    tag = "auth",
+    get,
+    path = "/api/auth/me",
+    responses(
+        (status = 200, description = "내 정보", body = MeResponse),
+        (status = 401, description = "인증 실패"),
+    )
+)]
 #[get("/api/auth/me")]
-pub async fn me(cfg: web::Data<AppConfig>, req: HttpRequest) -> Result<HttpResponse, Error> {
+pub async fn me(cfg: web::Data<AppConfig>, req: HttpRequest) -> Result<web::Json<MeResponse>, Error> {
     let sub = require_auth(&req, &cfg)?;
-    Ok(HttpResponse::Ok().json(serde_json::json!({ "email": sub })))
+    Ok(web::Json(MeResponse { email: sub }))
 }

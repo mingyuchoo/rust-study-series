@@ -9,6 +9,18 @@ use crate::error::Error;
 use crate::models::{ChatAskRequest, ChatAskResponse, SourceItem, GraphPathItem};
 use crate::search::AppState;
 
+#[utoipa::path(
+    tag = "chat",
+    post,
+    path = "/api/chat/ask",
+    request_body = ChatAskRequest,
+    responses(
+        (status = 200, description = "질의응답 결과", body = ChatAskResponse),
+        (status = 400, description = "잘못된 요청"),
+        (status = 401, description = "인증 실패"),
+        (status = 500, description = "서버 오류"),
+    )
+)]
 #[post("/api/chat/ask")]
 pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web::Json<ChatAskRequest>) -> Result<web::Json<ChatAskResponse>, Error> {
     // 인증 토큰 검증

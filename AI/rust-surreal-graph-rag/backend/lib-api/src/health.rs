@@ -6,6 +6,14 @@ use chrono::Utc;
 
 use crate::models::HealthResponse;
 
+#[utoipa::path(
+    tag = "health",
+    get,
+    path = "/api/health",
+    responses(
+        (status = 200, description = "시스템 상태 OK", body = HealthResponse)
+    )
+)]
 #[get("/api/health")]
 pub async fn health() -> Result<web::Json<HealthResponse>> {
     let now = Utc::now().to_rfc3339();

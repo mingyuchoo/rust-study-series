@@ -2,15 +2,16 @@
 //! 모든 주석은 한국어로 작성됩니다.
 
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 // 인증
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct LoginRequest {
     pub email: String,
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct LoginResponse {
     pub access_token: String,
     pub refresh_token: String,
@@ -18,19 +19,25 @@ pub struct LoginResponse {
     pub expires_in: i64,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct RefreshResponse {
     pub access_token: String,
     pub expires_in: i64,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct MessageResponse {
     pub message: String,
 }
 
+// 사용자 정보 응답
+#[derive(Debug, Serialize, ToSchema)]
+pub struct MeResponse {
+    pub email: String,
+}
+
 // 헬스체크
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct HealthResponse {
     pub status: String,
     pub timestamp: String,
@@ -39,7 +46,7 @@ pub struct HealthResponse {
 }
 
 // 검색
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct VectorSearchRequest {
     pub query: String,
     #[serde(default = "default_top_k")] pub top_k: u32,
@@ -50,7 +57,7 @@ pub struct VectorSearchRequest {
 fn default_top_k() -> u32 { 10 }
 fn default_threshold() -> f32 { 0.7 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct VectorSearchItem {
     pub id: String,
     pub content: String,
@@ -58,7 +65,7 @@ pub struct VectorSearchItem {
     pub metadata: serde_json::Value,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct VectorSearchResponse {
     pub results: Vec<VectorSearchItem>,
     pub total: u32,
@@ -66,7 +73,7 @@ pub struct VectorSearchResponse {
 }
 
 // 챗/질의응답
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct ChatAskRequest {
     pub query: String,
     #[serde(default)] pub conversation_id: Option<String>,
@@ -74,7 +81,7 @@ pub struct ChatAskRequest {
     #[serde(default)] pub options: Option<serde_json::Value>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct SourceItem {
     pub r#type: String,
     pub content: String,
@@ -82,14 +89,14 @@ pub struct SourceItem {
     pub metadata: serde_json::Value,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct GraphPathItem {
     pub path: String,
     pub nodes: serde_json::Value,
     pub relationships: serde_json::Value,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ChatAskResponse {
     pub response: String,
     pub conversation_id: Option<String>,

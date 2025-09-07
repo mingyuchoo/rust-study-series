@@ -16,6 +16,45 @@ use actix_web::web;
 use crate::config::AppConfig;
 use crate::azure::AzureOpenAI;
 use crate::search::AppState;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        health::health,
+        auth::login,
+        auth::refresh,
+        auth::logout,
+        auth::me,
+        search::vector_search,
+        chat::chat_ask,
+    ),
+    components(
+        schemas(
+            models::LoginRequest,
+            models::LoginResponse,
+            models::RefreshResponse,
+            models::MessageResponse,
+            models::HealthResponse,
+            models::VectorSearchRequest,
+            models::VectorSearchItem,
+            models::VectorSearchResponse,
+            models::ChatAskRequest,
+            models::SourceItem,
+            models::GraphPathItem,
+            models::ChatAskResponse,
+            models::MeResponse
+        )
+    ),
+    tags(
+        (name = "health", description = "헬스체크"),
+        (name = "auth", description = "인증"),
+        (name = "search", description = "벡터 검색"),
+        (name = "chat", description = "통합 질의응답")
+    )
+)]
+struct ApiDoc;
 
 pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     info!("Initializing database...");
@@ -29,6 +68,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 
     info!("Starting HTTP server...");
     HttpServer::new(move || {
+        let openapi = ApiDoc::openapi();
         App::new()
             .app_data(state.clone())
             // MVP 엔드포인트 등록
@@ -39,6 +79,11 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
             .service(auth::me)
             .service(search::vector_search)
             .service(chat::chat_ask)
+            // Swagger UI 및 OpenAPI 스펙 라우트
+            .service(
+                SwaggerUi::new("/swagger-ui/{_:.*}")
+                    .url("/api-doc/openapi.json", openapi.clone()),
+            )
             // 기존 샘플 라우트 유지
             .service(routes::session)
             .service(routes::list_people)
