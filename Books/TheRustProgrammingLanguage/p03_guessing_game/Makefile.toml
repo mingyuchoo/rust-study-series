@@ -17,7 +17,12 @@
   install_crate = "rustfmt"
 
 [tasks.build]
-  args         = ["build"]
+  args         = ["build", "--profile", "dev"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.release]
+  args         = ["build", "--profile", "release"]
   command      = "cargo"
   dependencies = ["format"]
 

@@ -5,6 +5,7 @@
 </p>
 
 # README
+
 ## For NixOS
 
 edit `/etc/nixos/configuration.nix` in root account
@@ -111,6 +112,23 @@ rustup component add rls
 rustup component add rust-analysis
 rustup component add rust-analyzer
 ```
+
+### Change Linker
+
+Create `$HOME/.cargo/config.toml`
+
+```toml
+# For Linux/macOS-mold
+# > cargo install mold
+[target.x86_64-unknown-linux-gnu]
+linker = "clang"
+rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+# For Windows-lld
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+```
+
 ## Formatting & linting
 
 ```bash

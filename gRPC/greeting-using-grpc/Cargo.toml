@@ -30,9 +30,13 @@
   harness = false
 
 [profile.dev]
-  debug     = true
-  opt-level = 0
+  codegen-units = 256
+  debug         = true
+  incremental   = true
+  opt-level     = 1
 
 [profile.release]
-  debug     = false
-  opt-level = 3
+  codegen-units = 1
+  debug         = false
+  lto           = "thin"
+  opt-level     = 3
