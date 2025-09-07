@@ -64,12 +64,15 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     let cfg = AppConfig::from_env();
     let azure = AzureOpenAI::new(cfg.azure.clone());
     let state = web::Data::new(AppState { cfg: cfg.clone(), azure });
+    // 인증 핸들러는 web::Data<AppConfig>를 요구하므로 AppConfig도 별도로 주입
+    let cfg_data = web::Data::new(cfg.clone());
 
     info!("Starting HTTP server...");
     HttpServer::new(move || {
         let openapi = ApiDoc::openapi();
         App::new()
             .app_data(state.clone())
+            .app_data(cfg_data.clone())
             // MVP 엔드포인트 등록
             .service(health::health)
             .service(auth::login)
