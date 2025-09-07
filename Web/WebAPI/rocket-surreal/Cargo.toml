@@ -1,6 +1,6 @@
 [package]
   edition = "2024"
-  name    = "rocket_surreal"
+  name    = "rocket-surreal"
   version = "0.1.0"
 
 [dependencies]

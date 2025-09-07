@@ -10,7 +10,7 @@
   authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
   build   = "build.rs"
   edition = "2024"
-  name    = "rdkafka_v028_simple"
+  name    = "rdkafka-v028-simple"
   version = "0.1.0"
 
 [dependencies]

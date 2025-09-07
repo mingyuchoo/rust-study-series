@@ -1,6 +1,6 @@
 [package]
   edition = "2024"
-  name    = "bin_web"
+  name    = "bin-web"
   version = "0.1.0"
 
 [lib]
@@ -16,8 +16,8 @@
   leptos_actix             = {version = "0.6.5", optional = true}
   leptos_meta              = {version = "0.6.5", features = ["nightly"]}
   leptos_router            = {version = "0.6.5", features = ["nightly"]}
-  lib_adder                = {path = "../lib_adder"}
-  lib_repo                 = {path = "../lib_repo"}
+  lib-adder                = {path = "../lib-adder"}
+  lib-repo                 = {path = "../lib-repo"}
   log                      = {workspace = true}
   serde                    = {workspace = true}
   uuid                     = "1.11.0"

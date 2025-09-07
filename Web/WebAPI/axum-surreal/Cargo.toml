@@ -1,5 +1,5 @@
 [package]
-name = "axum_surreal"
+name = "axum-surreal"
 version = "0.1.0"
 edition = "2024"
 

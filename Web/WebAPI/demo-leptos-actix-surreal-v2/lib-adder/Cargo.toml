@@ -1,6 +1,6 @@
 [package]
   edition = "2024"
-  name    = "lib_adder"
+  name    = "lib-adder"
   version = "0.1.0"
 
 [dependencies]
