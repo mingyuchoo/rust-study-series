@@ -7,11 +7,12 @@ import { IndexCreateResponse } from '@/types/api';
 // Vite 환경에서 동작하도록 동적 import 사용
 async function extractPdfText(file: File): Promise<string> {
   const pdfjsLib = await import('pdfjs-dist');
-  // 워커 경로 설정 (모듈 번들 사용)
+  // 워커 경로 설정: Vite의 asset import 기능(?url)로 문자열 URL을 주입해야 함
+  // 모듈 객체를 그대로 할당하면 Invalid `workerSrc` type 오류가 발생하므로 URL 문자열을 사용한다.
   // @ts-ignore
-  const worker = await import('pdfjs-dist/build/pdf.worker.min.mjs');
+  const workerUrl = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default as string;
   // @ts-ignore
-  pdfjsLib.GlobalWorkerOptions.workerSrc = worker;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
 
   const arrayBuffer = await file.arrayBuffer();
   // @ts-ignore
