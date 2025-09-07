@@ -32,7 +32,6 @@ use utoipa_swagger_ui::SwaggerUi;
         chat::chat_ask,
         index::index_create,
         admin::reindex_pdfs,
-        admin::upload_file,
     ),
     components(
         schemas(
