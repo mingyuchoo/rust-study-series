@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Chat from './pages/Chat';
 import VectorSearch from './pages/VectorSearch';
 import Health from './pages/Health';
+import Indexing from './pages/Indexing';
 import NavBar from './components/NavBar';
 import { AuthProvider, useAuth } from './store/auth';
 
@@ -41,6 +42,14 @@ const App: React.FC = () => {
             }
           />
           <Route path="/health" element={<Health />} />
+          <Route
+            path="/index"
+            element={
+              <PrivateRoute>
+                <Indexing />
+              </PrivateRoute>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

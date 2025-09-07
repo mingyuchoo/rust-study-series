@@ -105,3 +105,35 @@ pub struct ChatAskResponse {
     pub query_time: f32,
     pub tokens_used: u32,
 }
+
+// 인덱싱 생성
+#[derive(Debug, Deserialize, ToSchema, Clone)]
+pub struct IndexChunkInput {
+    /// 청크 텍스트 내용
+    pub content: String,
+    /// 선택적 메타데이터(JSON)
+    #[serde(default)]
+    pub metadata: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Deserialize, ToSchema, Clone)]
+pub struct IndexCreateRequest {
+    /// 문서 식별자(미지정 시 서버에서 생성)
+    #[serde(default)]
+    pub document_id: Option<String>,
+    /// 문서 제목(옵션)
+    #[serde(default)]
+    pub title: Option<String>,
+    /// 분할된 청크 목록
+    pub chunks: Vec<IndexChunkInput>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct IndexCreateResponse {
+    /// 생성/사용된 문서 식별자
+    pub document_id: String,
+    /// 인덱싱된 청크 개수
+    pub chunks_indexed: u32,
+    /// 전체 처리 시간(초)
+    pub elapsed: f32,
+}

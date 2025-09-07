@@ -18,3 +18,5 @@
   anyhow      = "1.0.95"
   utoipa      = { version = "5.4.0", features = ["actix_extras", "chrono", "macros"] }
   utoipa-swagger-ui = { version = "9.0.2", features = ["actix-web"] }
+  uuid        = { version = "1.10.0", features = ["v4"] }
+  surrealdb   = "2.1.2"
