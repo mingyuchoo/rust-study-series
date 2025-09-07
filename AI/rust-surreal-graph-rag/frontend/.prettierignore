@@ -1,0 +1,17 @@
+# 빌드/산출물 제외
+node_modules/
+dist/
+build/
+coverage/
+
+# 잠금 파일 제외
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# IDE/도구 폴더 제외
+.vscode/
+.idea/
+
+# 기타
+*.log

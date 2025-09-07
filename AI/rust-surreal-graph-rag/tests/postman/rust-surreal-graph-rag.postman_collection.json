@@ -1,0 +1,143 @@
+{
+	"info": {
+		"_postman_id": "13243cec-7036-4e24-8f18-713374a86bf3",
+		"name": "rust-surreal-graph-rag",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "4403101"
+	},
+	"item": [
+		{
+			"name": "api/auth/login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"dev@example.com\",\r\n  \"password\": \"devman2025@\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/api/auth/login",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/auth/me",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXZAZXhhbXBsZS5jb20iLCJleHAiOjE3NTcyMjYyNDAsInR5cGUiOiJhY2Nlc3MifQ.ecTEzWBmcO-D5Ivk2Our9_cbfHIkaUwFInPoG2x4e0c",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL}}/api/auth/me",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/search/vector",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXZAZXhhbXBsZS5jb20iLCJleHAiOjE3NTcyMjYyNDAsInR5cGUiOiJhY2Nlc3MifQ.ecTEzWBmcO-D5Ivk2Our9_cbfHIkaUwFInPoG2x4e0c",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"filters\": \"string\",\r\n  \"query\": \"string\",\r\n  \"threshold\": 0.1,\r\n  \"top_k\": 1073741824\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/api/search/vector",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"api",
+						"search",
+						"vector"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "api/chat/ask",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkZXZAZXhhbXBsZS5jb20iLCJleHAiOjE3NTcyMjYyNDAsInR5cGUiOiJhY2Nlc3MifQ.ecTEzWBmcO-D5Ivk2Our9_cbfHIkaUwFInPoG2x4e0c",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"options\": {\"temperature\": 0.2},\r\n  \"query\": \"Azure OpenAI의 최신 API 버전은 무엇인가?\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URL}}/api/chat/ask",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"api",
+						"chat",
+						"ask"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
