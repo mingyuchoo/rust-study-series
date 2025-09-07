@@ -7,16 +7,21 @@ use crate::embedding_cache::EmbeddingVector;
 
 #[derive(Clone)]
 pub struct AzureOpenAI {
-    pub endpoint: String,             // 예: https://<resource>.openai.azure.com
+    pub endpoint: String, // 예: https://<resource>.openai.azure.com
     pub api_key: String,
-    pub api_version: String,          // 예: 2024-02-15-preview
+    pub api_version: String, // 예: 2024-02-15-preview
     pub embeddings_deployment: String,
     pub chat_deployment: String,
     client: Client,
 }
 
 impl AzureOpenAI {
-    pub fn new(endpoint: String, api_key: String, embeddings_deployment: String, chat_deployment: String) -> Self {
+    pub fn new(
+        endpoint: String,
+        api_key: String,
+        embeddings_deployment: String,
+        chat_deployment: String,
+    ) -> Self {
         Self {
             endpoint,
             api_key,
@@ -30,11 +35,17 @@ impl AzureOpenAI {
     // 임베딩 생성
     pub async fn embed(&self, input: String) -> Result<EmbeddingVector> {
         #[derive(Serialize)]
-        struct Req { input: String }
+        struct Req {
+            input: String,
+        }
         #[derive(Deserialize)]
-        struct Resp { data: Vec<Datum> }
+        struct Resp {
+            data: Vec<Datum>,
+        }
         #[derive(Deserialize)]
-        struct Datum { embedding: Vec<f32> }
+        struct Datum {
+            embedding: Vec<f32>,
+        }
 
         let url = format!(
             "{}/openai/deployments/{}/embeddings?api-version={}",
@@ -51,22 +62,37 @@ impl AzureOpenAI {
             .error_for_status()?;
 
         let body: Resp = resp.json().await?;
-        Ok(body.data.first().map(|d| d.embedding.clone()).unwrap_or_default())
+        Ok(body
+            .data
+            .first()
+            .map(|d| d.embedding.clone())
+            .unwrap_or_default())
     }
 
     // 챗 생성 (응답 캐싱 용)
     pub async fn chat(&self, system: &str, user: &str) -> Result<String> {
         #[derive(Serialize)]
-        struct ReqMessage { role: String, content: String }
+        struct ReqMessage {
+            role: String,
+            content: String,
+        }
         #[derive(Serialize)]
-        struct Req { messages: Vec<ReqMessage> }
+        struct Req {
+            messages: Vec<ReqMessage>,
+        }
 
         #[derive(Deserialize)]
-        struct Choice { message: Msg }
+        struct Choice {
+            message: Msg,
+        }
         #[derive(Deserialize)]
-        struct Msg { content: String }
+        struct Msg {
+            content: String,
+        }
         #[derive(Deserialize)]
-        struct Resp { choices: Vec<Choice> }
+        struct Resp {
+            choices: Vec<Choice>,
+        }
 
         let url = format!(
             "{}/openai/deployments/{}/chat/completions?api-version={}",
@@ -75,8 +101,14 @@ impl AzureOpenAI {
 
         let req = Req {
             messages: vec![
-                ReqMessage { role: "system".to_string(), content: system.to_string() },
-                ReqMessage { role: "user".to_string(), content: user.to_string() },
+                ReqMessage {
+                    role: "system".to_string(),
+                    content: system.to_string(),
+                },
+                ReqMessage {
+                    role: "user".to_string(),
+                    content: user.to_string(),
+                },
             ],
         };
 
@@ -90,6 +122,10 @@ impl AzureOpenAI {
             .error_for_status()?;
 
         let body: Resp = resp.json().await?;
-        Ok(body.choices.first().map(|c| c.message.content.clone()).unwrap_or_default())
+        Ok(body
+            .choices
+            .first()
+            .map(|c| c.message.content.clone())
+            .unwrap_or_default())
     }
 }

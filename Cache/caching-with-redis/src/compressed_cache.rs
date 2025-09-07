@@ -1,7 +1,7 @@
 // 압축 임베딩 캐시
 use anyhow::Result;
-use flate2::{read::GzDecoder, write::GzEncoder, Compression};
-use redis::{aio::ConnectionManager, AsyncCommands};
+use flate2::{Compression, read::GzDecoder, write::GzEncoder};
+use redis::{AsyncCommands, aio::ConnectionManager};
 use std::io::{Read, Write};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -22,7 +22,11 @@ impl CompressedEmbeddingCache {
         Ok(Self {
             connection: Arc::new(RwLock::new(connection)),
             ttl,
-            stats: Arc::new(RwLock::new(CacheStats { hit_count: 0, miss_count: 0, total_keys: 0 })),
+            stats: Arc::new(RwLock::new(CacheStats {
+                hit_count: 0,
+                miss_count: 0,
+                total_keys: 0,
+            })),
             compression_level,
         })
     }
@@ -37,7 +41,10 @@ impl CompressedEmbeddingCache {
 
     fn compress_embedding(&self, embedding: &EmbeddingVector) -> Result<Vec<u8>> {
         // f32 -> LE 바이트 배열
-        let bytes: Vec<u8> = embedding.iter().flat_map(|&f| f.to_le_bytes().to_vec()).collect();
+        let bytes: Vec<u8> = embedding
+            .iter()
+            .flat_map(|&f| f.to_le_bytes().to_vec())
+            .collect();
         let mut encoder = GzEncoder::new(Vec::new(), Compression::new(self.compression_level));
         encoder.write_all(&bytes)?;
         Ok(encoder.finish()?)
@@ -57,14 +64,20 @@ impl CompressedEmbeddingCache {
         Ok(embedding)
     }
 
-    pub async fn get(&self, text: &str, model: &str) -> Result<Option<EmbeddingVector>, CacheError> {
+    pub async fn get(
+        &self,
+        text: &str,
+        model: &str,
+    ) -> Result<Option<EmbeddingVector>, CacheError> {
         let key = self.make_key(text, model);
         let mut conn = self.connection.write().await;
         let data_opt: Option<Vec<u8>> = conn.get(&key).await?;
         if let Some(compressed_data) = data_opt {
-            let embedding = self
-                .decompress_embedding(&compressed_data)
-                .map_err(|_| CacheError::Serialization(bincode::Error::new(bincode::ErrorKind::Custom("Decompression failed".to_string()))))?;
+            let embedding = self.decompress_embedding(&compressed_data).map_err(|_| {
+                CacheError::Serialization(bincode::Error::new(bincode::ErrorKind::Custom(
+                    "Decompression failed".to_string(),
+                )))
+            })?;
             let mut stats = self.stats.write().await;
             stats.hit_count += 1;
             Ok(Some(embedding))
@@ -75,13 +88,21 @@ impl CompressedEmbeddingCache {
         }
     }
 
-    pub async fn set(&self, text: &str, embedding: &EmbeddingVector, model: &str) -> Result<(), CacheError> {
+    pub async fn set(
+        &self,
+        text: &str,
+        embedding: &EmbeddingVector,
+        model: &str,
+    ) -> Result<(), CacheError> {
         let key = self.make_key(text, model);
-        let compressed_data = self
-            .compress_embedding(embedding)
-            .map_err(|_| CacheError::Serialization(bincode::Error::new(bincode::ErrorKind::Custom("Compression failed".to_string()))))?;
+        let compressed_data = self.compress_embedding(embedding).map_err(|_| {
+            CacheError::Serialization(bincode::Error::new(bincode::ErrorKind::Custom(
+                "Compression failed".to_string(),
+            )))
+        })?;
         let mut conn = self.connection.write().await;
-        conn.set_ex::<_, _, ()>(&key, &compressed_data, self.ttl).await?;
+        conn.set_ex::<_, _, ()>(&key, &compressed_data, self.ttl)
+            .await?;
         Ok(())
     }
 
@@ -104,10 +125,23 @@ impl CompressedEmbeddingCache {
                 sample_count += 1;
             }
         }
-        let avg_compressed_size = if sample_count > 0 { total_compressed / sample_count } else { 0 };
+        let avg_compressed_size = if sample_count > 0 {
+            total_compressed / sample_count
+        } else {
+            0
+        };
         let uncompressed_size = 1536 * 4; // OpenAI/Azure 기본 임베딩(예시) 1536차원
-        let compression_ratio = if avg_compressed_size > 0 { uncompressed_size as f64 / avg_compressed_size as f64 } else { 1.0 };
-        Ok(CompressionStats { avg_compressed_size, estimated_uncompressed_size: uncompressed_size, compression_ratio, sample_count })
+        let compression_ratio = if avg_compressed_size > 0 {
+            uncompressed_size as f64 / avg_compressed_size as f64
+        } else {
+            1.0
+        };
+        Ok(CompressionStats {
+            avg_compressed_size,
+            estimated_uncompressed_size: uncompressed_size,
+            compression_ratio,
+            sample_count,
+        })
     }
 
     /// cemb:* 패턴의 모든 키 삭제

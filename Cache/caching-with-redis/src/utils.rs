@@ -6,15 +6,36 @@ pub fn setup_redis_docker(max_memory: &str) -> Result<()> {
     println!("🚀 Redis Docker 컨테이너 시작...");
 
     // 기존 컨테이너 중지 및 제거 (실패해도 무시)
-    let _ = Command::new("docker").args(["stop", "redis-embedding"]).output();
-    let _ = Command::new("docker").args(["rm", "redis-embedding"]).output();
+    let _ = Command::new("docker")
+        .args(["stop", "redis-embedding"])
+        .output();
+    let _ = Command::new("docker")
+        .args(["rm", "redis-embedding"])
+        .output();
 
     // 새 Redis 컨테이너 시작 (allkeys-lru, appendonly 비활성, RDB 저장 없음)
     let output = Command::new("docker")
         .args([
-            "run", "-d", "--name", "redis-embedding", "--restart", "unless-stopped", "-p", "6379:6379",
-            "redis:alpine", "redis-server", "--maxmemory", max_memory, "--maxmemory-policy", "allkeys-lru",
-            "--save", "", "--appendonly", "no", "--timeout", "300",
+            "run",
+            "-d",
+            "--name",
+            "redis-embedding",
+            "--restart",
+            "unless-stopped",
+            "-p",
+            "6379:6379",
+            "redis:alpine",
+            "redis-server",
+            "--maxmemory",
+            max_memory,
+            "--maxmemory-policy",
+            "allkeys-lru",
+            "--save",
+            "",
+            "--appendonly",
+            "no",
+            "--timeout",
+            "300",
         ])
         .output()?;
 
@@ -38,7 +59,9 @@ pub async fn test_redis_connection(redis_url: &str) -> Result<()> {
 
     // ping 테스트
     let pong: String = redis::cmd("PING").query_async(&mut conn).await?;
-    if pong.to_uppercase() != "PONG" { anyhow::bail!("PING 실패: {}", pong); }
+    if pong.to_uppercase() != "PONG" {
+        anyhow::bail!("PING 실패: {}", pong);
+    }
 
     // 간단한 set/get
     conn.set::<_, _, ()>("test_key", "test_value").await?;

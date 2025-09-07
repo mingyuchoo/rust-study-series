@@ -35,3 +35,29 @@
   args         = ["run"]
   command      = "cargo"
   dependencies = ["format"]
+
+[tasks.run-setup]
+  command      = "cargo"
+  args         = ["run", "--", "setup"]
+  dependencies = ["format"]
+
+[tasks.run-status]
+  command      = "cargo"
+  args         = ["run", "--", "status"]
+  dependencies = ["format"]
+
+[tasks.run-stats]
+  command      = "cargo"
+  args         = ["run", "--", "stats"]
+  dependencies = ["format"]
+
+[tasks.run-clear]
+  command      = "cargo"
+  args         = ["run", "--", "clear"]
+  dependencies = ["format"]
+
+[tasks.run-test]
+  command      = "cargo"
+  # 기본 테스트 문장을 전달합니다. 필요 시 소스에서 수정하거나 별도 태스크를 추가하세요.
+  args         = ["run", "--", "test", "--text", "안녕하세요, Redis 임베딩 캐시입니다!"]
+  dependencies = ["format"]

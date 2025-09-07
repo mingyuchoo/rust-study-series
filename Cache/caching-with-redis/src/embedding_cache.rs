@@ -1,6 +1,6 @@
 // 기본 임베딩 캐시
 use anyhow::{Context, Result};
-use redis::{aio::ConnectionManager, AsyncCommands, Client};
+use redis::{AsyncCommands, Client, aio::ConnectionManager};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
@@ -31,7 +31,11 @@ pub struct CacheStats {
 impl CacheStats {
     pub fn hit_rate(&self) -> f64 {
         let total = self.hit_count + self.miss_count;
-        if total == 0 { 0.0 } else { self.hit_count as f64 / total as f64 }
+        if total == 0 {
+            0.0
+        } else {
+            self.hit_count as f64 / total as f64
+        }
     }
 }
 
@@ -51,7 +55,11 @@ impl EmbeddingCache {
         Ok(Self {
             connection: Arc::new(RwLock::new(connection)),
             ttl,
-            stats: Arc::new(RwLock::new(CacheStats { hit_count: 0, miss_count: 0, total_keys: 0 })),
+            stats: Arc::new(RwLock::new(CacheStats {
+                hit_count: 0,
+                miss_count: 0,
+                total_keys: 0,
+            })),
         })
     }
 
@@ -64,7 +72,11 @@ impl EmbeddingCache {
     }
 
     /// 캐시에서 임베딩 조회
-    pub async fn get(&self, text: &str, model: &str) -> Result<Option<EmbeddingVector>, CacheError> {
+    pub async fn get(
+        &self,
+        text: &str,
+        model: &str,
+    ) -> Result<Option<EmbeddingVector>, CacheError> {
         let key = self.make_key(text, model);
         let mut conn = self.connection.write().await;
         let data_opt: Option<Vec<u8>> = conn.get(&key).await?;
@@ -81,7 +93,12 @@ impl EmbeddingCache {
     }
 
     /// 임베딩을 캐시에 저장
-    pub async fn set(&self, text: &str, embedding: &EmbeddingVector, model: &str) -> Result<(), CacheError> {
+    pub async fn set(
+        &self,
+        text: &str,
+        embedding: &EmbeddingVector,
+        model: &str,
+    ) -> Result<(), CacheError> {
         let key = self.make_key(text, model);
         let data = bincode::serialize(embedding)?;
         let mut conn = self.connection.write().await;
@@ -90,19 +107,33 @@ impl EmbeddingCache {
     }
 
     /// 캐시에서 조회하거나 새로 계산
-    pub async fn get_or_compute<F, Fut>(&self, text: &str, model: &str, compute_fn: F) -> Result<EmbeddingVector>
+    pub async fn get_or_compute<F, Fut>(
+        &self,
+        text: &str,
+        model: &str,
+        compute_fn: F,
+    ) -> Result<EmbeddingVector>
     where
         F: FnOnce(String) -> Fut,
         Fut: std::future::Future<Output = Result<EmbeddingVector>>,
     {
-        if let Some(cached) = self.get(text, model).await? { return Ok(cached); }
-        let embedding = compute_fn(text.to_string()).await.context("Failed to compute embedding")?;
+        if let Some(cached) = self.get(text, model).await? {
+            return Ok(cached);
+        }
+        let embedding = compute_fn(text.to_string())
+            .await
+            .context("Failed to compute embedding")?;
         self.set(text, &embedding, model).await?;
         Ok(embedding)
     }
 
     /// 배치 처리
-    pub async fn get_or_compute_batch<F, Fut>(&self, texts: &[String], model: &str, compute_fn: F) -> Result<Vec<EmbeddingVector>>
+    pub async fn get_or_compute_batch<F, Fut>(
+        &self,
+        texts: &[String],
+        model: &str,
+        compute_fn: F,
+    ) -> Result<Vec<EmbeddingVector>>
     where
         F: FnOnce(Vec<String>) -> Fut,
         Fut: std::future::Future<Output = Result<Vec<EmbeddingVector>>>,
@@ -111,18 +142,27 @@ impl EmbeddingCache {
         let mut uncached_texts = Vec::new();
         let mut uncached_indices = Vec::new();
         for (i, text) in texts.iter().enumerate() {
-            if let Some(cached) = self.get(text, model).await? { results[i] = Some(cached); }
-            else { uncached_texts.push(text.clone()); uncached_indices.push(i); }
+            if let Some(cached) = self.get(text, model).await? {
+                results[i] = Some(cached);
+            } else {
+                uncached_texts.push(text.clone());
+                uncached_indices.push(i);
+            }
         }
         if !uncached_texts.is_empty() {
             let new_embeddings = compute_fn(uncached_texts.clone()).await?;
-            for (i, (text, embedding)) in uncached_texts.iter().zip(new_embeddings.iter()).enumerate() {
+            for (i, (text, embedding)) in
+                uncached_texts.iter().zip(new_embeddings.iter()).enumerate()
+            {
                 self.set(text, embedding, model).await?;
                 let original_index = uncached_indices[i];
                 results[original_index] = Some(embedding.clone());
             }
         }
-        results.into_iter().map(|opt| opt.ok_or_else(|| anyhow::anyhow!("Missing embedding result"))).collect()
+        results
+            .into_iter()
+            .map(|opt| opt.ok_or_else(|| anyhow::anyhow!("Missing embedding result")))
+            .collect()
     }
 
     /// 캐시 통계 조회
@@ -137,7 +177,11 @@ impl EmbeddingCache {
             "#,
         );
         let key_count: usize = script.invoke_async(&mut *conn).await.unwrap_or(0usize);
-        CacheStats { hit_count: stats.hit_count, miss_count: stats.miss_count, total_keys: key_count }
+        CacheStats {
+            hit_count: stats.hit_count,
+            miss_count: stats.miss_count,
+            total_keys: key_count,
+        }
     }
 
     /// 모든 임베딩 캐시 삭제

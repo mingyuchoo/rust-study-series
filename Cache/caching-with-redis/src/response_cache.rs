@@ -1,6 +1,6 @@
 // 질의-응답 캐시
 use anyhow::Result;
-use redis::{aio::ConnectionManager, AsyncCommands};
+use redis::{AsyncCommands, aio::ConnectionManager};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -14,7 +14,10 @@ impl ResponseCache {
     pub async fn new(redis_url: &str, ttl: u64) -> Result<Self> {
         let client = redis::Client::open(redis_url)?;
         let connection = client.get_connection_manager().await?;
-        Ok(Self { connection: Arc::new(RwLock::new(connection)), ttl })
+        Ok(Self {
+            connection: Arc::new(RwLock::new(connection)),
+            ttl,
+        })
     }
 
     fn make_key(&self, question: &str) -> String {

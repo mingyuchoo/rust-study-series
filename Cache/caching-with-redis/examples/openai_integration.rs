@@ -30,7 +30,10 @@ struct OpenAIClient {
 
 impl OpenAIClient {
     fn new(api_key: String) -> Self {
-        Self { client: Client::new(), api_key }
+        Self {
+            client: Client::new(),
+            api_key,
+        }
     }
 
     async fn get_embedding(&self, text: &str) -> Result<Vec<f32>> {
@@ -87,8 +90,15 @@ async fn main() -> Result<()> {
             let client = client.clone();
             async move { client.get_embedding(&t).await }
         };
-        let embedding = cache.get_or_compute(text, "openai-ada-002", embedding_func).await?;
-        println!("  {}. {} -> {}차원", i + 1, preview(text, 30), embedding.len());
+        let embedding = cache
+            .get_or_compute(text, "openai-ada-002", embedding_func)
+            .await?;
+        println!(
+            "  {}. {} -> {}차원",
+            i + 1,
+            preview(text, 30),
+            embedding.len()
+        );
     }
     let first_duration = start.elapsed();
     println!("  총 시간: {:?}", first_duration);
@@ -102,8 +112,15 @@ async fn main() -> Result<()> {
             let client = client.clone();
             async move { client.get_embedding(&t).await }
         };
-        let embedding = cache.get_or_compute(text, "openai-ada-002", embedding_func).await?;
-        println!("  {}. {} -> {}차원", i + 1, preview(text, 30), embedding.len());
+        let embedding = cache
+            .get_or_compute(text, "openai-ada-002", embedding_func)
+            .await?;
+        println!(
+            "  {}. {} -> {}차원",
+            i + 1,
+            preview(text, 30),
+            embedding.len()
+        );
     }
     let second_duration = start.elapsed();
     println!("  총 시간: {:?}", second_duration);

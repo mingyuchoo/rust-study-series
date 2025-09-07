@@ -31,8 +31,12 @@ impl CacheConfig {
     // 환경변수에서 설정 로드
     pub fn from_env() -> Self {
         Self {
-            redis_url: env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
-            ttl_seconds: env::var("CACHE_TTL").unwrap_or_else(|_| "3600".to_string()).parse().unwrap_or(3600),
+            redis_url: env::var("REDIS_URL")
+                .unwrap_or_else(|_| "redis://127.0.0.1:6379".to_string()),
+            ttl_seconds: env::var("CACHE_TTL")
+                .unwrap_or_else(|_| "3600".to_string())
+                .parse()
+                .unwrap_or(3600),
             max_memory: env::var("REDIS_MAX_MEMORY").unwrap_or_else(|_| "512mb".to_string()),
             azure_openai_endpoint: env::var("AZURE_OPENAI_ENDPOINT").ok(),
             azure_openai_api_key: env::var("AZURE_OPENAI_API_KEY").ok(),
