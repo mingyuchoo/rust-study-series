@@ -19,7 +19,7 @@
 
 `.env` 또는 `.env.local` 파일에 다음 항목을 설정하십시오.
 
-```
+```bash
 VITE_API_BASE_URL=http://localhost:4000
 ```
 
