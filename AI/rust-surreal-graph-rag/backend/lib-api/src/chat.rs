@@ -41,7 +41,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
         .query(
             r#"
             SELECT id, content, metadata,
-                   vector::similarity::cosine(embedding, $q) AS score
+                   vector::similarity::cosine(embedding_semantic, $q) AS score
             FROM chunk
             ORDER BY score DESC
             LIMIT 8;
