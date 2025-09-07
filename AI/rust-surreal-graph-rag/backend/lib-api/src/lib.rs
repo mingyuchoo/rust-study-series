@@ -1,5 +1,4 @@
 pub mod error;
-pub mod routes;
 pub mod config;
 pub mod azure;
 pub mod auth;
@@ -84,13 +83,6 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-doc/openapi.json", openapi.clone()),
             )
-            // 기존 샘플 라우트 유지
-            .service(routes::session)
-            .service(routes::list_people)
-            .service(routes::create_person)
-            .service(routes::read_person)
-            .service(routes::update_person)
-            .service(routes::delete_person)
     })
     .bind(("localhost", 4000))?
     .run()
