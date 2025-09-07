@@ -30,10 +30,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 pub async fn init_db() -> std::io::Result<()> {
     if let Err(err) = setup_database().await {
         error!("Failed to set up database: {:?}", err);
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Database setup failed",
-        ));
+        return Err(std::io::Error::new(std::io::ErrorKind::Other, "Database setup failed"));
     }
     Ok(())
 }

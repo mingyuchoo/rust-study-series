@@ -1,6 +1,6 @@
 [workspace]
   members = [
-    "server",
+    "bin-app",
     "lib_api",
     "lib_db",
   ]

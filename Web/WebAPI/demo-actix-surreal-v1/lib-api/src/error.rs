@@ -11,9 +11,7 @@ pub enum Error {
 impl ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
         match self {
-            | Error::Db(e) => {
-                HttpResponse::InternalServerError().body(e.to_string())
-            },
+            | Error::Db(e) => HttpResponse::InternalServerError().body(e.to_string()),
         }
     }
 }
