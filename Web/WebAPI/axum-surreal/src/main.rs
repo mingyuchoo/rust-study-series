@@ -1,17 +1,17 @@
-use axum::routing::{delete, get, post, put};
 use axum::Router;
+use axum::routing::{delete, get, post, put};
 use std::sync::LazyLock;
+use surrealdb::Surreal;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
-use surrealdb::Surreal;
 use tokio::net::TcpListener;
 
 static DB: LazyLock<Surreal<Client>> = LazyLock::new(Surreal::init);
 
 mod error {
+    use axum::Json;
     use axum::http::StatusCode;
     use axum::response::{IntoResponse, Response};
-    use axum::Json;
     use thiserror::Error;
 
     #[derive(Error, Debug)]
@@ -21,10 +21,7 @@ mod error {
     }
 
     impl IntoResponse for Error {
-        fn into_response(self) -> Response {
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(self.to_string()))
-                .into_response()
-        }
+        fn into_response(self) -> Response { (StatusCode::INTERNAL_SERVER_ERROR, Json(self.to_string())).into_response() }
     }
 
     impl From<surrealdb::Error> for Error {
@@ -36,14 +33,14 @@ mod error {
 }
 
 mod routes {
-    use crate::error::Error;
     use crate::DB;
-    use axum::extract::Path;
+    use crate::error::Error;
     use axum::Json;
+    use axum::extract::Path;
     use faker_rand::en_us::names::FirstName;
     use serde::{Deserialize, Serialize};
-    use surrealdb::opt::auth::Record;
     use surrealdb::RecordId;
+    use surrealdb::opt::auth::Record;
 
     const PERSON: &str = "person";
 
@@ -55,7 +52,7 @@ mod routes {
     #[derive(Serialize, Deserialize)]
     pub struct Person {
         name: String,
-        id:   RecordId,
+        id: RecordId,
     }
 
     pub async fn paths() -> &'static str {
@@ -78,38 +75,27 @@ mod routes {
     }
 
     pub async fn session() -> Result<Json<String>, Error> {
-        let res: Option<String> =
-            DB.query("RETURN <string>$session").await?.take(0)?;
+        let res: Option<String> = DB.query("RETURN <string>$session").await?.take(0)?;
 
         Ok(Json(res.unwrap_or("No session data found!".into())))
     }
 
-    pub async fn create_person(
-        id: Path<String>,
-        Json(person): Json<PersonData>,
-    ) -> Result<Json<Option<Person>>, Error> {
+    pub async fn create_person(id: Path<String>, Json(person): Json<PersonData>) -> Result<Json<Option<Person>>, Error> {
         let person = DB.create((PERSON, &*id)).content(person).await?;
         Ok(Json(person))
     }
 
-    pub async fn read_person(
-        id: Path<String>,
-    ) -> Result<Json<Option<Person>>, Error> {
+    pub async fn read_person(id: Path<String>) -> Result<Json<Option<Person>>, Error> {
         let person = DB.select((PERSON, &*id)).await?;
         Ok(Json(person))
     }
 
-    pub async fn update_person(
-        id: Path<String>,
-        Json(person): Json<PersonData>,
-    ) -> Result<Json<Option<Person>>, Error> {
+    pub async fn update_person(id: Path<String>, Json(person): Json<PersonData>) -> Result<Json<Option<Person>>, Error> {
         let person = DB.update((PERSON, &*id)).content(person).await?;
         Ok(Json(person))
     }
 
-    pub async fn delete_person(
-        id: Path<String>,
-    ) -> Result<Json<Option<Person>>, Error> {
+    pub async fn delete_person(id: Path<String>) -> Result<Json<Option<Person>>, Error> {
         let person = DB.delete((PERSON, &*id)).await?;
         Ok(Json(person))
     }
@@ -130,10 +116,10 @@ mod routes {
         let pass = rand::random::<FirstName>().to_string();
         let jwt = DB
             .signup(Record {
-                access:    "account",
+                access: "account",
                 namespace: "test",
-                database:  "test",
-                params:    Params {
+                database: "test",
+                params: Params {
                     name: &name,
                     pass: &pass,
                 },
@@ -164,7 +150,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     DB.use_ns("test").use_db("test").await?;
 
     DB.query(
-             "DEFINE TABLE IF NOT EXISTS person SCHEMALESS
+        "DEFINE TABLE IF NOT EXISTS person SCHEMALESS
             PERMISSIONS FOR 
                 CREATE, SELECT WHERE $auth,
                 FOR UPDATE, DELETE WHERE created_by = $auth;
@@ -177,7 +163,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         DURATION FOR TOKEN 15m, FOR SESSION 12h
         ;",
     )
-      .await?;
+    .await?;
 
     let listener = TcpListener::bind("localhost:8080").await?;
     let router = Router::new()

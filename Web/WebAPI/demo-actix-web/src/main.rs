@@ -1,4 +1,4 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{App, HttpResponse, HttpServer, Responder, get, post, web};
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -9,18 +9,12 @@ struct Args {
 }
 
 #[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
+async fn hello() -> impl Responder { HttpResponse::Ok().body("Hello world!") }
 
 #[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
+async fn echo(req_body: String) -> impl Responder { HttpResponse::Ok().body(req_body) }
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
+async fn manual_hello() -> impl Responder { HttpResponse::Ok().body("Hey there!") }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -28,13 +22,8 @@ async fn main() -> std::io::Result<()> {
 
     println!("Starting server on port {}", args.port);
 
-    HttpServer::new(|| {
-        App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
-    })
-    .bind(("0.0.0.0", args.port))?
-    .run()
-    .await
+    HttpServer::new(|| App::new().service(hello).service(echo).route("/hey", web::get().to(manual_hello)))
+        .bind(("0.0.0.0", args.port))?
+        .run()
+        .await
 }
