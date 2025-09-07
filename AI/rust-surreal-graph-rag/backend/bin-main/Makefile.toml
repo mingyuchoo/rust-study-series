@@ -1,0 +1,16 @@
+# bin-main 크레이트 전용 cargo-make 태스크 정의 (모든 주석은 한국어)
+
+[tasks.run]
+# 서버 바이너리 실행
+command = "cargo"
+args    = ["run"]
+
+[tasks.build]
+# 서버 바이너리 빌드 (개발 프로파일)
+command = "cargo"
+args    = ["build", "--profile", "dev"]
+
+[tasks.release]
+# 서버 바이너리 릴리즈 빌드
+command = "cargo"
+args    = ["build", "--profile", "release"]

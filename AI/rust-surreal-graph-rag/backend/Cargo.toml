@@ -1,0 +1,7 @@
+[workspace]
+  members = [
+    "bin-main",
+    "lib-api",
+    "lib-db",
+  ]
+  resolver = "2"

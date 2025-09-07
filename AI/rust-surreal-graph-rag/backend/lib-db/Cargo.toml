@@ -1,0 +1,10 @@
+[package]
+  edition = "2024"
+  name    = "lib-db"
+  version = "0.1.0"
+
+[dependencies]
+  log       = "0.4.22"
+  surrealdb = "2.1.2"
+  anyhow    = "1.0.95"
+  tokio     = { version = "1.40.0", features = ["time"] }
