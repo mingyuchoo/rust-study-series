@@ -19,11 +19,6 @@ struct ChatRequestBody {
 }
 
 #[derive(Debug, Deserialize)]
-struct ChatChoiceDelta {
-    content: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
 struct ChatChoice {
     message: Option<ChatMessage>,
 }
@@ -31,7 +26,6 @@ struct ChatChoice {
 #[derive(Debug, Deserialize)]
 struct ChatResponseBody {
     choices: Vec<ChatChoice>,
-    usage: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize)]
