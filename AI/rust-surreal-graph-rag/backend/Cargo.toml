@@ -3,5 +3,6 @@
     "bin-main",
     "lib-api",
     "lib-db",
+    "lib-index",
   ]
   resolver = "2"

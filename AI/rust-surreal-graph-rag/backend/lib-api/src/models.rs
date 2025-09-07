@@ -124,6 +124,12 @@ pub struct IndexCreateRequest {
     /// 문서 제목(옵션)
     #[serde(default)]
     pub title: Option<String>,
+    /// (옵션) PDF 파일 경로. 제공 시 서버가 직접 PDF를 처리하여 청킹/그래프/임베딩을 생성
+    #[serde(default)]
+    pub pdf_path: Option<String>,
+    /// (옵션) 로컬 TF-IDF 임베딩 사용 여부. 기본값: true
+    #[serde(default = "default_use_tfidf")]
+    pub use_tfidf: bool,
     /// 분할된 청크 목록
     pub chunks: Vec<IndexChunkInput>,
 }
@@ -137,3 +143,5 @@ pub struct IndexCreateResponse {
     /// 전체 처리 시간(초)
     pub elapsed: f32,
 }
+
+fn default_use_tfidf() -> bool { true }

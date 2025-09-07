@@ -7,6 +7,7 @@
   actix-web   = "4.9.0"
   actix-web-lab = "0.20.2"
   lib-db      = {version = "0.1.0", path = "../lib-db"}
+  lib-index   = {version = "0.1.0", path = "../lib-index"}
   log         = "0.4.22"
   serde       = {version = "1.0.215", features = ["derive"]}
   serde_json  = "1.0.133"

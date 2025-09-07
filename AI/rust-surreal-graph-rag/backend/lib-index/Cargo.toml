@@ -1,0 +1,33 @@
+[package]
+name = "lib-index"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+regex = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+anyhow = "1.0"
+log = "0.4"
+thiserror = "2.0"
+# SurrealDB는 lib-db를 통해 사용
+lib-db = { version = "0.1.0", path = "../lib-db" }
+
+# 임베딩(TF-IDF)용
+hashbrown = "0.14"
+
+# PDF 파싱(향후 실제 파서로 교체 가능). 현재는 간단한 텍스트 추출 스텁 포함
+
+[features]
+default = []
+# Windows/macOS에서 PDFium DLL 필요
+pdfium = ["dep:pdfium-render"]
+lopdf = ["dep:lopdf"]
+
+[dependencies.pdfium-render]
+version = "0.8"
+optional = true
+
+[dependencies.lopdf]
+version = "0.31"
+optional = true

@@ -35,7 +35,7 @@ pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<Vector
     let query_vec = embeddings.get(0).cloned().unwrap_or_default();
 
     // 2) SurrealDB에서 코사인 유사도 기반 검색
-    //    - chunk 테이블: { id, doc_id, index, content, embedding(array<float>), metadata }
+    //    - chunk 테이블: { id, doc_id, index, content, embedding_semantic(array<float>), metadata }
     //    - SurrealQL의 vector::similarity::cosine 사용
     let top_k = payload.top_k.max(1).min(100) as i64;
     let threshold = payload.threshold;
@@ -45,7 +45,7 @@ pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<Vector
         .query(
             r#"
             SELECT id, content, metadata,
-                   vector::similarity::cosine(embedding, $q) AS score
+                   vector::similarity::cosine(embedding_semantic, $q) AS score
             FROM chunk
             ORDER BY score DESC
             LIMIT $k;
