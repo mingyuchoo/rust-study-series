@@ -118,6 +118,7 @@ pub async fn index_create(
             chunk_embeddings,
             entity_embeddings,
             relation_embeddings,
+            embedding_type: if payload.use_tfidf { "tfidf".into() } else { "azure".into() },
         };
         index_db::store_processed_document(&processed)
             .await
@@ -216,6 +217,7 @@ pub async fn index_create(
         chunk_embeddings,
         entity_embeddings,
         relation_embeddings,
+        embedding_type: if payload.use_tfidf { "tfidf".into() } else { "azure".into() },
     };
     index_db::store_processed_document(&processed)
         .await

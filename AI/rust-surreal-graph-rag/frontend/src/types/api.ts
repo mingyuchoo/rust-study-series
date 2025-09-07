@@ -106,3 +106,37 @@ export type IndexCreateResponse = {
   // 전체 처리 시간(초)
   elapsed: number;
 };
+
+// 관리자 재인덱싱 요청/응답 타입
+export type ReindexRequest = {
+  // 재인덱싱할 PDF 파일 경로 목록(서버 경로)
+  pdf_paths: string[];
+  // TF-IDF 사용 여부(기본: false → Azure 임베딩 사용)
+  use_tfidf?: boolean;
+  // 기존 데이터 정리 여부: true면 동일 source의 기존 데이터 삭제 후 재인덱싱
+  clear_existing?: boolean;
+};
+
+export type ReindexItemResult = {
+  // 입력 PDF 경로(에코)
+  pdf_path: string;
+  // 생성/사용된 문서 ID
+  document_id?: string | null;
+  // 인덱싱된 청크 개수
+  chunks_indexed: number;
+  // 오류 메시지(성공 시 undefined)
+  error?: string | null;
+};
+
+export type ReindexResponse = {
+  results: ReindexItemResult[];
+  elapsed: number;
+};
+
+// 파일 업로드 응답
+export type UploadResponse = {
+  // 서버에 저장된 파일의 전체 경로
+  path: string;
+  // 저장된 파일 크기(바이트)
+  size: number;
+};

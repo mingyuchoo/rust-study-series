@@ -27,6 +27,7 @@ pub async fn store_processed_document(doc: &ProcessedDocument) -> Result<()> {
             CREATE chunk SET 
                 id = rand::uuid(),
                 doc_id = $doc_id,
+                embedding_type = $embedding_type,
                 index = $index,
                 level = $level,
                 kind = $kind,
@@ -38,6 +39,7 @@ pub async fn store_processed_document(doc: &ProcessedDocument) -> Result<()> {
             "#,
         )
         .bind(("doc_id", doc.doc_id.clone()))
+        .bind(("embedding_type", doc.embedding_type.clone()))
         .bind(("index", i as i64))
         .bind(("level", ch.level as i64))
         .bind(("kind", format!("{:?}", ch.kind)))
@@ -55,6 +57,7 @@ pub async fn store_processed_document(doc: &ProcessedDocument) -> Result<()> {
         DB.query(
             r#"
             CREATE entity SET id = rand::uuid(), doc_id = $doc_id, name = $name, type = $type,
+                embedding_type = $embedding_type,
                 embedding_semantic = $embedding_semantic,
                 embedding_structural = $embedding_structural,
                 embedding_functional = $embedding_functional;
@@ -63,6 +66,7 @@ pub async fn store_processed_document(doc: &ProcessedDocument) -> Result<()> {
         .bind(("doc_id", doc.doc_id.clone()))
         .bind(("name", e.name.clone()))
         .bind(("type", e.r#type.clone()))
+        .bind(("embedding_type", doc.embedding_type.clone()))
         .bind(("embedding_semantic", e_emb.semantic))
         .bind(("embedding_structural", e_emb.structural))
         .bind(("embedding_functional", e_emb.functional))
@@ -75,6 +79,7 @@ pub async fn store_processed_document(doc: &ProcessedDocument) -> Result<()> {
         DB.query(
             r#"
             CREATE relation SET id = rand::uuid(), doc_id = $doc_id, subject = $s, predicate = $p, object = $o, weight = $w,
+                embedding_type = $embedding_type,
                 embedding_semantic = $embedding_semantic,
                 embedding_structural = $embedding_structural,
                 embedding_functional = $embedding_functional;
@@ -85,6 +90,7 @@ pub async fn store_processed_document(doc: &ProcessedDocument) -> Result<()> {
         .bind(("p", r.predicate.clone()))
         .bind(("o", r.object.clone()))
         .bind(("w", r.weight))
+        .bind(("embedding_type", doc.embedding_type.clone()))
         .bind(("embedding_semantic", r_emb.semantic))
         .bind(("embedding_structural", r_emb.structural))
         .bind(("embedding_functional", r_emb.functional))

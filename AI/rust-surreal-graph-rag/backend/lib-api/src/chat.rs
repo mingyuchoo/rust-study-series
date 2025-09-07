@@ -45,6 +45,8 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             SELECT id, doc_id, content, metadata,
                    vector::similarity::cosine(embedding_semantic, $q) AS score
             FROM chunk
+            WHERE embedding_type = 'azure'
+              AND array::len(embedding_semantic) = array::len($q)
             ORDER BY score DESC
             LIMIT 8;
             "#,
@@ -136,11 +138,15 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
                 SELECT name, type, vector::similarity::cosine(embedding_semantic, $q) AS score
                 FROM entity
                 WHERE doc_id IN $doc_ids
+                  AND embedding_type = 'azure'
+                  AND array::len(embedding_semantic) = array::len($q)
                 ORDER BY score DESC
                 LIMIT $top_entities;
                 SELECT subject, predicate, object, weight, vector::similarity::cosine(embedding_semantic, $q) AS score
                 FROM relation
                 WHERE doc_id IN $doc_ids
+                  AND embedding_type = 'azure'
+                  AND array::len(embedding_semantic) = array::len($q)
                 ORDER BY score DESC
                 LIMIT $top_relations;
                 "#,

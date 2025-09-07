@@ -127,7 +127,8 @@ pub struct IndexCreateRequest {
     /// (옵션) PDF 파일 경로. 제공 시 서버가 직접 PDF를 처리하여 청킹/그래프/임베딩을 생성
     #[serde(default)]
     pub pdf_path: Option<String>,
-    /// (옵션) 로컬 TF-IDF 임베딩 사용 여부. 기본값: true
+    /// (옵션) 로컬 TF-IDF 임베딩 사용 여부.
+    /// 기본값: false (기본은 Azure 임베딩을 사용하여 검색과 동일한 임베딩 공간을 보장)
     #[serde(default = "default_use_tfidf")]
     pub use_tfidf: bool,
     /// 분할된 청크 목록
@@ -144,4 +145,45 @@ pub struct IndexCreateResponse {
     pub elapsed: f32,
 }
 
-fn default_use_tfidf() -> bool { true }
+/// 인덱싱 기본 모드: Azure 임베딩 사용(= TF-IDF 비활성)
+fn default_use_tfidf() -> bool { false }
+
+// 관리자 재인덱싱
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct ReindexRequest {
+    /// 재인덱싱할 PDF 파일 경로 목록(서버 파일 경로)
+    pub pdf_paths: Vec<String>,
+    /// TF-IDF 사용 여부(기본: false → Azure 임베딩 사용)
+    #[serde(default)]
+    pub use_tfidf: Option<bool>,
+    /// 기존 데이터 정리(삭제) 여부: true면 동일 source의 기존 chunk/entity/relation 삭제 후 재인덱싱
+    #[serde(default)]
+    pub clear_existing: Option<bool>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ReindexItemResult {
+    /// 입력 PDF 경로(에코)
+    pub pdf_path: String,
+    /// 생성/사용된 문서 ID
+    pub document_id: Option<String>,
+    /// 인덱싱된 청크 개수
+    pub chunks_indexed: u32,
+    /// 오류 메시지(성공 시 None)
+    pub error: Option<String>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ReindexResponse {
+    pub results: Vec<ReindexItemResult>,
+    pub elapsed: f32,
+}
+
+// 파일 업로드 응답
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UploadResponse {
+    /// 서버에 저장된 파일의 전체 경로
+    pub path: String,
+    /// 저장된 파일 크기(바이트)
+    pub size: u64,
+}

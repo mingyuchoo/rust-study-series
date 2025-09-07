@@ -7,6 +7,7 @@ pub mod search;
 pub mod chat;
 pub mod models;
 pub mod index;
+pub mod admin;
 
 use actix_web::{App, HttpServer, *};
 use lib_db::setup_database;
@@ -30,6 +31,8 @@ use utoipa_swagger_ui::SwaggerUi;
         search::vector_search,
         chat::chat_ask,
         index::index_create,
+        admin::reindex_pdfs,
+        admin::upload_file,
     ),
     components(
         schemas(
@@ -48,7 +51,11 @@ use utoipa_swagger_ui::SwaggerUi;
             models::MeResponse,
             models::IndexChunkInput,
             models::IndexCreateRequest,
-            models::IndexCreateResponse
+            models::IndexCreateResponse,
+            models::ReindexRequest,
+            models::ReindexItemResult,
+            models::ReindexResponse,
+            models::UploadResponse
         )
     ),
     tags(
@@ -56,7 +63,8 @@ use utoipa_swagger_ui::SwaggerUi;
         (name = "auth", description = "인증"),
         (name = "search", description = "벡터 검색"),
         (name = "chat", description = "통합 질의응답"),
-        (name = "index", description = "인덱싱 생성")
+        (name = "index", description = "인덱싱 생성"),
+        (name = "admin", description = "관리자/운영 도구")
     )
 )]
 struct ApiDoc;
@@ -88,6 +96,8 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
             .service(search::vector_search)
             .service(chat::chat_ask)
             .service(index::index_create)
+            .service(admin::reindex_pdfs)
+            .service(admin::upload_file)
             // Swagger UI 및 OpenAPI 스펙 라우트
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")

@@ -59,4 +59,6 @@ pub struct ProcessedDocument {
     pub entity_embeddings: Vec<Embeddings3>,
     /// 관계별 다중 관점 임베딩
     pub relation_embeddings: Vec<Embeddings3>,
+    /// 임베딩 타입(혼재 운영 구분용): "azure" | "tfidf" 등
+    pub embedding_type: String,
 }

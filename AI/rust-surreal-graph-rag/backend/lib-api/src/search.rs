@@ -47,6 +47,8 @@ pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<Vector
             SELECT id, content, metadata,
                    vector::similarity::cosine(embedding_semantic, $q) AS score
             FROM chunk
+            WHERE embedding_type = 'azure'
+              AND array::len(embedding_semantic) = array::len($q)
             ORDER BY score DESC
             LIMIT $k;
             "#,

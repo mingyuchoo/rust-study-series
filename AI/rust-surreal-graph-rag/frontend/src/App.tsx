@@ -8,6 +8,7 @@ import VectorSearch from './pages/VectorSearch';
 import Health from './pages/Health';
 import Indexing from './pages/Indexing';
 import NavBar from './components/NavBar';
+import AdminReindex from './pages/AdminReindex';
 import { AuthProvider, useAuth } from './store/auth';
 
 // 인증이 필요한 라우트 보호 컴포넌트
@@ -47,6 +48,14 @@ const App: React.FC = () => {
             element={
               <PrivateRoute>
                 <Indexing />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/reindex"
+            element={
+              <PrivateRoute>
+                <AdminReindex />
               </PrivateRoute>
             }
           />
