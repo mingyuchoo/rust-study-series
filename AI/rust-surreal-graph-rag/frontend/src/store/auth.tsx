@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { login as apiLogin, logout as apiLogout, me as apiMe } from '@/services/auth';
 import { LoginRequest, LoginResponse, MeResponse } from '@/types/api';
 
-// 한국어 주석: 토큰 저장/조회 유틸. localStorage 사용
+// 토큰 저장/조회 유틸. localStorage 사용
 const LS_KEY = 'rag_tokens_v1';
 
 export type StoredTokens = {
@@ -28,7 +28,7 @@ export function clearStoredTokens() {
   localStorage.removeItem(LS_KEY);
 }
 
-// 한국어 주석: 인증 컨텍스트
+// 인증 컨텍스트
 interface AuthContextState {
   isAuthenticated: boolean;
   me: MeResponse | null;

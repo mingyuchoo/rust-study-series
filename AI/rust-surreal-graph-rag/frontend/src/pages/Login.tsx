@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/store/auth';
 
 const Login: React.FC = () => {
-  // 한국어 주석: 로그인 폼 상태
+  // 로그인 폼 상태
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);

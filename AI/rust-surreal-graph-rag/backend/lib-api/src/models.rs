@@ -1,5 +1,5 @@
 //! 공용 요청/응답 모델 정의
-//! 모든 주석은 한국어로 작성됩니다.
+
 
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;

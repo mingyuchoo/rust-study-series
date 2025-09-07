@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
 import { getStoredTokens, setStoredTokens, clearStoredTokens } from '@/store/auth';
 
-// 한국어 주석: Axios 인스턴스 생성 및 인터셉터 설정
+// Axios 인스턴스 생성 및 인터셉터 설정
 const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '';
 
 const api: AxiosInstance = axios.create({

@@ -1,5 +1,4 @@
 //! 인증 관련 핸들러 (JWT 기반)
-//! 모든 주석은 한국어로 작성됩니다.
 
 use actix_web::{post, get, web, HttpRequest};
 use chrono::{Duration, Utc};

@@ -4,7 +4,7 @@ import { chatAsk } from '@/services/chat';
 import { ChatAskResponse } from '@/types/api';
 
 const Chat: React.FC = () => {
-  // 한국어 주석: 채팅 질의 상태
+  // 채팅 질의 상태
   const [query, setQuery] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

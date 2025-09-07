@@ -1,4 +1,4 @@
-// 한국어 주석: OpenAPI 명세 기반 타입 정의
+// OpenAPI 명세 기반 타입 정의
 
 export type LoginRequest = {
   email: string;

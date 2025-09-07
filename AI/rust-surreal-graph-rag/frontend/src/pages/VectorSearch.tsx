@@ -4,7 +4,7 @@ import { vectorSearch } from '@/services/search';
 import { VectorSearchResponse } from '@/types/api';
 
 const VectorSearch: React.FC = () => {
-  // 한국어 주석: 벡터 검색 상태
+  // 벡터 검색 상태
   const [query, setQuery] = useState('');
   const [topK, setTopK] = useState<number | undefined>(5);
   const [threshold, setThreshold] = useState<number | undefined>(undefined);

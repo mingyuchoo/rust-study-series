@@ -1,5 +1,5 @@
 //! Azure OpenAI 호출 유틸리티
-//! 모든 주석은 한국어로 작성됩니다.
+
 
 use crate::config::AzureOpenAIConfig;
 use reqwest::Client;

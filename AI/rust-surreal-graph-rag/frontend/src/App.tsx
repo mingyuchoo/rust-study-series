@@ -9,7 +9,7 @@ import Health from './pages/Health';
 import NavBar from './components/NavBar';
 import { AuthProvider, useAuth } from './store/auth';
 
-// 한국어 주석: 인증이 필요한 라우트 보호 컴포넌트
+// 인증이 필요한 라우트 보호 컴포넌트
 const PrivateRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? children : <Navigate to="/login" replace />;
@@ -17,7 +17,7 @@ const PrivateRoute: React.FC<{ children: React.ReactElement }> = ({ children }) 
 
 const App: React.FC = () => {
   return (
-    // 한국어 주석: 구 Fluent UI와의 호환을 위해 ThemeProvider 유지(필수는 아님)
+    // 구 Fluent UI와의 호환을 위해 ThemeProvider 유지(필수는 아님)
     <ThemeProvider>
       <AuthProvider>
         <NavBar />

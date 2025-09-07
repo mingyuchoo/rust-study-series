@@ -1,5 +1,5 @@
 //! 헬스체크 엔드포인트
-//! 모든 주석은 한국어로 작성됩니다.
+
 
 use actix_web::{get, web, Result};
 use chrono::Utc;

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getHealth } from '@/services/health';
 
 const Health: React.FC = () => {
-  // 한국어 주석: 헬스 상태 조회
+  // 헬스 상태 조회
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 

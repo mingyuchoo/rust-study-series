@@ -1,5 +1,5 @@
 //! 벡터 검색 엔드포인트 (MVP)
-//! 모든 주석은 한국어로 작성됩니다.
+
 
 use actix_web::{post, web, Result};
 use std::time::Instant;

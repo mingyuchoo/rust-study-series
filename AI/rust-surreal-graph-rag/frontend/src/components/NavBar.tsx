@@ -4,7 +4,7 @@ import { Stack, IStackStyles } from '@fluentui/react';
 import { DefaultButton, PrimaryButton } from '@fluentui/react';
 import { useAuth } from '@/store/auth';
 
-// 한국어 주석: 상단 네비게이션 바 컴포넌트
+// 상단 네비게이션 바 컴포넌트
 const NavBar: React.FC = () => {
   const { isAuthenticated, logout, me } = useAuth();
   const navigate = useNavigate();
