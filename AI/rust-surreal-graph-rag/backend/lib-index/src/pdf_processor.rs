@@ -7,7 +7,7 @@
 //! 텍스트 추출이 불가한 경우 파일명을 기반으로 더미 본문을 구성합니다.
 //! 실제 서비스에서는 `pdfium-render`, `lopdf` 등으로 교체하세요.
 
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 use regex::Regex;
 use serde_json::json;
 
@@ -101,17 +101,18 @@ pub fn process_pdf(path: &str) -> Result<Vec<Chunk>> {
 }
 
 /// 기능 플래그에 따라 실제 PDF 텍스트를 추출한다.
+#[allow(unused_variables)]
 fn extract_text_from_pdf(path: &str) -> Result<String> {
     // pdfium 우선 사용
     #[cfg(feature = "pdfium")]
     {
         use pdfium_render::prelude::*;
-        let pdfium = Pdfium::bind_to_system_library()?;
+        let pdfium = Pdfium::new(Pdfium::bind_to_system_library()?);
         let doc = pdfium.load_pdf_from_file(path, None)?;
         let mut out = String::new();
         for (i, page) in doc.pages().iter().enumerate() {
-            let text_page = page?.text()?;
-            let page_text = text_page.all()?;
+            let text_page = page.text()?;
+            let page_text = text_page.all();
             out.push_str(&format!("\n[Page {}]\n{}\n", i + 1, page_text));
         }
         return Ok(out);
@@ -135,7 +136,7 @@ fn extract_text_from_pdf(path: &str) -> Result<String> {
     // 어떤 기능도 없으면 오류
     #[cfg(all(not(feature = "pdfium"), not(feature = "lopdf")))]
     {
-        Err(anyhow!("PDF 파서 기능이 비활성화됨: Cargo features 'pdfium' 또는 'lopdf'를 활성화하세요."))
+        Err(anyhow::anyhow!("PDF 파서 기능이 비활성화됨: Cargo features 'pdfium' 또는 'lopdf'를 활성화하세요. 경로: {path}"))
     }
 }
 
