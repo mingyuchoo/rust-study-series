@@ -35,7 +35,10 @@ impl Ner for RegexNer {
     fn extract(&self, text: &str) -> Vec<Entity> {
         let mut entities = Vec::new();
         for m in self.re_date.find_iter(text) {
-            entities.push(Entity { name: m.as_str().to_string(), r#type: "DATE".into() });
+            entities.push(Entity {
+                name: m.as_str().to_string(),
+                r#type: "DATE".into(),
+            });
         }
         if self.re_org.is_match(text) {
             // 문장에서 조직명이 명시되지 않을 수 있어 간단히 문장 일부를 사용
@@ -43,20 +46,34 @@ impl Ner for RegexNer {
             entities.push(Entity { name, r#type: "ORG".into() });
         }
         for m in self.re_place.find_iter(text) {
-            entities.push(Entity { name: m.as_str().to_string(), r#type: "LOC".into() });
+            entities.push(Entity {
+                name: m.as_str().to_string(),
+                r#type: "LOC".into(),
+            });
         }
         for m in self.re_person.find_iter(text) {
             let s = m.as_str();
             if s.chars().count() == 3 {
-                entities.push(Entity { name: s.to_string(), r#type: "PERSON".into() });
+                entities.push(Entity {
+                    name: s.to_string(),
+                    r#type: "PERSON".into(),
+                });
             }
         }
         dedup_entities(entities)
     }
 }
 
+/// 멀티바이트(UTF-8) 안전 잘라내기: 바이트 인덱스가 아닌 문자 기준으로 자른다.
 fn truncate(s: &str, max: usize) -> String {
-    if s.len() <= max { s.to_string() } else { format!("{}…", &s[..max]) }
+    let char_count = s.chars().count();
+    if char_count <= max {
+        return s.to_string();
+    }
+    let mut out = String::with_capacity(max + 3);
+    out.extend(s.chars().take(max));
+    out.push('…');
+    out
 }
 
 fn dedup_entities(mut v: Vec<Entity>) -> Vec<Entity> {

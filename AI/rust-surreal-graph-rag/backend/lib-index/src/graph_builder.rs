@@ -2,9 +2,9 @@
 //! - 정규식 기반 간단 엔티티 추출
 //! - 엔티티 간 관계(주어-술어-목적어 유사) 추정
 
-use regex::Regex;
-use crate::types::{Chunk, Entity, Relation};
 use crate::ner::Ner;
+use crate::types::{Chunk, Entity, Relation};
+use regex::Regex;
 
 /// 간단한 정규식 룰 기반 NER
 pub fn extract_entities(chunks: &[Chunk]) -> Vec<Entity> {
@@ -18,7 +18,10 @@ pub fn extract_entities(chunks: &[Chunk]) -> Vec<Entity> {
         let text = ch.content.as_str();
         // 날짜
         for m in re_date.find_iter(text) {
-            entities.push(Entity { name: m.as_str().to_string(), r#type: "DATE".into() });
+            entities.push(Entity {
+                name: m.as_str().to_string(),
+                r#type: "DATE".into(),
+            });
         }
         // 조직(간단 키워드)
         if re_org.is_match(text) {
@@ -28,14 +31,20 @@ pub fn extract_entities(chunks: &[Chunk]) -> Vec<Entity> {
         }
         // 장소
         for m in re_place.find_iter(text) {
-            entities.push(Entity { name: m.as_str().to_string(), r#type: "LOC".into() });
+            entities.push(Entity {
+                name: m.as_str().to_string(),
+                r#type: "LOC".into(),
+            });
         }
         // 인명(아주 단순: 홍길동 등 3자 한글명 패턴)
         let re_person = Regex::new(r"[가-힣]{3}").unwrap();
         for m in re_person.find_iter(text) {
             let s = m.as_str();
             if s.chars().count() == 3 {
-                entities.push(Entity { name: s.to_string(), r#type: "PERSON".into() });
+                entities.push(Entity {
+                    name: s.to_string(),
+                    r#type: "PERSON".into(),
+                });
             }
         }
     }
@@ -68,7 +77,7 @@ pub fn infer_relations(chunks: &[Chunk], entities: &[Entity]) -> Vec<Relation> {
             }
             // 모든 쌍을 관계로 연결(간단)
             for i in 0..found.len() {
-                for j in (i+1)..found.len() {
+                for j in (i + 1)..found.len() {
                     rels.push(Relation {
                         subject: found[i].name.clone(),
                         predicate: "CO_OCCURS".into(),

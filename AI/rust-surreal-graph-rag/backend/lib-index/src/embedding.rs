@@ -24,8 +24,8 @@ pub fn embed_chunks(chunks: &[Chunk], mode: EmbeddingMode) -> Result<Vec<Vec<f32
 /// 임의의 텍스트 배열에 대해 임베딩을 생성한다(엔티티/관계 등 공용).
 pub fn embed_texts(texts: &[String], mode: EmbeddingMode) -> Result<Vec<Vec<f32>>> {
     match mode {
-        EmbeddingMode::Tfidf => tfidf_embed(texts),
-        EmbeddingMode::External(cb) => cb(&texts.iter().cloned().collect::<Vec<_>>()),
+        | EmbeddingMode::Tfidf => tfidf_embed(texts),
+        | EmbeddingMode::External(cb) => cb(&texts.iter().cloned().collect::<Vec<_>>()),
     }
 }
 
@@ -74,10 +74,7 @@ fn tfidf_embed(docs: &[String]) -> Result<Vec<Vec<f32>>> {
     }
 
     // 토큰화(아주 단순: 공백 기준, 소문자화)
-    let tokenized: Vec<Vec<String>> = docs
-        .iter()
-        .map(|d| tokenize(d))
-        .collect();
+    let tokenized: Vec<Vec<String>> = docs.iter().map(|d| tokenize(d)).collect();
 
     // vocabulary
     let mut vocab: HashMap<String, usize> = HashMap::new();
@@ -106,10 +103,7 @@ fn tfidf_embed(docs: &[String]) -> Result<Vec<Vec<f32>>> {
     }
 
     let n_docs = docs.len() as f32;
-    let idf: Vec<f32> = df
-        .iter()
-        .map(|&d| ((n_docs + 1.0) / (d as f32 + 1.0)).ln() + 1.0)
-        .collect();
+    let idf: Vec<f32> = df.iter().map(|&d| ((n_docs + 1.0) / (d as f32 + 1.0)).ln() + 1.0).collect();
 
     // TF-IDF
     let mut out = Vec::with_capacity(docs.len());
@@ -145,6 +139,8 @@ fn l2_normalize(v: &mut [f32]) {
     let sumsq: f32 = v.iter().map(|x| x * x).sum();
     if sumsq > 0.0 {
         let inv = 1.0 / sumsq.sqrt();
-        for x in v.iter_mut() { *x *= inv; }
+        for x in v.iter_mut() {
+            *x *= inv;
+        }
     }
 }

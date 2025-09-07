@@ -1,6 +1,5 @@
 //! 환경설정 로더
 
-
 use std::env;
 
 #[derive(Clone, Debug)]
@@ -22,16 +21,11 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn from_env() -> Self {
-        let endpoint = env::var("AZURE_OPENAI_ENDPOINT")
-            .unwrap_or_else(|_| "".to_string());
-        let api_key = env::var("AZURE_OPENAI_API_KEY")
-            .unwrap_or_else(|_| "".to_string());
-        let api_version = env::var("AZURE_OPENAI_API_VERSION")
-            .unwrap_or_else(|_| "2024-06-01".to_string());
-        let chat_deployment = env::var("AZURE_OPENAI_CHAT_DEPLOYMENT")
-            .unwrap_or_else(|_| "gpt-4.1".to_string());
-        let embed_deployment = env::var("AZURE_OPENAI_EMBED_DEPLOYMENT")
-            .unwrap_or_else(|_| "text-embedding-3-large".to_string());
+        let endpoint = env::var("AZURE_OPENAI_ENDPOINT").unwrap_or_else(|_| "".to_string());
+        let api_key = env::var("AZURE_OPENAI_API_KEY").unwrap_or_else(|_| "".to_string());
+        let api_version = env::var("AZURE_OPENAI_API_VERSION").unwrap_or_else(|_| "2024-06-01".to_string());
+        let chat_deployment = env::var("AZURE_OPENAI_CHAT_DEPLOYMENT").unwrap_or_else(|_| "gpt-4.1".to_string());
+        let embed_deployment = env::var("AZURE_OPENAI_EMBED_DEPLOYMENT").unwrap_or_else(|_| "text-embedding-3-large".to_string());
 
         let azure = AzureOpenAIConfig {
             endpoint,
@@ -45,6 +39,11 @@ impl AppConfig {
         let access_token_ttl_secs = env::var("ACCESS_TOKEN_TTL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(3600);
         let refresh_token_ttl_secs = env::var("REFRESH_TOKEN_TTL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(7 * 24 * 3600);
 
-        Self { azure, jwt_secret, access_token_ttl_secs, refresh_token_ttl_secs }
+        Self {
+            azure,
+            jwt_secret,
+            access_token_ttl_secs,
+            refresh_token_ttl_secs,
+        }
     }
 }

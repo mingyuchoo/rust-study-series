@@ -1,6 +1,5 @@
 //! 공용 요청/응답 모델 정의
 
-
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
@@ -49,13 +48,20 @@ pub struct HealthResponse {
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct VectorSearchRequest {
     pub query: String,
-    #[serde(default = "default_top_k")] pub top_k: u32,
-    #[serde(default = "default_threshold")] pub threshold: f32,
-    #[serde(default)] pub filters: Option<serde_json::Value>,
+    #[serde(default = "default_top_k")]
+    pub top_k: u32,
+    #[serde(default = "default_threshold")]
+    pub threshold: f32,
+    #[serde(default)]
+    pub filters: Option<serde_json::Value>,
 }
 
-fn default_top_k() -> u32 { 10 }
-fn default_threshold() -> f32 { 0.7 }
+fn default_top_k() -> u32 {
+    10
+}
+fn default_threshold() -> f32 {
+    0.7
+}
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct VectorSearchItem {
@@ -76,9 +82,12 @@ pub struct VectorSearchResponse {
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct ChatAskRequest {
     pub query: String,
-    #[serde(default)] pub conversation_id: Option<String>,
-    #[serde(default)] pub context: Option<serde_json::Value>,
-    #[serde(default)] pub options: Option<serde_json::Value>,
+    #[serde(default)]
+    pub conversation_id: Option<String>,
+    #[serde(default)]
+    pub context: Option<serde_json::Value>,
+    #[serde(default)]
+    pub options: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -146,7 +155,9 @@ pub struct IndexCreateResponse {
 }
 
 /// 인덱싱 기본 모드: Azure 임베딩 사용(= TF-IDF 비활성)
-fn default_use_tfidf() -> bool { false }
+fn default_use_tfidf() -> bool {
+    false
+}
 
 // 관리자 재인덱싱
 #[derive(Debug, Deserialize, ToSchema)]

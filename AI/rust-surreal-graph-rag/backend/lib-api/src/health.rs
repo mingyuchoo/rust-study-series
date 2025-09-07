@@ -1,9 +1,9 @@
 //! 헬스체크 엔드포인트
 
-use actix_web::{get, web, Result};
-use chrono::Utc;
 use crate::models::HealthResponse;
 use crate::search::AppState;
+use actix_web::{Result, get, web};
+use chrono::Utc;
 use lib_db::DB;
 
 #[utoipa::path(
@@ -21,8 +21,8 @@ pub async fn health(state: web::Data<AppState>) -> Result<web::Json<HealthRespon
 
     // 1) 데이터베이스 연결 상태 확인(간단 쿼리)
     let db_status = match DB.query("RETURN 1;").await {
-        Ok(_) => "ok".to_string(),
-        Err(e) => format!("error: {}", e),
+        | Ok(_) => "ok".to_string(),
+        | Err(e) => format!("error: {}", e),
     };
 
     // 2) 인덱스/그래프 테이블 카운트 조회 (GROUP ALL 사용)
@@ -38,11 +38,17 @@ pub async fn health(state: web::Data<AppState>) -> Result<web::Json<HealthRespon
         .await
     {
         let v0: Vec<serde_json::Value> = res.take(0).unwrap_or_default();
-        if let Some(v) = v0.get(0) { chunk_cnt = v.get("cnt").and_then(|x| x.as_i64()).unwrap_or(0); }
+        if let Some(v) = v0.get(0) {
+            chunk_cnt = v.get("cnt").and_then(|x| x.as_i64()).unwrap_or(0);
+        }
         let v1: Vec<serde_json::Value> = res.take(1).unwrap_or_default();
-        if let Some(v) = v1.get(0) { entity_cnt = v.get("cnt").and_then(|x| x.as_i64()).unwrap_or(0); }
+        if let Some(v) = v1.get(0) {
+            entity_cnt = v.get("cnt").and_then(|x| x.as_i64()).unwrap_or(0);
+        }
         let v2: Vec<serde_json::Value> = res.take(2).unwrap_or_default();
-        if let Some(v) = v2.get(0) { relation_cnt = v.get("cnt").and_then(|x| x.as_i64()).unwrap_or(0); }
+        if let Some(v) = v2.get(0) {
+            relation_cnt = v.get("cnt").and_then(|x| x.as_i64()).unwrap_or(0);
+        }
     }
 
     let vector_index_status = if chunk_cnt > 0 {

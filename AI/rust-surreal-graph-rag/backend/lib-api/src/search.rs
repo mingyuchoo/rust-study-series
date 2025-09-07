@@ -1,13 +1,12 @@
 //! 벡터 검색 엔드포인트 (MVP)
 
-
-use actix_web::{post, web, Result};
+use actix_web::{Result, post, web};
 use std::time::Instant;
 
 use crate::azure::AzureOpenAI;
 use crate::config::AppConfig;
 use crate::error::Error;
-use crate::models::{VectorSearchRequest, VectorSearchResponse, VectorSearchItem};
+use crate::models::{VectorSearchItem, VectorSearchRequest, VectorSearchResponse};
 use lib_db::DB;
 
 pub struct AppState {
@@ -30,8 +29,7 @@ pub struct AppState {
 pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<VectorSearchRequest>) -> Result<web::Json<VectorSearchResponse>, Error> {
     let t0 = Instant::now();
     // 1) 쿼리 임베딩 생성
-    let embeddings = state.azure.embed(&[&payload.query]).await
-        .map_err(|e| Error::External(e.to_string()))?;
+    let embeddings = state.azure.embed(&[&payload.query]).await.map_err(|e| Error::External(e.to_string()))?;
     let query_vec = embeddings.get(0).cloned().unwrap_or_default();
 
     // 2) SurrealDB에서 코사인 유사도 기반 검색
@@ -48,12 +46,14 @@ pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<Vector
                    vector::similarity::cosine(embedding_semantic, $q) AS score
             FROM chunk
             WHERE embedding_type = 'azure'
+              AND embedding_deployment = $dep
               AND array::len(embedding_semantic) = array::len($q)
             ORDER BY score DESC
             LIMIT $k;
             "#,
         )
         .bind(("q", query_vec))
+        .bind(("dep", state.azure.embed_deployment().to_string()))
         .bind(("k", top_k))
         .await
         .map_err(|e| Error::External(e.to_string()))?;
@@ -67,18 +67,9 @@ pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<Vector
             continue;
         }
         let id = v.get("id").map(|x| x.to_string()).unwrap_or_else(|| "null".into());
-        let content = v
-            .get("content")
-            .and_then(|x| x.as_str())
-            .unwrap_or_default()
-            .to_string();
+        let content = v.get("content").and_then(|x| x.as_str()).unwrap_or_default().to_string();
         let metadata = v.get("metadata").cloned().unwrap_or(serde_json::json!({}));
-        items.push(VectorSearchItem {
-            id,
-            content,
-            score,
-            metadata,
-        });
+        items.push(VectorSearchItem { id, content, score, metadata });
     }
 
     let elapsed = t0.elapsed().as_secs_f32();

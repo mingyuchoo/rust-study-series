@@ -1,21 +1,21 @@
-pub mod error;
-pub mod config;
-pub mod azure;
-pub mod auth;
-pub mod health;
-pub mod search;
-pub mod chat;
-pub mod models;
-pub mod index;
 pub mod admin;
+pub mod auth;
+pub mod azure;
+pub mod chat;
+pub mod config;
+pub mod error;
+pub mod health;
+pub mod index;
+pub mod models;
+pub mod search;
 
+use actix_web::web;
 use actix_web::{App, HttpServer, *};
 use lib_db::setup_database;
 use log::{error, info};
-use actix_web::web;
 
-use crate::config::AppConfig;
 use crate::azure::AzureOpenAI;
+use crate::config::AppConfig;
 use crate::search::AppState;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -113,10 +113,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
 pub async fn init_db() -> std::io::Result<()> {
     if let Err(err) = setup_database().await {
         error!("Failed to set up database: {:?}", err);
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Database setup failed",
-        ));
+        return Err(std::io::Error::new(std::io::ErrorKind::Other, "Database setup failed"));
     }
     Ok(())
 }

@@ -17,8 +17,8 @@ use crate::types::{Chunk, ChunkKind};
 pub fn process_pdf(path: &str) -> Result<Vec<Chunk>> {
     // 실제 PDF 파싱 시도 → 실패 시 시뮬레이션 텍스트로 대체
     let simulated_text = match extract_text_from_pdf(path) {
-        Ok(t) if !t.trim().is_empty() => t,
-        _ => simulate_extract_text_from_pdf(path),
+        | Ok(t) if !t.trim().is_empty() => t,
+        | _ => simulate_extract_text_from_pdf(path),
     };
 
     // 1) 문서 → 섹션 → 문단 계층으로 분해
@@ -54,7 +54,9 @@ pub fn process_pdf(path: &str) -> Result<Vec<Chunk>> {
         let mut section_tokens: Vec<String> = Vec::new();
         for p in &sec.paragraphs {
             let toks = tokenize(p);
-            if !toks.is_empty() { section_tokens.extend(toks); }
+            if !toks.is_empty() {
+                section_tokens.extend(toks);
+            }
         }
 
         // 섹션 요약(간단): 첫 문장 또는 처음 30 토큰
@@ -73,7 +75,9 @@ pub fn process_pdf(path: &str) -> Result<Vec<Chunk>> {
 
         for part in split_tokens_with_overlap(&section_tokens, 200, 500, 30) {
             let content = part.join(" ");
-            if content.trim().is_empty() { continue; }
+            if content.trim().is_empty() {
+                continue;
+            }
             chunks.push(Chunk {
                 content,
                 level: 1,
@@ -136,16 +140,15 @@ fn extract_text_from_pdf(path: &str) -> Result<String> {
     // 어떤 기능도 없으면 오류
     #[cfg(all(not(feature = "pdfium"), not(feature = "lopdf")))]
     {
-        Err(anyhow::anyhow!("PDF 파서 기능이 비활성화됨: Cargo features 'pdfium' 또는 'lopdf'를 활성화하세요. 경로: {path}"))
+        Err(anyhow::anyhow!(
+            "PDF 파서 기능이 비활성화됨: Cargo features 'pdfium' 또는 'lopdf'를 활성화하세요. 경로: {path}"
+        ))
     }
 }
 
 /// 간이 PDF 텍스트 추출(데모)
 fn simulate_extract_text_from_pdf(path: &str) -> String {
-    let filename = std::path::Path::new(path)
-        .file_name()
-        .and_then(|s| s.to_str())
-        .unwrap_or("문서");
+    let filename = std::path::Path::new(path).file_name().and_then(|s| s.to_str()).unwrap_or("문서");
     format!(
         "{title}\n1. 개요\n이 문서는 {title} 에 대한 테스트 문서입니다. Rust 기반 GraphRAG 파이프라인 검증 용도입니다.\n\n2. 본문\n조직 A는 2024-01-01에 프로젝트를 시작하였습니다. 장소는 서울입니다.\n인물 홍길동이 프로젝트를 이끌고, 주식회사 샘플이 참여했습니다.\n\n3. 결론\n본 문서는 MVP이므로 실제 PDF 파서로 교체가 필요합니다.",
         title = filename
@@ -190,7 +193,9 @@ fn split_sections(text: &str) -> Vec<Section> {
 
 /// 토큰 시퀀스를 [min_tokens, max_tokens] 범위로 분할하며, window_overlap 토큰 겹침을 적용
 fn split_tokens_with_overlap(tokens: &[String], min_tokens: usize, max_tokens: usize, window_overlap: usize) -> Vec<Vec<String>> {
-    if tokens.is_empty() { return vec![]; }
+    if tokens.is_empty() {
+        return vec![];
+    }
     let min_tokens = min_tokens.max(1);
     let max_tokens = max_tokens.max(min_tokens);
     let overlap = window_overlap.min(max_tokens.saturating_sub(1));
@@ -207,10 +212,14 @@ fn split_tokens_with_overlap(tokens: &[String], min_tokens: usize, max_tokens: u
         // 문장 경계로 조정(가능하면 뒤에서부터 마침표 위치 찾기)
         if let Some(rel) = find_sentence_boundary(&tokens[start..end]) {
             let cand = start + rel;
-            if cand - start >= min_tokens { end = cand; }
+            if cand - start >= min_tokens {
+                end = cand;
+            }
         }
         chunks.push(tokens[start..end].to_vec());
-        if end == tokens.len() { break; }
+        if end == tokens.len() {
+            break;
+        }
         start = end.saturating_sub(overlap);
     }
     chunks
@@ -231,7 +240,9 @@ fn find_sentence_boundary(tokens: &[String]) -> Option<usize> {
 }
 
 fn make_simple_summary(tokens: &[String], max_tokens: usize) -> String {
-    if tokens.is_empty() { return String::new(); }
+    if tokens.is_empty() {
+        return String::new();
+    }
     let end = tokens.len().min(max_tokens.max(1));
     tokens[..end].join(" ")
 }

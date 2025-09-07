@@ -1,13 +1,13 @@
 //! 인증 관련 핸들러 (JWT 기반)
 
-use actix_web::{post, get, web, HttpRequest};
+use actix_web::{HttpRequest, get, post, web};
 use chrono::{Duration, Utc};
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey, Algorithm};
+use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 
 use crate::config::AppConfig;
 use crate::error::Error;
-use crate::models::{LoginRequest, LoginResponse, RefreshResponse, MessageResponse, MeResponse};
+use crate::models::{LoginRequest, LoginResponse, MeResponse, MessageResponse, RefreshResponse};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -18,20 +18,28 @@ struct Claims {
 
 fn create_token(email: &str, ttl_secs: i64, token_type: &str, secret: &str) -> anyhow::Result<String> {
     let exp = (Utc::now() + Duration::seconds(ttl_secs)).timestamp();
-    let claims = Claims { sub: email.to_string(), exp, r#type: token_type.to_string() };
+    let claims = Claims {
+        sub: email.to_string(),
+        exp,
+        r#type: token_type.to_string(),
+    };
     let token = encode(&Header::new(Algorithm::HS256), &claims, &EncodingKey::from_secret(secret.as_bytes()))?;
     Ok(token)
 }
 
 fn verify_token(token: &str, expected_type: &str, secret: &str) -> anyhow::Result<Claims> {
     let data = decode::<Claims>(token, &DecodingKey::from_secret(secret.as_bytes()), &Validation::new(Algorithm::HS256))?;
-    if data.claims.r#type != expected_type { anyhow::bail!("잘못된 토큰 타입"); }
+    if data.claims.r#type != expected_type {
+        anyhow::bail!("잘못된 토큰 타입");
+    }
     Ok(data.claims)
 }
 
 pub fn require_auth(req: &HttpRequest, cfg: &AppConfig) -> std::result::Result<String, Error> {
     let auth = req.headers().get("Authorization").and_then(|v| v.to_str().ok()).unwrap_or("");
-    if !auth.starts_with("Bearer ") { return Err(Error::Unauthorized); }
+    if !auth.starts_with("Bearer ") {
+        return Err(Error::Unauthorized);
+    }
     let token = &auth[7..];
     let claims = verify_token(token, "access", &cfg.jwt_secret).map_err(|_| Error::Unauthorized)?;
     Ok(claims.sub)
@@ -55,10 +63,8 @@ pub async fn login(cfg: web::Data<AppConfig>, payload: web::Json<LoginRequest>) 
         return Err(Error::BadRequest("이메일/비밀번호가 비어 있습니다".into()));
     }
     // 데모: 모든 사용자 허용
-    let access = create_token(&payload.email, cfg.access_token_ttl_secs, "access", &cfg.jwt_secret)
-        .map_err(|e| Error::External(e.to_string()))?;
-    let refresh_token = create_token(&payload.email, cfg.refresh_token_ttl_secs, "refresh", &cfg.jwt_secret)
-        .map_err(|e| Error::External(e.to_string()))?;
+    let access = create_token(&payload.email, cfg.access_token_ttl_secs, "access", &cfg.jwt_secret).map_err(|e| Error::External(e.to_string()))?;
+    let refresh_token = create_token(&payload.email, cfg.refresh_token_ttl_secs, "refresh", &cfg.jwt_secret).map_err(|e| Error::External(e.to_string()))?;
 
     Ok(web::Json(LoginResponse {
         access_token: access,
@@ -81,13 +87,17 @@ pub async fn login(cfg: web::Data<AppConfig>, payload: web::Json<LoginRequest>) 
 #[post("/api/auth/refresh")]
 pub async fn refresh(cfg: web::Data<AppConfig>, req: HttpRequest) -> Result<web::Json<RefreshResponse>, Error> {
     let auth = req.headers().get("Authorization").and_then(|v| v.to_str().ok()).unwrap_or("");
-    if !auth.starts_with("Bearer ") { return Err(Error::Unauthorized); }
+    if !auth.starts_with("Bearer ") {
+        return Err(Error::Unauthorized);
+    }
     let token = &auth[7..];
     let claims = verify_token(token, "refresh", &cfg.jwt_secret).map_err(|_| Error::Unauthorized)?;
 
-    let access = create_token(&claims.sub, cfg.access_token_ttl_secs, "access", &cfg.jwt_secret)
-        .map_err(|e| Error::External(e.to_string()))?;
-    Ok(web::Json(RefreshResponse { access_token: access, expires_in: cfg.access_token_ttl_secs }))
+    let access = create_token(&claims.sub, cfg.access_token_ttl_secs, "access", &cfg.jwt_secret).map_err(|e| Error::External(e.to_string()))?;
+    Ok(web::Json(RefreshResponse {
+        access_token: access,
+        expires_in: cfg.access_token_ttl_secs,
+    }))
 }
 
 #[utoipa::path(
@@ -103,7 +113,9 @@ pub async fn refresh(cfg: web::Data<AppConfig>, req: HttpRequest) -> Result<web:
 #[post("/api/auth/logout")]
 pub async fn logout(_cfg: web::Data<AppConfig>, _req: HttpRequest) -> Result<web::Json<MessageResponse>, Error> {
     // MVP: 서버측 상태 저장을 하지 않으므로 단순 성공 반환
-    Ok(web::Json(MessageResponse { message: "Successfully logged out".into() }))
+    Ok(web::Json(MessageResponse {
+        message: "Successfully logged out".into(),
+    }))
 }
 
 #[utoipa::path(

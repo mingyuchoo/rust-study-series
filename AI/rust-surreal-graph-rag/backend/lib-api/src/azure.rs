@@ -1,6 +1,5 @@
 //! Azure OpenAI 호출 유틸리티
 
-
 use crate::config::AzureOpenAIConfig;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -50,10 +49,12 @@ pub struct AzureOpenAI {
 
 impl AzureOpenAI {
     pub fn new(cfg: AzureOpenAIConfig) -> Self {
-        Self {
-            client: Client::new(),
-            cfg,
-        }
+        Self { client: Client::new(), cfg }
+    }
+
+    /// 현재 사용 중인 임베딩 배포명 반환
+    pub fn embed_deployment(&self) -> &str {
+        &self.cfg.embed_deployment
     }
 
     fn chat_url(&self) -> String {
@@ -78,14 +79,21 @@ impl AzureOpenAI {
         // 간단한 시스템/유저 메시지 구성
         let body = ChatRequestBody {
             messages: vec![
-                ChatMessage { role: "system".into(), content: system_prompt.into() },
-                ChatMessage { role: "user".into(), content: user_query.into() },
+                ChatMessage {
+                    role: "system".into(),
+                    content: system_prompt.into(),
+                },
+                ChatMessage {
+                    role: "user".into(),
+                    content: user_query.into(),
+                },
             ],
             temperature,
             max_tokens: None,
         };
 
-        let resp = self.client
+        let resp = self
+            .client
             .post(self.chat_url())
             .header("api-key", &self.cfg.api_key)
             .header("Content-Type", "application/json")
@@ -111,7 +119,8 @@ impl AzureOpenAI {
 
     pub async fn embed(&self, texts: &[&str]) -> anyhow::Result<Vec<Vec<f32>>> {
         let body = EmbeddingInput { input: texts };
-        let resp = self.client
+        let resp = self
+            .client
             .post(self.embed_url())
             .header("api-key", &self.cfg.api_key)
             .header("Content-Type", "application/json")

@@ -1,12 +1,12 @@
-use log::info;
 use log::error;
+use log::info;
+use std::env;
 use std::sync::LazyLock;
 use std::time::Duration;
-use std::env;
-use tokio::time::sleep;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::{Error, RecordId, Surreal};
+use tokio::time::sleep;
 
 pub type Id = RecordId;
 pub type SurrealDbError = Error;
@@ -21,19 +21,17 @@ pub async fn setup_database() -> anyhow::Result<()> {
     let ns = env::var("SURREALDB_NS").unwrap_or_else(|_| "namespace".to_string());
     let db = env::var("SURREALDB_DB").unwrap_or_else(|_| "database".to_string());
 
-    info!(
-        "SurrealDB 접속 시도: url={url}, ns={ns}, db={db}, user={username}"
-    );
+    info!("SurrealDB 접속 시도: url={url}, ns={ns}, db={db}, user={username}");
 
     // 간단한 재시도 로직 (최대 5회)
     let mut last_err: Option<anyhow::Error> = None;
     for attempt in 1..=5 {
         // 1) 커넥션
         match DB.connect::<Ws>(&url).await {
-            Ok(_) => {
+            | Ok(_) => {
                 info!("SurrealDB 연결 성공({attempt}/5)");
             },
-            Err(e) => {
+            | Err(e) => {
                 error!("SurrealDB 연결 실패({attempt}/5): {e}");
                 last_err = Some(anyhow::Error::new(e));
                 sleep(Duration::from_millis(800)).await;
@@ -68,7 +66,5 @@ pub async fn setup_database() -> anyhow::Result<()> {
     }
 
     // 모든 재시도 실패 시 마지막 에러 반환
-    Err(last_err.unwrap_or_else(|| {
-        anyhow::anyhow!("SurrealDB 초기화 실패(알 수 없는 오류)")
-    }))
+    Err(last_err.unwrap_or_else(|| anyhow::anyhow!("SurrealDB 초기화 실패(알 수 없는 오류)")))
 }

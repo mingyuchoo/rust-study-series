@@ -17,18 +17,10 @@ pub enum Error {
 impl ResponseError for Error {
     fn error_response(&self) -> HttpResponse {
         match self {
-            | Error::Db(e) => {
-                HttpResponse::InternalServerError().body(e.to_string())
-            },
-            | Error::Unauthorized => {
-                HttpResponse::Unauthorized().finish()
-            },
-            | Error::BadRequest(e) => {
-                HttpResponse::BadRequest().body(e.to_string())
-            },
-            | Error::External(e) => {
-                HttpResponse::BadGateway().body(e.to_string())
-            },
+            | Error::Db(e) => HttpResponse::InternalServerError().body(e.to_string()),
+            | Error::Unauthorized => HttpResponse::Unauthorized().finish(),
+            | Error::BadRequest(e) => HttpResponse::BadRequest().body(e.to_string()),
+            | Error::External(e) => HttpResponse::BadGateway().body(e.to_string()),
         }
     }
 }

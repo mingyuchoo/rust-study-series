@@ -1,14 +1,13 @@
 //! 통합 질의응답 엔드포인트 (MVP)
 //! - 벡터 검색 기반 RAG + 그래프 엔티티/관계 조회를 결합한 GraphRAG 확장
 
-
-use actix_web::{post, web, HttpRequest, Result};
+use actix_web::{HttpRequest, Result, post, web};
+use std::collections::{HashMap, HashSet};
 use std::time::Instant;
-use std::collections::{HashSet, HashMap};
 
 use crate::auth::require_auth;
 use crate::error::Error;
-use crate::models::{ChatAskRequest, ChatAskResponse, SourceItem, GraphPathItem};
+use crate::models::{ChatAskRequest, ChatAskResponse, GraphPathItem, SourceItem};
 use crate::search::AppState;
 use lib_db::DB;
 
@@ -32,11 +31,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
     let t0 = Instant::now();
 
     // 1) 벡터 검색: 질의 임베딩 생성 후 chunk 테이블에서 유사도 상위 문맥 수집
-    let embeddings = state
-        .azure
-        .embed(&[&payload.query])
-        .await
-        .map_err(|e| Error::External(e.to_string()))?;
+    let embeddings = state.azure.embed(&[&payload.query]).await.map_err(|e| Error::External(e.to_string()))?;
     let query_vec = embeddings.get(0).cloned().unwrap_or_default();
 
     let mut res = DB
@@ -61,19 +56,14 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
     let mut doc_ids: HashSet<String> = HashSet::new();
     for v in rows {
         let score = v.get("score").and_then(|s| s.as_f64()).unwrap_or(0.0) as f32;
-        let content = v
-            .get("content")
-            .and_then(|x| x.as_str())
-            .unwrap_or_default()
-            .to_string();
+        let content = v.get("content").and_then(|x| x.as_str()).unwrap_or_default().to_string();
         let metadata = v.get("metadata").cloned().unwrap_or(serde_json::json!({}));
         if let Some(doc_id_val) = v.get("doc_id") {
             // 임시 문자열 참조를 피하고 소유하는 String으로 안전하게 변환
-            let did = doc_id_val
-                .as_str()
-                .map(String::from)
-                .unwrap_or_else(|| doc_id_val.to_string());
-            if !did.is_empty() { doc_ids.insert(did); }
+            let did = doc_id_val.as_str().map(String::from).unwrap_or_else(|| doc_id_val.to_string());
+            if !did.is_empty() {
+                doc_ids.insert(did);
+            }
         }
         if !content.is_empty() {
             context_text.push_str("- ");
@@ -167,9 +157,13 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             let name = e.get("name").and_then(|x| x.as_str()).unwrap_or_default().to_string();
             let etype = e.get("type").and_then(|x| x.as_str()).unwrap_or("").to_string();
             let score = e.get("score").and_then(|x| x.as_f64()).unwrap_or(0.0) as f32;
-            if name.is_empty() { continue; }
+            if name.is_empty() {
+                continue;
+            }
             let entry = entity_info.entry(name).or_insert((score, etype.clone()));
-            if score > entry.0 { *entry = (score, etype); }
+            if score > entry.0 {
+                *entry = (score, etype);
+            }
         }
 
         // 중심성(PageRank + Betweenness) 계산 및 엣지 가중치 최대치 추정
@@ -207,13 +201,17 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             let s = r.get("subject").and_then(|x| x.as_str()).unwrap_or_default().to_string();
             let o = r.get("object").and_then(|x| x.as_str()).unwrap_or_default().to_string();
             let w = r.get("weight").and_then(|x| x.as_f64()).unwrap_or(1.0) as f32;
-            if s.is_empty() || o.is_empty() { continue; }
+            if s.is_empty() || o.is_empty() {
+                continue;
+            }
             nodes_all.insert(s.clone());
             nodes_all.insert(o.clone());
             let entry = out_edges.entry(s).or_insert_with(HashMap::new);
             let e = entry.entry(o).or_insert(0.0);
             *e += w;
-            if w > max_weight { max_weight = w; }
+            if w > max_weight {
+                max_weight = w;
+            }
         }
 
         // PageRank 계산
@@ -239,7 +237,9 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
         }
         // PageRank 정규화(0~1)
         let pr_max = pr.values().cloned().fold(0.0_f32, f32::max).max(1e-6);
-        for v in pr.values_mut() { *v /= pr_max; }
+        for v in pr.values_mut() {
+            *v /= pr_max;
+        }
 
         // Betweenness 중심성(Brandes 알고리즘, 무가중치 근사)
         let node_list: Vec<String> = nodes_all.iter().cloned().collect();
@@ -248,7 +248,9 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
         for (u, nbrs) in &out_edges {
             if let Some(&ui) = index_of.get(u) {
                 for v in nbrs.keys() {
-                    if let Some(&vi) = index_of.get(v) { adj[ui].push(vi); }
+                    if let Some(&vi) = index_of.get(v) {
+                        adj[ui].push(vi);
+                    }
                 }
             }
         }
@@ -268,28 +270,44 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
                 stack.push(v);
                 let dv = dist[v];
                 for &w in &adj[v] {
-                    if dist[w] < 0 { dist[w] = dv + 1; queue.push_back(w); }
-                    if dist[w] == dv + 1 { sigma[w] += sigma[v]; pred[w].push(v); }
+                    if dist[w] < 0 {
+                        dist[w] = dv + 1;
+                        queue.push_back(w);
+                    }
+                    if dist[w] == dv + 1 {
+                        sigma[w] += sigma[v];
+                        pred[w].push(v);
+                    }
                 }
             }
             // 누적 의존도 계산
             let mut delta: Vec<f32> = vec![0.0; node_list.len()];
             while let Some(w) = stack.pop() {
                 for &v in &pred[w] {
-                    if sigma[w] > 0.0 { delta[v] += (sigma[v] / sigma[w]) * (1.0 + delta[w]); }
+                    if sigma[w] > 0.0 {
+                        delta[v] += (sigma[v] / sigma[w]) * (1.0 + delta[w]);
+                    }
                 }
-                if w != s { bc[w] += delta[w]; }
+                if w != s {
+                    bc[w] += delta[w];
+                }
             }
         }
         // Betweenness 정규화(0~1)
         let bc_max = bc.iter().cloned().fold(0.0_f32, f32::max).max(1e-6);
-        if bc_max > 0.0 { for v in bc.iter_mut() { *v /= bc_max; } }
+        if bc_max > 0.0 {
+            for v in bc.iter_mut() {
+                *v /= bc_max;
+            }
+        }
 
         // 노드 집합(중복 제거)과 간단 경로 문자열 생성(재랭킹 결과 기반)
         let mut node_set: HashSet<String> = HashSet::new();
         let mut nodes_json: Vec<serde_json::Value> = Vec::new();
         for (name, (escore, etype)) in &entity_info {
-            if *escore < graph_threshold { continue; }
+            if *escore < graph_threshold {
+                continue;
+            }
             if node_set.insert(format!("{}|{}", name, etype)) {
                 let tw = type_weights.get(etype).cloned().unwrap_or(1.0);
                 let cen_pr = pr.get(name).cloned().unwrap_or(0.0);
@@ -308,7 +326,9 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             let o = r.get("object").and_then(|x| x.as_str()).unwrap_or_default();
             let w = r.get("weight").and_then(|x| x.as_f64()).unwrap_or(1.0) as f32;
             let r_score = r.get("score").and_then(|x| x.as_f64()).unwrap_or(0.0) as f32;
-            if s.is_empty() || o.is_empty() { continue; }
+            if s.is_empty() || o.is_empty() {
+                continue;
+            }
             let (s_es, s_ty) = entity_info.get(s).cloned().unwrap_or((0.0, String::new()));
             let (o_es, o_ty) = entity_info.get(o).cloned().unwrap_or((0.0, String::new()));
             let ent_avg = if s_es > 0.0 || o_es > 0.0 { (s_es + o_es) / 2.0 } else { 0.0 };
@@ -320,8 +340,13 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             let tw_o = type_weights.get(&o_ty).cloned().unwrap_or(1.0);
             let type_mul = (tw_s + tw_o) / 2.0;
             let combined = (alpha * r_score + beta * ent_avg + gamma * w_norm + delta * cen) * type_mul;
-            if combined < graph_threshold { continue; }
-            let line = format!("{} -[{}]-> {} (rel={:.3}, ent={:.3}, w={:.2}, cen={:.2}, tw={:.2}, score={:.3})", s, p, o, r_score, ent_avg, w, cen, type_mul, combined);
+            if combined < graph_threshold {
+                continue;
+            }
+            let line = format!(
+                "{} -[{}]-> {} (rel={:.3}, ent={:.3}, w={:.2}, cen={:.2}, tw={:.2}, score={:.3})",
+                s, p, o, r_score, ent_avg, w, cen, type_mul, combined
+            );
             let json = serde_json::json!({
                 "subject": s, "predicate": p, "object": o, "weight": w,
                 "score_relation": r_score, "score_entity_avg": ent_avg,
@@ -336,17 +361,15 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
         let mut rels_json: Vec<serde_json::Value> = Vec::new();
         let mut path_lines: Vec<String> = Vec::new();
         for (i, (_sc, j, l)) in rel_items.into_iter().enumerate() {
-            if (i as i64) >= top_relations { break; }
+            if (i as i64) >= top_relations {
+                break;
+            }
             rels_json.push(j);
             path_lines.push(l);
         }
 
         // 간단히 모든 관계를 하나의 경로 묶음으로 구성
-        let path_str = if path_lines.is_empty() {
-            String::from("")
-        } else {
-            path_lines.join("\n")
-        };
+        let path_str = if path_lines.is_empty() { String::from("") } else { path_lines.join("\n") };
         graph_paths.push(GraphPathItem {
             path: path_str,
             nodes: serde_json::Value::Array(nodes_json),

@@ -15,9 +15,9 @@ pub enum ChunkKind {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Chunk {
     pub content: String,
-    pub level: u8,               // 문단(0) → 섹션(1) → 챕터(2) → 문서(3)
+    pub level: u8, // 문단(0) → 섹션(1) → 챕터(2) → 문서(3)
     pub kind: ChunkKind,
-    pub index: usize,            // 문서 내 순서
+    pub index: usize, // 문서 내 순서
     pub metadata: serde_json::Value,
 }
 
@@ -61,4 +61,6 @@ pub struct ProcessedDocument {
     pub relation_embeddings: Vec<Embeddings3>,
     /// 임베딩 타입(혼재 운영 구분용): "azure" | "tfidf" 등
     pub embedding_type: String,
+    /// 임베딩 배포명(모델 배포 식별자): 검색 시 동일 배포만 조회되도록 보장
+    pub embedding_deployment: String,
 }
