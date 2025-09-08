@@ -28,7 +28,7 @@ pub struct AppState {
 )]
 #[post("/api/search/vector")]
 pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<VectorSearchRequest>) -> Result<web::Json<VectorSearchResponse>, Error> {
-    debug!("Vector search request: {:#?}", payload);
+    debug!("Vector search request: {:?}", payload);
     let t0 = Instant::now();
     // 1) 쿼리 임베딩 생성
     let embeddings = state.azure.embed(&[&payload.query]).await.map_err(|e| Error::External(e.to_string()))?;
@@ -61,7 +61,10 @@ pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<Vector
         .map_err(|e| Error::External(e.to_string()))?;
 
     // 결과 파싱
+    debug!("Vector search res: {:?}", res);
     let rows: Vec<serde_json::Value> = res.take(0).unwrap_or_default();
+    debug!("Vector search rows: {:?}", rows);
+
     let mut items: Vec<VectorSearchItem> = Vec::new();
     for v in rows {
         let score = v.get("score").and_then(|s| s.as_f64()).unwrap_or(0.0) as f32;
