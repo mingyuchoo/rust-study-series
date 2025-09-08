@@ -28,8 +28,8 @@ const NavBar: React.FC = () => {
         <Link to="/">홈</Link>
         <Link to="/chat">채팅</Link>
         <Link to="/search">벡터검색</Link>
+        <Link to="/reindex">재인덱싱</Link>
         <Link to="/health">헬스</Link>
-        <Link to="/admin/reindex">재인덱싱(관리자)</Link>
       </Stack>
       <Stack horizontal tokens={{ childrenGap: 8 }}>
         {isAuthenticated ? (

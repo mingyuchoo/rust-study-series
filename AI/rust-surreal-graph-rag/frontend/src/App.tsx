@@ -43,7 +43,7 @@ const App: React.FC = () => {
           />
           <Route path="/health" element={<Health />} />
           <Route
-            path="/admin/reindex"
+            path="/reindex"
             element={
               <PrivateRoute>
                 <AdminReindex />

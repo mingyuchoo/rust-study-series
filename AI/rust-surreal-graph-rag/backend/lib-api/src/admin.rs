@@ -23,14 +23,14 @@ use uuid::Uuid;
 #[utoipa::path(
     tag = "admin",
     post,
-    path = "/api/admin/reindex",
+    path = "/api/reindex",
     request_body = ReindexRequest,
     responses(
         (status = 200, description = "재인덱싱 결과", body = ReindexResponse),
         (status = 500, description = "서버 오류"),
     )
 )]
-#[post("/api/admin/reindex")]
+#[post("/api/reindex")]
 pub async fn reindex_pdfs(state: web::Data<AppState>, payload: web::Json<ReindexRequest>) -> Result<web::Json<ReindexResponse>, Error> {
     let t0 = Instant::now();
     let clear_existing = payload.clear_existing.unwrap_or(false);
