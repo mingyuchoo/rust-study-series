@@ -31,3 +31,9 @@ impl From<SurrealDbError> for Error {
         Self::Db(error.to_string())
     }
 }
+
+impl From<serde_json::Error> for Error {
+    fn from(error: serde_json::Error) -> Self {
+        Self::External(format!("JSON 파싱 오류: {}", error))
+    }
+}

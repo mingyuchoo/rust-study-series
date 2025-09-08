@@ -8,12 +8,34 @@ use crate::config::AppConfig;
 use crate::error::Error;
 use crate::models::{VectorSearchItem, VectorSearchRequest, VectorSearchResponse};
 use lib_db::DB;
-use log::{debug, error, info};
+use log::debug;
 
+use serde::{Deserialize, Serialize};
+
+/// 애플리케이션 상태
 pub struct AppState {
     pub cfg: AppConfig,
     pub azure: AzureOpenAI,
 }
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChunkSearchResult {
+    pub content: String,
+    pub id: surrealdb::sql::Thing,
+    pub metadata: ChunkMetadata,
+    pub score: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChunkMetadata {
+    pub section_index: i32,
+    pub source: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub summary: Option<bool>,
+}
+
+
 
 #[utoipa::path(
     tag = "search",
@@ -60,20 +82,21 @@ pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<Vector
         .await
         .map_err(|e| Error::External(e.to_string()))?;
 
-    // 결과 파싱
-    debug!("Vector search res: {:?}", res);
-    let rows: Vec<serde_json::Value> = res.take(0).unwrap_or_default();
-    debug!("Vector search rows: {:?}", rows);
+    // 결과 파싱 - SurrealDB의 실제 응답 형식 사용
+    debug!("[choo] Vector search res: {:?}", res);
+    let rows: Vec<ChunkSearchResult> = res.take(0)?;
+    println!("rows 값: {}", rows.len());
+    debug!("[choo] Vector search rows: {:?}", rows);
 
     let mut items: Vec<VectorSearchItem> = Vec::new();
     for v in rows {
-        let score = v.get("score").and_then(|s| s.as_f64()).unwrap_or(0.0) as f32;
+        let score = v.score as f32;
         if score < threshold {
             continue;
         }
-        let id = v.get("id").map(|x| x.to_string()).unwrap_or_else(|| "null".into());
-        let content = v.get("content").and_then(|x| x.as_str()).unwrap_or_default().to_string();
-        let metadata = v.get("metadata").cloned().unwrap_or(serde_json::json!({}));
+        let id = v.id.to_string();
+        let content = v.content;
+        let metadata = serde_json::to_value(v.metadata).unwrap_or(serde_json::Value::Null);
         items.push(VectorSearchItem { id, content, score, metadata });
     }
 
