@@ -1,0 +1,6 @@
+[meta]
+name = "health"
+
+[config]
+method = "GET"
+url = "http://localhost:4000/api/health"

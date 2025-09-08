@@ -26,7 +26,6 @@ const NavBar: React.FC = () => {
     <Stack horizontal horizontalAlign="space-between" styles={styles}>
       <Stack horizontal tokens={{ childrenGap: 8 }}>
         <Link to="/">홈</Link>
-        <Link to="/index">인덱싱 생성</Link>
         <Link to="/chat">채팅</Link>
         <Link to="/search">벡터검색</Link>
         <Link to="/health">헬스</Link>

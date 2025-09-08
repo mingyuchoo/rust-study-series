@@ -5,7 +5,6 @@ pub mod chat;
 pub mod config;
 pub mod error;
 pub mod health;
-pub mod index;
 pub mod models;
 pub mod search;
 
@@ -30,7 +29,6 @@ use utoipa_swagger_ui::SwaggerUi;
         auth::me,
         search::vector_search,
         chat::chat_ask,
-        index::index_create,
         admin::reindex_pdfs,
     ),
     components(
@@ -48,9 +46,6 @@ use utoipa_swagger_ui::SwaggerUi;
             models::GraphPathItem,
             models::ChatAskResponse,
             models::MeResponse,
-            models::IndexChunkInput,
-            models::IndexCreateRequest,
-            models::IndexCreateResponse,
             models::ReindexRequest,
             models::ReindexItemResult,
             models::ReindexResponse,
@@ -62,7 +57,6 @@ use utoipa_swagger_ui::SwaggerUi;
         (name = "auth", description = "인증"),
         (name = "search", description = "벡터 검색"),
         (name = "chat", description = "통합 질의응답"),
-        (name = "index", description = "인덱싱 생성"),
         (name = "admin", description = "관리자/운영 도구")
     )
 )]
@@ -93,7 +87,6 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
             .service(auth::me)
             .service(search::vector_search)
             .service(chat::chat_ask)
-            .service(index::index_create)
             .service(admin::reindex_pdfs)
             .service(admin::upload_file)
             .service(SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-doc/openapi.json", openapi.clone()))
