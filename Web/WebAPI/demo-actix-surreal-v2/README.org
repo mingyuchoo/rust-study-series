@@ -1,0 +1,95 @@
+* Workspace project
+How to create a workspace project
+** List
+1. Create a workspace
+2. Create a main project
+3. Implement the three libraries
+4. Add dependencies main project
+5. Use three libraries main project
+6. Run the workspace
+** In details
+*** 1. Create a workspace
+#+BEGIN_SRC shell
+  mkdir demo_actix_surreal_v1
+  cd demo_actix_surreal_v1
+  touch Cargo.toml
+#+END_SRC
+Edit ~Cargo.toml~
+#+BEGIN_SRC toml
+  [workspace]
+  members = []
+  resolver = "2"
+#+END_SRC
+*** 2. Create a main project
+#+BEGIN_SRC shell
+  cargo new server --bin
+#+END_SRC
+The project name will be added to =members= of ~Cargo.toml~ automatically.
+#+BEGIN_SRC toml
+  [workspace]
+  members = ["server"]
+  resolver = "2"
+#+END_SRC
+Create three library projects
+#+BEGIN_SRC shell
+  cargo new lib_api   --lib
+  cargo new lib_db   --lib
+#+END_SRC
+The project name will be added to =members= of ~Cargo.toml~ automatically.
+#+BEGIN_SRC toml
+  [workspace]
+  members = [
+    "lib_api",
+    "lib_db",
+    "server"
+  ]
+  resolver = "2"
+#+END_SRC
+*** 3. Implement the three libraries
+Let's implement the three libraries
+- ~lib_api/src/lib.rs~
+#+BEGIN_SRC rust
+  pub fn add_one(x: i32) -> i32 {
+    x + 1
+  }
+#+END_SRC
+- ~lib_db/src/lib.rs~
+#+BEGIN_SRC rust
+  pub fn add_two(x: i32) -> i32 {
+    x + 2
+  }
+#+END_SRC
+*** 4. Add dependencies main project
+Add dependencies in ~Cargo.toml~ file of =server= project
+#+BEGIN_SRC toml
+  [package]
+  name = "server"
+  version = "0.1.0"
+  edition = "2024"
+
+  [dependencies]
+  lib_api   = { path = "../lib_api"}
+  lib_db   = { path = "../lib_db"}
+#+END_SRC
+*** 5. Use three libraries main project
+Use three libraries in =server= project
+- ~server/src/main.rs~
+#+BEGIN_SRC rust
+  fn main() {
+    let num = 10;
+    println!("{num} plus one is {}!", lib_api::add_one(num));
+    println!("{num} plus two is {}!", lib_db::add_two(num));
+    println!("{num} plus three is {}!", library_three::add_three(num));
+  }
+#+END_SRC
+*** 6. Run the workspace
+Run the workspace
+#+BEGIN_SRC shell
+  $ cd workspace
+  $ cargo run
+      Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+     Running `target/debug/server`
+  10 plus one is 11!
+  10 plus two is 12!
+  10 plus three is 13!
+#+END_SRC

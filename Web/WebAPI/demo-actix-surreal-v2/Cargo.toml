@@ -1,0 +1,7 @@
+[workspace]
+  members = [
+    "bin-app",
+    "lib-api",
+    "lib-db",
+  ]
+  resolver = "2"

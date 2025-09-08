@@ -1,0 +1,17 @@
+meta {
+  name: update_person
+  type: http
+  seq: 5
+}
+
+put {
+  url: http://localhost:4000/person/nsxqfxk52wysxb7ezpze
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "Rose"
+  }
+}
