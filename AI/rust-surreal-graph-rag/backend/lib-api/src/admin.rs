@@ -16,7 +16,7 @@ use lib_index::{
     graph_builder, pdf_processor,
     types::{Embeddings3, ProcessedDocument},
 };
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use serde::Deserialize;
 use std::path::PathBuf;
 use tokio::fs;

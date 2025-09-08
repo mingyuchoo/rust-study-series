@@ -86,7 +86,6 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         App::new()
             .app_data(state.clone())
             .app_data(cfg_data.clone())
-            // MVP 엔드포인트 등록
             .service(health::health)
             .service(auth::login)
             .service(auth::refresh)
@@ -97,11 +96,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
             .service(index::index_create)
             .service(admin::reindex_pdfs)
             .service(admin::upload_file)
-            // Swagger UI 및 OpenAPI 스펙 라우트
-            .service(
-                SwaggerUi::new("/swagger-ui/{_:.*}")
-                    .url("/api-doc/openapi.json", openapi.clone()),
-            )
+            .service(SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-doc/openapi.json", openapi.clone()))
     })
     .bind(("localhost", 4000))?
     .run()
