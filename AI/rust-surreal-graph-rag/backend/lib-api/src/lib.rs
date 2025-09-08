@@ -80,6 +80,8 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
         App::new()
             .app_data(state.clone())
             .app_data(cfg_data.clone())
+            // Increase payload limit to allow large file uploads (e.g., PDFs)
+            .app_data(web::PayloadConfig::default().limit(100 * 1024 * 1024)) // 100 MB
             .service(health::health)
             .service(auth::login)
             .service(auth::refresh)
