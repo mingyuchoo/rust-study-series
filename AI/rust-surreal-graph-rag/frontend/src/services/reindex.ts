@@ -13,7 +13,7 @@ export async function reindexPdfs(payload: ReindexRequest): Promise<ReindexRespo
 export async function uploadFile(file: File): Promise<UploadResponse> {
   const filename = encodeURIComponent(file.name || 'upload.bin');
   const { data } = await api.post<UploadResponse>(
-    `/api/admin/upload?filename=${filename}`,
+    `/api/reindex/upload?filename=${filename}`,
     file,
     { headers: { 'Content-Type': 'application/octet-stream' } },
   );

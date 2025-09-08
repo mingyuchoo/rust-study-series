@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Stack, TextField, PrimaryButton, DefaultButton } from '@fluentui/react';
-import { reindexPdfs, uploadFile } from '@/services/admin';
+import { reindexPdfs, uploadFile } from '@/services/reindex';
 import type { ReindexRequest, ReindexResponse } from '@/types/api';
 
 // 관리자 재인덱싱 페이지
 // - PDF 경로 목록 입력(줄바꿈 구분)
 // - 기존 데이터 정리 여부 선택
 // - 실행 결과 표시
-const AdminReindex: React.FC = () => {
+const Reindex: React.FC = () => {
   const [pathsText, setPathsText] = useState<string>('');
   const [clearExisting, setClearExisting] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
@@ -118,4 +118,4 @@ const AdminReindex: React.FC = () => {
   );
 };
 
-export default AdminReindex;
+export default Reindex;

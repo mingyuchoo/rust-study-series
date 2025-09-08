@@ -7,7 +7,7 @@ import Chat from './pages/Chat';
 import VectorSearch from './pages/VectorSearch';
 import Health from './pages/Health';
 import NavBar from './components/NavBar';
-import AdminReindex from './pages/AdminReindex';
+import Reindex from './pages/Reindex';
 import { AuthProvider, useAuth } from './store/auth';
 
 // 인증이 필요한 라우트 보호 컴포넌트
@@ -46,7 +46,7 @@ const App: React.FC = () => {
             path="/reindex"
             element={
               <PrivateRoute>
-                <AdminReindex />
+                <Reindex />
               </PrivateRoute>
             }
           />

@@ -21,7 +21,7 @@ use tokio::fs;
 use uuid::Uuid;
 
 #[utoipa::path(
-    tag = "admin",
+    tag = "reindex",
     post,
     path = "/api/reindex",
     request_body = ReindexRequest,
@@ -247,7 +247,7 @@ pub struct UploadQuery {
 }
 
 /// 파일 업로드 엔드포인트: application/octet-stream 바디를 받아 서버 로컬 uploads/에 저장
-#[post("/api/admin/upload")]
+#[post("/api/reindex/upload")]
 pub async fn upload_file(q: web::Query<UploadQuery>, body: web::Bytes) -> Result<web::Json<UploadResponse>, Error> {
     // 업로드 디렉터리 생성(없으면 생성)
     let mut dir = PathBuf::from("uploads");
