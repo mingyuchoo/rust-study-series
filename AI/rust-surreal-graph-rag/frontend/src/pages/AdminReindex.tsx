@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { Stack, TextField, PrimaryButton, Checkbox, DefaultButton } from '@fluentui/react';
+import { Stack, TextField, PrimaryButton, DefaultButton } from '@fluentui/react';
 import { reindexPdfs, uploadFile } from '@/services/admin';
 import type { ReindexRequest, ReindexResponse } from '@/types/api';
 
 // 관리자 재인덱싱 페이지
 // - PDF 경로 목록 입력(줄바꿈 구분)
-// - TF-IDF 사용 여부 선택(기본: 해제 → Azure 사용)
 // - 기존 데이터 정리 여부 선택
 // - 실행 결과 표시
 const AdminReindex: React.FC = () => {
   const [pathsText, setPathsText] = useState<string>('');
-  const [useTfidf, setUseTfidf] = useState<boolean>(false);
   const [clearExisting, setClearExisting] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +51,6 @@ const AdminReindex: React.FC = () => {
       }
       const payload: ReindexRequest = {
         pdf_paths,
-        use_tfidf: useTfidf,
         clear_existing: clearExisting,
       };
       const res = await reindexPdfs(payload);
@@ -86,16 +83,15 @@ const AdminReindex: React.FC = () => {
           rows={6}
         />
         <Stack horizontal tokens={{ childrenGap: 16 }}>
-          <Checkbox
-            label="TF-IDF 사용(기본: Azure 사용)"
-            checked={useTfidf}
-            onChange={(_, c) => setUseTfidf(!!c)}
-          />
-          <Checkbox
-            label="기존 데이터 정리(같은 source 데이터 삭제 후 재인덱싱)"
-            checked={clearExisting}
-            onChange={(_, c) => setClearExisting(!!c)}
-          />
+          <label style={{ display: 'flex', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={clearExisting}
+              onChange={(e) => setClearExisting(e.target.checked)}
+              style={{ marginRight: 8 }}
+            />
+            기존 데이터 정리(같은 source 데이터 삭제 후 재인덱싱)
+          </label>
         </Stack>
         <PrimaryButton onClick={onRun} disabled={loading}>
           {loading ? '처리 중...' : '재인덱싱 실행'}

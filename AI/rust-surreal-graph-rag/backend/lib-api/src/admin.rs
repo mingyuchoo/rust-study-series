@@ -1,6 +1,6 @@
 //! 관리자용 재인덱싱 엔드포인트
 //! - 기존 데이터 정리(옵션) → PDF 재처리 → 그래프/임베딩 저장
-//! - 혼재 운영 대비: embedding_type 필드에 "azure"/"tfidf" 기록
+//! - 임베딩 타입은 Azure 단일 모드로 저장(embedding_type = "azure")
 
 use actix_web::{Result, post, web};
 use std::time::Instant;
@@ -12,7 +12,6 @@ use crate::search::AppState;
 use lib_db::DB;
 use lib_index::{
     RegexNer, database as index_db,
-    embedding::{self, EmbeddingMode},
     graph_builder, pdf_processor,
     types::{Embeddings3, ProcessedDocument},
 };
@@ -35,13 +34,11 @@ use uuid::Uuid;
 #[post("/api/admin/reindex")]
 pub async fn reindex_pdfs(state: web::Data<AppState>, payload: web::Json<ReindexRequest>) -> Result<web::Json<ReindexResponse>, Error> {
     let t0 = Instant::now();
-    let use_tfidf = payload.use_tfidf.unwrap_or(false);
     let clear_existing = payload.clear_existing.unwrap_or(false);
 
     info!(
-        "[reindex] 시작: 파일 수={}, use_tfidf={}, clear_existing={}",
+        "[reindex] 시작: 파일 수={}, clear_existing={}",
         payload.pdf_paths.len(),
-        use_tfidf,
         clear_existing
     );
 
@@ -64,9 +61,10 @@ pub async fn reindex_pdfs(state: web::Data<AppState>, payload: web::Json<Reindex
             let _ = DB
                 .query(
                     r#"
+                    LET $doc_ids = (SELECT VALUE doc_id FROM chunk WHERE metadata.source = $src);
+                    DELETE FROM entity WHERE doc_id IN $doc_ids;
+                    DELETE FROM relation WHERE doc_id IN $doc_ids;
                     DELETE FROM chunk WHERE metadata.source = $src;
-                    DELETE FROM entity WHERE doc_id IN (SELECT DISTINCT doc_id FROM chunk WHERE metadata.source = $src);
-                    DELETE FROM relation WHERE doc_id IN (SELECT DISTINCT doc_id FROM chunk WHERE metadata.source = $src);
                     "#,
                 )
                 .bind(("src", pdf_path.clone()))
@@ -95,150 +93,111 @@ pub async fn reindex_pdfs(state: web::Data<AppState>, payload: web::Json<Reindex
         debug!("[reindex] 엔티티/관계 추출 완료: entities={}, relations={}", entities.len(), relations.len());
 
         // 4) 임베딩 생성
-        let chunk_embeddings: Vec<Embeddings3> = if use_tfidf {
-            debug!("[reindex] 청크 임베딩(TF-IDF) 시작: chunks={}", chunks.len());
-            match embedding::embed_chunks_e3(&chunks, EmbeddingMode::Tfidf) {
-                | Ok(v) => {
-                    debug!(
-                        "[reindex] 청크 임베딩(TF-IDF) 완료: count={}, dim_semantic={}",
-                        v.len(),
-                        v.get(0).map(|e| e.semantic.len()).unwrap_or(0)
-                    );
-                    v
-                },
-                | Err(e) => {
-                    error!("[reindex] 청크 임베딩(TF-IDF) 실패: path={}, error={}", pdf_path, e);
-                    item.error = Some(format!("TF-IDF 임베딩 실패: {}", e));
-                    results.push(item);
-                    continue;
-                },
-            }
-        } else {
+        let chunk_embeddings: Vec<Embeddings3> = {
             let texts: Vec<String> = chunks.iter().map(|c| c.content.clone()).collect();
             let refs: Vec<&str> = texts.iter().map(|s| s.as_str()).collect();
-            debug!("[reindex] 청크 임베딩(Azure) 시작: texts={}", refs.len());
-            let sems = match state.azure.embed(&refs).await {
-                | Ok(v) => {
-                    debug!(
-                        "[reindex] 청크 임베딩(Azure) 완료: count={}, dim={}",
-                        v.len(),
-                        v.get(0).map(|e| e.len()).unwrap_or(0)
-                    );
-                    v
-                },
-                | Err(e) => {
-                    error!("[reindex] 청크 임베딩(Azure) 실패: path={}, error={}", pdf_path, e);
-                    item.error = Some(format!("Azure 임베딩 실패: {}", e));
-                    results.push(item);
-                    continue;
-                },
-            };
-            chunks
-                .iter()
-                .enumerate()
-                .map(|(i, ch)| Embeddings3 {
-                    semantic: sems.get(i).cloned().unwrap_or_default(),
-                    structural: vec![ch.level as f32, i as f32 / chunks.len().max(1) as f32],
-                    functional: vec![ch.content.chars().count() as f32],
-                })
-                .collect()
+            if refs.is_empty() {
+                debug!("[reindex] 청크 임베딩(Azure) 생략: 입력 청크 0개");
+                Vec::new()
+            } else {
+                debug!("[reindex] 청크 임베딩(Azure) 시작: texts={}", refs.len());
+                let sems = match state.azure.embed(&refs).await {
+                    | Ok(v) => {
+                        debug!(
+                            "[reindex] 청크 임베딩(Azure) 완료: count={}, dim={}",
+                            v.len(),
+                            v.get(0).map(|e| e.len()).unwrap_or(0)
+                        );
+                        v
+                    },
+                    | Err(e) => {
+                        error!("[reindex] 청크 임베딩(Azure) 실패: path={}, error={}", pdf_path, e);
+                        item.error = Some(format!("Azure 임베딩 실패: {}", e));
+                        results.push(item);
+                        continue;
+                    },
+                };
+                chunks
+                    .iter()
+                    .enumerate()
+                    .map(|(i, ch)| Embeddings3 {
+                        semantic: sems.get(i).cloned().unwrap_or_default(),
+                        structural: vec![ch.level as f32, i as f32 / chunks.len().max(1) as f32],
+                        functional: vec![ch.content.chars().count() as f32],
+                    })
+                    .collect()
+            }
         };
 
         let entity_texts: Vec<String> = entities.iter().map(|e| e.name.clone()).collect();
         let relation_texts: Vec<String> = relations.iter().map(|r| format!("{} {} {}", r.subject, r.predicate, r.object)).collect();
-        let entity_embeddings: Vec<Embeddings3> = if use_tfidf {
-            debug!("[reindex] 엔티티 임베딩(TF-IDF) 시작: entities={}", entity_texts.len());
-            match embedding::embed_texts_e3(&entity_texts, EmbeddingMode::Tfidf) {
-                | Ok(v) => {
-                    debug!(
-                        "[reindex] 엔티티 임베딩(TF-IDF) 완료: count={}, dim_semantic={}",
-                        v.len(),
-                        v.get(0).map(|e| e.semantic.len()).unwrap_or(0)
-                    );
-                    v
-                },
-                | Err(e) => {
-                    error!("[reindex] 엔티티 임베딩(TF-IDF) 실패: path={}, error={}", pdf_path, e);
-                    item.error = Some(format!("TF-IDF 엔티티 임베딩 실패: {}", e));
-                    results.push(item);
-                    continue;
-                },
-            }
-        } else {
+        let entity_embeddings: Vec<Embeddings3> = {
             let refs: Vec<&str> = entity_texts.iter().map(|s| s.as_str()).collect();
-            debug!("[reindex] 엔티티 임베딩(Azure) 시작: entities={}", refs.len());
-            let sems = match state.azure.embed(&refs).await {
-                | Ok(v) => {
-                    debug!(
-                        "[reindex] 엔티티 임베딩(Azure) 완료: count={}, dim={}",
-                        v.len(),
-                        v.get(0).map(|e| e.len()).unwrap_or(0)
-                    );
-                    v
-                },
-                | Err(e) => {
-                    error!("[reindex] 엔티티 임베딩(Azure) 실패: path={}, error={}", pdf_path, e);
-                    item.error = Some(e.to_string());
-                    results.push(item);
-                    continue;
-                },
-            };
-            entity_texts
-                .iter()
-                .enumerate()
-                .map(|(i, t)| Embeddings3 {
-                    semantic: sems.get(i).cloned().unwrap_or_default(),
-                    structural: vec![i as f32 / entity_texts.len().max(1) as f32],
-                    functional: vec![t.chars().count() as f32],
-                })
-                .collect()
-        };
-        let relation_embeddings: Vec<Embeddings3> = if use_tfidf {
-            debug!("[reindex] 관계 임베딩(TF-IDF) 시작: relations={}", relation_texts.len());
-            match embedding::embed_texts_e3(&relation_texts, EmbeddingMode::Tfidf) {
-                | Ok(v) => {
-                    debug!(
-                        "[reindex] 관계 임베딩(TF-IDF) 완료: count={}, dim_semantic={}",
-                        v.len(),
-                        v.get(0).map(|e| e.semantic.len()).unwrap_or(0)
-                    );
-                    v
-                },
-                | Err(e) => {
-                    error!("[reindex] 관계 임베딩(TF-IDF) 실패: path={}, error={}", pdf_path, e);
-                    item.error = Some(format!("TF-IDF 관계 임베딩 실패: {}", e));
-                    results.push(item);
-                    continue;
-                },
+            if refs.is_empty() {
+                debug!("[reindex] 엔티티 임베딩(Azure) 생략: 입력 엔티티 0개");
+                Vec::new()
+            } else {
+                debug!("[reindex] 엔티티 임베딩(Azure) 시작: entities={}", refs.len());
+                let sems = match state.azure.embed(&refs).await {
+                    | Ok(v) => {
+                        debug!(
+                            "[reindex] 엔티티 임베딩(Azure) 완료: count={}, dim={}",
+                            v.len(),
+                            v.get(0).map(|e| e.len()).unwrap_or(0)
+                        );
+                        v
+                    },
+                    | Err(e) => {
+                        error!("[reindex] 엔티티 임베딩(Azure) 실패: path={}, error={}", pdf_path, e);
+                        item.error = Some(e.to_string());
+                        results.push(item);
+                        continue;
+                    },
+                };
+                entity_texts
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| Embeddings3 {
+                        semantic: sems.get(i).cloned().unwrap_or_default(),
+                        structural: vec![i as f32 / entity_texts.len().max(1) as f32],
+                        functional: vec![t.chars().count() as f32],
+                    })
+                    .collect()
             }
-        } else {
+        };
+        let relation_embeddings: Vec<Embeddings3> = {
             let refs: Vec<&str> = relation_texts.iter().map(|s| s.as_str()).collect();
-            debug!("[reindex] 관계 임베딩(Azure) 시작: relations={}", refs.len());
-            let sems = match state.azure.embed(&refs).await {
-                | Ok(v) => {
-                    debug!(
-                        "[reindex] 관계 임베딩(Azure) 완료: count={}, dim={}",
-                        v.len(),
-                        v.get(0).map(|e| e.len()).unwrap_or(0)
-                    );
-                    v
-                },
-                | Err(e) => {
-                    error!("[reindex] 관계 임베딩(Azure) 실패: path={}, error={}", pdf_path, e);
-                    item.error = Some(e.to_string());
-                    results.push(item);
-                    continue;
-                },
-            };
-            relation_texts
-                .iter()
-                .enumerate()
-                .map(|(i, t)| Embeddings3 {
-                    semantic: sems.get(i).cloned().unwrap_or_default(),
-                    structural: vec![i as f32 / relation_texts.len().max(1) as f32],
-                    functional: vec![t.chars().count() as f32],
-                })
-                .collect()
+            if refs.is_empty() {
+                debug!("[reindex] 관계 임베딩(Azure) 생략: 입력 관계 0개");
+                Vec::new()
+            } else {
+                debug!("[reindex] 관계 임베딩(Azure) 시작: relations={}", refs.len());
+                let sems = match state.azure.embed(&refs).await {
+                    | Ok(v) => {
+                        debug!(
+                            "[reindex] 관계 임베딩(Azure) 완료: count={}, dim={}",
+                            v.len(),
+                            v.get(0).map(|e| e.len()).unwrap_or(0)
+                        );
+                        v
+                    },
+                    | Err(e) => {
+                        error!("[reindex] 관계 임베딩(Azure) 실패: path={}, error={}", pdf_path, e);
+                        item.error = Some(e.to_string());
+                        results.push(item);
+                        continue;
+                    },
+                };
+                relation_texts
+                    .iter()
+                    .enumerate()
+                    .map(|(i, t)| Embeddings3 {
+                        semantic: sems.get(i).cloned().unwrap_or_default(),
+                        structural: vec![i as f32 / relation_texts.len().max(1) as f32],
+                        functional: vec![t.chars().count() as f32],
+                    })
+                    .collect()
+            }
         };
 
         // 5) 문서 ID: 파일명 기반(동일 파일 재인덱싱 시 동일 ID를 기대)
@@ -254,12 +213,8 @@ pub async fn reindex_pdfs(state: web::Data<AppState>, payload: web::Json<Reindex
             chunk_embeddings,
             entity_embeddings,
             relation_embeddings,
-            embedding_type: if use_tfidf { "tfidf".into() } else { "azure".into() },
-            embedding_deployment: if use_tfidf {
-                "tfidf".to_string()
-            } else {
-                state.azure.embed_deployment().to_string()
-            },
+            embedding_type: "azure".into(),
+            embedding_deployment: state.azure.embed_deployment().to_string(),
         };
         if let Err(e) = index_db::store_processed_document(&processed).await {
             error!("[reindex] DB 저장 실패: path={}, error={}", pdf_path, e);

@@ -111,8 +111,6 @@ export type IndexCreateResponse = {
 export type ReindexRequest = {
   // 재인덱싱할 PDF 파일 경로 목록(서버 경로)
   pdf_paths: string[];
-  // TF-IDF 사용 여부(기본: false → Azure 임베딩 사용)
-  use_tfidf?: boolean;
   // 기존 데이터 정리 여부: true면 동일 source의 기존 데이터 삭제 후 재인덱싱
   clear_existing?: boolean;
 };

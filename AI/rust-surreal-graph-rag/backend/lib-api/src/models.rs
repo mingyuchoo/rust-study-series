@@ -136,10 +136,6 @@ pub struct IndexCreateRequest {
     /// (옵션) PDF 파일 경로. 제공 시 서버가 직접 PDF를 처리하여 청킹/그래프/임베딩을 생성
     #[serde(default)]
     pub pdf_path: Option<String>,
-    /// (옵션) 로컬 TF-IDF 임베딩 사용 여부.
-    /// 기본값: false (기본은 Azure 임베딩을 사용하여 검색과 동일한 임베딩 공간을 보장)
-    #[serde(default = "default_use_tfidf")]
-    pub use_tfidf: bool,
     /// 분할된 청크 목록
     pub chunks: Vec<IndexChunkInput>,
 }
@@ -154,19 +150,13 @@ pub struct IndexCreateResponse {
     pub elapsed: f32,
 }
 
-/// 인덱싱 기본 모드: Azure 임베딩 사용(= TF-IDF 비활성)
-fn default_use_tfidf() -> bool {
-    false
-}
+// 인덱싱은 Azure 임베딩 단일 모드로 동작합니다.
 
 // 관리자 재인덱싱
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct ReindexRequest {
     /// 재인덱싱할 PDF 파일 경로 목록(서버 파일 경로)
     pub pdf_paths: Vec<String>,
-    /// TF-IDF 사용 여부(기본: false → Azure 임베딩 사용)
-    #[serde(default)]
-    pub use_tfidf: Option<bool>,
     /// 기존 데이터 정리(삭제) 여부: true면 동일 source의 기존 chunk/entity/relation 삭제 후 재인덱싱
     #[serde(default)]
     pub clear_existing: Option<bool>,

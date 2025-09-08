@@ -1,0 +1,16 @@
+[meta]
+name = "vector"
+
+[config]
+method = "POST"
+url = "http://localhost:4000/api/search/vector"
+content_type = "application/json"
+body = """
+{
+  "query": "분산 시스템에서 일관성 모델",
+  "top_k": 5,
+  "threshold": 0.2
+}"""
+
+[config.headers]
+Content-Type = "application/json"
