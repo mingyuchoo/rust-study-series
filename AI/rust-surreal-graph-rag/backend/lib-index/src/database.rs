@@ -105,10 +105,3 @@ pub async fn store_processed_document(doc: &ProcessedDocument) -> Result<()> {
 
     Ok(())
 }
-
-/// 간단한 벡터 유사도 검색(코사인 근사): SurrealDB가 벡터 연산을 직접 지원하지 않는 경우,
-/// 서버측 함수 또는 외부 서비스로 대체해야 한다. 여기서는 스텁.
-pub async fn vector_search(_query_vec: &[f32], _top_k: usize) -> Result<Vec<serde_json::Value>> {
-    // TODO: 실제 구현 시 SurrealDB 함수/플러그인 또는 애플리케이션 레벨 유사도 검색
-    Ok(vec![])
-}

@@ -11,8 +11,7 @@ use crate::models::{ReindexItemResult, ReindexRequest, ReindexResponse};
 use crate::search::AppState;
 use lib_db::DB;
 use lib_index::{
-    RegexNer, database as index_db,
-    graph_builder, pdf_processor,
+    RegexNer, database as index_db, graph_builder, pdf_processor,
     types::{Embeddings3, ProcessedDocument},
 };
 use log::{debug, error, info};
@@ -36,11 +35,7 @@ pub async fn reindex_pdfs(state: web::Data<AppState>, payload: web::Json<Reindex
     let t0 = Instant::now();
     let clear_existing = payload.clear_existing.unwrap_or(false);
 
-    info!(
-        "[reindex] 시작: 파일 수={}, clear_existing={}",
-        payload.pdf_paths.len(),
-        clear_existing
-    );
+    info!("[reindex] 시작: 파일 수={}, clear_existing={}", payload.pdf_paths.len(), clear_existing);
 
     let mut results: Vec<ReindexItemResult> = Vec::new();
 

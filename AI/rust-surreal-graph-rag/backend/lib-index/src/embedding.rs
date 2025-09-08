@@ -1,8 +1,8 @@
 //! 임베딩 모듈
 //! - 외부 API 연동 콜백만 지원
 
-use anyhow::Result;
 use crate::types::{Chunk, Embeddings3};
+use anyhow::Result;
 
 /// 임베딩 모드
 pub enum EmbeddingMode<'a> {
@@ -60,5 +60,3 @@ pub fn embed_texts_e3(texts: &[String], mode: EmbeddingMode) -> Result<Vec<Embed
     }
     Ok(out)
 }
-
-// 로컬 임베딩은 지원하지 않습니다.

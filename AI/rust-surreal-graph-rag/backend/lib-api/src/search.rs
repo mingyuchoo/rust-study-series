@@ -8,6 +8,7 @@ use crate::config::AppConfig;
 use crate::error::Error;
 use crate::models::{VectorSearchItem, VectorSearchRequest, VectorSearchResponse};
 use lib_db::DB;
+use log::{debug, error, info};
 
 pub struct AppState {
     pub cfg: AppConfig,
@@ -27,6 +28,7 @@ pub struct AppState {
 )]
 #[post("/api/search/vector")]
 pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<VectorSearchRequest>) -> Result<web::Json<VectorSearchResponse>, Error> {
+    debug!("Vector search request: {:#?}", payload);
     let t0 = Instant::now();
     // 1) 쿼리 임베딩 생성
     let embeddings = state.azure.embed(&[&payload.query]).await.map_err(|e| Error::External(e.to_string()))?;
