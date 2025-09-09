@@ -41,12 +41,14 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
                    vector::similarity::cosine(embedding_semantic, $q) AS score
             FROM chunk
             WHERE embedding_type = 'azure'
+              AND embedding_deployment = $dep
               AND array::len(embedding_semantic) = array::len($q)
             ORDER BY score DESC
             LIMIT 8;
             "#,
         )
         .bind(("q", query_vec.clone()))
+        .bind(("dep", state.azure.embed_deployment().to_string()))
         .await
         .map_err(|e| Error::External(e.to_string()))?;
 
@@ -129,6 +131,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
                 FROM entity
                 WHERE doc_id IN $doc_ids
                   AND embedding_type = 'azure'
+                  AND embedding_deployment = $dep
                   AND array::len(embedding_semantic) = array::len($q)
                 ORDER BY score DESC
                 LIMIT $top_entities;
@@ -136,6 +139,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
                 FROM relation
                 WHERE doc_id IN $doc_ids
                   AND embedding_type = 'azure'
+                  AND embedding_deployment = $dep
                   AND array::len(embedding_semantic) = array::len($q)
                 ORDER BY score DESC
                 LIMIT $top_relations;
@@ -143,6 +147,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             )
             .bind(("doc_ids", doc_id_list))
             .bind(("q", query_vec.clone()))
+            .bind(("dep", state.azure.embed_deployment().to_string()))
             .bind(("top_entities", top_entities))
             .bind(("top_relations", top_relations))
             .await
