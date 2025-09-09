@@ -10,6 +10,7 @@ use crate::error::Error;
 use crate::models::{ChatAskRequest, ChatAskResponse, GraphPathItem, SourceItem};
 use crate::search::AppState;
 use lib_db::DB;
+use log::debug;
 
 #[utoipa::path(
     tag = "chat",
@@ -29,11 +30,15 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
     let _user = require_auth(&req, &state.cfg)?;
 
     let t0 = Instant::now();
+    debug!("[chat] start chat_ask, conversation_id={:?}", payload.conversation_id);
 
     // 1) 벡터 검색: 질의 임베딩 생성 후 chunk 테이블에서 유사도 상위 문맥 수집
+    debug!("[chat][step1] embedding start, query='{}'", payload.query);
     let embeddings = state.azure.embed(&[&payload.query]).await.map_err(|e| Error::External(e.to_string()))?;
     let query_vec = embeddings.get(0).cloned().unwrap_or_default();
+    debug!("[chat][step1] embedding ok, dim={}", query_vec.len());
 
+    debug!("[chat][step1] chunk search start, dep={}, q_dim={}", state.azure.embed_deployment(), query_vec.len());
     let mut res = DB
         .query(
             r#"
@@ -53,6 +58,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
         .map_err(|e| Error::External(e.to_string()))?;
 
     let rows: Vec<serde_json::Value> = res.take(0).unwrap_or_default();
+    debug!("[chat][step1] chunk rows fetched: {}", rows.len());
     let mut sources: Vec<SourceItem> = Vec::new();
     let mut context_text = String::new();
     let mut doc_ids: HashSet<String> = HashSet::new();
@@ -79,6 +85,11 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             metadata,
         });
     }
+    debug!(
+        "[chat][step1] context built: sources={}, doc_ids={}",
+        sources.len(),
+        doc_ids.len()
+    );
 
     // 2) 그래프 경로 확장: 상위 청크들이 속한 문서들의 엔티티/관계를 조회하여 간단 경로 구성
     //    - 추가: 엔티티/관계 임베딩과 질의 임베딩 간 코사인 유사도 기반 랭킹을 적용하여 상위 결과만 사용
@@ -86,6 +97,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
     //    - 문서 집합이 비어 있으면 그래프 경로는 빈 배열로 유지
     let mut graph_paths: Vec<GraphPathItem> = Vec::new();
     if !doc_ids.is_empty() {
+        debug!("[chat][step2] graph expansion start, doc_count={}", 0usize + 1usize * 0 +  doc_ids.len());
         // 옵션에서 그래프 임계값/상한값을 읽어옴(없으면 기본값 사용)
         let graph_threshold: f32 = payload
             .options
@@ -103,6 +115,10 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             let d = coeffs.and_then(|c| c.get("delta").and_then(|v| v.as_f64())).unwrap_or(0.10) as f32;
             (a, b, g, d)
         };
+        debug!(
+            "[chat][step2] graph params: threshold={:.2}, alpha={:.2}, beta={:.2}, gamma={:.2}, delta={:.2}",
+            graph_threshold, alpha, beta, gamma, delta
+        );
         // 엔티티 타입별 가중치 (예: {"PERSON":1.2,"ORG":1.1,"LOC":1.0,"DATE":0.8})
         let type_weights: HashMap<String, f32> = payload
             .options
@@ -123,6 +139,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
 
         // SurrealDB에서 해당 문서들의 엔티티/관계 조회
         let doc_id_list: Vec<String> = doc_ids.into_iter().collect();
+        debug!("[chat][step2] querying graph tables, top_entities={}, top_relations={}", top_entities, top_relations);
         let mut gq = DB
             .query(
                 r#"
@@ -155,6 +172,11 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
 
         let entities_rows: Vec<serde_json::Value> = gq.take(0).unwrap_or_default();
         let relations_rows: Vec<serde_json::Value> = gq.take(1).unwrap_or_default();
+        debug!(
+            "[chat][step2] graph rows fetched: entities={}, relations={}",
+            entities_rows.len(),
+            relations_rows.len()
+        );
 
         // 엔티티 정보 맵(name -> (score, type))을 구성(동일 이름은 최고 점수로 유지)
         let mut entity_info: HashMap<String, (f32, String)> = HashMap::new();
@@ -305,6 +327,11 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
                 *v /= bc_max;
             }
         }
+        debug!(
+            "[chat][step2] centrality computed: nodes={}, out_edges={}",
+            nodes_all.len(),
+            out_edges.len()
+        );
 
         // 노드 집합(중복 제거)과 간단 경로 문자열 생성(재랭킹 결과 기반)
         let mut node_set: HashSet<String> = HashSet::new();
@@ -372,6 +399,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             rels_json.push(j);
             path_lines.push(l);
         }
+        debug!("[chat][step2] relations selected: {}, path_lines={}", rels_json.len(), path_lines.len());
 
         // 간단히 모든 관계를 하나의 경로 묶음으로 구성
         let path_str = if path_lines.is_empty() { String::from("") } else { path_lines.join("\n") };
@@ -394,14 +422,23 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
         .as_ref()
         .and_then(|o| o.get("temperature").and_then(|v| v.as_f64()))
         .map(|v| v as f32);
+    debug!(
+        "[chat][step3] LLM call: temp={:?}, system_prompt_chars={}, sources={}, graph_paths={}",
+        temperature,
+        system_prompt.len(),
+        sources.len(),
+        graph_paths.len()
+    );
 
     let (answer, tokens_used) = state
         .azure
         .chat_complete(&system_prompt, &payload.query, temperature)
         .await
         .map_err(|e| Error::External(e.to_string()))?;
+    debug!("[chat][step3] LLM ok: tokens_used={}", tokens_used);
 
     let elapsed = t0.elapsed().as_secs_f32();
+    debug!("[chat] done chat_ask: elapsed={:.3}s", elapsed);
 
     Ok(web::Json(ChatAskResponse {
         response: answer,

@@ -84,10 +84,10 @@ pub async fn vector_search(state: web::Data<AppState>, payload: web::Json<Vector
         .map_err(|e| Error::External(e.to_string()))?;
 
     // 결과 파싱 - SurrealDB의 실제 응답 형식 사용
-    debug!("[choo] Vector search res: {:?}", res);
+    //debug!("[choo] Vector search res: {:?}", res);
     let rows: Vec<ChunkSearchResult> = res.take(0)?;
     println!("rows 값: {}", rows.len());
-    debug!("[choo] Vector search rows: {:?}", rows);
+    //debug!("[choo] Vector search rows: {:?}", rows);
 
     let mut items: Vec<VectorSearchItem> = Vec::new();
     for v in rows {
