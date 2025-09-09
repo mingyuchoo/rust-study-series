@@ -6,8 +6,9 @@ use std::env;
 pub struct AzureOpenAIConfig {
     pub endpoint: String,
     pub api_key: String,
-    pub api_version: String,
+    pub chat_api_version: String,
     pub chat_deployment: String,
+    pub embed_api_version: String,
     pub embed_deployment: String,
 }
 
@@ -23,15 +24,17 @@ impl AppConfig {
     pub fn from_env() -> Self {
         let endpoint = env::var("AZURE_OPENAI_ENDPOINT").unwrap_or_else(|_| "".to_string());
         let api_key = env::var("AZURE_OPENAI_API_KEY").unwrap_or_else(|_| "".to_string());
-        let api_version = env::var("AZURE_OPENAI_API_VERSION").unwrap_or_else(|_| "2024-06-01".to_string());
+        let chat_api_version = env::var("AZURE_OPENAI_CHAT_API_VERSION").unwrap_or_else(|_| "2024-06-01".to_string());
         let chat_deployment = env::var("AZURE_OPENAI_CHAT_DEPLOYMENT").unwrap_or_else(|_| "gpt-4.1".to_string());
+        let embed_api_version = env::var("AZURE_OPENAI_EMBED_API_VERSION").unwrap_or_else(|_| "2024-02-01".to_string());
         let embed_deployment = env::var("AZURE_OPENAI_EMBED_DEPLOYMENT").unwrap_or_else(|_| "text-embedding-3-large".to_string());
 
         let azure = AzureOpenAIConfig {
             endpoint,
             api_key,
-            api_version,
+            chat_api_version,
             chat_deployment,
+            embed_api_version,
             embed_deployment,
         };
 

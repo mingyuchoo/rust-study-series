@@ -7,7 +7,7 @@ const VectorSearch: React.FC = () => {
   // 벡터 검색 상태
   const [query, setQuery] = useState('');
   const [topK, setTopK] = useState<number | undefined>(5);
-  const [threshold, setThreshold] = useState<number | undefined>(undefined);
+  const [threshold, setThreshold] = useState<number | undefined>(0.2);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<VectorSearchResponse | null>(null);
   const [error, setError] = useState<string | null>(null);

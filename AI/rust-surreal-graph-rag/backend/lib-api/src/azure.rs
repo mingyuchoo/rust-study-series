@@ -62,7 +62,7 @@ impl AzureOpenAI {
             "{}/openai/deployments/{}/chat/completions?api-version={}",
             self.cfg.endpoint.trim_end_matches('/'),
             self.cfg.chat_deployment,
-            self.cfg.api_version,
+            self.cfg.chat_api_version,
         )
     }
 
@@ -71,7 +71,7 @@ impl AzureOpenAI {
             "{}/openai/deployments/{}/embeddings?api-version={}",
             self.cfg.endpoint.trim_end_matches('/'),
             self.cfg.embed_deployment,
-            self.cfg.api_version,
+            self.cfg.embed_api_version,
         )
     }
 
