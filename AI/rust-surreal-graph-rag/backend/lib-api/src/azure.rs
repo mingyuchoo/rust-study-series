@@ -25,6 +25,14 @@ struct ChatChoice {
 #[derive(Debug, Deserialize)]
 struct ChatResponseBody {
     choices: Vec<ChatChoice>,
+    usage: Option<ChatUsage>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ChatUsage {
+    total_tokens: Option<u32>,
+    prompt_tokens: Option<u32>,
+    completion_tokens: Option<u32>,
 }
 
 #[derive(Debug, Serialize)]
@@ -113,8 +121,19 @@ impl AzureOpenAI {
             .and_then(|c| c.message.as_ref())
             .map(|m| m.content.clone())
             .unwrap_or_default();
-        // tokens_used를 usage에서 파싱하려면 스키마별 처리 필요. MVP로 0 반환.
-        Ok((content, 0))
+        // tokens_used: usage.total_tokens가 있으면 사용, 없으면 prompt+completion 합산
+        let tokens_used = if let Some(usage) = json.usage.as_ref() {
+            if let Some(total) = usage.total_tokens {
+                total
+            } else {
+                let p = usage.prompt_tokens.unwrap_or(0);
+                let c = usage.completion_tokens.unwrap_or(0);
+                p.saturating_add(c)
+            }
+        } else {
+            0
+        };
+        Ok((content, tokens_used))
     }
 
     pub async fn embed(&self, texts: &[&str]) -> anyhow::Result<Vec<Vec<f32>>> {

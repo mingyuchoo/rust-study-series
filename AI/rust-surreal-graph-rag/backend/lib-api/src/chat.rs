@@ -102,7 +102,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             .as_ref()
             .and_then(|o| o.get("graph_threshold").and_then(|v| v.as_f64()))
             .map(|v| v as f32)
-            .unwrap_or(0.30);
+            .unwrap_or(0.20);
         // 랭킹 가중치 계수(alpha: 관계 유사도, beta: 엔티티 유사도 평균, gamma: 엣지 가중치, delta: 중심성)
         let (alpha, beta, gamma, delta) = {
             let opts = payload.options.as_ref();
@@ -398,6 +398,61 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             path_lines.push(l);
         }
         debug!("[chat][step2] relations selected: {}, path_lines={}", rels_json.len(), path_lines.len());
+
+        // 필터 결과가 비었을 경우 폴백: 임계값을 적용하지 않고 상위 엔티티/관계를 채운다
+        if rels_json.is_empty() && (!entities_rows.is_empty() || !relations_rows.is_empty()) {
+            debug!("[chat][step2] fallback: no relations passed threshold; using top-N without threshold");
+            // 노드 폴백: 엔티티 점수 상위 사용
+            if nodes_json.is_empty() {
+                let mut ents_vec: Vec<(f32, String, String)> = entity_info
+                    .iter()
+                    .map(|(name, (score, etype))| (*score, name.clone(), etype.clone()))
+                    .collect();
+                ents_vec.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+                for (i, (_s, name, etype)) in ents_vec.into_iter().enumerate() {
+                    if (i as i64) >= top_entities { break; }
+                    let tw = type_weights.get(&etype).cloned().unwrap_or(1.0);
+                    let cen_pr = pr.get(&name).cloned().unwrap_or(0.0);
+                    let cen_bc = index_of.get(&name).map(|&idx| bc[idx]).unwrap_or(0.0);
+                    let cen = pr_weight * cen_pr + bc_weight * cen_bc;
+                    nodes_json.push(serde_json::json!({
+                        "name": name,
+                        "type": etype,
+                        "type_weight": tw,
+                        "centrality_pr": cen_pr,
+                        "centrality_bc": cen_bc,
+                        "centrality": cen
+                    }));
+                }
+            }
+
+            // 관계 폴백: 점수 기준 상위 사용(임계값 미적용)
+            let mut tmp: Vec<(f32, serde_json::Value, String)> = Vec::new();
+            for r in &relations_rows {
+                let s = r.get("subject").and_then(|x| x.as_str()).unwrap_or_default();
+                let p = r.get("predicate").and_then(|x| x.as_str()).unwrap_or("REL");
+                let o = r.get("object").and_then(|x| x.as_str()).unwrap_or_default();
+                if s.is_empty() || o.is_empty() { continue; }
+                let w = r.get("weight").and_then(|x| x.as_f64()).unwrap_or(1.0) as f32;
+                let r_score = r.get("score").and_then(|x| x.as_f64()).unwrap_or(0.0) as f32;
+                let line = format!("{} -[{}]-> {} (w={:.2}, score={:.3})", s, p, o, w, r_score);
+                let json = serde_json::json!({
+                    "subject": s,
+                    "predicate": p,
+                    "object": o,
+                    "weight": w,
+                    "score_relation": r_score
+                });
+                tmp.push((r_score, json, line));
+            }
+            tmp.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+            for (i, (_sc, j, l)) in tmp.into_iter().enumerate() {
+                if (i as i64) >= top_relations { break; }
+                rels_json.push(j);
+                path_lines.push(l);
+            }
+            debug!("[chat][step2] fallback applied: relations={}, nodes={}", rels_json.len(), nodes_json.len());
+        }
 
         // 간단히 모든 관계를 하나의 경로 묶음으로 구성
         let path_str = if path_lines.is_empty() { String::from("") } else { path_lines.join("\n") };
