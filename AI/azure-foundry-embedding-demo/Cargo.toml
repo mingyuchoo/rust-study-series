@@ -1,0 +1,12 @@
+[package]
+  edition = "2024"
+  name    = "azure-foundry-embedding-demo"
+  version = "0.1.0"
+
+[dependencies]
+  anyhow     = "1.0.99"
+  reqwest    = {features = ["json", "rustls-tls"], version = "0.12.23"}
+  serde      = {features = ["derive"], version = "1.0.219"}
+  tokio      = {features = ["full"], version = "1.47.1"}
+  dotenvy    = "0.15.7"
+ 
