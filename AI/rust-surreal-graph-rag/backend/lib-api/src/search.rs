@@ -3,38 +3,11 @@
 use actix_web::{Result, post, web};
 use std::time::Instant;
 
-use crate::azure::AzureOpenAI;
-use crate::config::AppConfig;
 use crate::error::Error;
 use crate::models::{VectorSearchItem, VectorSearchRequest, VectorSearchResponse};
+use crate::types::{AppState, ChunkSearchResult};
 use lib_db::DB;
 use log::debug;
-
-use serde::{Deserialize, Serialize};
-
-/// 애플리케이션 상태
-pub struct AppState {
-    pub cfg: AppConfig,
-    pub azure: AzureOpenAI,
-}
-
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChunkSearchResult {
-    pub content: String,
-    pub id: surrealdb::sql::Thing,
-    pub metadata: ChunkMetadata,
-    pub score: f64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChunkMetadata {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub section_index: Option<i32>,
-    pub source: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub summary: Option<bool>,
-}
 
 
 

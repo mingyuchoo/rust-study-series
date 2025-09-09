@@ -1,7 +1,7 @@
 //! 헬스체크 엔드포인트
 
 use crate::models::HealthResponse;
-use crate::search::AppState;
+use crate::types::AppState;
 use actix_web::{Result, get, web};
 use chrono::Utc;
 use lib_db::DB;

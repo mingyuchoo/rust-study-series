@@ -8,7 +8,7 @@ use std::time::Instant;
 use crate::error::Error;
 use crate::models::UploadResponse;
 use crate::models::{ReindexItemResult, ReindexRequest, ReindexResponse};
-use crate::search::AppState;
+use crate::types::AppState;
 use lib_db::DB;
 use lib_index::{
     RegexNer, database as index_db, graph_builder, pdf_processor,

@@ -8,7 +8,7 @@ use std::time::Instant;
 use crate::auth::require_auth;
 use crate::error::Error;
 use crate::models::{ChatAskRequest, ChatAskResponse, GraphPathItem, SourceItem};
-use crate::search::AppState;
+use crate::types::{AppState, ChunkSearchResult};
 use lib_db::DB;
 use log::debug;
 
@@ -57,18 +57,16 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
         .await
         .map_err(|e| Error::External(e.to_string()))?;
 
-    let rows: Vec<serde_json::Value> = res.take(0).unwrap_or_default();
+    let rows: Vec<ChunkSearchResult> = res.take(0).unwrap_or_default();
     debug!("[chat][step1] chunk rows fetched: {}", rows.len());
     let mut sources: Vec<SourceItem> = Vec::new();
     let mut context_text = String::new();
     let mut doc_ids: HashSet<String> = HashSet::new();
     for v in rows {
-        let score = v.get("score").and_then(|s| s.as_f64()).unwrap_or(0.0) as f32;
-        let content = v.get("content").and_then(|x| x.as_str()).unwrap_or_default().to_string();
-        let metadata = v.get("metadata").cloned().unwrap_or(serde_json::json!({}));
-        if let Some(doc_id_val) = v.get("doc_id") {
-            // 임시 문자열 참조를 피하고 소유하는 String으로 안전하게 변환
-            let did = doc_id_val.as_str().map(String::from).unwrap_or_else(|| doc_id_val.to_string());
+        let score = v.score as f32;
+        let content = v.content.clone();
+        let metadata = serde_json::to_value(v.metadata).unwrap_or(serde_json::Value::Null);
+        if let Some(did) = v.doc_id.clone() {
             if !did.is_empty() {
                 doc_ids.insert(did);
             }

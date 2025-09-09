@@ -7,6 +7,7 @@ pub mod error;
 pub mod health;
 pub mod models;
 pub mod search;
+pub mod types;
 
 use actix_web::web;
 use actix_web::{App, HttpServer, *};
@@ -15,7 +16,7 @@ use log::{error, info};
 
 use crate::azure::AzureOpenAI;
 use crate::config::AppConfig;
-use crate::search::AppState;
+use crate::types::AppState;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
