@@ -74,6 +74,19 @@ export type VectorSearchResponse = {
   query_time: number;
 };
 
+// 그래프 검색
+export type GraphSearchRequest = {
+  query: string;
+  top_k?: number;
+  max_hops?: number;
+};
+
+export type GraphSearchResponse = {
+  paths: GraphPathItem[];
+  total: number;
+  query_time: number;
+};
+
 export type HealthResponse = {
   status: string;
   timestamp: string;

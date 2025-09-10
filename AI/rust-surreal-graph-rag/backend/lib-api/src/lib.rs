@@ -8,6 +8,7 @@ pub mod health;
 pub mod models;
 pub mod search;
 pub mod types;
+pub mod graph;
 
 use actix_web::web;
 use actix_web::{App, HttpServer, *};
@@ -29,6 +30,7 @@ use utoipa_swagger_ui::SwaggerUi;
         auth::logout,
         auth::me,
         search::vector_search,
+        graph::graph_search,
         chat::chat_ask,
         reindex::reindex_pdfs,
     ),
@@ -42,6 +44,8 @@ use utoipa_swagger_ui::SwaggerUi;
             models::VectorSearchRequest,
             models::VectorSearchItem,
             models::VectorSearchResponse,
+            models::GraphSearchRequest,
+            models::GraphSearchResponse,
             models::ChatAskRequest,
             models::SourceItem,
             models::GraphPathItem,
@@ -57,6 +61,7 @@ use utoipa_swagger_ui::SwaggerUi;
         (name = "health", description = "헬스체크"),
         (name = "auth", description = "인증"),
         (name = "search", description = "벡터 검색"),
+        (name = "graph", description = "그래프 검색"),
         (name = "chat", description = "통합 질의응답"),
         (name = "reindex", description = "관리자/운영 도구")
     )
@@ -89,6 +94,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
             .service(auth::logout)
             .service(auth::me)
             .service(search::vector_search)
+            .service(graph::graph_search)
             .service(chat::chat_ask)
             .service(reindex::reindex_pdfs)
             .service(reindex::upload_file)

@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Chat from './pages/Chat';
 import VectorSearch from './pages/VectorSearch';
+import GraphSearch from './pages/GraphSearch';
 import Health from './pages/Health';
 import NavBar from './components/NavBar';
 import Reindex from './pages/Reindex';
@@ -38,6 +39,14 @@ const App: React.FC = () => {
             element={
               <PrivateRoute>
                 <VectorSearch />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/graph"
+            element={
+              <PrivateRoute>
+                <GraphSearch />
               </PrivateRoute>
             }
           />

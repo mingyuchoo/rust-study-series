@@ -78,6 +78,29 @@ pub struct VectorSearchResponse {
     pub query_time: f32,
 }
 
+// 그래프 검색
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct GraphSearchRequest {
+    /// 시작 쿼리(엔티티 키워드 등)
+    pub query: String,
+    /// 최대 경로 수
+    #[serde(default = "default_graph_top_k")]
+    pub top_k: u32,
+    /// 최대 홉 수(탐색 깊이)
+    #[serde(default = "default_graph_max_hops")]
+    pub max_hops: u32,
+}
+
+fn default_graph_top_k() -> u32 { 10 }
+fn default_graph_max_hops() -> u32 { 2 }
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct GraphSearchResponse {
+    pub paths: Vec<GraphPathItem>,
+    pub total: u32,
+    pub query_time: f32,
+}
+
 // 챗/질의응답
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct ChatAskRequest {
@@ -98,7 +121,7 @@ pub struct SourceItem {
     pub metadata: serde_json::Value,
 }
 
-#[derive(Debug, Serialize, ToSchema)]
+#[derive(Debug, Serialize, ToSchema, Clone)]
 pub struct GraphPathItem {
     pub path: String,
     pub nodes: serde_json::Value,

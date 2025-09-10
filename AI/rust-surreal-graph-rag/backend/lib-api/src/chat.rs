@@ -256,7 +256,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             let o = r.get("object").and_then(|x| x.as_str()).unwrap_or_default();
             // 폴백 조회일 수 있으므로 score가 없으면 0.0으로 처리
             let w = r.get("weight").and_then(|x| x.as_f64()).unwrap_or(1.0) as f32;
-            let r_score = r.get("score").and_then(|x| x.as_f64()).unwrap_or(0.0) as f32;
+            let _r_score = r.get("score").and_then(|x| x.as_f64()).unwrap_or(0.0) as f32;
             if s.is_empty() || o.is_empty() {
                 continue;
             }
