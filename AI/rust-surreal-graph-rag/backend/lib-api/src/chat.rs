@@ -160,7 +160,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
                 LIMIT $top_relations;
                 "#,
             )
-            .bind(("doc_ids", doc_id_list))
+            .bind(("doc_ids", doc_id_list.clone()))
             .bind(("q", query_vec.clone()))
             .bind(("dep", state.azure.embed_deployment().to_string()))
             .bind(("top_entities", top_entities))
@@ -176,11 +176,40 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             relations_rows.len()
         );
 
+        // 임베딩 조건으로 아무 것도 나오지 않는 경우, 임베딩 조건을 제거한 폴백 재조회
+        let (entities_rows, relations_rows) = if entities_rows.is_empty() && relations_rows.is_empty() {
+            debug!("[chat][step2] fallback query without embedding filters");
+            let mut gq2 = DB
+                .query(
+                    r#"
+                    LET $doc_ids = $doc_ids;
+                    SELECT name, type FROM entity
+                    WHERE doc_id IN $doc_ids
+                    LIMIT $top_entities;
+                    SELECT subject, predicate, object, weight FROM relation
+                    WHERE doc_id IN $doc_ids
+                    LIMIT $top_relations;
+                    "#,
+                )
+                .bind(("doc_ids", doc_id_list.clone()))
+                .bind(("top_entities", top_entities))
+                .bind(("top_relations", top_relations))
+                .await
+                .map_err(|e| Error::External(e.to_string()))?;
+            let e2: Vec<serde_json::Value> = gq2.take(0).unwrap_or_default();
+            let r2: Vec<serde_json::Value> = gq2.take(1).unwrap_or_default();
+            debug!("[chat][step2] fallback rows fetched: entities={}, relations={}", e2.len(), r2.len());
+            (e2, r2)
+        } else {
+            (entities_rows, relations_rows)
+        };
+
         // 엔티티 정보 맵(name -> (score, type))을 구성(동일 이름은 최고 점수로 유지)
         let mut entity_info: HashMap<String, (f32, String)> = HashMap::new();
         for e in &entities_rows {
             let name = e.get("name").and_then(|x| x.as_str()).unwrap_or_default().to_string();
             let etype = e.get("type").and_then(|x| x.as_str()).unwrap_or("").to_string();
+            // 폴백 조회인 경우 score 필드가 없을 수 있으므로 0.0으로 대체
             let score = e.get("score").and_then(|x| x.as_f64()).unwrap_or(0.0) as f32;
             if name.is_empty() {
                 continue;
@@ -223,16 +252,18 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
         let mut nodes_all: HashSet<String> = HashSet::new();
         let mut max_weight: f32 = 1.0;
         for r in &relations_rows {
-            let s = r.get("subject").and_then(|x| x.as_str()).unwrap_or_default().to_string();
-            let o = r.get("object").and_then(|x| x.as_str()).unwrap_or_default().to_string();
+            let s = r.get("subject").and_then(|x| x.as_str()).unwrap_or_default();
+            let o = r.get("object").and_then(|x| x.as_str()).unwrap_or_default();
+            // 폴백 조회일 수 있으므로 score가 없으면 0.0으로 처리
             let w = r.get("weight").and_then(|x| x.as_f64()).unwrap_or(1.0) as f32;
+            let r_score = r.get("score").and_then(|x| x.as_f64()).unwrap_or(0.0) as f32;
             if s.is_empty() || o.is_empty() {
                 continue;
             }
-            nodes_all.insert(s.clone());
-            nodes_all.insert(o.clone());
-            let entry = out_edges.entry(s).or_insert_with(HashMap::new);
-            let e = entry.entry(o).or_insert(0.0);
+            nodes_all.insert(s.to_string());
+            nodes_all.insert(o.to_string());
+            let entry = out_edges.entry(s.to_string()).or_insert_with(HashMap::new);
+            let e = entry.entry(o.to_string()).or_insert(0.0);
             *e += w;
             if w > max_weight {
                 max_weight = w;
@@ -355,6 +386,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
             let p = r.get("predicate").and_then(|x| x.as_str()).unwrap_or("REL");
             let o = r.get("object").and_then(|x| x.as_str()).unwrap_or_default();
             let w = r.get("weight").and_then(|x| x.as_f64()).unwrap_or(1.0) as f32;
+            // 폴백 조회일 수 있으므로 score가 없으면 0.0으로 처리
             let r_score = r.get("score").and_then(|x| x.as_f64()).unwrap_or(0.0) as f32;
             if s.is_empty() || o.is_empty() {
                 continue;
@@ -413,7 +445,7 @@ pub async fn chat_ask(state: web::Data<AppState>, req: HttpRequest, payload: web
                     if (i as i64) >= top_entities { break; }
                     let tw = type_weights.get(&etype).cloned().unwrap_or(1.0);
                     let cen_pr = pr.get(&name).cloned().unwrap_or(0.0);
-                    let cen_bc = index_of.get(&name).map(|&idx| bc[idx]).unwrap_or(0.0);
+                    let cen_bc = index_of.get(&name).map(|&i| bc[i]).unwrap_or(0.0);
                     let cen = pr_weight * cen_pr + bc_weight * cen_bc;
                     nodes_json.push(serde_json::json!({
                         "name": name,
