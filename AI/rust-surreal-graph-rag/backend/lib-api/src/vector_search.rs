@@ -12,7 +12,7 @@ use log::debug;
 
 
 #[utoipa::path(
-    tag = "search",
+    tag = "vector_search",
     post,
     path = "/api/search/vector",
     request_body = VectorSearchRequest,
