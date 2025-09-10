@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Stack, TextField, PrimaryButton } from '@fluentui/react';
-import { graphSearch } from '@/services/graph';
+import { graphSearch } from '@/services/graphSearch';
 import { GraphSearchResponse } from '@/types/api';
 
 const GraphSearch: React.FC = () => {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Stack, TextField, PrimaryButton } from '@fluentui/react';
-import { vectorSearch } from '@/services/search';
+import { vectorSearch } from '@/services/vectorSearch';
 import { VectorSearchResponse } from '@/types/api';
 
 const VectorSearch: React.FC = () => {

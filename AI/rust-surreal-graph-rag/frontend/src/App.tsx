@@ -35,7 +35,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/search"
+            path="/vector-search"
             element={
               <PrivateRoute>
                 <VectorSearch />
@@ -43,7 +43,7 @@ const App: React.FC = () => {
             }
           />
           <Route
-            path="/graph"
+            path="/graph-search"
             element={
               <PrivateRoute>
                 <GraphSearch />
