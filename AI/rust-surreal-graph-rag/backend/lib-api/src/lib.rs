@@ -8,7 +8,7 @@ pub mod health;
 pub mod models;
 pub mod vector_search;
 pub mod types;
-pub mod graph;
+pub mod graph_search;
 
 use actix_web::web;
 use actix_web::{App, HttpServer, *};
@@ -30,7 +30,7 @@ use utoipa_swagger_ui::SwaggerUi;
         auth::logout,
         auth::me,
         vector_search::vector_search,
-        graph::graph_search,
+        graph_search::graph_search,
         chat::chat_ask,
         reindex::reindex_pdfs,
     ),
@@ -94,7 +94,7 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
             .service(auth::logout)
             .service(auth::me)
             .service(vector_search::vector_search)
-            .service(graph::graph_search)
+            .service(graph_search::graph_search)
             .service(chat::chat_ask)
             .service(reindex::reindex_pdfs)
             .service(reindex::upload_file)
