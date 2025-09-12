@@ -348,6 +348,7 @@ struct CircuitBreakerState {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub(crate) enum CircuitState {
     Closed,
     Open,
@@ -355,6 +356,7 @@ pub(crate) enum CircuitState {
 }
 
 impl CircuitBreaker {
+    #[allow(dead_code)]
     pub fn new(failure_threshold: usize, recovery_timeout: Duration) -> Self {
         Self {
             failure_threshold,
@@ -367,6 +369,7 @@ impl CircuitBreaker {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn execute<F, Fut, T>(&self, operation: F) -> Result<T, ServiceError>
     where
         F: Fn() -> Fut,
@@ -433,11 +436,13 @@ impl CircuitBreaker {
         }
     }
 
-    pub async fn get_state(&self) -> CircuitState {
+    #[allow(dead_code)]
+    pub(crate) async fn get_state(&self) -> CircuitState {
         let state = self.state.read().await;
         state.state.clone()
     }
 
+    #[allow(dead_code)]
     pub async fn get_failure_count(&self) -> usize {
         let state = self.state.read().await;
         state.failures

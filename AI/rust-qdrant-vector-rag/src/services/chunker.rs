@@ -11,6 +11,7 @@ pub struct ChunkingConfig {
     /// Minimum chunk size to avoid very small chunks
     pub min_chunk_size: usize,
     /// Whether to respect semantic boundaries (headers, paragraphs)
+    #[allow(dead_code)]
     pub respect_boundaries: bool,
 }
 

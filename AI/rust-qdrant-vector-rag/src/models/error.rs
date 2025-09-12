@@ -82,6 +82,7 @@ impl ServiceError {
     }
 
     /// Creates a new not found error
+    #[allow(dead_code)]
     pub fn not_found<T: Into<String>>(msg: T) -> Self {
         ServiceError::NotFound(msg.into())
     }

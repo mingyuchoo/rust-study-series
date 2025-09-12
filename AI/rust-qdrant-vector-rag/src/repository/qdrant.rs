@@ -31,9 +31,11 @@ pub trait VectorRepository: Send + Sync {
     async fn get_chunks_by_document_id(&self, document_id: &str) -> Result<Vec<DocumentChunk>, ServiceError>;
 
     /// Delete chunks by document ID
+    #[allow(dead_code)]
     async fn delete_chunks_by_document_id(&self, document_id: &str) -> Result<(), ServiceError>;
 
     /// Delete a specific chunk by ID
+    #[allow(dead_code)]
     async fn delete_chunk(&self, chunk_id: &str) -> Result<(), ServiceError>;
 
     /// Get collection statistics
