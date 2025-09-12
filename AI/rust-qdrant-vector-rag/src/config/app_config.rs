@@ -80,6 +80,7 @@ impl AppConfig {
     }
 
     /// Get the server socket address
+    #[allow(dead_code)]
     pub fn server_address(&self) -> Result<SocketAddr, ServiceError> {
         let ip: IpAddr = self
             .server

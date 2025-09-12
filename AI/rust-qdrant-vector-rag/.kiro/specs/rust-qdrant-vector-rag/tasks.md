@@ -91,7 +91,6 @@
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
 - [x] 8. Create web layer with Actix Web
-
 - [x] 8.1 Implement HTTP handlers
   - Create upload_handler for markdown file processing
   - Implement query_handler for question-answering requests

@@ -192,6 +192,7 @@ impl AppContainer {
 
 /// Health status for individual services
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum ServiceHealth {
     Healthy,
     Degraded(String),

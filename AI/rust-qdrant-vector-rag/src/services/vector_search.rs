@@ -5,6 +5,7 @@ use std::sync::Arc;
 use tracing::{debug, info};
 
 #[async_trait]
+#[allow(dead_code)]
 pub trait VectorSearchService: Send + Sync {
     async fn search_similar(&self, query_embedding: Vec<f32>, limit: usize) -> Result<Vec<SearchResult>, ServiceError>;
     async fn search_similar_with_threshold(&self, query_embedding: Vec<f32>, limit: usize, score_threshold: f32) -> Result<Vec<SearchResult>, ServiceError>;
@@ -15,6 +16,7 @@ pub trait VectorSearchService: Send + Sync {
 
 /// Statistics about the vector collection
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct VectorCollectionStats {
     pub total_vectors: u64,
     pub indexed_vectors: u64,
@@ -23,6 +25,7 @@ pub struct VectorCollectionStats {
 
 pub struct VectorSearchServiceImpl {
     vector_repository: Arc<dyn VectorRepository>,
+    #[allow(dead_code)]
     default_score_threshold: f32,
     max_search_limit: usize,
 }
@@ -36,6 +39,7 @@ impl VectorSearchServiceImpl {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_config(vector_repository: Arc<dyn VectorRepository>, default_score_threshold: f32, max_search_limit: usize) -> Self {
         Self {
             vector_repository,
@@ -76,6 +80,7 @@ impl VectorSearchServiceImpl {
     }
 
     /// Validates chunks before storage
+    #[allow(dead_code)]
     fn validate_chunks(&self, chunks: &[DocumentChunk]) -> Result<(), ServiceError> {
         if chunks.is_empty() {
             return Ok(()); // Empty chunks is valid, just a no-op

@@ -46,6 +46,7 @@ impl ResilienceService {
         Self { config }
     }
 
+    #[allow(dead_code)]
     pub fn with_default_config() -> Self {
         Self::new(ResilienceConfig::default())
     }
@@ -120,6 +121,7 @@ impl ResilienceService {
         Err(last_error)
     }
 
+    #[allow(dead_code)]
     /// Executes an operation with a timeout
     pub async fn with_timeout<F, Fut, T>(&self, operation: F) -> Result<T, ServiceError>
     where
@@ -142,6 +144,7 @@ impl ResilienceService {
         }
     }
 
+    #[allow(dead_code)]
     /// Executes an operation with both retry and timeout
     pub async fn retry_with_timeout<F, Fut, T>(&self, operation: F) -> Result<T, ServiceError>
     where
@@ -190,6 +193,7 @@ impl ResilienceService {
         delay_ms * jitter_factor
     }
 
+    #[allow(dead_code)]
     /// Executes an operation with graceful degradation
     pub async fn with_fallback<F, Fut, T, FB, FutB>(&self, primary_operation: F, fallback_operation: FB) -> Result<T, ServiceError>
     where
@@ -232,6 +236,7 @@ impl ResilienceService {
         }
     }
 
+    #[allow(dead_code)]
     /// Health check with retry logic
     pub async fn health_check<F, Fut>(&self, check_operation: F) -> Result<bool, ServiceError>
     where
@@ -260,6 +265,7 @@ impl ResilienceService {
         }
     }
 
+    #[allow(dead_code)]
     /// Executes multiple operations concurrently with error aggregation
     pub async fn execute_concurrent<T>(
         &self,
@@ -282,6 +288,7 @@ impl ResilienceService {
         results
     }
 
+    #[allow(dead_code)]
     /// Batches operations to avoid overwhelming external services
     pub async fn batch_execute<F, Fut, T>(&self, items: Vec<T>, batch_size: usize, operation: F) -> Vec<Result<T, ServiceError>>
     where
@@ -325,6 +332,7 @@ impl ResilienceService {
 
 /// Circuit breaker implementation for preventing cascading failures
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct CircuitBreaker {
     failure_threshold: usize,
     recovery_timeout: Duration,
@@ -332,6 +340,7 @@ pub struct CircuitBreaker {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct CircuitBreakerState {
     failures: usize,
     last_failure_time: Option<Instant>,
@@ -339,7 +348,7 @@ struct CircuitBreakerState {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-enum CircuitState {
+pub(crate) enum CircuitState {
     Closed,
     Open,
     HalfOpen,

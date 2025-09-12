@@ -33,6 +33,7 @@ impl EmbeddingServiceImpl {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_resilience_config(azure_client: AzureOpenAIClient, resilience_config: ResilienceConfig) -> Self {
         Self {
             azure_client,

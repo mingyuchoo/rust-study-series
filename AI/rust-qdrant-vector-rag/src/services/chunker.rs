@@ -314,12 +314,14 @@ impl DocumentChunker {
     }
 
     /// Estimates the token count for a text string
+    #[allow(dead_code)]
     pub fn estimate_token_count(text: &str) -> usize {
         // Rough estimation: 1 token ≈ 4 characters for English text
         text.len() / 4
     }
 
     /// Validates that chunks meet the requirements
+    #[allow(dead_code)]
     pub fn validate_chunks(&self, chunks: &[DocumentChunk]) -> Result<(), ServiceError> {
         for (i, chunk) in chunks.iter().enumerate() {
             let content_len = chunk.content.len();

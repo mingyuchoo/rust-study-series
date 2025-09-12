@@ -13,10 +13,10 @@ use crate::services::{DocumentService, EmbeddingService, RAGService, VectorSearc
 pub async fn health_handler(
     config: web::Data<AppConfig>,
     azure_client: web::Data<AzureOpenAIClient>,
-    document_service: web::Data<Arc<dyn DocumentService>>,
-    rag_service: web::Data<Arc<dyn RAGService>>,
-    embedding_service: web::Data<Arc<dyn EmbeddingService>>,
-    vector_search_service: web::Data<Arc<dyn VectorSearchService>>,
+    _document_service: web::Data<Arc<dyn DocumentService>>,
+    _rag_service: web::Data<Arc<dyn RAGService>>,
+    _embedding_service: web::Data<Arc<dyn EmbeddingService>>,
+    _vector_search_service: web::Data<Arc<dyn VectorSearchService>>,
 ) -> Result<HttpResponse> {
     debug!("Processing comprehensive health check request with injected services");
 

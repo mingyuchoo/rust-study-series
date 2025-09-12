@@ -31,6 +31,7 @@ pub(crate) enum EmbeddingInput {
 
 /// Response structure for embedding generation
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct EmbeddingResponse {
     data: Vec<EmbeddingData>,
     usage: Usage,
@@ -64,6 +65,7 @@ pub struct ChatMessage {
 
 /// Response structure for chat completions
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct ChatCompletionResponse {
     choices: Vec<ChatChoice>,
     usage: Usage,
@@ -71,6 +73,7 @@ struct ChatCompletionResponse {
 
 /// Individual chat choice
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct ChatChoice {
     message: ChatMessage,
     index: usize,
@@ -79,6 +82,7 @@ struct ChatChoice {
 
 /// Usage statistics
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct Usage {
     prompt_tokens: u32,
     #[serde(default)]
@@ -94,6 +98,7 @@ pub(crate) struct ApiErrorResponse {
 
 /// API error details
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 pub(crate) struct ApiError {
     pub message: String,
     #[serde(rename = "type")]

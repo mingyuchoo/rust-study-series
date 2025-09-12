@@ -33,6 +33,7 @@ impl DocumentChunk {
     }
 
     /// Returns the token count estimate for this chunk
+    #[allow(dead_code)]
     pub fn estimated_token_count(&self) -> usize {
         // Rough estimation: 1 token ≈ 4 characters
         self.content.len() / 4
@@ -79,6 +80,7 @@ impl ChunkMetadata {
     }
 
     /// Sets the parent section for this chunk
+    #[allow(dead_code)]
     pub fn with_parent_section(mut self, parent: String) -> Self {
         self.parent_section = Some(parent);
         self
@@ -117,4 +119,5 @@ impl SearchResult {
 }
 
 /// Represents a document identifier
+#[allow(dead_code)]
 pub type DocumentId = String;

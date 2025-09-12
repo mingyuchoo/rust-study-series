@@ -31,11 +31,13 @@ impl RAGResponse {
     }
 
     /// Returns the highest relevance score among sources
+    #[allow(dead_code)]
     pub fn max_relevance_score(&self) -> f32 {
         self.sources.iter().map(|s| s.relevance_score).fold(0.0, f32::max)
     }
 
     /// Returns sources sorted by relevance score (descending)
+    #[allow(dead_code)]
     pub fn sources_by_relevance(&self) -> Vec<&SourceReference> {
         let mut sources: Vec<&SourceReference> = self.sources.iter().collect();
         sources.sort_by(|a, b| b.relevance_score.partial_cmp(&a.relevance_score).unwrap());
@@ -76,6 +78,7 @@ impl SourceReference {
     }
 
     /// Returns a truncated snippet if it exceeds the given length
+    #[allow(dead_code)]
     pub fn truncated_snippet(&self, max_length: usize) -> String {
         if self.snippet.len() <= max_length {
             self.snippet.clone()

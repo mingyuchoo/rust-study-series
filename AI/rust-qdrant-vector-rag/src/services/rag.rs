@@ -62,6 +62,7 @@ impl RAGServiceImpl {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_config(
         embedding_service: Arc<dyn EmbeddingService>,
         vector_search_service: Arc<dyn VectorSearchService>,

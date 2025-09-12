@@ -10,7 +10,6 @@ mod services;
 use actix_cors::Cors;
 use actix_web::{
     App, HttpResponse, HttpServer,
-    dev::ServiceFactory,
     middleware::{Compress, DefaultHeaders, Logger},
     web,
 };

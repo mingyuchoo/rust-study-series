@@ -41,6 +41,7 @@ impl DocumentParser {
     }
 
     /// Creates a parser with custom configuration
+    #[allow(dead_code)]
     pub fn with_config(preserve_structure: bool) -> Self {
         Self { preserve_structure }
     }
@@ -282,6 +283,7 @@ impl DocumentParser {
     }
 
     /// Extracts plain text content from markdown, stripping all formatting
+    #[allow(dead_code)]
     pub fn extract_plain_text(&self, markdown: &str) -> Result<String, ServiceError> {
         let parser = Parser::new(markdown);
         let mut plain_text = String::new();
