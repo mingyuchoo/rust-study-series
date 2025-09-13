@@ -1,6 +1,6 @@
 use actix_cors::Cors;
 use actix_web::middleware::{Compress, DefaultHeaders, Logger};
-use actix_web::{App, HttpResponse, HttpServer, web};
+use actix_web::{App, HttpResponse, HttpServer, web, http::header};
 use rust_qdrant_vector_rag::app::{AppContainer, ShutdownHandler};
 use rust_qdrant_vector_rag::config::AppConfig;
 use rust_qdrant_vector_rag::handlers::{benchmark_handler, cache_stats_handler, clear_cache_handler, health_handler, health_with_performance_handler, metrics_handler, prometheus_metrics_handler, query_handler, simple_health_handler, simple_query_handler, upload_handler, upload_json_handler};
@@ -154,29 +154,26 @@ async fn main() -> std::io::Result<()> {
                     .route("/upload/json", web::post().to(upload_json_handler))
                     .route("/query", web::post().to(query_handler))
                     .route("/query/{question}", web::get().to(simple_query_handler))
-                    // Performance monitoring endpoints
                     .route("/metrics", web::get().to(metrics_handler))
                     .route("/metrics/prometheus", web::get().to(prometheus_metrics_handler))
                     .route("/cache/stats", web::get().to(cache_stats_handler))
                     .route("/cache/clear", web::post().to(clear_cache_handler))
                     .route("/benchmark", web::post().to(benchmark_handler))
             )
-            // Swagger UI 및 OpenAPI JSON 제공
-            // /swagger-ui/ 에서 UI 접속, /api-doc/openapi.json 에서 스펙 제공
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-doc/openapi.json", ApiDoc::openapi())
             )
-            
-            // Legacy routes (for backward compatibility)
+            .route(
+                "/swagger-ui",
+                web::get().to(swagger_redirect_handler)
+            )
             .route("/health", web::get().to(health_handler))
             .route("/health/simple", web::get().to(simple_health_handler))
             .route("/upload", web::post().to(upload_handler))
             .route("/upload/json", web::post().to(upload_json_handler))
             .route("/query", web::post().to(query_handler))
             .route("/query/{question}", web::get().to(simple_query_handler))
-            
-            // Default route for unmatched paths
             .default_service(web::route().to(not_found_handler))
     })
     .bind(format!("{}:{}", server_host, server_port))?
@@ -236,6 +233,13 @@ async fn not_found_handler() -> HttpResponse {
             "GET /api/v1/query/{question}"
         ]
     }))
+}
+
+/// Swagger UI 기본 경로("/swagger-ui") 접근 시 트레일링 슬래시가 필요한 경로("/swagger-ui/")로 영구 리다이렉트
+async fn swagger_redirect_handler() -> HttpResponse {
+    HttpResponse::PermanentRedirect()
+        .insert_header((header::LOCATION, "/swagger-ui/"))
+        .finish()
 }
 
 fn init_logging() {

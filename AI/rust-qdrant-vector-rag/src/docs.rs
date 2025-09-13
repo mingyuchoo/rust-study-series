@@ -15,6 +15,16 @@ use utoipa::OpenApi;
         crate::handlers::query::query_handler,
         crate::handlers::query::simple_query_handler,
         crate::handlers::upload::upload_json_handler,
+        crate::handlers::upload::upload_handler,
+        crate::handlers::upload::upload_handler_root,
+        crate::handlers::monitoring::metrics_handler,
+        crate::handlers::monitoring::prometheus_metrics_handler,
+        crate::handlers::monitoring::cache_stats_handler,
+        crate::handlers::monitoring::clear_cache_handler,
+        crate::handlers::monitoring::benchmark_handler,
+        crate::handlers::monitoring::health_with_performance_handler,
+        crate::handlers::query::query_handler_root,
+        crate::handlers::query::simple_query_handler_root,
     ),
     components(
         schemas(
@@ -28,12 +38,22 @@ use utoipa::OpenApi;
             crate::handlers::query::QueryRequest,
             crate::handlers::query::QueryConfig,
             crate::handlers::upload::UploadRequest,
+            crate::handlers::monitoring::PerformanceMetricsResponse,
+            crate::handlers::monitoring::SystemMetrics,
+            crate::handlers::monitoring::ApplicationMetrics,
+            crate::handlers::monitoring::CacheMetrics,
+            crate::handlers::monitoring::CacheStats,
+            crate::handlers::monitoring::ConnectionMetrics,
+            crate::handlers::monitoring::PoolMetrics,
+            crate::handlers::monitoring::ClearCacheRequest,
+            crate::handlers::monitoring::BenchmarkRequest,
         )
     ),
     tags(
         (name = "health", description = "헬스체크 API"),
         (name = "query", description = "질의/응답 API"),
-        (name = "upload", description = "문서 업로드 API")
+        (name = "upload", description = "문서 업로드 API"),
+        (name = "monitoring", description = "모니터링 및 메트릭 API")
     )
 )]
 pub struct ApiDoc;

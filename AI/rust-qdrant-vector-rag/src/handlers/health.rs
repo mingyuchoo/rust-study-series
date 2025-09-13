@@ -68,7 +68,7 @@ pub async fn health_handler(
 /// 간단한 헬스체크 엔드포인트에 대한 OpenAPI 메타데이터를 추가합니다.
 #[utoipa::path(
     get,
-    path = "/health",
+    path = "/health/simple",
     tag = "health",
     responses(
         (status = 200, description = "간단한 헬스체크 응답", body = serde_json::Value)

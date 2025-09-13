@@ -20,7 +20,37 @@ pub struct UploadRequest {
     pub filename: String,
 }
 
-/// Upload handler that processes markdown files
+/// 루트 경로용 래퍼: POST /upload
+/// 기존 멀티파트 업로드 핸들러를 재사용합니다.
+#[utoipa::path(
+    post,
+    path = "/upload",
+    tag = "upload",
+    responses(
+        (status = 200, description = "업로드 완료", body = UploadResponse),
+        (status = 400, description = "유효성 검사 실패")
+    )
+)]
+pub async fn upload_handler_root(
+    payload: Multipart,
+    config: web::Data<AppConfig>,
+    azure_client: web::Data<AzureOpenAIClient>,
+) -> Result<HttpResponse> {
+    // 원본 핸들러는 가변 payload를 요구하므로, 이 래퍼는 동일 시그니처로 위임합니다.
+    upload_handler(payload, config, azure_client).await
+}
+
+/// 멀티파트 기반 마크다운 파일 업로드 엔드포인트
+/// Swagger 표시를 위해 OpenAPI 메타데이터를 추가합니다.
+#[utoipa::path(
+    post,
+    path = "/api/v1/upload",
+    tag = "upload",
+    responses(
+        (status = 200, description = "업로드 완료", body = UploadResponse),
+        (status = 400, description = "유효성 검사 실패")
+    )
+)]
 pub async fn upload_handler(mut payload: Multipart, config: web::Data<AppConfig>, azure_client: web::Data<AzureOpenAIClient>) -> Result<HttpResponse> {
     let start_time = Instant::now();
 

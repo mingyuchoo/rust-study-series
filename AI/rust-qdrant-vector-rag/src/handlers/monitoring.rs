@@ -4,9 +4,10 @@ use crate::services::cache::CacheManager;
 use actix_web::{HttpResponse, Result, web};
 use serde::{Deserialize, Serialize};
 use tracing::{debug, error};
+use utoipa::ToSchema;
 
-/// Performance metrics response
-#[derive(Debug, Serialize)]
+/// 성능 메트릭 응답 스키마
+#[derive(Debug, Serialize, ToSchema)]
 pub struct PerformanceMetricsResponse {
     pub timestamp: chrono::DateTime<chrono::Utc>,
     pub system: SystemMetrics,
@@ -15,8 +16,8 @@ pub struct PerformanceMetricsResponse {
     pub connections: ConnectionMetrics,
 }
 
-/// System-level metrics
-#[derive(Debug, Serialize)]
+/// 시스템 레벨 메트릭 스키마
+#[derive(Debug, Serialize, ToSchema)]
 pub struct SystemMetrics {
     pub memory_usage_bytes: u64,
     pub memory_usage_percent: f64,
@@ -24,8 +25,8 @@ pub struct SystemMetrics {
     pub process_memory_mb: Option<u64>,
 }
 
-/// Application-level metrics
-#[derive(Debug, Serialize)]
+/// 애플리케이션 레벨 메트릭 스키마
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ApplicationMetrics {
     pub uptime_seconds: u64,
     pub total_requests: u64,
@@ -34,8 +35,8 @@ pub struct ApplicationMetrics {
     pub avg_response_time_ms: f64,
 }
 
-/// Cache metrics
-#[derive(Debug, Serialize)]
+/// 캐시 메트릭 스키마
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CacheMetrics {
     pub embedding_cache: CacheStats,
     pub search_cache: CacheStats,
@@ -44,8 +45,8 @@ pub struct CacheMetrics {
     pub total_entries: u64,
 }
 
-/// Individual cache statistics
-#[derive(Debug, Serialize)]
+/// 개별 캐시 통계 스키마
+#[derive(Debug, Serialize, ToSchema)]
 pub struct CacheStats {
     pub hits: u64,
     pub misses: u64,
@@ -55,15 +56,15 @@ pub struct CacheStats {
     pub total_entries: u64,
 }
 
-/// Connection pool metrics
-#[derive(Debug, Serialize)]
+/// 커넥션 풀 메트릭 스키마
+#[derive(Debug, Serialize, ToSchema)]
 pub struct ConnectionMetrics {
     pub azure_openai_pool: Option<PoolMetrics>,
     pub qdrant_pool: Option<PoolMetrics>,
 }
 
-/// Pool metrics
-#[derive(Debug, Serialize)]
+/// 풀 메트릭 스키마
+#[derive(Debug, Serialize, ToSchema)]
 pub struct PoolMetrics {
     pub size: usize,
     pub available: usize,
@@ -76,7 +77,16 @@ pub struct PoolMetrics {
     pub connection_errors: u64,
 }
 
-/// Metrics endpoint handler
+/// 어플리케이션 메트릭 조회 엔드포인트
+#[utoipa::path(
+    get,
+    path = "/api/v1/metrics",
+    tag = "monitoring",
+    responses(
+        (status = 200, description = "성능 메트릭 응답", body = PerformanceMetricsResponse),
+        (status = 500, description = "메트릭 수집 실패")
+    )
+)]
 pub async fn metrics_handler(
     container: web::Data<AppContainer>,
     performance_monitor: web::Data<PerformanceMonitor>,
@@ -99,7 +109,15 @@ pub async fn metrics_handler(
     }
 }
 
-/// Prometheus metrics endpoint
+/// Prometheus 메트릭 엔드포인트 프록시
+#[utoipa::path(
+    get,
+    path = "/api/v1/metrics/prometheus",
+    tag = "monitoring",
+    responses(
+        (status = 200, description = "Prometheus 포맷 메트릭 문자열")
+    )
+)]
 pub async fn prometheus_metrics_handler() -> Result<HttpResponse> {
     debug!("Handling Prometheus metrics request");
 
@@ -110,7 +128,16 @@ pub async fn prometheus_metrics_handler() -> Result<HttpResponse> {
         .body("# Metrics are served by the Prometheus exporter\n"))
 }
 
-/// Health check with performance indicators
+/// 성능 지표를 포함한 헬스체크 엔드포인트
+#[utoipa::path(
+    get,
+    path = "/api/v1/health/performance",
+    tag = "health",
+    responses(
+        (status = 200, description = "헬스 및 성능 지표 응답"),
+        (status = 503, description = "비정상 상태")
+    )
+)]
 pub async fn health_with_performance_handler(container: web::Data<AppContainer>, performance_monitor: web::Data<PerformanceMonitor>) -> Result<HttpResponse> {
     debug!("Handling health check with performance indicators");
 
@@ -242,7 +269,15 @@ async fn collect_metrics(
     })
 }
 
-/// Cache management endpoints
+/// 캐시 통계 조회 엔드포인트
+#[utoipa::path(
+    get,
+    path = "/api/v1/cache/stats",
+    tag = "monitoring",
+    responses(
+        (status = 200, description = "캐시 통계 응답")
+    )
+)]
 pub async fn cache_stats_handler(cache_manager: web::Data<CacheManager>) -> Result<HttpResponse> {
     debug!("Handling cache stats request");
 
@@ -251,11 +286,22 @@ pub async fn cache_stats_handler(cache_manager: web::Data<CacheManager>) -> Resu
 }
 
 /// Clear cache endpoint
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct ClearCacheRequest {
     pub cache_type: Option<String>, // "embedding", "search", "chunk", or "all"
 }
 
+/// 캐시 초기화 엔드포인트
+#[utoipa::path(
+    post,
+    path = "/api/v1/cache/clear",
+    tag = "monitoring",
+    request_body = ClearCacheRequest,
+    responses(
+        (status = 200, description = "요청된 캐시 초기화 완료"),
+        (status = 400, description = "유효하지 않은 캐시 타입")
+    )
+)]
 pub async fn clear_cache_handler(cache_manager: web::Data<CacheManager>, request: web::Json<ClearCacheRequest>) -> Result<HttpResponse> {
     debug!("Handling clear cache request: {:?}", request.cache_type);
 
@@ -292,12 +338,23 @@ pub async fn clear_cache_handler(cache_manager: web::Data<CacheManager>, request
 }
 
 /// Performance benchmark endpoint
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct BenchmarkRequest {
     pub operation: String, // "embedding", "search", "rag"
     pub iterations: Option<usize>,
 }
 
+/// 성능 벤치마크 실행 엔드포인트
+#[utoipa::path(
+    post,
+    path = "/api/v1/benchmark",
+    tag = "monitoring",
+    request_body = BenchmarkRequest,
+    responses(
+        (status = 200, description = "벤치마크 결과 반환"),
+        (status = 400, description = "유효하지 않은 operation 값")
+    )
+)]
 pub async fn benchmark_handler(container: web::Data<AppContainer>, request: web::Json<BenchmarkRequest>) -> Result<HttpResponse> {
     debug!("Handling benchmark request: {:?}", request.operation);
 

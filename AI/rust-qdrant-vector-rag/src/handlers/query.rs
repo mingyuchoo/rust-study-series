@@ -151,6 +151,48 @@ pub async fn simple_query_handler(
     query_handler(web::Json(request), config, azure_client).await
 }
 
+/// 루트 경로용 래퍼: POST /query
+/// 기존 핸들러를 재사용하여 동일한 동작을 제공합니다.
+#[utoipa::path(
+    post,
+    path = "/query",
+    tag = "query",
+    request_body = QueryRequest,
+    responses(
+        (status = 200, description = "질의 성공", body = crate::models::RAGResponse),
+        (status = 400, description = "유효성 검사 실패")
+    )
+)]
+pub async fn query_handler_root(
+    request: web::Json<QueryRequest>,
+    config: web::Data<AppConfig>,
+    azure_client: web::Data<AzureOpenAIClient>,
+) -> Result<HttpResponse> {
+    query_handler(request, config, azure_client).await
+}
+
+/// 루트 경로용 래퍼: GET /query/{question}
+/// 기존 핸들러를 재사용하여 동일한 동작을 제공합니다.
+#[utoipa::path(
+    get,
+    path = "/query/{question}",
+    tag = "query",
+    params(
+        ("question" = String, Path, description = "질의할 질문 문자열")
+    ),
+    responses(
+        (status = 200, description = "질의 성공", body = crate::models::RAGResponse),
+        (status = 400, description = "유효성 검사 실패")
+    )
+)]
+pub async fn simple_query_handler_root(
+    question: web::Path<String>,
+    config: web::Data<AppConfig>,
+    azure_client: web::Data<AzureOpenAIClient>,
+) -> Result<HttpResponse> {
+    simple_query_handler(question, config, azure_client).await
+}
+
 /// Helper function to create RAG service with all dependencies
 async fn create_rag_service(config: &AppConfig, azure_client: &AzureOpenAIClient) -> Result<RAGServiceImpl, ServiceError> {
     // Create Qdrant repository
