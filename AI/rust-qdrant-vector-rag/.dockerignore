@@ -1,0 +1,33 @@
+# Ignore Git and VCS
+.git/
+.gitignore
+
+# IDE/editor
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# .NET build outputs
+bin/
+obj/
+
+# Logs and temp
+*.log
+*.tmp
+**/node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+!Dockerfile
+.dockerignore
+
+# Misc
+*.swp
+*.lock
