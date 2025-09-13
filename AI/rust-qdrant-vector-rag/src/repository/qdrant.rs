@@ -61,10 +61,16 @@ impl QdrantRepository {
         // Set timeout
         client_config.timeout = Duration::from_secs(config.timeout_seconds);
 
-        // Set API key if provided
-        if let Some(api_key) = &config.api_key {
-            client_config.api_key = Some(api_key.clone());
-        }
+        // 로컬 Docker 환경에서는 인증을 사용하지 않으므로 API 키를 설정하지 않음
+
+        // Skip compatibility check if server version cannot be obtained
+        // This avoids startup failure in environments where version endpoint is restricted
+        client_config.check_compatibility = false;
+
+        info!(
+            "Qdrant client configured: check_compatibility={}",
+            client_config.check_compatibility
+        );
 
         let client = Qdrant::new(client_config).map_err(|e| ServiceError::database(format!("Failed to create Qdrant client: {}", e)))?;
 
