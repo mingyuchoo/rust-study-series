@@ -13,3 +13,10 @@ export { default as Toast } from './Toast.svelte';
 export { default as FileUpload } from './FileUpload.svelte';
 export { default as UploadProgress } from './UploadProgress.svelte';
 export { default as UploadResult } from './UploadResult.svelte';
+
+// Search components
+export { default as SearchForm } from './SearchForm.svelte';
+export { default as SearchConfig } from './SearchConfig.svelte';
+export { default as LoadingSpinner } from './LoadingSpinner.svelte';
+export { default as AnswerDisplay } from './AnswerDisplay.svelte';
+export { default as SourceReferences } from './SourceReferences.svelte';
