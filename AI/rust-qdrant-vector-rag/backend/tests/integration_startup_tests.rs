@@ -1,5 +1,5 @@
-use rust_qdrant_vector_rag::app::{AppContainer, HealthStatus};
-use rust_qdrant_vector_rag::config::AppConfig;
+use backend::app::{AppContainer, HealthStatus};
+use backend::config::AppConfig;
 use std::env;
 use std::time::Duration;
 use tokio::time::timeout;
@@ -100,17 +100,17 @@ async fn test_health_status_creation() {
     assert!(health_status.is_healthy());
 
     // Test health status with different service states
-    health_status.overall = rust_qdrant_vector_rag::app::ServiceHealth::Degraded("Test degradation".to_string());
+    health_status.overall = backend::app::ServiceHealth::Degraded("Test degradation".to_string());
     assert!(!health_status.is_healthy());
 
-    health_status.overall = rust_qdrant_vector_rag::app::ServiceHealth::Unhealthy("Test failure".to_string());
+    health_status.overall = backend::app::ServiceHealth::Unhealthy("Test failure".to_string());
     assert!(!health_status.is_healthy());
 }
 
 #[tokio::test]
 #[traced_test]
 async fn test_graceful_shutdown_handler() {
-    use rust_qdrant_vector_rag::app::ShutdownHandler;
+    use backend::app::ShutdownHandler;
 
     let shutdown_handler = ShutdownHandler::new(Duration::from_millis(100));
 
@@ -124,7 +124,7 @@ async fn test_graceful_shutdown_handler() {
 #[tokio::test]
 #[traced_test]
 async fn test_service_health_enum() {
-    use rust_qdrant_vector_rag::app::ServiceHealth;
+    use backend::app::ServiceHealth;
 
     let healthy = ServiceHealth::Healthy;
     assert!(healthy.is_healthy());

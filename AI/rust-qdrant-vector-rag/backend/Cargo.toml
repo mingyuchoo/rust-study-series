@@ -1,6 +1,6 @@
 [package]
-  edition = "2021"
-  name    = "rust-qdrant-vector-rag"
+  edition = "2024"
+  name    = "backend"
   version = "0.1.0"
 
 [dependencies]
@@ -63,32 +63,31 @@
   futures = "0.3"
 
   # Performance monitoring and metrics
-  metrics = "0.22"
+  metrics                     = "0.22"
   metrics-exporter-prometheus = "0.13"
-  
+
   # Connection pooling
   deadpool = "0.10"
-  
+
   # Memory monitoring
   sysinfo = "0.30"
-  
+
   # Performance timing
   instant = "0.1"
 
   # OpenAPI/Swagger (utoipa ecosystem)
-  utoipa = { version = "4", features = ["actix_extras", "uuid", "chrono", "preserve_order"] }
-  utoipa-swagger-ui = { version = "7", features = ["actix-web"] }
+  utoipa            = {features = ["actix_extras", "uuid", "chrono", "preserve_order"], version = "4"}
+  utoipa-swagger-ui = {features = ["actix-web"], version = "7"}
 
 [dev-dependencies]
   # Testing utilities
   tokio-test   = "0.4"
   tracing-test = "0.2"
-  
-  # HTTP client for testing
-  reqwest = { version = "0.11", features = ["json", "multipart"] }
-  
-  # Test utilities
-  tempfile = "3.8"
-  wiremock = "0.5"
-  urlencoding = "2.1"
 
+  # HTTP client for testing
+  reqwest = {features = ["json", "multipart"], version = "0.11"}
+
+  # Test utilities
+  tempfile    = "3.8"
+  urlencoding = "2.1"
+  wiremock    = "0.5"

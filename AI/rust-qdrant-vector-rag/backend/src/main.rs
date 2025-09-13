@@ -1,13 +1,13 @@
 use actix_cors::Cors;
 use actix_web::middleware::{Compress, DefaultHeaders, Logger};
 use actix_web::{App, HttpResponse, HttpServer, web, http::header};
-use rust_qdrant_vector_rag::app::{AppContainer, ShutdownHandler};
-use rust_qdrant_vector_rag::config::AppConfig;
-use rust_qdrant_vector_rag::handlers::{benchmark_handler, cache_stats_handler, clear_cache_handler, health_handler, health_with_performance_handler, metrics_handler, prometheus_metrics_handler, query_handler, simple_health_handler, simple_query_handler, upload_handler, upload_json_handler};
-use rust_qdrant_vector_rag::middleware::{ErrorHandlerMiddleware, RequestLoggerMiddleware};
-use rust_qdrant_vector_rag::monitoring::{PerformanceMonitor, init_metrics};
-use rust_qdrant_vector_rag::services::cache::CacheManager;
-use rust_qdrant_vector_rag::docs::ApiDoc;
+use backend::app::{AppContainer, ShutdownHandler};
+use backend::config::AppConfig;
+use backend::handlers::{benchmark_handler, cache_stats_handler, clear_cache_handler, health_handler, health_with_performance_handler, metrics_handler, prometheus_metrics_handler, query_handler, simple_health_handler, simple_query_handler, upload_handler, upload_json_handler};
+use backend::middleware::{ErrorHandlerMiddleware, RequestLoggerMiddleware};
+use backend::monitoring::{PerformanceMonitor, init_metrics};
+use backend::services::cache::CacheManager;
+use backend::docs::ApiDoc;
 use std::time::Duration;
 use tracing::{error, info, warn};
 use tracing_subscriber::layer::SubscriberExt;
@@ -244,7 +244,7 @@ async fn swagger_redirect_handler() -> HttpResponse {
 
 fn init_logging() {
     tracing_subscriber::registry()
-        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "rust_qdrant_vector_rag=info,actix_web=info".into()))
+        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "backend=info,actix_web=info".into()))
         .with(tracing_subscriber::fmt::layer())
         .init();
 }

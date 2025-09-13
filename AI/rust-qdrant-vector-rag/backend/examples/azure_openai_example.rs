@@ -1,6 +1,6 @@
-use rust_qdrant_vector_rag::clients::AzureOpenAIClient;
-use rust_qdrant_vector_rag::config::AzureOpenAIConfig;
-use rust_qdrant_vector_rag::services::embedding::{EmbeddingService, EmbeddingServiceImpl};
+use backend::clients::AzureOpenAIClient;
+use backend::config::AzureOpenAIConfig;
+use backend::services::embedding::{EmbeddingService, EmbeddingServiceImpl};
 use std::env;
 
 #[tokio::main]
@@ -111,7 +111,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test chat completion
     println!("💬 Testing chat completion...");
-    let messages = vec![rust_qdrant_vector_rag::clients::azure_openai::ChatMessage {
+    let messages = vec![backend::clients::azure_openai::ChatMessage {
         role: "user".to_string(),
         content: "Explain what vector embeddings are in one sentence.".to_string(),
     }];

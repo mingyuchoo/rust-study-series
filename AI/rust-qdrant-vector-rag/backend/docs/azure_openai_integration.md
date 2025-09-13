@@ -73,8 +73,8 @@ The system validates all configuration at startup:
 ### Basic Embedding Generation
 
 ```rust
-use rust_qdrant_vector_rag::clients::AzureOpenAIClient;
-use rust_qdrant_vector_rag::config::AzureOpenAIConfig;
+use backend::clients::AzureOpenAIClient;
+use backend::config::AzureOpenAIConfig;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -108,7 +108,7 @@ println!("Generated {} embeddings", embeddings.len());
 ### Using the Embedding Service
 
 ```rust
-use rust_qdrant_vector_rag::services::embedding::{EmbeddingService, EmbeddingServiceImpl};
+use backend::services::embedding::{EmbeddingService, EmbeddingServiceImpl};
 
 let embedding_service = EmbeddingServiceImpl::new(azure_client);
 
@@ -122,7 +122,7 @@ let embeddings = embedding_service.generate_embeddings_batch(texts).await?;
 ### Chat Completion
 
 ```rust
-use rust_qdrant_vector_rag::clients::azure_openai::ChatMessage;
+use backend::clients::azure_openai::ChatMessage;
 
 let messages = vec![
     ChatMessage {
@@ -270,10 +270,10 @@ The client provides structured logging at multiple levels:
 
 ```rust
 // Enable debug logging
-RUST_LOG=rust_qdrant_vector_rag=debug cargo run
+RUST_LOG=backend=debug cargo run
 
 // Enable trace logging for detailed request/response info
-RUST_LOG=rust_qdrant_vector_rag=trace cargo run
+RUST_LOG=backend=trace cargo run
 ```
 
 ### Metrics
@@ -323,7 +323,7 @@ match client.test_connectivity().await {
 Enable detailed logging for troubleshooting:
 
 ```bash
-RUST_LOG=rust_qdrant_vector_rag=trace cargo run
+RUST_LOG=backend=trace cargo run
 ```
 
 This will show:

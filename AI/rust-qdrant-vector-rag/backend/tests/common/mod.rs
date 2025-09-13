@@ -1,5 +1,5 @@
-use rust_qdrant_vector_rag::app::AppContainer;
-use rust_qdrant_vector_rag::config::AppConfig;
+use backend::app::AppContainer;
+use backend::config::AppConfig;
 use std::env;
 use std::time::Duration;
 use tokio::time::timeout;
@@ -102,7 +102,7 @@ The similarity search uses:
 ### Rust Implementation
 
 ```rust
-use rust_qdrant_vector_rag::services::{DocumentService, RAGService};
+use backend::services::{DocumentService, RAGService};
 
 async fn process_document(service: &DocumentService, content: String) -> Result<String, ServiceError> {
     service.process_document(content, "example.md".to_string()).await

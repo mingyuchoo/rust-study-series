@@ -1,7 +1,7 @@
-use rust_qdrant_vector_rag::app::AppContainer;
-use rust_qdrant_vector_rag::config::AppConfig;
-use rust_qdrant_vector_rag::monitoring::{PerformanceMonitor, PerformanceTimer};
-use rust_qdrant_vector_rag::services::cache::{CacheManager, EmbeddingCacheKey};
+use backend::app::AppContainer;
+use backend::config::AppConfig;
+use backend::monitoring::{PerformanceMonitor, PerformanceTimer};
+use backend::services::cache::{CacheManager, EmbeddingCacheKey};
 use std::time::Duration;
 use tokio::time::Instant;
 use tracing::{info, warn};

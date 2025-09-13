@@ -1,6 +1,6 @@
 use reqwest::{Client, multipart};
-use rust_qdrant_vector_rag::config::AppConfig;
-use rust_qdrant_vector_rag::models::{HealthResponse, RAGResponse, UploadResponse};
+use backend::config::AppConfig;
+use backend::models::{HealthResponse, RAGResponse, UploadResponse};
 use serde_json::json;
 use std::env;
 use std::time::Duration;
@@ -170,9 +170,9 @@ async fn test_health_check_endpoints() {
             // uptime_seconds is u64, so it's always >= 0
             assert!(matches!(
                 health_response.status,
-                rust_qdrant_vector_rag::models::HealthStatus::Healthy
-                    | rust_qdrant_vector_rag::models::HealthStatus::Degraded
-                    | rust_qdrant_vector_rag::models::HealthStatus::Unhealthy
+                backend::models::HealthStatus::Healthy
+                    | backend::models::HealthStatus::Degraded
+                    | backend::models::HealthStatus::Unhealthy
             ));
         },
         | Err(e) => {
@@ -217,7 +217,7 @@ async fn test_document_upload_json_endpoint() {
                         assert!(!upload_response.document_id.is_empty());
                         assert_eq!(upload_response.filename, test_data.sample_filename);
                         assert!(upload_response.chunks_created > 0);
-                        assert!(matches!(upload_response.status, rust_qdrant_vector_rag::models::UploadStatus::Success));
+                        assert!(matches!(upload_response.status, backend::models::UploadStatus::Success));
                     },
                     | Err(e) => {
                         tracing::error!("Failed to parse upload response: {}", e);
@@ -291,7 +291,7 @@ async fn test_document_upload_multipart_endpoint() {
                         assert!(!upload_response.document_id.is_empty());
                         assert_eq!(upload_response.filename, test_data.sample_filename);
                         assert!(upload_response.chunks_created > 0);
-                        assert!(matches!(upload_response.status, rust_qdrant_vector_rag::models::UploadStatus::Success));
+                        assert!(matches!(upload_response.status, backend::models::UploadStatus::Success));
                     },
                     | Err(e) => {
                         tracing::error!("Failed to parse multipart upload response: {}", e);

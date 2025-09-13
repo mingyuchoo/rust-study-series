@@ -530,9 +530,9 @@ async fn test_service_health_monitoring() {
                     // Verify health status structure
                     assert!(matches!(
                         status.overall,
-                        rust_qdrant_vector_rag::app::ServiceHealth::Healthy
-                            | rust_qdrant_vector_rag::app::ServiceHealth::Degraded(_)
-                            | rust_qdrant_vector_rag::app::ServiceHealth::Unhealthy(_)
+                        backend::app::ServiceHealth::Healthy
+                            | backend::app::ServiceHealth::Degraded(_)
+                            | backend::app::ServiceHealth::Unhealthy(_)
                     ));
 
                     tracing::info!("Service health monitoring test: PASSED");

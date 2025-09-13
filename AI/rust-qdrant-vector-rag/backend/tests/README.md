@@ -244,7 +244,7 @@ The tests use structured test data including:
 Enable debug logging for detailed test execution:
 
 ```bash
-RUST_LOG=rust_qdrant_vector_rag=debug,integration=debug cargo test --test integration_e2e_tests --ignored -- --nocapture
+RUST_LOG=backend=debug,integration=debug cargo test --test integration_e2e_tests --ignored -- --nocapture
 ```
 
 ### Test Isolation

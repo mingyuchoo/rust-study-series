@@ -239,7 +239,7 @@ cargo test
 - 로깅 레벨 설정:
 
 ```
-RUST_LOG=rust_qdrant_vector_rag=debug,actix_web=info cargo run
+RUST_LOG=backend=debug,actix_web=info cargo run
 ```
 
 - Prometheus 스크레이프 엔드포인트: `GET /api/v1/metrics/prometheus`

@@ -1,5 +1,5 @@
-use rust_qdrant_vector_rag::app::AppContainer;
-use rust_qdrant_vector_rag::config::AppConfig;
+use backend::app::AppContainer;
+use backend::config::AppConfig;
 use std::env;
 // 환경변수 조작 직렬화를 위한 전역 락
 use std::sync::{Mutex, OnceLock};
@@ -403,9 +403,9 @@ async fn test_service_health_and_monitoring() {
             // Verify health status structure
             assert!(matches!(
                 status.overall,
-                rust_qdrant_vector_rag::app::ServiceHealth::Healthy
-                    | rust_qdrant_vector_rag::app::ServiceHealth::Degraded(_)
-                    | rust_qdrant_vector_rag::app::ServiceHealth::Unhealthy(_)
+                backend::app::ServiceHealth::Healthy
+                    | backend::app::ServiceHealth::Degraded(_)
+                    | backend::app::ServiceHealth::Unhealthy(_)
             ));
 
             // Check individual service health
