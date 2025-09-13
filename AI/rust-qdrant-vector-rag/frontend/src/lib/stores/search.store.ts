@@ -4,8 +4,11 @@
  */
 
 import { writable, derived } from 'svelte/store';
+import { errorHandler } from '../services/error-handler.js';
+import { toastActions } from './toast.store.js';
 import type { SearchState, SearchHistoryItem } from '../types/state.js';
 import type { RAGResponse, QueryConfig } from '../types/api.js';
+import type { AppError, SearchError } from '../types/errors.js';
 
 // Default search configuration
 const defaultSearchConfig: QueryConfig = {
@@ -105,7 +108,34 @@ export const searchActions = {
     });
   },
 
-  failSearch: (_error: string) => {
+  failSearch: (error: string | AppError, retryAction?: () => Promise<void>) => {
+    if (typeof error === 'string') {
+      toastActions.error(error);
+    } else {
+      // Handle AppError with comprehensive error handling
+      const errorContext = errorHandler.handleError(error, retryAction, false);
+      
+      // Show toast with recovery options for search errors
+      if (error.type === 'search_error') {
+        const searchError = error as SearchError;
+        if (searchError.retryable && retryAction) {
+          toastActions.error(errorContext.userMessage, {
+            duration: 0, // Don't auto-dismiss
+            dismissible: true
+          });
+        } else {
+          // For non-retryable search errors (like no results), show as info
+          if (searchError.reason === 'no_results') {
+            toastActions.info(errorContext.userMessage);
+          } else {
+            toastActions.warning(errorContext.userMessage);
+          }
+        }
+      } else {
+        toastActions.error(errorContext.userMessage);
+      }
+    }
+
     searchStore.update(state => ({ 
       ...state, 
       results: null,

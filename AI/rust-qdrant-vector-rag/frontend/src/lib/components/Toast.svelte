@@ -1,17 +1,26 @@
 <script lang="ts">
   import { toastStore, toastActions } from '../stores/toast.store.js';
-  import { CheckCircle, AlertCircle, AlertTriangle, Info, X } from 'lucide-svelte';
+  import { errorHandler } from '../services/error-handler.js';
+  import { CheckCircle, AlertCircle, AlertTriangle, Info, X, RefreshCw, WifiOff } from 'lucide-svelte';
   import { fly, fade } from 'svelte/transition';
   import { flip } from 'svelte/animate';
+  import type { ToastMessage } from '../types/state.js';
 
   export let position: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' = 'top-right';
   export let maxToasts = 5;
+  export let enableRetryActions = true;
+
+  let retryingToasts = new Set<string>();
 
   // Limit the number of toasts displayed
   $: displayedToasts = $toastStore.slice(-maxToasts);
 
   // Get icon for toast type
-  function getIcon(type: string) {
+  function getIcon(type: string, isRetrying = false) {
+    if (isRetrying) {
+      return RefreshCw;
+    }
+    
     switch (type) {
       case 'success':
         return CheckCircle;
@@ -20,6 +29,9 @@
       case 'warning':
         return AlertTriangle;
       case 'info':
+        return Info;
+      case 'offline':
+        return WifiOff;
       default:
         return Info;
     }
@@ -35,6 +47,9 @@
       case 'warning':
         return 'toast-warning';
       case 'info':
+        return 'toast-info';
+      case 'offline':
+        return 'toast-offline';
       default:
         return 'toast-info';
     }
@@ -42,6 +57,7 @@
 
   // Handle toast dismissal
   function dismissToast(id: string) {
+    retryingToasts.delete(id);
     toastActions.remove(id);
   }
 
@@ -51,6 +67,44 @@
       event.preventDefault();
       dismissToast(id);
     }
+  }
+
+  // Handle retry action
+  async function handleRetry(toast: ToastMessage): Promise<void> {
+    if (retryingToasts.has(toast.id)) {
+      return;
+    }
+
+    retryingToasts.add(toast.id);
+    retryingToasts = new Set(retryingToasts); // Trigger reactivity
+
+    try {
+      // Check connectivity for network-related errors
+      const isConnected = await errorHandler.checkConnectivity();
+      
+      if (isConnected) {
+        toastActions.success('Connection restored! You can try your action again.');
+        dismissToast(toast.id);
+      } else {
+        toastActions.warning('Still offline. Please check your connection.');
+      }
+    } catch (error) {
+      console.error('Retry failed:', error);
+      toastActions.error('Retry failed. Please try again later.');
+    } finally {
+      retryingToasts.delete(toast.id);
+      retryingToasts = new Set(retryingToasts); // Trigger reactivity
+    }
+  }
+
+  // Check if toast should show retry button
+  function shouldShowRetryButton(toast: ToastMessage): boolean {
+    return enableRetryActions && 
+           (toast.type === 'error' || toast.type === 'warning') &&
+           (toast.message.toLowerCase().includes('network') ||
+            toast.message.toLowerCase().includes('connection') ||
+            toast.message.toLowerCase().includes('offline') ||
+            toast.message.toLowerCase().includes('failed'));
   }
 
   // Get transition direction based on position
@@ -82,25 +136,39 @@
         animate:flip={{ duration: 200 }}
       >
         <div class="toast-content">
-          <div class="toast-icon">
-            <svelte:component this={getIcon(toast.type)} size={20} />
+          <div class="toast-icon" class:spinning={retryingToasts.has(toast.id)}>
+            <svelte:component this={getIcon(toast.type, retryingToasts.has(toast.id))} size={20} />
           </div>
           
           <div class="toast-message">
             {toast.message}
           </div>
           
-          {#if toast.dismissible}
-            <button
-              class="toast-dismiss"
-              on:click={() => dismissToast(toast.id)}
-              on:keydown={(e) => handleKeydown(e, toast.id)}
-              aria-label="Dismiss notification"
-              title="Dismiss"
-            >
-              <X size={16} />
-            </button>
-          {/if}
+          <div class="toast-actions">
+            {#if shouldShowRetryButton(toast)}
+              <button
+                class="toast-retry"
+                on:click={() => handleRetry(toast)}
+                disabled={retryingToasts.has(toast.id)}
+                aria-label="Retry action"
+                title="Retry"
+              >
+                <RefreshCw size={14} class={retryingToasts.has(toast.id) ? 'spinning' : ''} />
+              </button>
+            {/if}
+            
+            {#if toast.dismissible}
+              <button
+                class="toast-dismiss"
+                on:click={() => dismissToast(toast.id)}
+                on:keydown={(e) => handleKeydown(e, toast.id)}
+                aria-label="Dismiss notification"
+                title="Dismiss"
+              >
+                <X size={16} />
+              </button>
+            {/if}
+          </div>
         </div>
         
         {#if toast.duration && toast.duration > 0}
@@ -182,8 +250,16 @@
     word-wrap: break-word;
   }
 
-  .toast-dismiss {
+  .toast-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
     flex-shrink: 0;
+    margin-top: -0.125rem;
+  }
+
+  .toast-retry,
+  .toast-dismiss {
     background: none;
     border: none;
     cursor: pointer;
@@ -191,17 +267,39 @@
     border-radius: 0.25rem;
     color: var(--color-surface-500);
     transition: all 0.2s ease;
-    margin-top: -0.125rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
+  .toast-retry:hover:not(:disabled),
   .toast-dismiss:hover {
     background-color: var(--color-surface-100);
     color: var(--color-surface-700);
   }
 
+  .toast-retry:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .toast-retry:focus,
   .toast-dismiss:focus {
     outline: 2px solid var(--color-primary-500);
     outline-offset: 2px;
+  }
+
+  .spinning {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .toast-progress {
@@ -279,6 +377,18 @@
     background-color: var(--color-info-500);
   }
 
+  .toast-offline {
+    border-left: 4px solid var(--color-surface-500);
+  }
+
+  .toast-offline .toast-icon {
+    color: var(--color-surface-600);
+  }
+
+  .toast-offline .toast-progress-bar {
+    background-color: var(--color-surface-500);
+  }
+
   /* Mobile responsive */
   @media (max-width: 767px) {
     .toast-container {
@@ -322,10 +432,12 @@
       color: var(--color-surface-100);
     }
 
+    .toast-retry,
     .toast-dismiss {
       color: var(--color-surface-400);
     }
 
+    .toast-retry:hover:not(:disabled),
     .toast-dismiss:hover {
       background-color: var(--color-surface-700);
       color: var(--color-surface-200);

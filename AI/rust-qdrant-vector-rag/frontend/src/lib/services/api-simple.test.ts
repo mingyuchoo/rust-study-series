@@ -63,7 +63,17 @@ describe('ApiService - Core Functionality', () => {
 
         const mockResponse: RAGResponse = {
             answer: 'The main topic is artificial intelligence.',
-            sources: [],
+            sources: [
+                {
+                    document_id: 'doc-123',
+                    chunk_id: 'chunk-1',
+                    relevance_score: 0.95,
+                    snippet: 'This document discusses artificial intelligence as the main topic.',
+                    source_file: 'test.pdf',
+                    chunk_index: 0,
+                    headers: ['Introduction']
+                }
+            ],
             confidence: 0.92,
             query: 'What is the main topic?',
             response_time_ms: 2500,

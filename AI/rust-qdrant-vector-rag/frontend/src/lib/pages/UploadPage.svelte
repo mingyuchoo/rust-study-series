@@ -7,7 +7,9 @@
   import { uploadActions, isUploading, uploadProgress, uploadResult, selectedFile } from '../stores/upload.store.js';
   import { toastActions } from '../stores/toast.store.js';
   import { apiService } from '../services/api.js';
+  import { errorHandler } from '../services/error-handler.js';
   import type { ValidationError } from '../types/state.js';
+  import type { AppError } from '../types/errors.js';
 
   // Local state
   let uploadStartTime: number | null = null;
@@ -56,13 +58,26 @@
   async function startUpload() {
     const file = $selectedFile;
     if (!file) {
-      toastActions.add({
-        type: 'error',
-        message: 'No file selected for upload',
-        duration: 3000
-      });
+      const uploadError = errorHandler.createUploadError(
+        'No file selected for upload',
+        'unknown',
+        'upload_failed'
+      );
+      uploadActions.failUpload(uploadError);
       return;
     }
+
+    // Check if we're online before attempting upload
+    if (!errorHandler.isOnline()) {
+      const networkError = errorHandler.createNetworkError(
+        'Cannot upload while offline. Please check your connection.',
+        { url: '/upload', method: 'POST' }
+      );
+      uploadActions.failUpload(networkError, () => startUpload());
+      return;
+    }
+
+    let progressInterval: number | null = null;
 
     try {
       uploadActions.startUpload();
@@ -70,7 +85,7 @@
       estimatedTimeRemaining = null;
 
       // Simulate progress updates (since we don't have real progress from the API)
-      const progressInterval = setInterval(() => {
+      progressInterval = window.setInterval(() => {
         const currentProgress = $uploadProgress;
         if (currentProgress < 90 && $isUploading) {
           const increment = Math.random() * 10 + 5; // Random increment between 5-15%
@@ -84,39 +99,36 @@
             estimatedTimeRemaining = remaining;
           }
         } else if (!$isUploading) {
-          clearInterval(progressInterval);
+          if (progressInterval) {
+            clearInterval(progressInterval);
+            progressInterval = null;
+          }
         }
       }, 500);
 
       // Perform the actual upload
       const result = await apiService.uploadDocument(file);
       
-      clearInterval(progressInterval);
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
       estimatedTimeRemaining = null;
       
       uploadActions.completeUpload(result);
       
-      toastActions.add({
-        type: 'success',
-        message: `Successfully uploaded ${file.name}`,
-        duration: 5000
-      });
+      toastActions.success(`Successfully uploaded ${file.name}`);
 
     } catch (error) {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
       estimatedTimeRemaining = null;
       
-      let errorMessage = 'Upload failed';
-      if (error && typeof error === 'object' && 'message' in error) {
-        errorMessage = error.message as string;
-      }
-      
-      uploadActions.failUpload(errorMessage);
-      
-      toastActions.add({
-        type: 'error',
-        message: `Upload failed: ${errorMessage}`,
-        duration: 5000
-      });
+      // Handle error with comprehensive error handling and retry capability
+      const appError = error as AppError;
+      uploadActions.failUpload(appError, () => startUpload());
     }
   }
 
@@ -156,140 +168,170 @@
 </script>
 
 <div class="upload-page">
-  <div class="upload-container">
+  <div class="upload-container container-responsive">
     <!-- Page header -->
-    <div class="page-header">
-      <h1 class="page-title">Upload Documents</h1>
-      <p class="page-description">
+    <header class="page-header">
+      <h1 class="page-title text-responsive-xl" id="upload-page-title">Upload Documents</h1>
+      <p class="page-description text-responsive-base" aria-describedby="upload-page-title">
         Upload PDF documents to make them searchable with AI-powered queries
       </p>
-    </div>
+    </header>
 
     <!-- Upload section -->
-    <div class="upload-section">
+    <main class="upload-section" aria-labelledby="upload-page-title">
       {#if !$uploadResult}
         <!-- File upload component -->
-        <FileUpload
-          bind:selectedFile={$selectedFile}
-          disabled={$isUploading}
-          on:fileSelect={handleFileSelect}
-          on:fileRemove={handleFileRemove}
-          on:validationError={handleValidationError}
-          on:dragEnter={handleDragEnter}
-          on:dragLeave={handleDragLeave}
-        />
+        <section class="upload-area" aria-labelledby="upload-area-title">
+          <h2 id="upload-area-title" class="sr-only">File Upload Area</h2>
+          <FileUpload
+            bind:selectedFile={$selectedFile}
+            disabled={$isUploading}
+            on:fileSelect={handleFileSelect}
+            on:fileRemove={handleFileRemove}
+            on:validationError={handleValidationError}
+            on:dragEnter={handleDragEnter}
+            on:dragLeave={handleDragLeave}
+          />
+        </section>
 
         <!-- Upload button -->
         {#if $selectedFile && !$isUploading}
           <div class="upload-actions">
             <button
-              class="btn btn-primary btn-lg"
+              class="btn btn-primary btn-lg focus-ring-enhanced touch-target-enhanced"
               on:click={startUpload}
+              aria-describedby="upload-button-desc"
             >
-              <ArrowRight size={20} />
+              <ArrowRight size={20} aria-hidden="true" />
               Upload Document
+              <span id="upload-button-desc" class="sr-only">
+                Upload {$selectedFile.name} to make it searchable
+              </span>
             </button>
           </div>
         {/if}
 
         <!-- Upload progress -->
         {#if $isUploading || $uploadProgress > 0}
-          <UploadProgress
-            progress={$uploadProgress}
-            isUploading={$isUploading}
-            fileName={$selectedFile?.name || ''}
-            status={$isUploading ? 'uploading' : 'idle'}
-            message={$isUploading ? 'Processing your document...' : ''}
-            {estimatedTimeRemaining}
-          />
+          <section class="progress-section" aria-labelledby="progress-title" aria-live="polite">
+            <h2 id="progress-title" class="sr-only">Upload Progress</h2>
+            <UploadProgress
+              progress={$uploadProgress}
+              isUploading={$isUploading}
+              fileName={$selectedFile?.name || ''}
+              status={$isUploading ? 'uploading' : 'idle'}
+              message={$isUploading ? 'Processing your document...' : ''}
+              {estimatedTimeRemaining}
+            />
+          </section>
         {/if}
       {:else}
         <!-- Upload result -->
-        <UploadResult
-          result={$uploadResult}
-          on:retry={handleRetry}
-          on:newUpload={handleNewUpload}
-          on:dismiss={handleResultDismiss}
-        />
+        <section class="result-section" aria-labelledby="result-title" role="status">
+          <h2 id="result-title" class="sr-only">Upload Result</h2>
+          <UploadResult
+            result={$uploadResult}
+            on:retry={handleRetry}
+            on:newUpload={handleNewUpload}
+            on:dismiss={handleResultDismiss}
+          />
+        </section>
 
         <!-- Success actions -->
         {#if $uploadResult.status === 'success'}
-          <div class="success-actions">
-            <p class="success-message">
+          <section class="success-actions" aria-labelledby="success-title">
+            <h2 id="success-title" class="sr-only">Next Steps</h2>
+            <p class="success-message text-responsive-base">
               Your document has been processed and is ready for searching
             </p>
-            <div class="success-buttons">
+            <div class="success-buttons flex-responsive">
               <button
-                class="btn btn-primary"
+                class="btn btn-primary focus-ring-enhanced touch-target-enhanced"
                 on:click={navigateToSearch}
+                aria-describedby="search-button-desc"
               >
-                <Search size={20} />
+                <Search size={20} aria-hidden="true" />
                 Search Documents
+                <span id="search-button-desc" class="sr-only">
+                  Go to search page to query your uploaded documents
+                </span>
               </button>
               <button
-                class="btn btn-secondary"
+                class="btn btn-secondary focus-ring-enhanced touch-target-enhanced"
                 on:click={handleNewUpload}
+                aria-describedby="new-upload-button-desc"
               >
                 Upload Another
+                <span id="new-upload-button-desc" class="sr-only">
+                  Upload another document
+                </span>
               </button>
             </div>
-          </div>
+          </section>
         {/if}
       {/if}
-    </div>
+    </main>
 
     <!-- Help text -->
-    <div class="help-section">
-      <p class="help-text">
-        Supported formats: PDF files up to 10MB
-      </p>
-      <p class="help-text">
-        Your documents will be processed and split into searchable chunks for AI-powered queries
-      </p>
-    </div>
+    <aside class="help-section" aria-labelledby="help-title">
+      <h2 id="help-title" class="help-title text-responsive-base">Upload Guidelines</h2>
+      <ul class="help-list" role="list">
+        <li class="help-text text-responsive-sm">
+          <strong>Supported formats:</strong> PDF files up to 10MB
+        </li>
+        <li class="help-text text-responsive-sm">
+          <strong>Processing:</strong> Your documents will be processed and split into searchable chunks for AI-powered queries
+        </li>
+        <li class="help-text text-responsive-sm">
+          <strong>Privacy:</strong> Your documents are processed securely and stored temporarily for search purposes
+        </li>
+      </ul>
+    </aside>
   </div>
 </div>
 
 <style>
   .upload-page {
     min-height: 100vh;
-    padding: 2rem 0;
+    padding: var(--spacing-xl) 0;
     background-color: var(--color-surface-50);
+    scroll-behavior: smooth;
   }
 
   .upload-container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 0 1rem;
   }
 
   .page-header {
     text-align: center;
-    margin-bottom: 3rem;
+    margin-bottom: var(--spacing-3xl);
   }
 
   .page-title {
-    margin: 0 0 1rem 0;
-    font-size: 2.5rem;
+    margin: 0 0 var(--spacing-lg) 0;
     font-weight: 700;
     color: var(--color-surface-900);
+    line-height: var(--line-height-tight);
   }
 
   .page-description {
-    margin: 0;
-    font-size: 1.125rem;
+    margin: 0 auto;
     color: var(--color-surface-600);
     max-width: 600px;
-    margin: 0 auto;
-    line-height: 1.6;
+    line-height: var(--line-height-relaxed);
   }
 
   .upload-section {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--spacing-xl);
     max-width: 600px;
     margin: 0 auto;
+  }
+
+  .upload-area {
+    position: relative;
   }
 
   .upload-actions {
@@ -297,30 +339,39 @@
     justify-content: center;
   }
 
+  .progress-section,
+  .result-section {
+    position: relative;
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid transparent;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: 2px solid transparent;
     border-radius: 0.5rem;
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: var(--font-size-base);
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all var(--duration-fast) ease;
     text-decoration: none;
     background: none;
     white-space: nowrap;
+    position: relative;
+    line-height: var(--line-height-tight);
   }
 
   .btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    pointer-events: none;
   }
 
   .btn-lg {
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
+    padding: var(--spacing-lg) var(--spacing-2xl);
+    font-size: var(--font-size-lg);
     width: 100%;
     justify-content: center;
   }
@@ -334,6 +385,13 @@
   .btn-primary:hover:not(:disabled) {
     background-color: var(--color-primary-700);
     border-color: var(--color-primary-700);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--shadow-md);
   }
 
   .btn-secondary {
@@ -345,55 +403,76 @@
   .btn-secondary:hover:not(:disabled) {
     background-color: var(--color-surface-200);
     border-color: var(--color-surface-400);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
   }
 
-  .btn:focus {
-    outline: 2px solid var(--color-primary-500);
-    outline-offset: 2px;
+  .btn-secondary:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
   }
 
   .success-actions {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--spacing-xl);
     align-items: center;
     text-align: center;
-    padding: 2rem;
+    padding: var(--spacing-2xl);
     background-color: var(--color-success-50);
     border-radius: 0.75rem;
-    border: 1px solid var(--color-success-200);
+    border: 2px solid var(--color-success-200);
+    box-shadow: var(--shadow-sm);
   }
 
   .success-message {
     margin: 0;
-    font-size: 1rem;
     color: var(--color-surface-600);
-    line-height: 1.5;
+    line-height: var(--line-height-relaxed);
+    max-width: 500px;
   }
 
   .success-buttons {
     display: flex;
-    gap: 1rem;
+    gap: var(--spacing-lg);
     flex-wrap: wrap;
     justify-content: center;
+    width: 100%;
   }
 
   .help-section {
     text-align: center;
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-surface-200);
+    margin-top: var(--spacing-3xl);
+    padding-top: var(--spacing-2xl);
+    border-top: 2px solid var(--color-surface-200);
+  }
+
+  .help-title {
+    margin: 0 0 var(--spacing-lg) 0;
+    font-weight: 600;
+    color: var(--color-surface-700);
+  }
+
+  .help-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    max-width: 600px;
+    margin: 0 auto;
   }
 
   .help-text {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.875rem;
+    margin: 0;
     color: var(--color-surface-500);
-    line-height: 1.5;
-  }
-
-  .help-text:last-child {
-    margin-bottom: 0;
+    line-height: var(--line-height-relaxed);
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-surface-100);
+    border-radius: 0.5rem;
+    border-left: 4px solid var(--color-primary-300);
   }
 
   /* Dark mode support */
@@ -407,6 +486,10 @@
     }
 
     .page-description {
+      color: var(--color-surface-300);
+    }
+
+    .help-title {
       color: var(--color-surface-300);
     }
 
@@ -436,51 +519,184 @@
 
     .help-text {
       color: var(--color-surface-400);
+      background-color: var(--color-surface-800);
+      border-left-color: var(--color-primary-400);
     }
   }
 
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .upload-page {
-      padding: 1rem 0;
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .btn {
+      border-width: 3px;
     }
 
-    .upload-container {
-      padding: 0 1rem;
+    .success-actions {
+      border-width: 3px;
+    }
+
+    .help-text {
+      border-left-width: 6px;
+    }
+
+    .help-section {
+      border-top-width: 3px;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .btn {
+      transition: none;
+    }
+
+    .btn:hover:not(:disabled),
+    .btn:active:not(:disabled) {
+      transform: none;
+    }
+
+    .upload-page {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Print styles */
+  @media print {
+    .upload-page {
+      background: white;
+      color: black;
+    }
+
+    .btn {
+      border: 2px solid black;
+      background: white;
+      color: black;
+    }
+
+    .success-actions {
+      border: 2px solid black;
+      background: white;
+    }
+
+    .help-text {
+      background: white;
+      border-left: 4px solid black;
+    }
+  }
+
+  /* Focus management for keyboard users */
+  .upload-section:focus-within {
+    outline: 2px solid transparent;
+  }
+
+  /* Enhanced touch targets for mobile */
+  @media (max-width: 767px) {
+    .btn {
+      min-height: 48px;
+      min-width: 48px;
+      font-size: 16px; /* Prevent zoom on iOS */
+    }
+  }
+
+  /* Mobile styles (default) */
+  @media (max-width: 767px) {
+    .upload-page {
+      padding: var(--spacing-lg) 0;
     }
 
     .page-header {
-      margin-bottom: 2rem;
-    }
-
-    .page-title {
-      font-size: 2rem;
-    }
-
-    .page-description {
-      font-size: 1rem;
+      margin-bottom: var(--spacing-2xl);
     }
 
     .upload-section {
       max-width: 100%;
+      gap: var(--spacing-lg);
     }
 
     .success-actions {
-      padding: 1.5rem;
+      padding: var(--spacing-xl);
     }
 
     .success-buttons {
       flex-direction: column;
       width: 100%;
+      gap: var(--spacing-md);
     }
 
     .btn {
+      width: 100%;
       justify-content: center;
     }
 
     .help-section {
-      margin-top: 2rem;
-      padding-top: 1.5rem;
+      margin-top: var(--spacing-2xl);
+      padding-top: var(--spacing-xl);
+    }
+
+    .help-list {
+      gap: var(--spacing-sm);
+    }
+
+    .help-text {
+      text-align: center;
+      padding: var(--spacing-md);
+    }
+  }
+
+  /* Tablet styles */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .upload-page {
+      padding: var(--spacing-2xl) 0;
+    }
+
+    .page-header {
+      margin-bottom: var(--spacing-3xl);
+    }
+
+    .success-buttons {
+      flex-direction: row;
+      justify-content: center;
+    }
+
+    .btn {
+      min-width: 200px;
+    }
+  }
+
+  /* Desktop styles */
+  @media (min-width: 1024px) {
+    .upload-page {
+      padding: var(--spacing-3xl) 0;
+    }
+
+    .page-header {
+      margin-bottom: var(--spacing-4xl);
+    }
+
+    .upload-section {
+      gap: var(--spacing-2xl);
+    }
+
+    .success-actions {
+      padding: var(--spacing-3xl);
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+
+    .btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+  }
+
+  /* Large desktop styles */
+  @media (min-width: 1440px) {
+    .upload-container {
+      max-width: 900px;
+    }
+
+    .upload-section {
+      max-width: 700px;
     }
   }
 </style>

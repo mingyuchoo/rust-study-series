@@ -5,6 +5,7 @@
  */
 
 import { env } from '../config/env.js';
+import { errorHandler } from './error-handler.js';
 import type {
   QueryRequest,
   UploadResponse,
@@ -100,15 +101,19 @@ class ApiClient {
    * Create AppError from fetch error
    */
   private createErrorFromFetch(error: unknown, config: RequestConfig): AppError {
+    // Check if we're offline
+    if (!errorHandler.isOnline()) {
+      return errorHandler.createNetworkError(
+        'You are currently offline. Please check your internet connection.',
+        { url: config.url, method: config.method }
+      );
+    }
+
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      return {
-        type: ErrorTypeValues.NETWORK_ERROR,
-        message: 'Network connection failed',
-        details: { originalError: error.message, url: config.url, method: config.method },
-        retryable: true,
-        severity: ErrorSeverityValues.HIGH,
-        timestamp: new Date()
-      } as NetworkError;
+      return errorHandler.createNetworkError(
+        'Network connection failed',
+        { url: config.url, method: config.method }
+      );
     }
 
     if (error instanceof DOMException && error.name === 'AbortError') {
@@ -238,10 +243,13 @@ class ApiClient {
           if (attempt < this.retryConfig.maxAttempts && this.isRetryableError(error)) {
             lastError = error;
             const delay = this.calculateRetryDelay(attempt);
+            console.log(`API request failed (attempt ${attempt}/${this.retryConfig.maxAttempts}), retrying in ${delay}ms...`);
             await this.sleep(delay);
             continue;
           }
           
+          // Handle the error through the error handler service
+          errorHandler.handleError(error, undefined, false); // Don't show toast here, let the calling code handle it
           throw error;
         }
 
@@ -255,10 +263,13 @@ class ApiClient {
         if (attempt < this.retryConfig.maxAttempts && this.isRetryableError(appError)) {
           lastError = appError;
           const delay = this.calculateRetryDelay(attempt);
+          console.log(`API request failed (attempt ${attempt}/${this.retryConfig.maxAttempts}), retrying in ${delay}ms...`);
           await this.sleep(delay);
           continue;
         }
 
+        // Handle the error through the error handler service
+        errorHandler.handleError(appError, undefined, false); // Don't show toast here, let the calling code handle it
         throw appError;
       }
     }
@@ -329,39 +340,140 @@ class ApiService {
    * Upload document to the backend
    */
   async uploadDocument(file: File): Promise<UploadResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
+    try {
+      // Validate file before upload
+      if (!file) {
+        throw errorHandler.createUploadError(
+          'No file selected',
+          'unknown',
+          'upload_failed'
+        );
+      }
 
-    const response = await this.client.post<UploadResponse>('/upload', formData, {
-      timeout: 60000, // 60 seconds for file upload
-      retryable: false // Don't retry file uploads
-    });
+      if (file.size > env.MAX_FILE_SIZE) {
+        throw errorHandler.createUploadError(
+          'File is too large',
+          file.name,
+          'file_too_large',
+          { fileSize: file.size, fileType: file.type }
+        );
+      }
 
-    return response.data;
+      if (!file.name.toLowerCase().endsWith('.pdf')) {
+        throw errorHandler.createUploadError(
+          'Invalid file type. Please select a PDF file.',
+          file.name,
+          'invalid_type',
+          { fileType: file.type }
+        );
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await this.client.post<UploadResponse>('/upload', formData, {
+        timeout: 60000, // 60 seconds for file upload
+        retryable: false // Don't retry file uploads
+      });
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error && 'type' in error) {
+        // Re-throw AppError as-is
+        throw error;
+      }
+      
+      // Convert unknown errors to upload errors
+      throw errorHandler.createUploadError(
+        'Upload failed due to an unexpected error',
+        file?.name || 'unknown',
+        'upload_failed'
+      );
+    }
   }
 
   /**
    * Query documents using RAG
    */
   async queryDocuments(request: QueryRequest): Promise<RAGResponse> {
-    const response = await this.client.post<RAGResponse>('/query', request, {
-      timeout: 45000, // 45 seconds for AI processing
-      retryable: true
-    });
+    try {
+      // Validate query before sending
+      if (!request.question || request.question.trim().length === 0) {
+        throw errorHandler.createSearchError(
+          'Please enter a search query',
+          request.question || '',
+          'query_too_short'
+        );
+      }
 
-    return response.data;
+      if (request.question.length > env.MAX_QUERY_LENGTH) {
+        throw errorHandler.createSearchError(
+          'Search query is too long',
+          request.question,
+          'query_too_long'
+        );
+      }
+
+      const response = await this.client.post<RAGResponse>('/query', request, {
+        timeout: 45000, // 45 seconds for AI processing
+        retryable: true
+      });
+
+      // Check if response indicates no results
+      if (response.data.sources.length === 0) {
+        throw errorHandler.createSearchError(
+          'No relevant information found for your query',
+          request.question,
+          'no_results'
+        );
+      }
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error && 'type' in error) {
+        // Re-throw AppError as-is
+        throw error;
+      }
+      
+      // Convert unknown errors to search errors
+      throw errorHandler.createSearchError(
+        'Search failed due to an unexpected error',
+        request.question || '',
+        'service_unavailable'
+      );
+    }
   }
 
   /**
    * Get system health status
    */
   async getHealth(): Promise<HealthResponse> {
-    const response = await this.client.get<HealthResponse>('/health', {
-      timeout: 10000, // 10 seconds for health check
-      retryable: true
-    });
+    try {
+      const response = await this.client.get<HealthResponse>('/health', {
+        timeout: 10000, // 10 seconds for health check
+        retryable: true
+      });
 
-    return response.data;
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error && 'type' in error) {
+        // Re-throw AppError as-is
+        throw error;
+      }
+      
+      // Convert unknown errors to API errors
+      throw {
+        type: ErrorTypeValues.API_ERROR,
+        message: 'Health check failed',
+        details: error,
+        retryable: true,
+        severity: ErrorSeverityValues.MEDIUM,
+        timestamp: new Date(),
+        statusCode: 0,
+        endpoint: '/health',
+        method: 'GET'
+      } as ApiError;
+    }
   }
 }
 

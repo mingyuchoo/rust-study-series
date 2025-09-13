@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
 
 // Mock environment variables
 vi.mock('./lib/config/env.js', () => ({

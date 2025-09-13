@@ -4,8 +4,11 @@
  */
 
 import { writable, derived } from 'svelte/store';
+import { errorHandler } from '../services/error-handler.js';
+import { toastActions } from './toast.store.js';
 import type { UploadState } from '../types/state.js';
 import type { UploadResponse } from '../types/api.js';
+import type { AppError, UploadError } from '../types/errors.js';
 
 // Initial state
 const initialUploadState: UploadState = {
@@ -88,14 +91,38 @@ export const uploadActions = {
     }));
   },
 
-  failUpload: (error: string) => {
-    const errorResult: UploadResponse = {
+  failUpload: (error: string | AppError, retryAction?: () => Promise<void>) => {
+    let errorMessage = '';
+    let errorResult: UploadResponse;
+
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else {
+      // Handle AppError with comprehensive error handling
+      const errorContext = errorHandler.handleError(error, retryAction, false);
+      errorMessage = errorContext.userMessage;
+      
+      // Show toast with recovery options for upload errors
+      if (error.type === 'upload_error') {
+        const uploadError = error as UploadError;
+        if (uploadError.retryable && retryAction) {
+          toastActions.error(errorMessage, {
+            duration: 0, // Don't auto-dismiss
+            dismissible: true
+          });
+        } else {
+          toastActions.error(errorMessage);
+        }
+      }
+    }
+
+    errorResult = {
       document_id: '',
       filename: '',
       chunks_created: 0,
       processing_time_ms: 0,
       status: 'failure',
-      message: error,
+      message: errorMessage,
       timestamp: new Date().toISOString()
     };
     

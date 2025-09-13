@@ -18,6 +18,12 @@ export * from './components/index.js';
 
 // Export configuration
 export * from './config/env.js';
+export * from './config/theme.js';
+
+// Export utilities
+export * from './utils/accessibility.js';
+export * from './utils/responsive.js';
+export * from './utils/accessibility-testing.js';
 
 // Export validation schemas
 export * from './schemas/validation.js';

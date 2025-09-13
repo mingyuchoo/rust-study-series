@@ -1,0 +1,7 @@
+# docker
+db_data/
+data/
+**/uploads/
+
+# macos
+.DS_Store

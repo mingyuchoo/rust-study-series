@@ -3,7 +3,9 @@
   import { HealthStatus, SystemMetrics } from '../components/index.js';
   import { healthActions, healthAutoRefresh } from '../stores/health.store.js';
   import { apiService } from '../services/api.js';
+  import { errorHandler } from '../services/error-handler.js';
   import { toastActions } from '../stores/toast.store.js';
+  import type { AppError } from '../types/errors.js';
 
   // Dashboard configuration
   const HEALTH_CHECK_INTERVAL = 30000; // 30 seconds
@@ -11,17 +13,35 @@
 
   // Health check function for the dashboard
   const performHealthCheck = async () => {
+    // Check if we're online before attempting health check
+    if (!errorHandler.isOnline()) {
+      const networkError = errorHandler.createNetworkError(
+        'Cannot check system health while offline',
+        { url: '/health', method: 'GET' }
+      );
+      healthActions.failCheck(networkError.message);
+      return;
+    }
+
     try {
       healthActions.startCheck();
       const healthData = await apiService.getHealth();
       healthActions.setStatus(healthData);
     } catch (error) {
       console.error('Dashboard health check failed:', error);
-      healthActions.failCheck(error instanceof Error ? error.message : 'Unknown error');
       
-      toastActions.error('Failed to fetch system health status', {
-        duration: 5000
-      });
+      // Handle error with comprehensive error handling and retry capability
+      const appError = error as AppError;
+      const errorContext = errorHandler.handleError(appError, performHealthCheck, false);
+      
+      healthActions.failCheck(errorContext.userMessage);
+      
+      // Only show toast for critical health check failures
+      if (appError.severity === 'critical' || appError.severity === 'high') {
+        toastActions.warning('System health check failed', {
+          duration: 5000
+        });
+      }
     }
   };
 
