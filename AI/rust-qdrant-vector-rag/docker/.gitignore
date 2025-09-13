@@ -1,4 +1,5 @@
 # docker
+qdrant_data/
 db_data/
 data/
 **/uploads/
