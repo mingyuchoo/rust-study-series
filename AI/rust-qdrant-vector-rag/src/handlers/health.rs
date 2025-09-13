@@ -9,6 +9,16 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{debug, error, warn};
 
 /// Comprehensive health check handler with dependency injection
+/// OpenAPI 문서화를 위한 메타데이터를 추가합니다.
+#[utoipa::path(
+    get,
+    path = "/api/v1/health",
+    tag = "health",
+    responses(
+        (status = 200, description = "서비스가 정상 또는 부분 정상 상태", body = HealthResponse),
+        (status = 503, description = "서비스가 비정상 상태", body = HealthResponse)
+    )
+)]
 pub async fn health_handler(
     config: web::Data<AppConfig>,
     azure_client: web::Data<AzureOpenAIClient>,
@@ -55,6 +65,15 @@ pub async fn health_handler(
 }
 
 /// Simple health check that just returns basic status
+/// 간단한 헬스체크 엔드포인트에 대한 OpenAPI 메타데이터를 추가합니다.
+#[utoipa::path(
+    get,
+    path = "/health",
+    tag = "health",
+    responses(
+        (status = 200, description = "간단한 헬스체크 응답", body = serde_json::Value)
+    )
+)]
 pub async fn simple_health_handler() -> Result<HttpResponse> {
     Ok(HttpResponse::Ok().json(serde_json::json!({
         "status": "healthy",

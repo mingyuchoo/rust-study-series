@@ -7,5 +7,6 @@ pub mod models;
 pub mod monitoring;
 pub mod repository;
 pub mod services;
+pub mod docs;
 
 pub use models::*;

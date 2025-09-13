@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
 /// Response structure for RAG (Retrieval Augmented Generation) queries
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
 pub struct RAGResponse {
     pub answer: String,
     pub sources: Vec<SourceReference>,
@@ -42,7 +43,7 @@ impl RAGResponse {
 }
 
 /// Reference to a source document chunk used in generating the answer
-#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, ToSchema)]
 pub struct SourceReference {
     pub document_id: String,
     pub chunk_id: String,
@@ -85,7 +86,7 @@ impl SourceReference {
 }
 
 /// Response for document upload operations
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct UploadResponse {
     pub document_id: String,
     pub filename: String,
@@ -125,7 +126,7 @@ impl UploadResponse {
 }
 
 /// Status of document upload operation
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
 pub enum UploadStatus {
     Success,
     Failed,
@@ -133,7 +134,7 @@ pub enum UploadStatus {
 }
 
 /// Health check response
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct HealthResponse {
     pub status: HealthStatus,
     pub timestamp: DateTime<Utc>,
@@ -160,7 +161,7 @@ impl HealthResponse {
 }
 
 /// Overall health status
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, ToSchema)]
 pub enum HealthStatus {
     Healthy,
     Degraded,
@@ -168,7 +169,7 @@ pub enum HealthStatus {
 }
 
 /// Health status of external services
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ServiceHealthStatus {
     pub qdrant: bool,
     pub azure_openai: bool,

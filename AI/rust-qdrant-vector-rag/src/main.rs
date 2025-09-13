@@ -7,10 +7,13 @@ use rust_qdrant_vector_rag::handlers::{benchmark_handler, cache_stats_handler, c
 use rust_qdrant_vector_rag::middleware::{ErrorHandlerMiddleware, RequestLoggerMiddleware};
 use rust_qdrant_vector_rag::monitoring::{PerformanceMonitor, init_metrics};
 use rust_qdrant_vector_rag::services::cache::CacheManager;
+use rust_qdrant_vector_rag::docs::ApiDoc;
 use std::time::Duration;
 use tracing::{error, info, warn};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -157,6 +160,12 @@ async fn main() -> std::io::Result<()> {
                     .route("/cache/stats", web::get().to(cache_stats_handler))
                     .route("/cache/clear", web::post().to(clear_cache_handler))
                     .route("/benchmark", web::post().to(benchmark_handler))
+            )
+            // Swagger UI 및 OpenAPI JSON 제공
+            // /swagger-ui/ 에서 UI 접속, /api-doc/openapi.json 에서 스펙 제공
+            .service(
+                SwaggerUi::new("/swagger-ui/{_:.*}")
+                    .url("/api-doc/openapi.json", ApiDoc::openapi())
             )
             
             // Legacy routes (for backward compatibility)

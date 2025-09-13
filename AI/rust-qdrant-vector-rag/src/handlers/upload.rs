@@ -11,9 +11,10 @@ use futures_util::TryStreamExt;
 use serde::Deserialize;
 use std::time::Instant;
 use tracing::{debug, error, info, warn};
+use utoipa::ToSchema;
 
 /// Request structure for file upload (when using JSON)
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct UploadRequest {
     pub content: String,
     pub filename: String,
@@ -140,6 +141,17 @@ pub async fn upload_handler(mut payload: Multipart, config: web::Data<AppConfig>
 }
 
 /// JSON-based upload handler for when content is sent as JSON
+/// OpenAPI 문서화를 위한 메타데이터를 추가합니다.
+#[utoipa::path(
+    post,
+    path = "/api/v1/upload/json",
+    tag = "upload",
+    request_body = UploadRequest,
+    responses(
+        (status = 200, description = "업로드 완료", body = UploadResponse),
+        (status = 400, description = "유효성 검사 실패")
+    )
+)]
 pub async fn upload_json_handler(
     request: web::Json<UploadRequest>,
     config: web::Data<AppConfig>,

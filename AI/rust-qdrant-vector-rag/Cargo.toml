@@ -75,6 +75,10 @@
   # Performance timing
   instant = "0.1"
 
+  # OpenAPI/Swagger (utoipa ecosystem)
+  utoipa = { version = "4", features = ["actix_extras", "uuid", "chrono", "preserve_order"] }
+  utoipa-swagger-ui = { version = "7", features = ["actix-web"] }
+
 [dev-dependencies]
   # Testing utilities
   tokio-test   = "0.4"
@@ -87,3 +91,4 @@
   tempfile = "3.8"
   wiremock = "0.5"
   urlencoding = "2.1"
+

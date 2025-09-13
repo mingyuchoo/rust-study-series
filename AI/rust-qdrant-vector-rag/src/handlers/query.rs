@@ -10,9 +10,10 @@ use actix_web::{HttpResponse, ResponseError, Result, web};
 use serde::Deserialize;
 use std::time::Instant;
 use tracing::{debug, error, info, warn};
+use utoipa::ToSchema;
 
 /// Request structure for question-answering queries
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct QueryRequest {
     pub question: String,
     #[serde(default)]
@@ -20,7 +21,7 @@ pub struct QueryRequest {
 }
 
 /// Optional configuration for query behavior
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, ToSchema)]
 pub struct QueryConfig {
     /// Maximum number of chunks to retrieve for context
     pub max_chunks: Option<usize>,
@@ -59,6 +60,17 @@ impl From<QueryConfig> for RAGConfig {
 }
 
 /// Query handler that processes question-answering requests
+/// OpenAPI 문서화를 위한 메타데이터를 추가합니다.
+#[utoipa::path(
+    post,
+    path = "/api/v1/query",
+    tag = "query",
+    request_body = QueryRequest,
+    responses(
+        (status = 200, description = "질의 성공", body = crate::models::RAGResponse),
+        (status = 400, description = "유효성 검사 실패")
+    )
+)]
 pub async fn query_handler(request: web::Json<QueryRequest>, config: web::Data<AppConfig>, azure_client: web::Data<AzureOpenAIClient>) -> Result<HttpResponse> {
     let start_time = Instant::now();
 
@@ -113,6 +125,19 @@ pub async fn query_handler(request: web::Json<QueryRequest>, config: web::Data<A
 }
 
 /// Simple query handler that accepts just a question string
+/// path 파라미터 기반 간단 질의 엔드포인트에 대한 메타데이터를 추가합니다.
+#[utoipa::path(
+    get,
+    path = "/api/v1/query/{question}",
+    tag = "query",
+    params(
+        ("question" = String, Path, description = "질의할 질문 문자열")
+    ),
+    responses(
+        (status = 200, description = "질의 성공", body = crate::models::RAGResponse),
+        (status = 400, description = "유효성 검사 실패")
+    )
+)]
 pub async fn simple_query_handler(
     question: web::Path<String>,
     config: web::Data<AppConfig>,
