@@ -1,13 +1,12 @@
-use actix_web::{HttpResponse, Result, web};
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
-use tracing::{debug, error, warn};
-
 use crate::clients::AzureOpenAIClient;
 use crate::config::AppConfig;
 use crate::models::{HealthResponse, HealthStatus, ServiceHealthStatus};
 use crate::repository::{QdrantRepository, VectorRepository};
 use crate::services::{DocumentService, EmbeddingService, RAGService, VectorSearchService};
+use actix_web::{HttpResponse, Result, web};
+use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
+use tracing::{debug, error, warn};
 
 /// Comprehensive health check handler with dependency injection
 pub async fn health_handler(

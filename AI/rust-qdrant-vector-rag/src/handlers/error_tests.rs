@@ -86,7 +86,6 @@ impl RAGService for MockRAGService {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     use crate::middleware::ErrorHandlerMiddleware;
     use actix_web::{App, test, web};
 
@@ -442,7 +441,7 @@ mod tests {
         .await;
 
         // Test multiple sequential requests
-        for i in 0..5 {
+        for i in 0 .. 5 {
             let req = test::TestRequest::post()
                 .uri("/query")
                 .set_json(&json!({

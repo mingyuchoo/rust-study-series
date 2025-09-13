@@ -1,16 +1,13 @@
+use crate::config::QdrantConfig;
+use crate::models::{DocumentChunk, SearchResult, ServiceError};
 use async_trait::async_trait;
 use qdrant_client::Qdrant;
-use qdrant_client::qdrant::{
-    CollectionInfo, Condition, CreateCollection, Distance, FieldCondition, Filter, Match, PointStruct, PointsIdsList, PointsSelector, ScoredPoint, Value,
-    VectorParams, VectorsConfig,
-};
+use qdrant_client::qdrant::{CollectionInfo, Condition, CreateCollection, Distance, FieldCondition, Filter, Match, PointStruct, PointsIdsList, PointsSelector, ScoredPoint, Value, VectorParams, VectorsConfig};
 use std::collections::HashMap;
 use std::time::Duration;
 use tokio::time::sleep;
 use tracing::{debug, error, info, warn};
-
-use crate::config::QdrantConfig;
-use crate::models::{DocumentChunk, SearchResult, ServiceError};
+// Metrics integration will be added when needed
 
 /// Repository trait for vector database operations
 #[async_trait]
@@ -64,17 +61,18 @@ impl QdrantRepository {
         // 로컬 Docker 환경에서는 인증을 사용하지 않으므로 API 키를 설정하지 않음
 
         // Skip compatibility check if server version cannot be obtained
-        // This avoids startup failure in environments where version endpoint is restricted
+        // This avoids startup failure in environments where version endpoint is
+        // restricted
         client_config.check_compatibility = false;
 
-        info!(
-            "Qdrant client configured: check_compatibility={}",
-            client_config.check_compatibility
-        );
+        info!("Qdrant client configured: check_compatibility={}", client_config.check_compatibility);
 
         let client = Qdrant::new(client_config).map_err(|e| ServiceError::database(format!("Failed to create Qdrant client: {}", e)))?;
 
-        let repository = Self { client, config };
+        let repository = Self {
+            client,
+            config,
+        };
 
         // Test connection
         repository.health_check().await?;
@@ -91,7 +89,7 @@ impl QdrantRepository {
     {
         let mut last_error = ServiceError::database("No attempts made".to_string());
 
-        for attempt in 1..=self.config.max_retries {
+        for attempt in 1 ..= self.config.max_retries {
             match operation().await {
                 | Ok(result) => return Ok(result),
                 | Err(e) => {

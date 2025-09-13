@@ -1,9 +1,8 @@
-use actix_web::{App, test, web};
-use serde_json::json;
-
 use crate::clients::AzureOpenAIClient;
 use crate::config::AppConfig;
 use crate::handlers::{health_handler, query_handler, simple_health_handler, upload_json_handler};
+use actix_web::{App, test, web};
+use serde_json::json;
 
 /// Helper function to create test app configuration
 fn create_test_config() -> AppConfig {
@@ -53,7 +52,8 @@ async fn test_health_handler() {
     let req = test::TestRequest::get().uri("/health").to_request();
 
     let resp = test::call_service(&app, req).await;
-    // Health check might fail due to external dependencies, but should return a response
+    // Health check might fail due to external dependencies, but should return a
+    // response
     assert!(resp.status().as_u16() == 200 || resp.status().as_u16() == 503);
 
     let body: serde_json::Value = test::read_body_json(resp).await;
@@ -175,7 +175,8 @@ async fn test_query_handler_with_config() {
         .to_request();
 
     let resp = test::call_service(&app, req).await;
-    // This will likely fail due to missing vector data, but should validate the request structure
-    // The important thing is that it doesn't fail with a 400 validation error
+    // This will likely fail due to missing vector data, but should validate the
+    // request structure The important thing is that it doesn't fail with a 400
+    // validation error
     assert!(resp.status().as_u16() != 400);
 }

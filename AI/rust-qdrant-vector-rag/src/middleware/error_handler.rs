@@ -1,17 +1,12 @@
-use actix_web::{
-    Error, ResponseError,
-    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
-};
+use crate::models::ServiceError;
+use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready};
+use actix_web::{Error, ResponseError};
 use futures_util::future::LocalBoxFuture;
-use std::{
-    future::{Ready, ready},
-    rc::Rc,
-    time::Instant,
-};
+use std::future::{Ready, ready};
+use std::rc::Rc;
+use std::time::Instant;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
-
-use crate::models::ServiceError;
 
 /// Middleware for handling errors and converting them to proper HTTP responses
 pub struct ErrorHandlerMiddleware;
@@ -22,14 +17,16 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
     type Error = Error;
-    type InitError = ();
-    type Transform = ErrorHandlerMiddlewareService<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
+    type InitError = ();
+    type Response = ServiceResponse<B>;
+    type Transform = ErrorHandlerMiddlewareService<S>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(ErrorHandlerMiddlewareService { service: Rc::new(service) }))
+        ready(Ok(ErrorHandlerMiddlewareService {
+            service: Rc::new(service),
+        }))
     }
 }
 
@@ -43,7 +40,9 @@ impl<S> ErrorHandlerMiddlewareService<S> {
         // Handle JSON payload errors
         if let Some(json_err) = err.as_error::<actix_web::error::JsonPayloadError>() {
             return Some(match json_err {
-                | actix_web::error::JsonPayloadError::Overflow { limit: _ } => ServiceError::validation("Request payload too large"),
+                | actix_web::error::JsonPayloadError::Overflow {
+                    limit: _,
+                } => ServiceError::validation("Request payload too large"),
                 | actix_web::error::JsonPayloadError::ContentType => ServiceError::validation("Invalid content type, expected application/json"),
                 | actix_web::error::JsonPayloadError::Deserialize(de_err) => ServiceError::validation(format!("Invalid JSON format: {}", de_err)),
                 | _ => ServiceError::validation("Invalid JSON payload"),
@@ -85,9 +84,9 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Response = ServiceResponse<B>;
 
     forward_ready!(service);
 

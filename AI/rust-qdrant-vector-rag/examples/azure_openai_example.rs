@@ -80,7 +80,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     match embedding_service.generate_embedding(test_text).await {
         | Ok(embedding) => {
             println!("✅ Generated embedding with {} dimensions", embedding.len());
-            println!("   First 5 values: {:?}", &embedding[..5.min(embedding.len())]);
+            println!("   First 5 values: {:?}", &embedding[.. 5.min(embedding.len())]);
         },
         | Err(e) => {
             println!("❌ Failed to generate embedding: {}", e);

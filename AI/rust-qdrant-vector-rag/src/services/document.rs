@@ -82,9 +82,9 @@ impl DocumentServiceImpl {
 
         let mut processed_chunks = Vec::with_capacity(chunks.len());
 
-        for batch_start in (0..chunks.len()).step_by(batch_size) {
+        for batch_start in (0 .. chunks.len()).step_by(batch_size) {
             let batch_end = std::cmp::min(batch_start + batch_size, chunks.len());
-            let batch = &chunks[batch_start..batch_end];
+            let batch = &chunks[batch_start .. batch_end];
 
             debug!("Processing batch {}-{} of {}", batch_start, batch_end - 1, chunks.len());
 
@@ -113,7 +113,7 @@ impl DocumentServiceImpl {
             }
 
             // Add processed chunks to result
-            processed_chunks.extend_from_slice(&chunks[batch_start..batch_end]);
+            processed_chunks.extend_from_slice(&chunks[batch_start .. batch_end]);
         }
 
         info!("Successfully processed {} chunks with embeddings", processed_chunks.len());
@@ -209,9 +209,7 @@ mod tests {
             }
         }
 
-        async fn get_call_count(&self) -> usize {
-            *self.call_count.lock().await
-        }
+        async fn get_call_count(&self) -> usize { *self.call_count.lock().await }
     }
 
     #[async_trait]
@@ -262,9 +260,7 @@ mod tests {
             }
         }
 
-        async fn get_call_count(&self) -> usize {
-            *self.call_count.lock().await
-        }
+        async fn get_call_count(&self) -> usize { *self.call_count.lock().await }
 
         async fn get_stored_chunks_count(&self) -> usize {
             let chunks = self.stored_chunks.lock().await;
@@ -274,13 +270,9 @@ mod tests {
 
     #[async_trait]
     impl VectorRepository for MockVectorRepository {
-        async fn initialize_collection(&self) -> Result<(), ServiceError> {
-            Ok(())
-        }
+        async fn initialize_collection(&self) -> Result<(), ServiceError> { Ok(()) }
 
-        async fn collection_exists(&self) -> Result<bool, ServiceError> {
-            Ok(true)
-        }
+        async fn collection_exists(&self) -> Result<bool, ServiceError> { Ok(true) }
 
         async fn store_chunks(&self, chunks: Vec<DocumentChunk>) -> Result<(), ServiceError> {
             let mut count = self.call_count.lock().await;
@@ -302,21 +294,15 @@ mod tests {
             Ok(stored.get(document_id).cloned().unwrap_or_default())
         }
 
-        async fn delete_chunks_by_document_id(&self, _document_id: &str) -> Result<(), ServiceError> {
-            Ok(())
-        }
+        async fn delete_chunks_by_document_id(&self, _document_id: &str) -> Result<(), ServiceError> { Ok(()) }
 
-        async fn delete_chunk(&self, _chunk_id: &str) -> Result<(), ServiceError> {
-            Ok(())
-        }
+        async fn delete_chunk(&self, _chunk_id: &str) -> Result<(), ServiceError> { Ok(()) }
 
         async fn get_collection_info(&self) -> Result<qdrant_client::qdrant::CollectionInfo, ServiceError> {
             Err(ServiceError::internal("Not implemented in mock"))
         }
 
-        async fn health_check(&self) -> Result<bool, ServiceError> {
-            Ok(true)
-        }
+        async fn health_check(&self) -> Result<bool, ServiceError> { Ok(true) }
     }
 
     fn create_test_service() -> (DocumentServiceImpl, Arc<MockEmbeddingService>, Arc<MockVectorRepository>) {
@@ -514,7 +500,8 @@ mod tests {
 
         assert!(result.is_ok(), "Batch processing should succeed");
 
-        // Verify that batch processing was used (fewer embedding calls than total chunks)
+        // Verify that batch processing was used (fewer embedding calls than total
+        // chunks)
         let embedding_calls = embedding_service.get_call_count().await;
         assert!(embedding_calls > 0, "Should make embedding calls");
         // The exact number depends on chunking, but should be reasonable

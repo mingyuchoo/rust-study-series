@@ -1,8 +1,3 @@
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::signal;
-use tracing::{info, warn};
-
 use crate::clients::AzureOpenAIClient;
 use crate::config::AppConfig;
 use crate::models::ServiceError;
@@ -12,6 +7,10 @@ use crate::services::embedding::EmbeddingServiceImpl;
 use crate::services::rag::RAGServiceImpl;
 use crate::services::vector_search::VectorSearchServiceImpl;
 use crate::services::{ChunkingConfig, DocumentService, EmbeddingService, RAGService, VectorSearchService};
+use std::sync::Arc;
+use std::time::Duration;
+use tokio::signal;
+use tracing::{info, warn};
 
 /// Application container that holds all initialized services and dependencies
 #[derive(Clone)]
@@ -69,7 +68,8 @@ impl AppContainer {
                 | Ok(()) => info!("Azure OpenAI connectivity test passed"),
                 | Err(e) => {
                     warn!("Azure OpenAI connectivity test failed: {}. Service will continue but may have issues.", e);
-                    // Don't fail startup - allow service to start even if connectivity test fails
+                    // Don't fail startup - allow service to start even if
+                    // connectivity test fails
                 },
             }
         } else {
@@ -200,9 +200,7 @@ pub enum ServiceHealth {
 }
 
 impl ServiceHealth {
-    pub fn is_healthy(&self) -> bool {
-        matches!(self, ServiceHealth::Healthy)
-    }
+    pub fn is_healthy(&self) -> bool { matches!(self, ServiceHealth::Healthy) }
 }
 
 /// Overall application health status
@@ -224,9 +222,7 @@ impl HealthStatus {
         }
     }
 
-    pub fn is_healthy(&self) -> bool {
-        self.overall.is_healthy()
-    }
+    pub fn is_healthy(&self) -> bool { self.overall.is_healthy() }
 }
 
 /// Graceful shutdown handler
@@ -236,7 +232,9 @@ pub struct ShutdownHandler {
 
 impl ShutdownHandler {
     pub fn new(shutdown_timeout: Duration) -> Self {
-        Self { shutdown_timeout }
+        Self {
+            shutdown_timeout,
+        }
     }
 
     /// Wait for shutdown signal (SIGINT or SIGTERM)

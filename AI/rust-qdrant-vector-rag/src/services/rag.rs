@@ -147,9 +147,9 @@ impl RAGServiceImpl {
             // Add content
             let content = if chunk.content.len() > config.max_snippet_length * 2 {
                 // If content is very long, truncate but preserve readability
-                let truncated = &chunk.content[..config.max_snippet_length * 2];
+                let truncated = &chunk.content[.. config.max_snippet_length * 2];
                 if let Some(last_sentence) = truncated.rfind('.') {
-                    format!("{}.", &truncated[..last_sentence])
+                    format!("{}.", &truncated[.. last_sentence])
                 } else {
                     format!("{}...", truncated)
                 }
@@ -171,9 +171,9 @@ impl RAGServiceImpl {
             .map(|result| {
                 let chunk = &result.chunk;
                 let snippet = if chunk.content.len() > config.max_snippet_length {
-                    let truncated = &chunk.content[..config.max_snippet_length];
+                    let truncated = &chunk.content[.. config.max_snippet_length];
                     if let Some(last_space) = truncated.rfind(' ') {
-                        format!("{}...", &truncated[..last_space])
+                        format!("{}...", &truncated[.. last_space])
                     } else {
                         format!("{}...", truncated)
                     }
@@ -207,7 +207,7 @@ impl RAGServiceImpl {
         let source_factor = match search_results.len() {
             | 0 => 0.0,
             | 1 => 0.8,
-            | 2..=3 => 1.0,
+            | 2 ..= 3 => 1.0,
             | _ => 0.95, // Too many sources might indicate scattered information
         };
 
@@ -367,7 +367,6 @@ mod tests {
     use crate::services::{EmbeddingService, VectorSearchService};
     use async_trait::async_trait;
     use chrono::Utc;
-
     use tokio::sync::Mutex;
     use uuid::Uuid;
 
@@ -378,11 +377,15 @@ mod tests {
 
     impl MockEmbeddingService {
         fn new() -> Self {
-            Self { should_fail: false }
+            Self {
+                should_fail: false,
+            }
         }
 
         fn with_failure() -> Self {
-            Self { should_fail: true }
+            Self {
+                should_fail: true,
+            }
         }
     }
 
@@ -465,13 +468,9 @@ mod tests {
             Ok(results)
         }
 
-        async fn store_embeddings(&self, _chunks: Vec<DocumentChunk>) -> Result<(), ServiceError> {
-            Ok(())
-        }
+        async fn store_embeddings(&self, _chunks: Vec<DocumentChunk>) -> Result<(), ServiceError> { Ok(()) }
 
-        async fn delete_document_embeddings(&self, _document_id: &str) -> Result<(), ServiceError> {
-            Ok(())
-        }
+        async fn delete_document_embeddings(&self, _document_id: &str) -> Result<(), ServiceError> { Ok(()) }
 
         async fn get_collection_stats(&self) -> Result<crate::services::vector_search::VectorCollectionStats, ServiceError> {
             Ok(crate::services::vector_search::VectorCollectionStats {
@@ -490,7 +489,10 @@ mod tests {
 
     impl MockAzureOpenAIClient {
         fn new(response: String) -> Self {
-            Self { response, should_fail: false }
+            Self {
+                response,
+                should_fail: false,
+            }
         }
 
         fn with_failure() -> Self {

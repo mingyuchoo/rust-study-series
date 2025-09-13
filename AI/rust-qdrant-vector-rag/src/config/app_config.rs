@@ -45,7 +45,8 @@ pub struct QdrantConfig {
 }
 
 impl AppConfig {
-    /// Load configuration from environment variables with comprehensive validation
+    /// Load configuration from environment variables with comprehensive
+    /// validation
     pub fn from_env() -> Result<Self, ServiceError> {
         // Load .env file if it exists
         dotenvy::dotenv().ok();
@@ -210,13 +211,20 @@ impl AzureOpenAIConfig {
             ));
         }
 
-        // Validate API version format
-        if self.api_version.matches('-').count() != 2 {
-             return Err(ServiceError::Configuration(format!(
-                 "Invalid API version format '{}', expected format: YYYY-MM-DD",
-                 self.api_version
-             )));
-         }
+        // Validate API version format (YYYY-MM-DD or YYYY-MM-DD-preview)
+        let parts: Vec<&str> = self.api_version.split('-').collect();
+        let is_valid = parts.len() >= 3 &&
+                      parts.len() <= 4 &&  // YYYY-MM-DD or YYYY-MM-DD-preview
+                      parts[0].len() == 4 && parts[0].parse::<u32>().is_ok() &&  // YYYY
+                      parts[1].len() == 2 && parts[1].parse::<u32>().is_ok() &&  // MM
+                      parts[2].len() == 2 && parts[2].parse::<u32>().is_ok();   // DD
+        
+        if !is_valid {
+            return Err(ServiceError::Configuration(format!(
+                "Invalid API version format '{}', expected format: YYYY-MM-DD or YYYY-MM-DD-preview",
+                self.api_version
+            )));
+        }
 
         // Validate deployment names are not empty
         if self.chat_deployment.trim().is_empty() {
@@ -248,9 +256,7 @@ impl AzureOpenAIConfig {
     }
 
     /// Get the base URL for Azure OpenAI API calls
-    pub fn base_url(&self) -> String {
-        format!("{}/openai", self.endpoint.trim_end_matches('/'))
-    }
+    pub fn base_url(&self) -> String { format!("{}/openai", self.endpoint.trim_end_matches('/')) }
 }
 
 impl QdrantConfig {

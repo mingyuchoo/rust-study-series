@@ -1,10 +1,9 @@
+use rust_qdrant_vector_rag::app::{AppContainer, HealthStatus};
+use rust_qdrant_vector_rag::config::AppConfig;
 use std::env;
 use std::time::Duration;
 use tokio::time::timeout;
 use tracing_test::traced_test;
-
-use rust_qdrant_vector_rag::app::{AppContainer, HealthStatus};
-use rust_qdrant_vector_rag::config::AppConfig;
 
 /// Test configuration setup for integration tests
 fn setup_test_config() -> AppConfig {

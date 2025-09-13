@@ -47,70 +47,44 @@ pub enum ServiceError {
 
 impl ServiceError {
     /// Creates a new document processing error
-    pub fn document_processing<T: Into<String>>(msg: T) -> Self {
-        ServiceError::DocumentProcessing(msg.into())
-    }
+    pub fn document_processing<T: Into<String>>(msg: T) -> Self { ServiceError::DocumentProcessing(msg.into()) }
 
     /// Creates a new embedding generation error
-    pub fn embedding_generation<T: Into<String>>(msg: T) -> Self {
-        ServiceError::EmbeddingGeneration(msg.into())
-    }
+    pub fn embedding_generation<T: Into<String>>(msg: T) -> Self { ServiceError::EmbeddingGeneration(msg.into()) }
 
     /// Creates a new vector search error
-    pub fn vector_search<T: Into<String>>(msg: T) -> Self {
-        ServiceError::VectorSearch(msg.into())
-    }
+    pub fn vector_search<T: Into<String>>(msg: T) -> Self { ServiceError::VectorSearch(msg.into()) }
 
     /// Creates a new external API error
-    pub fn external_api<T: Into<String>>(msg: T) -> Self {
-        ServiceError::ExternalAPI(msg.into())
-    }
+    pub fn external_api<T: Into<String>>(msg: T) -> Self { ServiceError::ExternalAPI(msg.into()) }
 
     /// Creates a new configuration error
-    pub fn configuration<T: Into<String>>(msg: T) -> Self {
-        ServiceError::Configuration(msg.into())
-    }
+    pub fn configuration<T: Into<String>>(msg: T) -> Self { ServiceError::Configuration(msg.into()) }
 
     /// Creates a new internal error
-    pub fn internal<T: Into<String>>(msg: T) -> Self {
-        ServiceError::Internal(msg.into())
-    }
+    pub fn internal<T: Into<String>>(msg: T) -> Self { ServiceError::Internal(msg.into()) }
 
     /// Creates a new validation error
-    pub fn validation<T: Into<String>>(msg: T) -> Self {
-        ServiceError::Validation(msg.into())
-    }
+    pub fn validation<T: Into<String>>(msg: T) -> Self { ServiceError::Validation(msg.into()) }
 
     /// Creates a new not found error
     #[allow(dead_code)]
-    pub fn not_found<T: Into<String>>(msg: T) -> Self {
-        ServiceError::NotFound(msg.into())
-    }
+    pub fn not_found<T: Into<String>>(msg: T) -> Self { ServiceError::NotFound(msg.into()) }
 
     /// Creates a new rate limit error
-    pub fn rate_limit<T: Into<String>>(msg: T) -> Self {
-        ServiceError::RateLimit(msg.into())
-    }
+    pub fn rate_limit<T: Into<String>>(msg: T) -> Self { ServiceError::RateLimit(msg.into()) }
 
     /// Creates a new authentication error
-    pub fn authentication<T: Into<String>>(msg: T) -> Self {
-        ServiceError::Authentication(msg.into())
-    }
+    pub fn authentication<T: Into<String>>(msg: T) -> Self { ServiceError::Authentication(msg.into()) }
 
     /// Creates a new serialization error
-    pub fn serialization<T: Into<String>>(msg: T) -> Self {
-        ServiceError::Serialization(msg.into())
-    }
+    pub fn serialization<T: Into<String>>(msg: T) -> Self { ServiceError::Serialization(msg.into()) }
 
     /// Creates a new network error
-    pub fn network<T: Into<String>>(msg: T) -> Self {
-        ServiceError::Network(msg.into())
-    }
+    pub fn network<T: Into<String>>(msg: T) -> Self { ServiceError::Network(msg.into()) }
 
     /// Creates a new database error
-    pub fn database<T: Into<String>>(msg: T) -> Self {
-        ServiceError::Database(msg.into())
-    }
+    pub fn database<T: Into<String>>(msg: T) -> Self { ServiceError::Database(msg.into()) }
 
     /// Returns the HTTP status code for this error
     pub fn status_code(&self) -> u16 {
@@ -244,9 +218,7 @@ impl ResponseError for ServiceError {
 
 // Error conversions from common error types
 impl From<serde_json::Error> for ServiceError {
-    fn from(err: serde_json::Error) -> Self {
-        ServiceError::Serialization(err.to_string())
-    }
+    fn from(err: serde_json::Error) -> Self { ServiceError::Serialization(err.to_string()) }
 }
 
 impl From<reqwest::Error> for ServiceError {
@@ -260,15 +232,11 @@ impl From<reqwest::Error> for ServiceError {
 }
 
 impl From<config::ConfigError> for ServiceError {
-    fn from(err: config::ConfigError) -> Self {
-        ServiceError::Configuration(err.to_string())
-    }
+    fn from(err: config::ConfigError) -> Self { ServiceError::Configuration(err.to_string()) }
 }
 
 impl From<uuid::Error> for ServiceError {
-    fn from(err: uuid::Error) -> Self {
-        ServiceError::Internal(format!("UUID generation error: {}", err))
-    }
+    fn from(err: uuid::Error) -> Self { ServiceError::Internal(format!("UUID generation error: {}", err)) }
 }
 
 impl From<std::io::Error> for ServiceError {
@@ -284,14 +252,10 @@ impl From<std::io::Error> for ServiceError {
 }
 
 impl From<tokio::time::error::Elapsed> for ServiceError {
-    fn from(err: tokio::time::error::Elapsed) -> Self {
-        ServiceError::Network(format!("Operation timed out: {}", err))
-    }
+    fn from(err: tokio::time::error::Elapsed) -> Self { ServiceError::Network(format!("Operation timed out: {}", err)) }
 }
 
 // Additional error conversion for common crates
 impl From<url::ParseError> for ServiceError {
-    fn from(err: url::ParseError) -> Self {
-        ServiceError::Configuration(format!("Invalid URL: {}", err))
-    }
+    fn from(err: url::ParseError) -> Self { ServiceError::Configuration(format!("Invalid URL: {}", err)) }
 }

@@ -1,13 +1,9 @@
-use actix_web::{
-    Error,
-    dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready},
-};
+use actix_web::Error;
+use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready};
 use futures_util::future::LocalBoxFuture;
-use std::{
-    future::{Ready, ready},
-    rc::Rc,
-    time::Instant,
-};
+use std::future::{Ready, ready};
+use std::rc::Rc;
+use std::time::Instant;
 use tracing::{info, warn};
 
 /// Middleware for logging HTTP requests and responses
@@ -19,14 +15,16 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
     type Error = Error;
-    type InitError = ();
-    type Transform = RequestLoggerMiddlewareService<S>;
     type Future = Ready<Result<Self::Transform, Self::InitError>>;
+    type InitError = ();
+    type Response = ServiceResponse<B>;
+    type Transform = RequestLoggerMiddlewareService<S>;
 
     fn new_transform(&self, service: S) -> Self::Future {
-        ready(Ok(RequestLoggerMiddlewareService { service: Rc::new(service) }))
+        ready(Ok(RequestLoggerMiddlewareService {
+            service: Rc::new(service),
+        }))
     }
 }
 
@@ -40,9 +38,9 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = LocalBoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Response = ServiceResponse<B>;
 
     forward_ready!(service);
 

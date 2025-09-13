@@ -1,16 +1,12 @@
-use std::env;
-use std::time::Duration;
-use tracing_test::traced_test;
-
 use rust_qdrant_vector_rag::app::AppContainer;
 use rust_qdrant_vector_rag::config::AppConfig;
-
+use std::env;
 // 환경변수 조작 직렬화를 위한 전역 락
 use std::sync::{Mutex, OnceLock};
+use std::time::Duration;
+use tracing_test::traced_test;
 static ENV_MUTEX: OnceLock<Mutex<()>> = OnceLock::new();
-fn env_lock() -> std::sync::MutexGuard<'static, ()> {
-    ENV_MUTEX.get_or_init(|| Mutex::new(())).lock().expect("env mutex poisoned")
-}
+fn env_lock() -> std::sync::MutexGuard<'static, ()> { ENV_MUTEX.get_or_init(|| Mutex::new(())).lock().expect("env mutex poisoned") }
 
 /// Test configuration setup for integration tests with test collection
 fn setup_test_config() -> AppConfig {
@@ -100,9 +96,10 @@ This document serves as test data for the integration tests.
 /// Setup test environment with Qdrant collection
 async fn setup_test_environment() -> Result<AppContainer, Box<dyn std::error::Error>> {
     let config = setup_test_config();
-    
+
     // Initialize app container
-    let container = AppContainer::new(config).await
+    let container = AppContainer::new(config)
+        .await
         .map_err(|e| format!("Failed to initialize app container: {}", e))?;
 
     // Clean up any existing test data
@@ -115,11 +112,11 @@ async fn setup_test_environment() -> Result<AppContainer, Box<dyn std::error::Er
 async fn cleanup_test_collection(container: &AppContainer) -> Result<(), Box<dyn std::error::Error>> {
     // Try to delete the test collection if it exists
     if container.vector_repository.collection_exists().await.unwrap_or(false) {
-        // In a real implementation, you might want to delete all points or recreate the collection
-        // For now, we'll just ensure it's properly initialized
+        // In a real implementation, you might want to delete all points or recreate the
+        // collection For now, we'll just ensure it's properly initialized
         tracing::info!("Test collection exists, ensuring it's clean");
     }
-    
+
     Ok(())
 }
 
@@ -128,42 +125,43 @@ async fn cleanup_test_collection(container: &AppContainer) -> Result<(), Box<dyn
 #[traced_test]
 #[ignore] // Requires external services (Qdrant, Azure OpenAI)
 async fn test_complete_document_upload_workflow() {
-    let container = setup_test_environment().await
-        .expect("Failed to setup test environment");
-    
+    let container = setup_test_environment().await.expect("Failed to setup test environment");
+
     let test_data = TestData::new();
 
     // Test document processing through service layer
-    let result = container.document_service
+    let result = container
+        .document_service
         .process_document(test_data.sample_markdown.to_string(), test_data.sample_filename.to_string())
         .await;
 
     match result {
-        Ok(document_id) => {
+        | Ok(document_id) => {
             tracing::info!("Document processed successfully: {}", document_id);
-            
+
             // Verify chunks were created
-            let chunks = container.document_service
+            let chunks = container
+                .document_service
                 .get_document_chunks(document_id.clone())
                 .await
                 .expect("Failed to get document chunks");
-            
+
             assert!(!chunks.is_empty(), "No chunks were created");
             assert!(chunks.len() >= 2, "Expected at least 2 chunks for test document");
-            
+
             // Verify chunks have embeddings
             for chunk in &chunks {
                 assert!(chunk.embedding.is_some(), "Chunk should have embedding");
                 assert!(!chunk.content.is_empty(), "Chunk content should not be empty");
                 assert_eq!(chunk.document_id, document_id, "Chunk should reference correct document");
             }
-            
+
             tracing::info!("Created {} chunks with embeddings", chunks.len());
-        }
-        Err(e) => {
+        },
+        | Err(e) => {
             tracing::warn!("Document processing failed (expected in test environment): {}", e);
             // In test environment without real services, this is expected
-        }
+        },
     }
 }
 
@@ -172,21 +170,21 @@ async fn test_complete_document_upload_workflow() {
 #[traced_test]
 #[ignore] // Requires external services (Qdrant, Azure OpenAI)
 async fn test_complete_question_answering_pipeline() {
-    let container = setup_test_environment().await
-        .expect("Failed to setup test environment");
-    
+    let container = setup_test_environment().await.expect("Failed to setup test environment");
+
     let test_data = TestData::new();
 
     // First, upload a document
-    let _document_id = match container.document_service
+    let _document_id = match container
+        .document_service
         .process_document(test_data.sample_markdown.to_string(), test_data.sample_filename.to_string())
         .await
     {
-        Ok(id) => id,
-        Err(e) => {
+        | Ok(id) => id,
+        | Err(e) => {
             tracing::warn!("Document upload failed (expected in test environment): {}", e);
             return; // Skip the rest of the test
-        }
+        },
     };
 
     // Wait a moment for indexing
@@ -195,23 +193,24 @@ async fn test_complete_question_answering_pipeline() {
     // Test each question
     for question in test_data.test_questions {
         tracing::info!("Testing question: {}", question);
-        
-        let result = container.rag_service
-            .answer_question(question.to_string())
-            .await;
+
+        let result = container.rag_service.answer_question(question.to_string()).await;
 
         match result {
-            Ok(response) => {
+            | Ok(response) => {
                 assert!(!response.answer.is_empty(), "Answer should not be empty");
                 assert!(!response.query.is_empty(), "Query should not be empty");
                 assert!(response.confidence >= 0.0 && response.confidence <= 1.0, "Confidence should be between 0 and 1");
-                
-                tracing::info!("Question answered successfully: {} sources, confidence: {:.2}", 
-                    response.source_count(), response.confidence);
-            }
-            Err(e) => {
+
+                tracing::info!(
+                    "Question answered successfully: {} sources, confidence: {:.2}",
+                    response.source_count(),
+                    response.confidence
+                );
+            },
+            | Err(e) => {
                 tracing::warn!("Question answering failed (expected in test environment): {}", e);
-            }
+            },
         }
     }
 }
@@ -221,48 +220,43 @@ async fn test_complete_question_answering_pipeline() {
 #[traced_test]
 async fn test_error_scenarios_and_edge_cases() {
     let container = match setup_test_environment().await {
-        Ok(c) => c,
-        Err(e) => {
+        | Ok(c) => c,
+        | Err(e) => {
             tracing::warn!("Failed to setup test environment: {}", e);
             return; // Skip test if environment setup fails
-        }
+        },
     };
 
     // Test empty document
-    let result = container.document_service
-        .process_document("".to_string(), "empty.md".to_string())
-        .await;
-    
+    let result = container.document_service.process_document("".to_string(), "empty.md".to_string()).await;
+
     assert!(result.is_err(), "Empty document should fail");
 
     // Test invalid markdown (should still work as it's just text)
-    let result = container.document_service
+    let result = container
+        .document_service
         .process_document("Just plain text without markdown".to_string(), "plain.md".to_string())
         .await;
-    
+
     // This should succeed as plain text is valid
     match result {
-        Ok(_) => tracing::info!("Plain text processed successfully"),
-        Err(e) => tracing::warn!("Plain text processing failed: {}", e),
+        | Ok(_) => tracing::info!("Plain text processed successfully"),
+        | Err(e) => tracing::warn!("Plain text processing failed: {}", e),
     }
 
     // Test empty question
-    let result = container.rag_service
-        .answer_question("".to_string())
-        .await;
-    
+    let result = container.rag_service.answer_question("".to_string()).await;
+
     assert!(result.is_err(), "Empty question should fail");
 
     // Test very long question
     let long_question = "What ".repeat(500) + "is this about?";
-    let result = container.rag_service
-        .answer_question(long_question)
-        .await;
-    
+    let result = container.rag_service.answer_question(long_question).await;
+
     // This might succeed or fail depending on implementation limits
     match result {
-        Ok(_) => tracing::info!("Long question processed successfully"),
-        Err(e) => tracing::info!("Long question failed as expected: {}", e),
+        | Ok(_) => tracing::info!("Long question processed successfully"),
+        | Err(e) => tracing::info!("Long question failed as expected: {}", e),
     }
 }
 
@@ -271,40 +265,40 @@ async fn test_error_scenarios_and_edge_cases() {
 #[traced_test]
 async fn test_data_cleanup_and_isolation() {
     let container = match setup_test_environment().await {
-        Ok(c) => c,
-        Err(e) => {
+        | Ok(c) => c,
+        | Err(e) => {
             tracing::warn!("Failed to setup test environment: {}", e);
             return;
-        }
+        },
     };
 
     // Test that we start with a clean collection
     let collection_info = container.vector_repository.get_collection_info().await;
     match collection_info {
-        Ok(info) => {
+        | Ok(info) => {
             let point_count = info.points_count.unwrap_or(0);
             tracing::info!("Collection has {} points", point_count);
             // We don't assert on the count as other tests might have added data
-        }
-        Err(e) => {
+        },
+        | Err(e) => {
             tracing::warn!("Failed to get collection info: {}", e);
-        }
+        },
     }
 
     // Test collection exists
     let exists = container.vector_repository.collection_exists().await;
     match exists {
-        Ok(true) => tracing::info!("Test collection exists"),
-        Ok(false) => tracing::warn!("Test collection does not exist"),
-        Err(e) => tracing::warn!("Failed to check collection existence: {}", e),
+        | Ok(true) => tracing::info!("Test collection exists"),
+        | Ok(false) => tracing::warn!("Test collection does not exist"),
+        | Err(e) => tracing::warn!("Failed to check collection existence: {}", e),
     }
 
     // Test health check
     let health = container.vector_repository.health_check().await;
     match health {
-        Ok(true) => tracing::info!("Vector repository is healthy"),
-        Ok(false) => tracing::warn!("Vector repository is not healthy"),
-        Err(e) => tracing::warn!("Health check failed: {}", e),
+        | Ok(true) => tracing::info!("Vector repository is healthy"),
+        | Ok(false) => tracing::warn!("Vector repository is not healthy"),
+        | Err(e) => tracing::warn!("Health check failed: {}", e),
     }
 }
 
@@ -314,29 +308,25 @@ async fn test_data_cleanup_and_isolation() {
 #[ignore] // Requires external services and can be resource intensive
 async fn test_concurrent_operations() {
     let container = match setup_test_environment().await {
-        Ok(c) => c,
-        Err(e) => {
+        | Ok(c) => c,
+        | Err(e) => {
             tracing::warn!("Failed to setup test environment: {}", e);
             return;
-        }
+        },
     };
 
     let test_data = TestData::new();
 
     // Test concurrent document uploads
     let mut upload_tasks = Vec::new();
-    
-    for i in 0..3 {
+
+    for i in 0 .. 3 {
         let container_clone = container.clone();
         let content = format!("{}\n\n## Document {}", test_data.sample_markdown, i);
         let filename = format!("test_doc_{}.md", i);
-        
-        let task = tokio::spawn(async move {
-            container_clone.document_service
-                .process_document(content, filename)
-                .await
-        });
-        
+
+        let task = tokio::spawn(async move { container_clone.document_service.process_document(content, filename).await });
+
         upload_tasks.push(task);
     }
 
@@ -344,16 +334,16 @@ async fn test_concurrent_operations() {
     let mut successful_uploads = 0;
     for task in upload_tasks {
         match task.await {
-            Ok(Ok(_)) => {
+            | Ok(Ok(_)) => {
                 successful_uploads += 1;
                 tracing::info!("Concurrent upload succeeded");
-            }
-            Ok(Err(e)) => {
+            },
+            | Ok(Err(e)) => {
                 tracing::warn!("Concurrent upload failed: {}", e);
-            }
-            Err(e) => {
+            },
+            | Err(e) => {
                 tracing::error!("Task failed: {}", e);
-            }
+            },
         }
     }
 
@@ -361,17 +351,13 @@ async fn test_concurrent_operations() {
 
     // Test concurrent queries
     let mut query_tasks = Vec::new();
-    
+
     for question in test_data.test_questions {
         let container_clone = container.clone();
         let question = question.to_string();
-        
-        let task = tokio::spawn(async move {
-            container_clone.rag_service
-                .answer_question(question)
-                .await
-        });
-        
+
+        let task = tokio::spawn(async move { container_clone.rag_service.answer_question(question).await });
+
         query_tasks.push(task);
     }
 
@@ -379,16 +365,16 @@ async fn test_concurrent_operations() {
     let mut successful_queries = 0;
     for task in query_tasks {
         match task.await {
-            Ok(Ok(_)) => {
+            | Ok(Ok(_)) => {
                 successful_queries += 1;
                 tracing::info!("Concurrent query succeeded");
-            }
-            Ok(Err(e)) => {
+            },
+            | Ok(Err(e)) => {
                 tracing::warn!("Concurrent query failed: {}", e);
-            }
-            Err(e) => {
+            },
+            | Err(e) => {
                 tracing::error!("Query task failed: {}", e);
-            }
+            },
         }
     }
 
@@ -400,51 +386,52 @@ async fn test_concurrent_operations() {
 #[traced_test]
 async fn test_service_health_and_monitoring() {
     let container = match setup_test_environment().await {
-        Ok(c) => c,
-        Err(e) => {
+        | Ok(c) => c,
+        | Err(e) => {
             tracing::warn!("Failed to setup test environment: {}", e);
             return;
-        }
+        },
     };
 
     // Test comprehensive health check
     let health_result = container.health_check().await;
-    
+
     match health_result {
-        Ok(status) => {
+        | Ok(status) => {
             tracing::info!("Health check completed: {:?}", status);
-            
+
             // Verify health status structure
-            assert!(matches!(status.overall, 
-                rust_qdrant_vector_rag::app::ServiceHealth::Healthy |
-                rust_qdrant_vector_rag::app::ServiceHealth::Degraded(_) |
-                rust_qdrant_vector_rag::app::ServiceHealth::Unhealthy(_)
+            assert!(matches!(
+                status.overall,
+                rust_qdrant_vector_rag::app::ServiceHealth::Healthy
+                    | rust_qdrant_vector_rag::app::ServiceHealth::Degraded(_)
+                    | rust_qdrant_vector_rag::app::ServiceHealth::Unhealthy(_)
             ));
-            
+
             // Check individual service health
             tracing::info!("Azure OpenAI health: {:?}", status.azure_openai);
             tracing::info!("Qdrant health: {:?}", status.qdrant);
-            
+
             if let Some(collection_status) = &status.collection_status {
                 tracing::info!("Collection status: {}", collection_status);
             }
-        }
-        Err(e) => {
+        },
+        | Err(e) => {
             tracing::warn!("Health check failed: {}", e);
-        }
+        },
     }
 
     // Test individual service connectivity
     let azure_connectivity = container.azure_client.test_connectivity().await;
     match azure_connectivity {
-        Ok(()) => tracing::info!("Azure OpenAI connectivity test passed"),
-        Err(e) => tracing::warn!("Azure OpenAI connectivity test failed: {}", e),
+        | Ok(()) => tracing::info!("Azure OpenAI connectivity test passed"),
+        | Err(e) => tracing::warn!("Azure OpenAI connectivity test failed: {}", e),
     }
 
     let qdrant_health = container.vector_repository.health_check().await;
     match qdrant_health {
-        Ok(healthy) => tracing::info!("Qdrant health check: {}", healthy),
-        Err(e) => tracing::warn!("Qdrant health check failed: {}", e),
+        | Ok(healthy) => tracing::info!("Qdrant health check: {}", healthy),
+        | Err(e) => tracing::warn!("Qdrant health check failed: {}", e),
     }
 }
 
@@ -454,57 +441,58 @@ async fn test_service_health_and_monitoring() {
 #[ignore] // Performance test - run manually
 async fn test_performance_and_resource_usage() {
     let container = match setup_test_environment().await {
-        Ok(c) => c,
-        Err(e) => {
+        | Ok(c) => c,
+        | Err(e) => {
             tracing::warn!("Failed to setup test environment: {}", e);
             return;
-        }
+        },
     };
 
     let test_data = TestData::new();
 
     // Test document processing performance
     let start_time = std::time::Instant::now();
-    
-    let result = container.document_service
+
+    let result = container
+        .document_service
         .process_document(test_data.sample_markdown.to_string(), test_data.sample_filename.to_string())
         .await;
 
     let processing_time = start_time.elapsed();
-    
+
     match result {
-        Ok(document_id) => {
+        | Ok(document_id) => {
             tracing::info!("Document processed in {:?}: {}", processing_time, document_id);
-            
+
             // Performance assertions (adjust based on expected performance)
-            assert!(processing_time < Duration::from_secs(30), "Document processing should complete within 30 seconds");
-        }
-        Err(e) => {
+            assert!(
+                processing_time < Duration::from_secs(30),
+                "Document processing should complete within 30 seconds"
+            );
+        },
+        | Err(e) => {
             tracing::warn!("Document processing failed: {}", e);
-        }
+        },
     }
 
     // Test query performance
     for question in test_data.test_questions {
         let start_time = std::time::Instant::now();
-        
-        let result = container.rag_service
-            .answer_question(question.to_string())
-            .await;
+
+        let result = container.rag_service.answer_question(question.to_string()).await;
 
         let query_time = start_time.elapsed();
-        
+
         match result {
-            Ok(response) => {
-                tracing::info!("Query '{}' answered in {:?}, confidence: {:.2}", 
-                    question, query_time, response.confidence);
-                
+            | Ok(response) => {
+                tracing::info!("Query '{}' answered in {:?}, confidence: {:.2}", question, query_time, response.confidence);
+
                 // Performance assertions
                 assert!(query_time < Duration::from_secs(15), "Query should complete within 15 seconds");
-            }
-            Err(e) => {
+            },
+            | Err(e) => {
                 tracing::warn!("Query failed: {}", e);
-            }
+            },
         }
     }
 }
@@ -515,45 +503,47 @@ async fn test_performance_and_resource_usage() {
 #[ignore] // Memory test - run manually
 async fn test_memory_usage_with_large_documents() {
     let container = match setup_test_environment().await {
-        Ok(c) => c,
-        Err(e) => {
+        | Ok(c) => c,
+        | Err(e) => {
             tracing::warn!("Failed to setup test environment: {}", e);
             return;
-        }
+        },
     };
 
     // Create a large document (repeat content multiple times)
     let base_content = TestData::new().sample_markdown;
-    let large_content = (0..10).map(|i| format!("# Section {}\n\n{}", i, base_content)).collect::<Vec<_>>().join("\n\n");
-    
+    let large_content = (0 .. 10)
+        .map(|i| format!("# Section {}\n\n{}", i, base_content))
+        .collect::<Vec<_>>()
+        .join("\n\n");
+
     tracing::info!("Testing with large document: {} bytes", large_content.len());
 
-    let result = container.document_service
+    let result = container
+        .document_service
         .process_document(large_content, "large_test_document.md".to_string())
         .await;
 
     match result {
-        Ok(document_id) => {
+        | Ok(document_id) => {
             tracing::info!("Large document processed successfully: {}", document_id);
-            
+
             // Check chunk count
-            let chunks = container.document_service
-                .get_document_chunks(document_id)
-                .await;
-                
+            let chunks = container.document_service.get_document_chunks(document_id).await;
+
             match chunks {
-                Ok(chunks) => {
+                | Ok(chunks) => {
                     tracing::info!("Large document created {} chunks", chunks.len());
                     assert!(chunks.len() > 10, "Large document should create multiple chunks");
-                }
-                Err(e) => {
+                },
+                | Err(e) => {
                     tracing::warn!("Failed to get chunks for large document: {}", e);
-                }
+                },
             }
-        }
-        Err(e) => {
+        },
+        | Err(e) => {
             tracing::warn!("Large document processing failed: {}", e);
-        }
+        },
     }
 }
 
@@ -563,7 +553,7 @@ fn cleanup_test_env() {
     let _guard = env_lock();
     let test_vars = [
         "SERVER_HOST",
-        "SERVER_PORT", 
+        "SERVER_PORT",
         "SERVER_MAX_REQUEST_SIZE",
         "SERVER_TIMEOUT_SECONDS",
         "AZURE_OPENAI_ENDPOINT",
@@ -592,14 +582,14 @@ fn cleanup_test_env() {
 async fn test_cleanup_functionality() {
     // Test environment cleanup
     setup_test_config();
-    
+
     // Verify variables are set
     assert!(env::var("SERVER_HOST").is_ok());
     assert!(env::var("QDRANT_COLLECTION_NAME").is_ok());
-    
+
     // Clean up
     cleanup_test_env();
-    
+
     // Verify cleanup worked
     assert!(env::var("SERVER_HOST").is_err());
     assert!(env::var("QDRANT_COLLECTION_NAME").is_err());

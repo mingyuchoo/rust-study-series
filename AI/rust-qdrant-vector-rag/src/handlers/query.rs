@@ -1,18 +1,15 @@
-use actix_web::{HttpResponse, ResponseError, Result, web};
-use serde::Deserialize;
-use std::time::Instant;
-use tracing::{debug, error, info, warn};
-
 use crate::clients::AzureOpenAIClient;
 use crate::config::AppConfig;
 use crate::models::ServiceError;
 use crate::repository::{QdrantRepository, VectorRepository};
-use crate::services::{
-    RAGService,
-    embedding::EmbeddingServiceImpl,
-    rag::{RAGConfig, RAGServiceImpl},
-    vector_search::VectorSearchServiceImpl,
-};
+use crate::services::RAGService;
+use crate::services::embedding::EmbeddingServiceImpl;
+use crate::services::rag::{RAGConfig, RAGServiceImpl};
+use crate::services::vector_search::VectorSearchServiceImpl;
+use actix_web::{HttpResponse, ResponseError, Result, web};
+use serde::Deserialize;
+use std::time::Instant;
+use tracing::{debug, error, info, warn};
 
 /// Request structure for question-answering queries
 #[derive(Debug, Deserialize)]

@@ -99,7 +99,7 @@ mod tests {
         let mut handles = vec![];
 
         // Simulate concurrent operations with mixed success/failure
-        for i in 0..10 {
+        for i in 0 .. 10 {
             let error_count_clone = error_count.clone();
             let success_count_clone = success_count.clone();
             let resilience_clone = Arc::new(resilience.clone());

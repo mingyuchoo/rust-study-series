@@ -308,9 +308,7 @@ mod tests {
             Ok(())
         }
 
-        async fn collection_exists(&self) -> Result<bool, ServiceError> {
-            Ok(true)
-        }
+        async fn collection_exists(&self) -> Result<bool, ServiceError> { Ok(true) }
 
         async fn store_chunks(&self, chunks: Vec<DocumentChunk>) -> Result<(), ServiceError> {
             if self.should_fail {
@@ -353,9 +351,7 @@ mod tests {
             Ok(())
         }
 
-        async fn delete_chunk(&self, _chunk_id: &str) -> Result<(), ServiceError> {
-            Ok(())
-        }
+        async fn delete_chunk(&self, _chunk_id: &str) -> Result<(), ServiceError> { Ok(()) }
 
         async fn get_collection_info(&self) -> Result<qdrant_client::qdrant::CollectionInfo, ServiceError> {
             if self.should_fail {
@@ -377,9 +373,7 @@ mod tests {
             })
         }
 
-        async fn health_check(&self) -> Result<bool, ServiceError> {
-            Ok(!self.should_fail)
-        }
+        async fn health_check(&self) -> Result<bool, ServiceError> { Ok(!self.should_fail) }
     }
 
     fn create_test_chunk(document_id: &str, content: &str, embedding: Vec<f32>) -> DocumentChunk {

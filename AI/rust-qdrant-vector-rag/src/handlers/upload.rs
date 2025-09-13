@@ -1,15 +1,16 @@
+use crate::clients::AzureOpenAIClient;
+use crate::config::AppConfig;
+use crate::models::{ServiceError, UploadResponse};
+use crate::repository::{QdrantRepository, VectorRepository};
+use crate::services::DocumentService;
+use crate::services::document::DocumentServiceImpl;
+use crate::services::embedding::EmbeddingServiceImpl;
 use actix_multipart::Multipart;
 use actix_web::{HttpResponse, ResponseError, Result, web};
 use futures_util::TryStreamExt;
 use serde::Deserialize;
 use std::time::Instant;
 use tracing::{debug, error, info, warn};
-
-use crate::clients::AzureOpenAIClient;
-use crate::config::AppConfig;
-use crate::models::{ServiceError, UploadResponse};
-use crate::repository::{QdrantRepository, VectorRepository};
-use crate::services::{DocumentService, document::DocumentServiceImpl, embedding::EmbeddingServiceImpl};
 
 /// Request structure for file upload (when using JSON)
 #[derive(Debug, Deserialize)]

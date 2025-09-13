@@ -62,6 +62,19 @@
   # Futures utilities
   futures = "0.3"
 
+  # Performance monitoring and metrics
+  metrics = "0.22"
+  metrics-exporter-prometheus = "0.13"
+  
+  # Connection pooling
+  deadpool = "0.10"
+  
+  # Memory monitoring
+  sysinfo = "0.30"
+  
+  # Performance timing
+  instant = "0.1"
+
 [dev-dependencies]
   # Testing utilities
   tokio-test   = "0.4"

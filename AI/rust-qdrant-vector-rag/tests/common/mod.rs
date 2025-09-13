@@ -1,9 +1,8 @@
+use rust_qdrant_vector_rag::app::AppContainer;
+use rust_qdrant_vector_rag::config::AppConfig;
 use std::env;
 use std::time::Duration;
 use tokio::time::timeout;
-
-use rust_qdrant_vector_rag::app::AppContainer;
-use rust_qdrant_vector_rag::config::AppConfig;
 
 /// Common test configuration setup
 pub fn setup_test_config(collection_name: &str, port: u16) -> AppConfig {
@@ -186,7 +185,7 @@ The integration tests verify:
 - Data isolation and cleanup
 "#;
 
-        let large_markdown = (0..5)
+        let large_markdown = (0 .. 5)
             .map(|i| format!("# Section {}\n\n{}\n\n", i + 1, sample_markdown))
             .collect::<Vec<_>>()
             .join("");
@@ -207,17 +206,16 @@ The integration tests verify:
         }
     }
 
-    pub fn get_large_document(&self) -> (&str, &str) {
-        (&self.large_markdown, "large_integration_test_document.md")
-    }
+    pub fn get_large_document(&self) -> (&str, &str) { (&self.large_markdown, "large_integration_test_document.md") }
 }
 
 /// Test environment setup with error handling
 pub async fn setup_test_environment(collection_name: &str, port: u16) -> Result<AppContainer, Box<dyn std::error::Error>> {
     let config = setup_test_config(collection_name, port);
-    
+
     // Initialize app container with timeout
-    let container = timeout(Duration::from_secs(30), AppContainer::new(config)).await
+    let container = timeout(Duration::from_secs(30), AppContainer::new(config))
+        .await
         .map_err(|_| "Timeout initializing app container")?
         .map_err(|e| format!("Failed to initialize app container: {}", e))?;
 
@@ -231,40 +229,39 @@ pub async fn cleanup_test_environment(container: &AppContainer) -> Result<(), Bo
     // - Clear the test collection
     // - Reset any test state
     // - Clean up temporary files
-    
+
     tracing::info!("Cleaning up test environment for collection: {}", container.config.qdrant.collection_name);
-    
+
     // For now, just verify the collection exists
     if container.vector_repository.collection_exists().await.unwrap_or(false) {
         tracing::info!("Test collection exists and is ready for cleanup");
     }
-    
+
     Ok(())
 }
 
 /// Wait for service readiness
 #[allow(dead_code)]
 pub async fn wait_for_service_readiness(container: &AppContainer, max_attempts: u32) -> Result<(), Box<dyn std::error::Error>> {
-    for attempt in 1..=max_attempts {
+    for attempt in 1 ..= max_attempts {
         match container.health_check().await {
-            Ok(status) => {
+            | Ok(status) =>
                 if status.is_healthy() {
                     tracing::info!("Service is ready after {} attempts", attempt);
                     return Ok(());
                 } else {
                     tracing::warn!("Service not healthy on attempt {}: {:?}", attempt, status);
-                }
-            }
-            Err(e) => {
+                },
+            | Err(e) => {
                 tracing::warn!("Health check failed on attempt {}: {}", attempt, e);
-            }
+            },
         }
-        
+
         if attempt < max_attempts {
             tokio::time::sleep(Duration::from_millis(500)).await;
         }
     }
-    
+
     Err("Service did not become ready within the specified attempts".into())
 }
 
@@ -299,18 +296,17 @@ pub fn cleanup_test_env() {
 pub async fn verify_test_isolation(container1: &AppContainer, container2: &AppContainer) -> Result<(), Box<dyn std::error::Error>> {
     // Verify that different test containers use different collections
     assert_ne!(
-        container1.config.qdrant.collection_name,
-        container2.config.qdrant.collection_name,
+        container1.config.qdrant.collection_name, container2.config.qdrant.collection_name,
         "Test containers should use different collections for isolation"
     );
-    
+
     // Verify that both collections can exist independently
     let exists1 = container1.vector_repository.collection_exists().await.unwrap_or(false);
     let exists2 = container2.vector_repository.collection_exists().await.unwrap_or(false);
-    
+
     tracing::info!("Collection {} exists: {}", container1.config.qdrant.collection_name, exists1);
     tracing::info!("Collection {} exists: {}", container2.config.qdrant.collection_name, exists2);
-    
+
     Ok(())
 }
 
@@ -327,16 +323,14 @@ impl PerformanceMetrics {
             operation_name,
         }
     }
-    
-    pub fn elapsed(&self) -> Duration {
-        self.start_time.elapsed()
-    }
-    
+
+    pub fn elapsed(&self) -> Duration { self.start_time.elapsed() }
+
     pub fn log_completion(&self) {
         let elapsed = self.elapsed();
         tracing::info!("Operation '{}' completed in {:?}", self.operation_name, elapsed);
     }
-    
+
     pub fn assert_performance(&self, max_duration: Duration) {
         let elapsed = self.elapsed();
         assert!(
@@ -366,16 +360,16 @@ impl TestResults {
             skipped_tests: 0,
         }
     }
-    
+
     pub fn add_result(&mut self, result: TestResult) {
         self.total_tests += 1;
         match result {
-            TestResult::Passed => self.passed_tests += 1,
-            TestResult::Failed => self.failed_tests += 1,
-            TestResult::Skipped => self.skipped_tests += 1,
+            | TestResult::Passed => self.passed_tests += 1,
+            | TestResult::Failed => self.failed_tests += 1,
+            | TestResult::Skipped => self.skipped_tests += 1,
         }
     }
-    
+
     pub fn success_rate(&self) -> f32 {
         if self.total_tests == 0 {
             0.0
@@ -383,7 +377,7 @@ impl TestResults {
             self.passed_tests as f32 / self.total_tests as f32
         }
     }
-    
+
     pub fn log_summary(&self) {
         tracing::info!(
             "Test Results: {}/{} passed ({:.1}%), {} failed, {} skipped",

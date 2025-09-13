@@ -1,3 +1,4 @@
+pub mod cache;
 pub mod chunker;
 pub mod document;
 pub mod embedding;
@@ -12,6 +13,8 @@ mod tests;
 #[cfg(test)]
 mod error_integration_tests;
 
+#[allow(unused_imports)]
+pub use cache::*;
 pub use chunker::{ChunkingConfig, DocumentChunker};
 pub use document::DocumentService;
 pub use embedding::EmbeddingService;

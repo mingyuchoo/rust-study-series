@@ -35,7 +35,8 @@ impl Default for ResilienceConfig {
     }
 }
 
-/// Service for implementing resilience patterns like retry, timeout, and circuit breaker
+/// Service for implementing resilience patterns like retry, timeout, and
+/// circuit breaker
 #[derive(Clone)]
 pub struct ResilienceService {
     config: ResilienceConfig,
@@ -43,13 +44,13 @@ pub struct ResilienceService {
 
 impl ResilienceService {
     pub fn new(config: ResilienceConfig) -> Self {
-        Self { config }
+        Self {
+            config,
+        }
     }
 
     #[allow(dead_code)]
-    pub fn with_default_config() -> Self {
-        Self::new(ResilienceConfig::default())
-    }
+    pub fn with_default_config() -> Self { Self::new(ResilienceConfig::default()) }
 
     /// Executes an operation with retry logic and exponential backoff
     pub async fn retry_with_backoff<F, Fut, T>(&self, operation: F) -> Result<T, ServiceError>
@@ -168,7 +169,8 @@ impl ResilienceService {
         .await
     }
 
-    /// Calculates the delay for the next retry attempt using exponential backoff
+    /// Calculates the delay for the next retry attempt using exponential
+    /// backoff
     fn calculate_delay(&self, attempt: usize) -> Duration {
         let base_delay = self.config.base_delay_ms as f64;
         let multiplier = self.config.backoff_multiplier;
@@ -189,7 +191,7 @@ impl ResilienceService {
         let mut rng = rand::thread_rng();
 
         // Add ±25% jitter
-        let jitter_factor = rng.gen_range(0.75..=1.25);
+        let jitter_factor = rng.gen_range(0.75 ..= 1.25);
         delay_ms * jitter_factor
     }
 
@@ -381,7 +383,7 @@ impl CircuitBreaker {
 
             match state.state {
                 | CircuitState::Closed => true,
-                | CircuitState::Open => {
+                | CircuitState::Open =>
                     if let Some(last_failure) = state.last_failure_time {
                         if last_failure.elapsed() >= self.recovery_timeout {
                             debug!("Circuit breaker transitioning to half-open");
@@ -392,8 +394,7 @@ impl CircuitBreaker {
                         }
                     } else {
                         false
-                    }
-                },
+                    },
                 | CircuitState::HalfOpen => true,
             }
         };

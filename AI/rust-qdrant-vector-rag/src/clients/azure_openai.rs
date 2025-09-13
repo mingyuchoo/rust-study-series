@@ -1,5 +1,6 @@
 use crate::config::AzureOpenAIConfig;
 use crate::models::ServiceError;
+use crate::monitoring::{Metrics, PerformanceTimer};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -114,17 +115,21 @@ impl AzureOpenAIClient {
             .build()
             .map_err(|e| ServiceError::configuration(format!("Failed to create HTTP client: {}", e)))?;
 
-        Ok(Self { config, client })
+        Ok(Self {
+            config,
+            client,
+        })
     }
 
     /// Get the configuration (for testing)
     #[cfg(test)]
-    pub(crate) fn config(&self) -> &AzureOpenAIConfig {
-        &self.config
-    }
+    pub(crate) fn config(&self) -> &AzureOpenAIConfig { &self.config }
 
     /// Generate embedding for a single text
     pub async fn generate_embedding(&self, text: &str) -> Result<Vec<f32>, ServiceError> {
+        let timer = PerformanceTimer::start("azure_openai_embedding");
+        Metrics::increment_azure_openai_requests("embedding");
+
         debug!("Generating embedding for text of length: {}", text.len());
 
         let request = EmbeddingRequest {
@@ -132,7 +137,30 @@ impl AzureOpenAIClient {
             user: None,
         };
 
-        let response = self.execute_with_retry(|| self.create_embedding_request(&request)).await?;
+        let result = self.execute_with_retry(|| self.create_embedding_request(&request)).await;
+
+        match &result {
+            | Ok(_response) => {
+                let duration = timer.finish();
+                Metrics::record_azure_openai_duration("embedding", duration);
+                Metrics::increment_embeddings_generated(1);
+            },
+            | Err(e) => {
+                timer.finish();
+                let error_type = match e {
+                    | ServiceError::RateLimit(_) => {
+                        Metrics::increment_azure_openai_rate_limits();
+                        "rate_limit"
+                    },
+                    | ServiceError::Authentication(_) => "authentication",
+                    | ServiceError::Network(_) => "network",
+                    | _ => "other",
+                };
+                Metrics::increment_azure_openai_errors("embedding", error_type);
+            },
+        }
+
+        let response = result?;
 
         if response.data.is_empty() {
             return Err(ServiceError::embedding_generation("No embedding data returned from API"));
@@ -155,6 +183,11 @@ impl AzureOpenAIClient {
             return Ok(Vec::new());
         }
 
+        let timer = PerformanceTimer::start("azure_openai_embedding_batch");
+        Metrics::increment_azure_openai_requests("embedding_batch");
+        Metrics::increment_embedding_batch_requests();
+        Metrics::record_embedding_batch_size(texts.len());
+
         debug!("Generating embeddings for batch of {} texts", texts.len());
 
         let request = EmbeddingRequest {
@@ -162,7 +195,30 @@ impl AzureOpenAIClient {
             user: None,
         };
 
-        let response = self.execute_with_retry(|| self.create_embedding_request(&request)).await?;
+        let result = self.execute_with_retry(|| self.create_embedding_request(&request)).await;
+
+        match &result {
+            | Ok(_) => {
+                let duration = timer.finish();
+                Metrics::record_azure_openai_duration("embedding_batch", duration);
+                Metrics::increment_embeddings_generated(texts.len() as u64);
+            },
+            | Err(e) => {
+                timer.finish();
+                let error_type = match e {
+                    | ServiceError::RateLimit(_) => {
+                        Metrics::increment_azure_openai_rate_limits();
+                        "rate_limit"
+                    },
+                    | ServiceError::Authentication(_) => "authentication",
+                    | ServiceError::Network(_) => "network",
+                    | _ => "other",
+                };
+                Metrics::increment_azure_openai_errors("embedding_batch", error_type);
+            },
+        }
+
+        let response = result?;
 
         if response.data.len() != texts.len() {
             return Err(ServiceError::embedding_generation(format!(
@@ -189,6 +245,9 @@ impl AzureOpenAIClient {
         max_tokens: Option<u32>,
         temperature: Option<f32>,
     ) -> Result<String, ServiceError> {
+        let timer = PerformanceTimer::start("azure_openai_chat_completion");
+        Metrics::increment_azure_openai_requests("chat_completion");
+
         debug!("Generating chat completion for {} messages", messages.len());
 
         let request = ChatCompletionRequest {
@@ -198,7 +257,29 @@ impl AzureOpenAIClient {
             user: None,
         };
 
-        let response = self.execute_with_retry(|| self.create_chat_completion_request(&request)).await?;
+        let result = self.execute_with_retry(|| self.create_chat_completion_request(&request)).await;
+
+        match &result {
+            | Ok(_) => {
+                let duration = timer.finish();
+                Metrics::record_azure_openai_duration("chat_completion", duration);
+            },
+            | Err(e) => {
+                timer.finish();
+                let error_type = match e {
+                    | ServiceError::RateLimit(_) => {
+                        Metrics::increment_azure_openai_rate_limits();
+                        "rate_limit"
+                    },
+                    | ServiceError::Authentication(_) => "authentication",
+                    | ServiceError::Network(_) => "network",
+                    | _ => "other",
+                };
+                Metrics::increment_azure_openai_errors("chat_completion", error_type);
+            },
+        }
+
+        let response = result?;
 
         if response.choices.is_empty() {
             return Err(ServiceError::external_api("No choices returned from chat completion API"));
@@ -224,7 +305,7 @@ impl AzureOpenAIClient {
     {
         let mut last_error = None;
 
-        for attempt in 0..=self.config.max_retries {
+        for attempt in 0 ..= self.config.max_retries {
             match request_fn().await {
                 | Ok(response) => return Ok(response),
                 | Err(error) => {
@@ -328,7 +409,7 @@ impl AzureOpenAIClient {
                 | 400 => Err(ServiceError::validation(error_msg)),
                 | 401 => Err(ServiceError::authentication(error_msg)),
                 | 429 => Err(ServiceError::rate_limit(error_msg)),
-                | 500..=599 => Err(ServiceError::external_api(error_msg)),
+                | 500 ..= 599 => Err(ServiceError::external_api(error_msg)),
                 | _ => Err(ServiceError::external_api(error_msg)),
             };
         }
@@ -339,7 +420,7 @@ impl AzureOpenAIClient {
             | 400 => Err(ServiceError::validation(error_msg)),
             | 401 => Err(ServiceError::authentication(error_msg)),
             | 429 => Err(ServiceError::rate_limit(error_msg)),
-            | 500..=599 => Err(ServiceError::external_api(error_msg)),
+            | 500 ..= 599 => Err(ServiceError::external_api(error_msg)),
             | _ => Err(ServiceError::external_api(error_msg)),
         }
     }

@@ -27,9 +27,7 @@ impl MockAzureOpenAIServer {
     }
 
     #[allow(dead_code)]
-    pub async fn add_response(&self, response: MockResponse) {
-        self.responses.lock().await.push(response);
-    }
+    pub async fn add_response(&self, response: MockResponse) { self.responses.lock().await.push(response); }
 
     #[allow(dead_code)]
     pub async fn add_embedding_response(&self, embeddings: Vec<Vec<f32>>) {
@@ -105,9 +103,7 @@ impl MockAzureOpenAIServer {
     }
 
     #[allow(dead_code)]
-    pub async fn add_rate_limit_response(&self) {
-        self.add_error_response(429, "Rate limit exceeded").await;
-    }
+    pub async fn add_rate_limit_response(&self) { self.add_error_response(429, "Rate limit exceeded").await; }
 }
 
 fn create_test_config() -> AzureOpenAIConfig {

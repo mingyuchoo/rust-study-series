@@ -226,21 +226,21 @@ impl DocumentChunker {
 
         // Try to find a good break point (sentence, paragraph, etc.)
         let start_pos = content.len().saturating_sub(self.config.overlap_size);
-        let overlap_section = &content[start_pos..];
+        let overlap_section = &content[start_pos ..];
 
         // Look for sentence boundaries
         if let Some(sentence_end) = overlap_section.rfind(". ") {
-            return overlap_section[sentence_end + 2..].to_string();
+            return overlap_section[sentence_end + 2 ..].to_string();
         }
 
         // Look for paragraph boundaries
         if let Some(para_end) = overlap_section.rfind("\n\n") {
-            return overlap_section[para_end + 2..].to_string();
+            return overlap_section[para_end + 2 ..].to_string();
         }
 
         // Look for line boundaries
         if let Some(line_end) = overlap_section.rfind('\n') {
-            return overlap_section[line_end + 1..].to_string();
+            return overlap_section[line_end + 1 ..].to_string();
         }
 
         // Fallback to character-based overlap
@@ -271,7 +271,7 @@ impl DocumentChunker {
             // Try to find a good break point if we're not at the end
             if end < content.len() {
                 let search_start = std::cmp::max(start, end.saturating_sub(200));
-                let search_section = &content[search_start..end];
+                let search_section = &content[search_start .. end];
 
                 // Look for sentence boundaries
                 if let Some(sentence_pos) = search_section.rfind(". ") {
@@ -283,7 +283,7 @@ impl DocumentChunker {
                 }
             }
 
-            let chunk_content = content[start..chunk_end].trim();
+            let chunk_content = content[start .. chunk_end].trim();
             if chunk_content.len() >= self.config.min_chunk_size {
                 let metadata = ChunkMetadata::new(source_file.to_string(), *chunk_index, element.element_type.clone())
                     .with_headers(headers.to_vec())
@@ -347,9 +347,7 @@ impl DocumentChunker {
 }
 
 impl Default for DocumentChunker {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[cfg(test)]

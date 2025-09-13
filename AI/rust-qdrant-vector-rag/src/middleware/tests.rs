@@ -9,9 +9,7 @@ async fn success_handler() -> Result<HttpResponse> {
 }
 
 /// Test handler that returns an error
-async fn error_handler() -> Result<HttpResponse> {
-    Err(actix_web::error::ErrorInternalServerError("Test error"))
-}
+async fn error_handler() -> Result<HttpResponse> { Err(actix_web::error::ErrorInternalServerError("Test error")) }
 
 #[actix_web::test]
 async fn test_request_logger_middleware_success() {

@@ -37,13 +37,17 @@ pub struct DocumentParser {
 impl DocumentParser {
     /// Creates a new document parser
     pub fn new() -> Self {
-        Self { preserve_structure: true }
+        Self {
+            preserve_structure: true,
+        }
     }
 
     /// Creates a parser with custom configuration
     #[allow(dead_code)]
     pub fn with_config(preserve_structure: bool) -> Self {
-        Self { preserve_structure }
+        Self {
+            preserve_structure,
+        }
     }
 
     /// Parses markdown content and returns structured elements
@@ -102,11 +106,10 @@ impl DocumentParser {
                     current_content.push_str(&code);
                     current_content.push('`');
                 },
-                | Event::Html(html) => {
+                | Event::Html(html) =>
                     if self.preserve_structure {
                         current_content.push_str(&html);
-                    }
-                },
+                    },
                 | Event::SoftBreak | Event::HardBreak => {
                     current_content.push('\n');
                 },
@@ -305,9 +308,7 @@ impl DocumentParser {
 }
 
 impl Default for DocumentParser {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 #[cfg(test)]
@@ -453,7 +454,8 @@ More content."#;
 
         assert!(!text_elements.is_empty());
 
-        // The text under "Subsection 1.1.1" should have all three headers in its hierarchy
+        // The text under "Subsection 1.1.1" should have all three headers in its
+        // hierarchy
         let subsection_text = text_elements.iter().find(|e| e.content == "Some content.").unwrap();
 
         assert_eq!(subsection_text.headers.len(), 3);

@@ -133,7 +133,7 @@ mod tests {
         let mut handles = vec![];
 
         // Simulate concurrent error creation
-        for i in 0..100 {
+        for i in 0 .. 100 {
             let counter_clone = counter.clone();
             let handle = task::spawn(async move {
                 let error = ServiceError::internal(format!("Error {}", i));

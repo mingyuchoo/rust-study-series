@@ -26,15 +26,11 @@ impl RAGResponse {
     }
 
     /// Returns the number of sources used
-    pub fn source_count(&self) -> usize {
-        self.sources.len()
-    }
+    pub fn source_count(&self) -> usize { self.sources.len() }
 
     /// Returns the highest relevance score among sources
     #[allow(dead_code)]
-    pub fn max_relevance_score(&self) -> f32 {
-        self.sources.iter().map(|s| s.relevance_score).fold(0.0, f32::max)
-    }
+    pub fn max_relevance_score(&self) -> f32 { self.sources.iter().map(|s| s.relevance_score).fold(0.0, f32::max) }
 
     /// Returns sources sorted by relevance score (descending)
     #[allow(dead_code)]
@@ -83,7 +79,7 @@ impl SourceReference {
         if self.snippet.len() <= max_length {
             self.snippet.clone()
         } else {
-            format!("{}...", &self.snippet[..max_length])
+            format!("{}...", &self.snippet[.. max_length])
         }
     }
 }
@@ -181,11 +177,12 @@ pub struct ServiceHealthStatus {
 impl ServiceHealthStatus {
     /// Creates a new service health status
     pub fn new(qdrant: bool, azure_openai: bool) -> Self {
-        Self { qdrant, azure_openai }
+        Self {
+            qdrant,
+            azure_openai,
+        }
     }
 
     /// Returns true if all services are healthy
-    pub fn all_healthy(&self) -> bool {
-        self.qdrant && self.azure_openai
-    }
+    pub fn all_healthy(&self) -> bool { self.qdrant && self.azure_openai }
 }

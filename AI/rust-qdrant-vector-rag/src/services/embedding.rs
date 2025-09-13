@@ -56,16 +56,17 @@ impl EmbeddingServiceImpl {
         Ok(())
     }
 
-    /// Truncates text to fit within model limits while preserving word boundaries
+    /// Truncates text to fit within model limits while preserving word
+    /// boundaries
     fn truncate_text(&self, text: &str, max_length: usize) -> String {
         if text.len() <= max_length {
             return text.to_string();
         }
 
         // Find the last space before the limit to avoid cutting words
-        let truncated = &text[..max_length];
+        let truncated = &text[.. max_length];
         if let Some(last_space) = truncated.rfind(' ') {
-            text[..last_space].to_string()
+            text[.. last_space].to_string()
         } else {
             // If no space found, just truncate at the limit
             truncated.to_string()
@@ -317,7 +318,9 @@ mod tests {
     }
 
     fn create_mock_service(mock_client: MockAzureOpenAIClient) -> MockEmbeddingService {
-        MockEmbeddingService { client: mock_client }
+        MockEmbeddingService {
+            client: mock_client,
+        }
     }
 
     // Mock embedding service that uses our mock client
@@ -563,7 +566,7 @@ mod tests {
         let service = create_mock_service(mock_client);
 
         // Create a large batch
-        let texts: Vec<String> = (0..100).map(|i| format!("Text number {}", i)).collect();
+        let texts: Vec<String> = (0 .. 100).map(|i| format!("Text number {}", i)).collect();
         let text_refs: Vec<&str> = texts.iter().map(|s| s.as_str()).collect();
 
         let result = service.generate_embeddings_batch(text_refs).await;
@@ -573,8 +576,8 @@ mod tests {
         assert_eq!(embeddings.len(), 100, "Should return embedding for each text");
 
         // Verify all embeddings are different (based on our mock implementation)
-        for i in 0..embeddings.len() {
-            for j in (i + 1)..embeddings.len() {
+        for i in 0 .. embeddings.len() {
+            for j in (i + 1) .. embeddings.len() {
                 assert_ne!(embeddings[i], embeddings[j], "Embeddings should be different");
             }
         }

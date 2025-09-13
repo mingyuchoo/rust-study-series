@@ -99,9 +99,7 @@ pub enum ChunkType {
 }
 
 impl Default for ChunkType {
-    fn default() -> Self {
-        ChunkType::Text
-    }
+    fn default() -> Self { ChunkType::Text }
 }
 
 /// Result from a vector similarity search
@@ -114,7 +112,10 @@ pub struct SearchResult {
 impl SearchResult {
     /// Creates a new search result
     pub fn new(chunk: DocumentChunk, relevance_score: f32) -> Self {
-        Self { chunk, relevance_score }
+        Self {
+            chunk,
+            relevance_score,
+        }
     }
 }
 
