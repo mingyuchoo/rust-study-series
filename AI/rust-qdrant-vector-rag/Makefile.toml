@@ -32,7 +32,7 @@
   dependencies = ["format"]
 
 [tasks.run]
-  args      = ["run", "-p", "bin-main"]
+  args      = ["run"]
   command   = "cargo"
-  env       = {RUST_LOG = "lib_api=debug,actix_web=info"}
+  env       = {RUST_LOG = "rust_qdrant_vector_rag=debug,actix_web=info"}
   workspace = false
