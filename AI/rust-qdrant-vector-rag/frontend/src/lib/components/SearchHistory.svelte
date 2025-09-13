@@ -330,7 +330,7 @@
     margin-bottom: 0.25rem;
   }
 
-  .history-item-icon {
+  :global(.history-item-icon) {
     color: #6b7280;
     flex-shrink: 0;
   }
@@ -472,7 +472,7 @@
       color: #10b981;
     }
 
-    .history-item-icon {
+    :global(.history-item-icon) {
       color: #9ca3af;
     }
 

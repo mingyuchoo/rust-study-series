@@ -1,7 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import { X, Keyboard, Command } from 'lucide-svelte';
-  import { FocusManager, KeyboardNavigation } from '../utils/accessibility.js';
+  import { FocusManager } from '../utils/accessibility.js';
+
   import type { KeyboardShortcut } from '../utils/keyboard-shortcuts.js';
 
   // Props
@@ -93,7 +94,7 @@
 
     // Remove empty groups
     Object.keys(groups).forEach(key => {
-      if (groups[key].length === 0) {
+      if ((groups[key]?.length ?? 0) === 0) {
         delete groups[key];
       }
     });
@@ -249,8 +250,6 @@
     gap: 0.75rem;
   }
 
-
-
   .shortcuts-title {
     margin: 0;
     font-size: 1.25rem;
@@ -395,7 +394,7 @@
       color: #f9fafb;
     }
 
-    .shortcuts-icon {
+    :global(.shortcuts-icon) {
       color: #60a5fa;
     }
 

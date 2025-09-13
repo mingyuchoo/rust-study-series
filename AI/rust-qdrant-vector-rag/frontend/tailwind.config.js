@@ -2,17 +2,17 @@
 export default {
   content: ['./src/**/*.{html,js,svelte,ts}', './index.html'],
   theme: {
-    extend: {
-      // Custom breakpoints for responsive design
-      screens: {
-        'xs': '320px',
-        'sm': '640px',
-        'md': '768px',
-        'lg': '1024px',
-        'xl': '1280px',
-        '2xl': '1440px',
-      },
+    // Custom breakpoints for responsive design (ensure responsive variants like `md:` are registered)
+    screens: {
+      'xs': '320px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1440px',
+    },
 
+    extend: {
       // Enhanced color palette with accessibility in mind
       colors: {
         primary: {
