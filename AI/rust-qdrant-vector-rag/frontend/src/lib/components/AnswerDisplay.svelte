@@ -9,6 +9,7 @@
     Share,
     Bookmark
   } from 'lucide-svelte';
+  import { announceToScreenReader } from '../utils/accessibility.js';
   import type { RAGResponse } from '../types/api.js';
 
   // Props
@@ -48,9 +49,22 @@
     if (!allowCopy) return;
 
     try {
-      await navigator.clipboard.writeText(response.answer);
+      // Create a clean text version without HTML formatting
+      const cleanText = response.answer
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+        .replace(/&amp;/g, '&') // Replace HTML entities
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .trim();
+
+      await navigator.clipboard.writeText(cleanText);
       copied = true;
-      dispatch('copy', response.answer);
+      dispatch('copy', cleanText);
+      
+      // Announce to screen readers
+      announceToScreenReader('Answer copied to clipboard', 'polite');
       
       // Reset copied state after 2 seconds
       setTimeout(() => {
@@ -58,6 +72,26 @@
       }, 2000);
     } catch (error) {
       console.error('Failed to copy to clipboard:', error);
+      // Fallback for older browsers
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = response.answer.replace(/<[^>]*>/g, '');
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        copied = true;
+        dispatch('copy', response.answer);
+        announceToScreenReader('Answer copied to clipboard', 'polite');
+        
+        setTimeout(() => {
+          copied = false;
+        }, 2000);
+      } catch (fallbackError) {
+        console.error('Fallback copy failed:', fallbackError);
+        announceToScreenReader('Failed to copy answer', 'assertive');
+      }
     }
   }
 

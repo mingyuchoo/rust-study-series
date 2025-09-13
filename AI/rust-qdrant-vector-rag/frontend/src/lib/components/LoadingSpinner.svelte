@@ -19,7 +19,9 @@
     'Analyzing your question...',
     'Searching through documents...',
     'Finding relevant information...',
-    'Generating response...'
+    'Generating response...',
+    'Crafting the perfect answer...',
+    'Almost ready...'
   ];
 
   const uploadMessages = [
@@ -27,14 +29,18 @@
     'Extracting text content...',
     'Creating vector embeddings...',
     'Storing in database...',
-    'Finalizing upload...'
+    'Finalizing upload...',
+    'Optimizing for search...',
+    'Nearly complete...'
   ];
 
   const processingMessages = [
     'Processing...',
     'Working on it...',
     'Almost done...',
-    'Finishing up...'
+    'Finishing up...',
+    'Just a moment...',
+    'Wrapping up...'
   ];
 
   // Get messages based on variant

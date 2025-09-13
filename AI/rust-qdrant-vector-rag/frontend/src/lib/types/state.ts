@@ -20,6 +20,9 @@ export interface UploadState {
   uploadResult: UploadResponse | null;
   selectedFile: globalThis.File | null;
   dragActive: boolean;
+  currentStage?: string;
+  estimatedTimeRemaining?: number | null;
+  uploadSpeed?: number; // bytes per second
 }
 
 // Search State Management

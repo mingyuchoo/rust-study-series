@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ArrowRight, Search } from 'lucide-svelte';
+  import { ArrowRight, Search, Upload } from 'lucide-svelte';
   import FileUpload from '../components/FileUpload.svelte';
   import UploadProgress from '../components/UploadProgress.svelte';
   import UploadResult from '../components/UploadResult.svelte';
+  import { InteractiveButton, ProgressIndicator, SuccessNotification, LoadingOverlay } from '../components/index.js';
   import { uploadActions, isUploading, uploadProgress, uploadResult, selectedFile } from '../stores/upload.store.js';
   import { toastActions } from '../stores/toast.store.js';
   import { apiService } from '../services/api.js';
@@ -14,6 +15,9 @@
   // Local state
   let uploadStartTime: number | null = null;
   let estimatedTimeRemaining: number | null = null;
+  let showSuccessNotification = false;
+  let showLoadingOverlay = false;
+  let successNotificationRef: SuccessNotification;
 
   // Handle file selection
   function handleFileSelect(event: CustomEvent<{ file: File }>) {
@@ -117,6 +121,8 @@
       
       uploadActions.completeUpload(result);
       
+      // Show enhanced success notification
+      showSuccessNotification = true;
       toastActions.success(`Successfully uploaded ${file.name}`);
 
     } catch (error) {
@@ -197,17 +203,21 @@
         <!-- Upload button -->
         {#if $selectedFile && !$isUploading}
           <div class="upload-actions">
-            <button
-              class="btn btn-primary btn-lg focus-ring-enhanced touch-target-enhanced"
+            <InteractiveButton
+              variant="primary"
+              size="lg"
+              fullWidth={true}
+              icon={Upload}
+              loading={$isUploading}
+              loadingText="Uploading..."
+              rippleEffect={true}
+              hoverEffect={true}
+              focusEffect={true}
+              ariaLabel="Upload {$selectedFile.name} to make it searchable"
               on:click={startUpload}
-              aria-describedby="upload-button-desc"
             >
-              <ArrowRight size={20} aria-hidden="true" />
               Upload Document
-              <span id="upload-button-desc" class="sr-only">
-                Upload {$selectedFile.name} to make it searchable
-              </span>
-            </button>
+            </InteractiveButton>
           </div>
         {/if}
 
@@ -215,14 +225,30 @@
         {#if $isUploading || $uploadProgress > 0}
           <section class="progress-section" aria-labelledby="progress-title" aria-live="polite">
             <h2 id="progress-title" class="sr-only">Upload Progress</h2>
-            <UploadProgress
-              progress={$uploadProgress}
-              isUploading={$isUploading}
-              fileName={$selectedFile?.name || ''}
-              status={$isUploading ? 'uploading' : 'idle'}
-              message={$isUploading ? 'Processing your document...' : ''}
-              {estimatedTimeRemaining}
-            />
+            <div class="progress-container">
+              <ProgressIndicator
+                progress={$uploadProgress}
+                status={$isUploading ? 'loading' : ($uploadResult?.status === 'success' ? 'success' : 'idle')}
+                message={$isUploading ? 'Processing your document...' : ''}
+                showPercentage={true}
+                showTimeRemaining={true}
+                estimatedTimeRemaining={estimatedTimeRemaining}
+                size="md"
+                variant="linear"
+                animated={true}
+                showIcon={true}
+              />
+              
+              <!-- Enhanced upload progress with file details -->
+              <div class="upload-details">
+                <p class="file-name">
+                  <strong>File:</strong> {$selectedFile?.name || 'Unknown file'}
+                </p>
+                <p class="file-size">
+                  <strong>Size:</strong> {$selectedFile ? Math.round($selectedFile.size / 1024) : 0} KB
+                </p>
+              </div>
+            </div>
           </section>
         {/if}
       {:else}
@@ -245,27 +271,30 @@
               Your document has been processed and is ready for searching
             </p>
             <div class="success-buttons flex-responsive">
-              <button
-                class="btn btn-primary focus-ring-enhanced touch-target-enhanced"
+              <InteractiveButton
+                variant="primary"
+                size="md"
+                icon={Search}
+                rippleEffect={true}
+                hoverEffect={true}
+                focusEffect={true}
+                ariaLabel="Go to search page to query your uploaded documents"
                 on:click={navigateToSearch}
-                aria-describedby="search-button-desc"
               >
-                <Search size={20} aria-hidden="true" />
                 Search Documents
-                <span id="search-button-desc" class="sr-only">
-                  Go to search page to query your uploaded documents
-                </span>
-              </button>
-              <button
-                class="btn btn-secondary focus-ring-enhanced touch-target-enhanced"
+              </InteractiveButton>
+              <InteractiveButton
+                variant="secondary"
+                size="md"
+                icon={Upload}
+                rippleEffect={true}
+                hoverEffect={true}
+                focusEffect={true}
+                ariaLabel="Upload another document"
                 on:click={handleNewUpload}
-                aria-describedby="new-upload-button-desc"
               >
                 Upload Another
-                <span id="new-upload-button-desc" class="sr-only">
-                  Upload another document
-                </span>
-              </button>
+              </InteractiveButton>
             </div>
           </section>
         {/if}
@@ -289,6 +318,42 @@
     </aside>
   </div>
 </div>
+
+<!-- Success notification -->
+<SuccessNotification
+  bind:this={successNotificationRef}
+  bind:visible={showSuccessNotification}
+  title="Upload Successful!"
+  message="Your document has been processed and is ready for searching"
+  variant="celebration"
+  duration={6000}
+  actions={[
+    { label: 'Search Now', action: 'search', icon: Search, variant: 'primary' },
+    { label: 'Upload Another', action: 'upload', variant: 'secondary' }
+  ]}
+  on:action={(e) => {
+    if (e.detail.action === 'search') {
+      navigateToSearch();
+    } else if (e.detail.action === 'upload') {
+      handleNewUpload();
+    }
+    showSuccessNotification = false;
+  }}
+  on:dismiss={() => showSuccessNotification = false}
+/>
+
+<!-- Loading overlay for intensive operations -->
+<LoadingOverlay
+  bind:visible={showLoadingOverlay}
+  message="Processing your document..."
+  variant="upload"
+  showProgress={true}
+  progress={$uploadProgress}
+  estimatedTime={estimatedTimeRemaining}
+  backdrop="blur"
+  size="md"
+  allowDismiss={false}
+/>
 
 <style>
   .upload-page {
@@ -342,6 +407,32 @@
   .progress-section,
   .result-section {
     position: relative;
+  }
+
+  .progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    background-color: var(--color-surface-100);
+    border-radius: 0.75rem;
+    padding: var(--spacing-lg);
+    border: 2px solid var(--color-surface-200);
+  }
+
+  .upload-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: var(--font-size-sm);
+    color: var(--color-surface-600);
+  }
+
+  .file-name,
+  .file-size {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
   }
 
   .btn {

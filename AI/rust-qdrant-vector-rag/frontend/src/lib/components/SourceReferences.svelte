@@ -10,6 +10,7 @@
     Copy,
     CheckCircle
   } from 'lucide-svelte';
+  import { announceToScreenReader } from '../utils/accessibility.js';
   import type { SourceReference } from '../types/api.js';
 
   // Props
@@ -40,8 +41,10 @@
   function toggleSourceExpansion(sourceId: string) {
     if (expandedSources.has(sourceId)) {
       expandedSources.delete(sourceId);
+      announceToScreenReader('Snippet collapsed', 'polite');
     } else {
       expandedSources.add(sourceId);
+      announceToScreenReader('Snippet expanded', 'polite');
     }
     expandedSources = expandedSources; // Trigger reactivity
   }

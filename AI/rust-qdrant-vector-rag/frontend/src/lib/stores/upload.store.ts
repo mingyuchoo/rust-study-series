@@ -16,7 +16,10 @@ const initialUploadState: UploadState = {
   isUploading: false,
   uploadResult: null,
   selectedFile: null,
-  dragActive: false
+  dragActive: false,
+  currentStage: undefined,
+  estimatedTimeRemaining: null,
+  uploadSpeed: undefined
 };
 
 // Create the writable store
@@ -66,11 +69,22 @@ export const uploadActions = {
     }));
   },
 
-  updateProgress: (progress: number) => {
+  updateProgress: (progress: number, stage?: string, estimatedTime?: number, speed?: number) => {
     uploadStore.update(state => ({ 
       ...state, 
-      uploadProgress: Math.min(100, Math.max(0, progress))
+      uploadProgress: Math.min(100, Math.max(0, progress)),
+      currentStage: stage || state.currentStage,
+      estimatedTimeRemaining: estimatedTime !== undefined ? estimatedTime : state.estimatedTimeRemaining,
+      uploadSpeed: speed !== undefined ? speed : state.uploadSpeed
     }));
+  },
+
+  setUploadStage: (stage: string) => {
+    uploadStore.update(state => ({ ...state, currentStage: stage }));
+  },
+
+  setEstimatedTime: (time: number | null) => {
+    uploadStore.update(state => ({ ...state, estimatedTimeRemaining: time }));
   },
 
   setUploadResult: (result: UploadResponse) => {

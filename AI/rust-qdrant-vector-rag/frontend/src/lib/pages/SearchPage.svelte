@@ -1,17 +1,24 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { AlertCircle, Search as SearchIcon } from 'lucide-svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import { AlertCircle, Search as SearchIcon, Sparkles, HelpCircle, Clock } from 'lucide-svelte';
   import { 
     SearchForm, 
     SearchConfig, 
     LoadingSpinner, 
     AnswerDisplay, 
-    SourceReferences 
+    SourceReferences,
+    InteractiveButton,
+    SuccessNotification,
+    LoadingOverlay
   } from '../components/index.js';
+  import SearchHistory from '../components/SearchHistory.svelte';
+  import KeyboardShortcutsHelp from '../components/KeyboardShortcutsHelp.svelte';
   import { searchStore, searchActions, isSearching, searchResults, searchConfig } from '../stores/search.store.js';
   import { toastActions } from '../stores/toast.store.js';
   import { apiService } from '../services/api.js';
   import { errorHandler } from '../services/error-handler.js';
+  import { KeyboardShortcutManager, DEFAULT_SHORTCUTS } from '../utils/keyboard-shortcuts.js';
+  import { LocalStorageManager, STORAGE_KEYS } from '../utils/local-storage.js';
   import type { QueryConfig, RAGResponse } from '../types/api.js';
   import type { AppError } from '../types/errors.js';
 
@@ -19,6 +26,14 @@
   let query = '';
   let showAdvanced = false;
   let searchError: string | null = null;
+  let showSuccessNotification = false;
+  let showLoadingOverlay = false;
+  let searchStartTime: number | null = null;
+  let showSearchHistory = false;
+  let showKeyboardHelp = false;
+  let searchHistoryComponent: SearchHistory;
+  let keyboardManager: KeyboardShortcutManager;
+  let searchInputElement: HTMLInputElement;
 
   // Subscribe to stores
   let currentResults: RAGResponse | null = null;
@@ -56,6 +71,7 @@
     searchError = null;
     searchActions.setQuery(searchQuery);
     searchActions.startSearch();
+    searchStartTime = Date.now();
 
     try {
       const response = await apiService.queryDocuments({
@@ -65,7 +81,17 @@
 
       searchActions.setResults(response);
       
-      toastActions.success(`Found ${response.sources.length} relevant sources`);
+      // Add to search history
+      if (searchHistoryComponent) {
+        searchHistoryComponent.addToHistory(searchQuery, response.sources.length);
+      }
+      
+      // Calculate search time
+      const searchTime = searchStartTime ? (Date.now() - searchStartTime) / 1000 : 0;
+      
+      // Show enhanced success notification
+      showSuccessNotification = true;
+      toastActions.success(`Found ${response.sources.length} relevant sources in ${searchTime.toFixed(1)}s`);
 
     } catch (error) {
       console.error('Search failed:', error);
@@ -99,6 +125,29 @@
       type: 'info',
       message: 'Search configuration reset to defaults'
     });
+  }
+
+  // Handle search history actions
+  function handleSelectQuery(event: CustomEvent<string>) {
+    query = event.detail;
+    searchActions.setQuery(query);
+    showSearchHistory = false;
+    
+    // Focus search input after selection
+    if (searchInputElement) {
+      searchInputElement.focus();
+    }
+  }
+
+  function handleClearHistory() {
+    toastActions.show({
+      type: 'info',
+      message: 'Search history cleared'
+    });
+  }
+
+  function handleRemoveHistoryItem() {
+    // History item removed - no additional action needed
   }
 
   // Handle answer actions
@@ -158,12 +207,106 @@
     }
   }
 
+  // Keyboard shortcuts setup
+  function setupKeyboardShortcuts() {
+    keyboardManager = new KeyboardShortcutManager();
+    
+    // Focus search input
+    keyboardManager.register({
+      key: '/',
+      description: 'Focus search input',
+      action: () => {
+        if (searchInputElement) {
+          searchInputElement.focus();
+        }
+      }
+    });
+
+    // New search
+    keyboardManager.register({
+      key: 'n',
+      ctrlKey: true,
+      description: 'Start new search',
+      action: () => {
+        query = '';
+        searchActions.clearResults();
+        if (searchInputElement) {
+          searchInputElement.focus();
+        }
+      }
+    });
+
+    // Toggle advanced options
+    keyboardManager.register({
+      key: 'a',
+      ctrlKey: true,
+      description: 'Toggle advanced options',
+      action: () => {
+        showAdvanced = !showAdvanced;
+      }
+    });
+
+    // Copy answer (when results are visible)
+    keyboardManager.register({
+      key: 'c',
+      ctrlKey: true,
+      shiftKey: true,
+      description: 'Copy AI answer',
+      action: () => {
+        if (currentResults) {
+          navigator.clipboard.writeText(currentResults.answer.replace(/<[^>]*>/g, ''));
+          toastActions.success('Answer copied to clipboard');
+        }
+      }
+    });
+
+    // Clear search results
+    keyboardManager.register({
+      key: 'Escape',
+      description: 'Clear search results',
+      action: () => {
+        if (currentResults) {
+          searchActions.clearResults();
+        }
+      }
+    });
+
+    // Show keyboard shortcuts help
+    keyboardManager.register({
+      key: '?',
+      description: 'Show keyboard shortcuts help',
+      action: () => {
+        showKeyboardHelp = true;
+      }
+    });
+
+    // Toggle search history
+    keyboardManager.register({
+      key: 'h',
+      ctrlKey: true,
+      description: 'Toggle search history',
+      action: () => {
+        showSearchHistory = !showSearchHistory;
+      }
+    });
+  }
+
   // Initialize component
   onMount(() => {
     // Set initial query from store if available
     const storeState = $searchStore;
     if (storeState.query) {
       query = storeState.query;
+    }
+
+    // Setup keyboard shortcuts
+    setupKeyboardShortcuts();
+  });
+
+  // Cleanup
+  onDestroy(() => {
+    if (keyboardManager) {
+      keyboardManager.destroy();
     }
   });
 </script>
@@ -172,17 +315,59 @@
   <div class="search-layout">
     <!-- Page header -->
     <header class="page-header">
-      <h1 class="page-title text-responsive-xl" id="search-page-title">
-        <SearchIcon size={32} aria-hidden="true" />
-        Search Documents
-      </h1>
-      <p class="page-description text-responsive-base" aria-describedby="search-page-title">
-        Ask questions about your uploaded documents and get AI-powered answers
-      </p>
+      <div class="header-content">
+        <div class="title-section">
+          <h1 class="page-title text-responsive-xl" id="search-page-title">
+            <SearchIcon size={32} aria-hidden="true" />
+            Search Documents
+          </h1>
+          <p class="page-description text-responsive-base" aria-describedby="search-page-title">
+            Ask questions about your uploaded documents and get AI-powered answers
+          </p>
+        </div>
+        
+        <div class="header-actions">
+          <button
+            type="button"
+            class="header-action-button"
+            on:click={() => showSearchHistory = !showSearchHistory}
+            aria-label="Toggle search history"
+            title="Search history (Ctrl+H)"
+          >
+            <Clock size={20} />
+          </button>
+          
+          <button
+            type="button"
+            class="header-action-button"
+            on:click={() => showKeyboardHelp = true}
+            aria-label="Show keyboard shortcuts"
+            title="Keyboard shortcuts (?)"
+          >
+            <HelpCircle size={20} />
+          </button>
+        </div>
+      </div>
     </header>
 
     <!-- Search form -->
     <main class="search-main" aria-labelledby="search-page-title">
+      <!-- Search history -->
+      {#if showSearchHistory}
+        <section class="search-history-container" aria-labelledby="search-history-title">
+          <h2 id="search-history-title" class="sr-only">Search History</h2>
+          <SearchHistory
+            bind:this={searchHistoryComponent}
+            visible={showSearchHistory}
+            maxItems={10}
+            allowClear={true}
+            on:select-query={handleSelectQuery}
+            on:clear-history={handleClearHistory}
+            on:remove-item={handleRemoveHistoryItem}
+          />
+        </section>
+      {/if}
+
       <section class="search-form-container" aria-labelledby="search-form-title">
         <h2 id="search-form-title" class="sr-only">Search Form</h2>
         <SearchForm
@@ -203,6 +388,7 @@
           bind:visible={showAdvanced}
           config={currentConfig}
           disabled={searching}
+          initiallyExpanded={false}
           on:config-change={handleConfigChange}
           on:reset={handleConfigReset}
         />
@@ -219,17 +405,19 @@
               <h3 id="error-title" class="error-title">Search Error</h3>
               <p class="error-message">{searchError}</p>
               <div class="error-actions">
-                <button 
-                  class="retry-button focus-ring-enhanced touch-target-enhanced"
+                <InteractiveButton
+                  variant="error"
+                  size="sm"
+                  loading={searching}
+                  loadingText="Retrying..."
+                  rippleEffect={true}
+                  hoverEffect={true}
+                  focusEffect={true}
+                  ariaLabel="Retry the search with the same query"
                   on:click={retrySearch}
-                  disabled={searching}
-                  aria-describedby="retry-button-desc"
                 >
                   Try Again
-                  <span id="retry-button-desc" class="sr-only">
-                    Retry the search with the same query
-                  </span>
-                </button>
+                </InteractiveButton>
               </div>
             </div>
             <button
@@ -250,11 +438,27 @@
       {#if searching}
         <section class="loading-container" role="status" aria-live="polite" aria-labelledby="loading-title">
           <h2 id="loading-title" class="sr-only">Searching</h2>
-          <LoadingSpinner 
-            size="lg" 
-            variant="search"
-            message="Searching through your documents..."
-          />
+          <div class="enhanced-loading">
+            <LoadingSpinner 
+              size="lg" 
+              variant="search"
+              message="AI is analyzing your question..."
+            />
+            <div class="loading-details">
+              <p class="loading-step">
+                <Sparkles size={16} />
+                Processing natural language query
+              </p>
+              <p class="loading-step">
+                <SearchIcon size={16} />
+                Searching vector database
+              </p>
+              <p class="loading-step">
+                <Sparkles size={16} />
+                Generating AI response
+              </p>
+            </div>
+          </div>
         </section>
       {/if}
 
@@ -314,6 +518,44 @@
   </div>
 </div>
 
+<!-- Success notification for search results -->
+<SuccessNotification
+  bind:visible={showSuccessNotification}
+  title="Search Complete!"
+  message="Found relevant information in your documents"
+  variant="success"
+  duration={4000}
+  actions={[
+    { label: 'New Search', action: 'new_search', variant: 'secondary' }
+  ]}
+  on:action={(e) => {
+    if (e.detail.action === 'new_search') {
+      query = '';
+      searchActions.clearResults();
+    }
+    showSuccessNotification = false;
+  }}
+  on:dismiss={() => showSuccessNotification = false}
+/>
+
+<!-- Loading overlay for intensive search operations -->
+<LoadingOverlay
+  bind:visible={showLoadingOverlay}
+  message="AI is processing your query..."
+  variant="search"
+  showProgress={false}
+  backdrop="blur"
+  size="md"
+  allowDismiss={false}
+/>
+
+<!-- Keyboard shortcuts help -->
+<KeyboardShortcutsHelp
+  bind:visible={showKeyboardHelp}
+  shortcuts={keyboardManager ? keyboardManager.getShortcuts() : []}
+  on:close={() => showKeyboardHelp = false}
+/>
+
 <style>
   .search-page {
     min-height: 100vh;
@@ -331,8 +573,50 @@
   }
 
   .page-header {
-    text-align: center;
     margin-bottom: var(--spacing-xl);
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-lg);
+  }
+
+  .title-section {
+    text-align: center;
+    flex: 1;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+  }
+
+  .header-action-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm);
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .header-action-button:hover {
+    background: #f9fafb;
+    color: #374151;
+    border-color: #d1d5db;
+  }
+
+  .header-action-button:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
   }
 
   .page-title {
@@ -367,6 +651,12 @@
   .search-config-container {
     display: flex;
     justify-content: center;
+  }
+
+  .search-history-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-lg);
   }
 
   /* Error styles */
@@ -412,36 +702,7 @@
     gap: var(--spacing-sm);
   }
 
-  .retry-button {
-    background-color: var(--color-error-600);
-    color: white;
-    border: 2px solid var(--color-error-600);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    transition: all var(--duration-fast) ease;
-    position: relative;
-  }
 
-  .retry-button:hover:not(:disabled) {
-    background-color: var(--color-error-700);
-    border-color: var(--color-error-700);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-  }
-
-  .retry-button:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .retry-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
 
   .close-button {
     background: none;
@@ -468,6 +729,59 @@
     display: flex;
     justify-content: center;
     padding: var(--spacing-2xl) 0;
+  }
+
+  .enhanced-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xl);
+    max-width: 400px;
+    text-align: center;
+  }
+
+  .loading-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    opacity: 0.8;
+  }
+
+  .loading-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    color: var(--color-surface-600);
+    margin: 0;
+    animation: fade-in-sequence 0.5s ease-out forwards;
+  }
+
+  .loading-step:nth-child(1) {
+    animation-delay: 0.5s;
+    opacity: 0;
+  }
+
+  .loading-step:nth-child(2) {
+    animation-delay: 1s;
+    opacity: 0;
+  }
+
+  .loading-step:nth-child(3) {
+    animation-delay: 1.5s;
+    opacity: 0;
+  }
+
+  @keyframes fade-in-sequence {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 0.8;
+      transform: translateY(0);
+    }
   }
 
   /* Results styles */
@@ -531,9 +845,18 @@
       margin-bottom: var(--spacing-lg);
     }
 
+    .header-content {
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+
     .page-title {
       flex-direction: column;
       gap: var(--spacing-sm);
+    }
+
+    .header-actions {
+      justify-content: center;
     }
 
     .search-main {
@@ -559,10 +882,7 @@
       justify-content: center;
     }
 
-    .retry-button {
-      min-height: 48px;
-      font-size: 16px; /* Prevent zoom on iOS */
-    }
+
   }
 
   /* Tablet styles */
@@ -606,13 +926,7 @@
       padding: var(--spacing-4xl) var(--spacing-3xl);
     }
 
-    .retry-button:hover:not(:disabled) {
-      transform: translateY(-1px);
-    }
 
-    .retry-button:active:not(:disabled) {
-      transform: translateY(0);
-    }
   }
 
   /* Large desktop styles */
@@ -681,6 +995,17 @@
     .empty-state-description {
       color: var(--color-surface-500);
     }
+
+    .header-action-button {
+      background: #1f2937;
+      border-color: #374151;
+      color: #9ca3af;
+    }
+
+    .header-action-button:hover {
+      background: #374151;
+      color: #f3f4f6;
+    }
   }
 
   /* High contrast mode support */
@@ -694,9 +1019,7 @@
       border-color: #000;
     }
 
-    .retry-button {
-      border-width: 3px;
-    }
+
 
     .close-button {
       border: 2px solid;
@@ -709,14 +1032,7 @@
       scroll-behavior: auto;
     }
 
-    .retry-button {
-      transition: none;
-    }
 
-    .retry-button:hover:not(:disabled),
-    .retry-button:active:not(:disabled) {
-      transform: none;
-    }
 
     .close-button {
       transition: none;

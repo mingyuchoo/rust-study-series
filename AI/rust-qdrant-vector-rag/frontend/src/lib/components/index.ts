@@ -33,3 +33,13 @@ export { default as SystemMetrics } from './SystemMetrics.svelte';
 export { default as AccessibleInput } from './AccessibleInput.svelte';
 export { default as AccessibleButton } from './AccessibleButton.svelte';
 export { default as AccessibilityTester } from './AccessibilityTester.svelte';
+
+// Enhanced UX components for loading states and feedback
+export { default as ProgressIndicator } from './ProgressIndicator.svelte';
+export { default as InteractiveButton } from './InteractiveButton.svelte';
+export { default as SuccessNotification } from './SuccessNotification.svelte';
+export { default as LoadingOverlay } from './LoadingOverlay.svelte';
+
+// Advanced UI features
+export { default as SearchHistory } from './SearchHistory.svelte';
+export { default as KeyboardShortcutsHelp } from './KeyboardShortcutsHelp.svelte';

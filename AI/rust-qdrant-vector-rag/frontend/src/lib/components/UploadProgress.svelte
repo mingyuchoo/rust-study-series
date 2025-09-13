@@ -210,6 +210,24 @@
     );
     background-size: 1rem 1rem;
     animation: progress-stripes 1s linear infinite;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar.animated::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    );
+    animation: progress-shimmer 2s infinite;
   }
 
   .progress-bar.green {
@@ -278,6 +296,15 @@
     }
     to {
       background-position: 0 0;
+    }
+  }
+
+  @keyframes progress-shimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
     }
   }
 
