@@ -1,7 +1,7 @@
 use rust_qdrant_vector_rag::app::AppContainer;
 use rust_qdrant_vector_rag::config::AppConfig;
 use rust_qdrant_vector_rag::monitoring::{PerformanceMonitor, PerformanceTimer};
-use rust_qdrant_vector_rag::services::cache::{CacheManager, EmbeddingCacheKey, SearchCacheKey};
+use rust_qdrant_vector_rag::services::cache::{CacheManager, EmbeddingCacheKey};
 use std::time::Duration;
 use tokio::time::Instant;
 use tracing::{info, warn};
@@ -43,7 +43,7 @@ struct PerformanceResults {
 impl PerformanceResults {
     fn new(operation: String, durations: Vec<Duration>, failures: usize) -> Self {
         let iterations = durations.len() + failures;
-        let total_duration = durations.iter().sum();
+        let total_duration = durations.iter().copied().sum::<Duration>();
         let avg_duration = if durations.is_empty() {
             Duration::ZERO
         } else {
@@ -91,10 +91,10 @@ async fn test_embedding_generation_performance() {
 
     info!("Starting embedding generation performance test");
 
-    let test_texts = vec![
-        "Short text for testing",
-        "This is a medium length text that contains multiple sentences and should provide a good test case for embedding generation performance.",
-        &"Long text ".repeat(100), // Very long text
+    let test_texts: Vec<String> = vec![
+        "Short text for testing".to_string(),
+        "This is a medium length text that contains multiple sentences and should provide a good test case for embedding generation performance.".to_string(),
+        "Long text ".repeat(100), // Very long text
     ];
 
     for (i, text) in test_texts.iter().enumerate() {
@@ -104,7 +104,7 @@ async fn test_embedding_generation_performance() {
         for _ in 0 .. config.embedding_iterations {
             let timer = PerformanceTimer::start("embedding_generation");
 
-            match container.embedding_service.generate_embedding(text).await {
+            match container.embedding_service.generate_embedding(text.as_str()).await {
                 | Ok(_) => {
                     durations.push(timer.finish());
                 },
@@ -146,7 +146,11 @@ async fn test_vector_search_performance() {
     for _ in 0 .. config.search_iterations {
         let timer = PerformanceTimer::start("vector_search");
 
-        match container.vector_search_service.search_similar(test_embedding.clone(), 10, None).await {
+        match container
+            .vector_search_service
+            .search_similar(test_embedding.clone(), 10)
+            .await
+        {
             | Ok(_) => {
                 durations.push(timer.finish());
             },
@@ -431,16 +435,8 @@ async fn setup_test_container() -> AppContainer {
 #[ignore] // Run with --ignored flag for benchmarking
 async fn run_performance_benchmark_suite() {
     println!("=== Running Performance Benchmark Suite ===\n");
-
-    // Run all performance tests
-    test_embedding_generation_performance().await;
-    test_vector_search_performance().await;
-    test_rag_pipeline_performance().await;
-    test_concurrent_request_performance().await;
-    test_large_document_processing_performance().await;
-    test_cache_performance().await;
-    test_memory_usage_monitoring().await;
-
+    // 벤치마크 모음은 개별 테스트(`#[tokio::test]`)를 직접 호출하지 않습니다.
+    // 필요 시, 각 테스트 로직을 별도의 helper 함수로 분리한 뒤 여기서 호출하세요.
     println!("=== Performance Benchmark Suite Complete ===");
 }
 
