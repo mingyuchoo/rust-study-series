@@ -43,3 +43,8 @@ export { default as LoadingOverlay } from './LoadingOverlay.svelte';
 // Advanced UI features
 export { default as SearchHistory } from './SearchHistory.svelte';
 export { default as KeyboardShortcutsHelp } from './KeyboardShortcutsHelp.svelte';
+
+// Performance and lazy loading components
+export { default as LazyLoad } from './LazyLoad.svelte';
+export { default as LazyComponent } from './LazyComponent.svelte';
+export { default as PerformanceMonitor } from './PerformanceMonitor.svelte';

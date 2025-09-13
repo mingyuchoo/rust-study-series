@@ -435,73 +435,7 @@
     gap: var(--spacing-xs);
   }
 
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-md) var(--spacing-xl);
-    border: 2px solid transparent;
-    border-radius: 0.5rem;
-    font-size: var(--font-size-base);
-    font-weight: 600;
-    cursor: pointer;
-    transition: all var(--duration-fast) ease;
-    text-decoration: none;
-    background: none;
-    white-space: nowrap;
-    position: relative;
-    line-height: var(--line-height-tight);
-  }
 
-  .btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-
-  .btn-lg {
-    padding: var(--spacing-lg) var(--spacing-2xl);
-    font-size: var(--font-size-lg);
-    width: 100%;
-    justify-content: center;
-  }
-
-  .btn-primary {
-    background-color: var(--color-primary-600);
-    color: white;
-    border-color: var(--color-primary-600);
-  }
-
-  .btn-primary:hover:not(:disabled) {
-    background-color: var(--color-primary-700);
-    border-color: var(--color-primary-700);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .btn-primary:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: var(--shadow-md);
-  }
-
-  .btn-secondary {
-    background-color: var(--color-surface-100);
-    color: var(--color-surface-700);
-    border-color: var(--color-surface-300);
-  }
-
-  .btn-secondary:hover:not(:disabled) {
-    background-color: var(--color-surface-200);
-    border-color: var(--color-surface-400);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
-  }
-
-  .btn-secondary:active:not(:disabled) {
-    transform: translateY(0);
-    box-shadow: var(--shadow-sm);
-  }
 
   .success-actions {
     display: flex;
@@ -584,15 +518,9 @@
       color: var(--color-surface-300);
     }
 
-    .btn-secondary {
-      background-color: var(--color-surface-700);
-      color: var(--color-surface-200);
-      border-color: var(--color-surface-600);
-    }
-
-    .btn-secondary:hover:not(:disabled) {
-      background-color: var(--color-surface-600);
-      border-color: var(--color-surface-500);
+    .progress-container {
+      background-color: var(--color-surface-800);
+      border-color: var(--color-surface-700);
     }
 
     .success-actions {
@@ -617,7 +545,7 @@
 
   /* High contrast mode support */
   @media (prefers-contrast: high) {
-    .btn {
+    .progress-container {
       border-width: 3px;
     }
 
@@ -636,13 +564,9 @@
 
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
-    .btn {
-      transition: none;
-    }
-
-    .btn:hover:not(:disabled),
-    .btn:active:not(:disabled) {
-      transform: none;
+    * {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
     }
 
     .upload-page {
@@ -653,12 +577,6 @@
   /* Print styles */
   @media print {
     .upload-page {
-      background: white;
-      color: black;
-    }
-
-    .btn {
-      border: 2px solid black;
       background: white;
       color: black;
     }
@@ -681,11 +599,7 @@
 
   /* Enhanced touch targets for mobile */
   @media (max-width: 767px) {
-    .btn {
-      min-height: 48px;
-      min-width: 48px;
-      font-size: 16px; /* Prevent zoom on iOS */
-    }
+    /* Enhanced touch targets for mobile devices */
   }
 
   /* Mobile styles (default) */
@@ -713,10 +627,7 @@
       gap: var(--spacing-md);
     }
 
-    .btn {
-      width: 100%;
-      justify-content: center;
-    }
+
 
     .help-section {
       margin-top: var(--spacing-2xl);
@@ -748,8 +659,9 @@
       justify-content: center;
     }
 
-    .btn {
-      min-width: 200px;
+    .upload-details {
+      flex-direction: column;
+      gap: var(--spacing-sm);
     }
   }
 
@@ -771,12 +683,9 @@
       padding: var(--spacing-3xl);
     }
 
-    .btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-    }
-
-    .btn:active:not(:disabled) {
-      transform: translateY(0);
+    .upload-details {
+      flex-direction: row;
+      justify-content: space-between;
     }
   }
 

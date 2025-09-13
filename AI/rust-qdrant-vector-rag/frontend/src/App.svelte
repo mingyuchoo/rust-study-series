@@ -6,6 +6,7 @@
   import Toast from './lib/components/Toast.svelte';
   import OfflineIndicator from './lib/components/OfflineIndicator.svelte';
   import AccessibilityTester from './lib/components/AccessibilityTester.svelte';
+  import PerformanceMonitor from './lib/components/PerformanceMonitor.svelte';
   import { appActions } from './lib/stores/app.store.js';
   import { errorHandler } from './lib/services/error-handler.js';
 
@@ -40,6 +41,14 @@
     
     <!-- Accessibility tester for development -->
     <AccessibilityTester autoRun={false} />
+    
+    <!-- Performance monitor for development -->
+    <PerformanceMonitor 
+      enabled={true}
+      showMetrics={import.meta.env.DEV}
+      logToConsole={import.meta.env.DEV}
+      reportInterval={30000}
+    />
   </ErrorBoundary>
 </div>
 

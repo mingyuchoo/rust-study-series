@@ -1,8 +1,5 @@
-import forms from '@tailwindcss/forms';
-
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class',
   content: ['./src/**/*.{html,js,svelte,ts}', './index.html'],
   theme: {
     extend: {
@@ -15,7 +12,7 @@ export default {
         'xl': '1280px',
         '2xl': '1440px',
       },
-      
+
       // Enhanced color palette with accessibility in mind
       colors: {
         primary: {
@@ -91,7 +88,7 @@ export default {
           900: '#1e3a8a',
         },
       },
-      
+
       // Enhanced spacing scale
       spacing: {
         'xs': '0.5rem',    // 8px
@@ -104,13 +101,13 @@ export default {
         '4xl': '5rem',     // 80px
         '5xl': '6rem',     // 96px
       },
-      
+
       // Typography enhancements
       fontFamily: {
         'sans': ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         'mono': ['SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', 'Consolas', 'Courier New', 'monospace'],
       },
-      
+
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1.25' }],
         'sm': ['0.875rem', { lineHeight: '1.5' }],
@@ -122,7 +119,7 @@ export default {
         '4xl': ['2.25rem', { lineHeight: '1.2' }],
         '5xl': ['3rem', { lineHeight: '1.1' }],
       },
-      
+
       // Enhanced shadows
       boxShadow: {
         'sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
@@ -135,14 +132,14 @@ export default {
         'focus-error': '0 0 0 3px rgba(239, 68, 68, 0.1)',
         'focus-success': '0 0 0 3px rgba(16, 185, 129, 0.1)',
       },
-      
+
       // Animation and transition enhancements
       transitionDuration: {
         'fast': '150ms',
         'normal': '300ms',
         'slow': '500ms',
       },
-      
+
       // Z-index scale
       zIndex: {
         'dropdown': '1000',
@@ -153,7 +150,7 @@ export default {
         'tooltip': '1060',
         'toast': '1070',
       },
-      
+
       // Border radius enhancements
       borderRadius: {
         'xs': '0.125rem',
@@ -164,7 +161,7 @@ export default {
         'xl': '1rem',
         '2xl': '1.5rem',
       },
-      
+
       // Minimum sizes for accessibility
       minHeight: {
         'touch': '44px',
@@ -174,37 +171,4 @@ export default {
       },
     },
   },
-  plugins: [
-    forms,
-    // Custom plugin for accessibility utilities
-    function({ addUtilities, theme }) {
-      const newUtilities = {
-        '.sr-only': {
-          position: 'absolute',
-          width: '1px',
-          height: '1px',
-          padding: '0',
-          margin: '-1px',
-          overflow: 'hidden',
-          clip: 'rect(0, 0, 0, 0)',
-          whiteSpace: 'nowrap',
-          border: '0',
-        },
-        '.focus-visible:focus-visible': {
-          outline: `2px solid ${theme('colors.primary.500')}`,
-          outlineOffset: '2px',
-          borderRadius: theme('borderRadius.DEFAULT'),
-        },
-        '.focus-visible:focus:not(:focus-visible)': {
-          outline: 'none',
-        },
-        '.min-touch-target': {
-          minHeight: '44px',
-          minWidth: '44px',
-        },
-      };
-      
-      addUtilities(newUtilities);
-    },
-  ],
 };

@@ -1,21 +1,46 @@
 <script lang="ts">
   import { currentPage } from '../stores/app.store.js';
-  import UploadPage from '../pages/UploadPage.svelte';
-  import SearchPage from '../pages/SearchPage.svelte';
-  import DashboardPage from '../pages/DashboardPage.svelte';
   import { fade } from 'svelte/transition';
+  import LoadingSpinner from './LoadingSpinner.svelte';
   
   type PageKey = 'upload' | 'search' | 'dashboard';
 
-  // Route configuration
-  const routes: Record<PageKey, any> = {
-    upload: UploadPage,
-    search: SearchPage,
-    dashboard: DashboardPage
+  // Lazy-loaded page components with code splitting
+  const routes: Record<PageKey, () => Promise<any>> = {
+    upload: () => import('../pages/UploadPage.svelte'),
+    search: () => import('../pages/SearchPage.svelte'),
+    dashboard: () => import('../pages/DashboardPage.svelte')
   };
 
-  // Get current component based on route
-  $: currentComponent = routes[($currentPage as PageKey)] || routes.upload;
+  // Component loading state
+  let currentComponent: any = null;
+  let isLoading = false;
+  let loadError: string | null = null;
+
+  // Load component dynamically
+  async function loadComponent(page: PageKey) {
+    if (isLoading) return;
+    
+    isLoading = true;
+    loadError = null;
+    
+    try {
+      const componentModule = await routes[page]();
+      currentComponent = componentModule.default;
+    } catch (error) {
+      console.error(`Failed to load page component: ${page}`, error);
+      loadError = `Failed to load ${page} page. Please try again.`;
+      currentComponent = null;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  // React to page changes
+  $: if ($currentPage) {
+    loadComponent($currentPage as PageKey);
+  }
+
   $: pageTitle = getPageTitle($currentPage);
 
   function getPageTitle(page: string): string {
@@ -47,11 +72,30 @@
   </div>
 
   <div class="page-content">
-    {#key $currentPage}
-      <div class="page-wrapper" in:fade={{ duration: 200, delay: 100 }} out:fade={{ duration: 100 }}>
-        <svelte:component this={currentComponent} />
+    {#if isLoading}
+      <div class="loading-container" in:fade={{ duration: 150 }}>
+        <LoadingSpinner size="lg" message="Loading page..." />
       </div>
-    {/key}
+    {:else if loadError}
+      <div class="error-container" in:fade={{ duration: 150 }}>
+        <div class="error-content">
+          <h2>Page Load Error</h2>
+          <p>{loadError}</p>
+          <button 
+            class="retry-button"
+            on:click={() => loadComponent($currentPage as PageKey)}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    {:else if currentComponent}
+      {#key $currentPage}
+        <div class="page-wrapper" in:fade={{ duration: 200, delay: 100 }} out:fade={{ duration: 100 }}>
+          <svelte:component this={currentComponent} />
+        </div>
+      {/key}
+    {/if}
   </div>
 </div>
 
@@ -146,6 +190,72 @@
   /* Focus management for screen readers */
   .page-wrapper:focus {
     outline: none;
+  }
+
+  .loading-container,
+  .error-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 400px;
+  }
+
+  .error-content {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--color-surface-100);
+    border-radius: 0.75rem;
+    border: 2px solid var(--color-error-200);
+    max-width: 400px;
+  }
+
+  .error-content h2 {
+    margin: 0 0 1rem 0;
+    color: var(--color-error-700);
+    font-size: 1.25rem;
+  }
+
+  .error-content p {
+    margin: 0 0 1.5rem 0;
+    color: var(--color-surface-600);
+    line-height: 1.5;
+  }
+
+  .retry-button {
+    background-color: var(--color-primary-600);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .retry-button:hover {
+    background-color: var(--color-primary-700);
+  }
+
+  .retry-button:focus {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* Dark mode support for error states */
+  @media (prefers-color-scheme: dark) {
+    .error-content {
+      background-color: var(--color-surface-800);
+      border-color: var(--color-error-700);
+    }
+
+    .error-content h2 {
+      color: var(--color-error-400);
+    }
+
+    .error-content p {
+      color: var(--color-surface-300);
+    }
   }
 
   /* Reduced motion support */
