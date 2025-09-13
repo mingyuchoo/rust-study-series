@@ -211,12 +211,12 @@ impl AzureOpenAIConfig {
         }
 
         // Validate API version format
-        if !self.api_version.matches('-').count() == 2 {
-            return Err(ServiceError::Configuration(format!(
-                "Invalid API version format '{}', expected format: YYYY-MM-DD",
-                self.api_version
-            )));
-        }
+        if self.api_version.matches('-').count() != 2 {
+             return Err(ServiceError::Configuration(format!(
+                 "Invalid API version format '{}', expected format: YYYY-MM-DD",
+                 self.api_version
+             )));
+         }
 
         // Validate deployment names are not empty
         if self.chat_deployment.trim().is_empty() {

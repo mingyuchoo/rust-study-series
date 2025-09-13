@@ -5,8 +5,17 @@ use tracing_test::traced_test;
 use rust_qdrant_vector_rag::app::AppContainer;
 use rust_qdrant_vector_rag::config::AppConfig;
 
+// 환경변수 조작 직렬화를 위한 전역 락
+use std::sync::{Mutex, OnceLock};
+static ENV_MUTEX: OnceLock<Mutex<()>> = OnceLock::new();
+fn env_lock() -> std::sync::MutexGuard<'static, ()> {
+    ENV_MUTEX.get_or_init(|| Mutex::new(())).lock().expect("env mutex poisoned")
+}
+
 /// Test configuration setup for integration tests with test collection
 fn setup_test_config() -> AppConfig {
+    // 환경변수 조작 시 전역 락 획득 (테스트 간 레이스 방지)
+    let _guard = env_lock();
     // Clear any existing environment variables first
     cleanup_test_env();
 
@@ -550,6 +559,8 @@ async fn test_memory_usage_with_large_documents() {
 
 /// Cleanup function for tests
 fn cleanup_test_env() {
+    // 환경변수 제거 시 전역 락 획득 (테스트 간 레이스 방지)
+    let _guard = env_lock();
     let test_vars = [
         "SERVER_HOST",
         "SERVER_PORT", 
