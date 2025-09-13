@@ -14,7 +14,7 @@
   - Set up validation schemas using Zod
   - _Requirements: 2.1, 2.2, 2.3, 7.7_
 
-- [ ] 3. Implement API service layer
+- [x] 3. Implement API service layer
   - Create base API client with error handling and retry logic
   - Implement upload document API method with multipart form support
   - Implement query documents API method with configuration options
@@ -22,7 +22,7 @@
   - Add request/response interceptors for error handling
   - _Requirements: 1.4, 2.3, 4.1, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
 
-- [ ] 4. Create Svelte stores for state management
+- [x] 4. Create Svelte stores for state management
   - Implement app store for global application state
   - Create upload store for file upload state and progress
   - Implement search store for query state and results
@@ -30,7 +30,7 @@
   - Add toast store for notification management
   - _Requirements: 1.5, 2.4, 4.2, 6.2, 6.5_
 
-- [ ] 5. Build core layout and navigation components
+- [x] 5. Build core layout and navigation components
   - Create main App.svelte with SvelteUI theme provider
   - Implement Navigation component with responsive menu
   - Create Router component for client-side routing
