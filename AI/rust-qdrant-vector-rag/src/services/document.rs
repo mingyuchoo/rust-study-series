@@ -190,7 +190,7 @@ impl DocumentService for DocumentServiceImpl {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::models::{ChunkMetadata, ChunkType, SearchResult};
+    use crate::models::SearchResult;
     use crate::repository::VectorRepository;
     use crate::services::EmbeddingService;
     use async_trait::async_trait;

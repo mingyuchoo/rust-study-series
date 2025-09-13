@@ -5,11 +5,13 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 /// Mock HTTP server for testing Azure OpenAI client
+#[allow(dead_code)]
 pub struct MockAzureOpenAIServer {
     responses: Arc<Mutex<Vec<MockResponse>>>,
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct MockResponse {
     pub status_code: u16,
     pub body: String,
@@ -17,16 +19,19 @@ pub struct MockResponse {
 }
 
 impl MockAzureOpenAIServer {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             responses: Arc::new(Mutex::new(Vec::new())),
         }
     }
 
+    #[allow(dead_code)]
     pub async fn add_response(&self, response: MockResponse) {
         self.responses.lock().await.push(response);
     }
 
+    #[allow(dead_code)]
     pub async fn add_embedding_response(&self, embeddings: Vec<Vec<f32>>) {
         let data: Vec<_> = embeddings
             .into_iter()
@@ -55,6 +60,7 @@ impl MockAzureOpenAIServer {
         .await;
     }
 
+    #[allow(dead_code)]
     pub async fn add_chat_completion_response(&self, content: &str) {
         let response_body = json!({
             "choices": [{
@@ -80,6 +86,7 @@ impl MockAzureOpenAIServer {
         .await;
     }
 
+    #[allow(dead_code)]
     pub async fn add_error_response(&self, status_code: u16, error_message: &str) {
         let response_body = json!({
             "error": {
@@ -97,6 +104,7 @@ impl MockAzureOpenAIServer {
         .await;
     }
 
+    #[allow(dead_code)]
     pub async fn add_rate_limit_response(&self) {
         self.add_error_response(429, "Rate limit exceeded").await;
     }

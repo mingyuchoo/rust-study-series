@@ -367,7 +367,7 @@ mod tests {
     use crate::services::{EmbeddingService, VectorSearchService};
     use async_trait::async_trait;
     use chrono::Utc;
-    use std::collections::HashMap;
+
     use tokio::sync::Mutex;
     use uuid::Uuid;
 

@@ -3,7 +3,6 @@ mod tests {
     use crate::models::document::*;
     use crate::models::error::*;
     use crate::models::response::*;
-    use chrono::Utc;
     use serde_json;
 
     #[test]

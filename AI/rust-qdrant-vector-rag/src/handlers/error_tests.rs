@@ -1,7 +1,6 @@
 use crate::handlers::{health_handler, query_handler, upload_handler};
 use crate::models::{RAGResponse, ServiceError};
 use crate::services::{DocumentService, RAGService};
-use actix_web::{App, test, web};
 use async_trait::async_trait;
 use serde_json::json;
 use std::sync::Arc;

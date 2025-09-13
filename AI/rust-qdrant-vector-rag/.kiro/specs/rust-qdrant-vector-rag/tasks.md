@@ -123,7 +123,7 @@
   - Write integration tests for application startup
   - _Requirements: 3.4, 4.1_
 
-- [ ] 11. Create end-to-end integration tests
+- [x] 11. Create end-to-end integration tests
   - Set up test environment with test Qdrant collection
   - Create integration tests for complete document upload workflow
   - Add integration tests for question-answering pipeline
