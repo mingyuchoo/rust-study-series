@@ -38,7 +38,7 @@
   - Implement Toast component for notifications
   - _Requirements: 5.1, 5.2, 5.3, 6.1, 6.6_
 
-- [ ] 6. Implement file upload functionality
+- [x] 6. Implement file upload functionality
   - Create FileUpload component with drag-and-drop interface
   - Implement file validation for PDF format and size limits
   - Build UploadProgress component with progress indicators

@@ -13,6 +13,9 @@ export type { RequestConfig } from './services/index.js';
 // Export stores
 export * from './stores/index.js';
 
+// Export components
+export * from './components/index.js';
+
 // Export configuration
 export * from './config/env.js';
 
