@@ -20,3 +20,7 @@ export { default as SearchConfig } from './SearchConfig.svelte';
 export { default as LoadingSpinner } from './LoadingSpinner.svelte';
 export { default as AnswerDisplay } from './AnswerDisplay.svelte';
 export { default as SourceReferences } from './SourceReferences.svelte';
+
+// Health and dashboard components
+export { default as HealthStatus } from './HealthStatus.svelte';
+export { default as SystemMetrics } from './SystemMetrics.svelte';

@@ -47,7 +47,6 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8_
 
 - [x] 7. Build search and query interfaces
-
   - Create SearchForm component with input validation
   - Implement SearchConfig component for advanced search options
   - Build LoadingSpinner component for search progress indication
@@ -56,7 +55,7 @@
   - Integrate all search components into SearchPage
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
 
-- [ ] 8. Implement advanced search configuration
+- [x] 8. Implement advanced search configuration
   - Create form controls for max chunks parameter with validation
   - Implement similarity threshold slider with range validation
   - Add temperature control with proper bounds checking
@@ -64,7 +63,7 @@
   - Integrate configuration with search API calls
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
 
-- [ ] 9. Build system health and dashboard
+- [x] 9. Build system health and dashboard
   - Create HealthStatus component with service status indicators
   - Implement SystemMetrics component for uptime display
   - Build health check polling mechanism
