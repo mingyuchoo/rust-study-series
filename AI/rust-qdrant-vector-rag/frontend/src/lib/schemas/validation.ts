@@ -9,8 +9,11 @@ import { z } from 'zod';
 export const FileUploadSchema = z.object({
   file: z
     .instanceof(globalThis.File)
-    .refine((file) => file.type === 'application/pdf', {
-      message: 'Only PDF files are allowed'
+    .refine((file) => {
+      const name = file.name.toLowerCase();
+      return name.endsWith('.md') || name.endsWith('.markdown');
+    }, {
+      message: 'Only Markdown files (.md, .markdown) are allowed'
     })
     .refine((file) => file.size <= 10 * 1024 * 1024, {
       message: 'File size must be less than 10MB'
@@ -114,8 +117,11 @@ export const SearchFormSchema = z.object({
 export const UploadFormSchema = z.object({
   file: z
     .instanceof(globalThis.File)
-    .refine((file) => file.type === 'application/pdf', {
-      message: 'Only PDF files are supported'
+    .refine((file) => {
+      const name = file.name.toLowerCase();
+      return name.endsWith('.md') || name.endsWith('.markdown');
+    }, {
+      message: 'Only Markdown files (.md, .markdown) are supported'
     })
     .refine((file) => file.size <= 10 * 1024 * 1024, {
       message: 'File size must be less than 10MB'

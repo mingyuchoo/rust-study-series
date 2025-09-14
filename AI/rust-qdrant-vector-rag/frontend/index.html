@@ -26,15 +26,15 @@
     
     <!-- SEO and social media -->
     <title>RAG Document Search - AI-Powered Document Analysis</title>
-    <meta name="description" content="Upload PDF documents and ask intelligent questions using AI-powered search and analysis. Fast, secure, and easy to use." />
-    <meta name="keywords" content="AI, document search, PDF analysis, RAG, question answering, document intelligence" />
+    <meta name="description" content="Upload Markdown (.md, .markdown) documents and ask intelligent questions using AI-powered search and analysis. Fast, secure, and easy to use." />
+    <meta name="keywords" content="AI, document search, Markdown analysis, RAG, question answering, document intelligence" />
     <meta name="author" content="RAG Document Search" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="/" />
     <meta property="og:title" content="RAG Document Search - AI-Powered Document Analysis" />
-    <meta property="og:description" content="Upload PDF documents and ask intelligent questions using AI-powered search and analysis." />
+    <meta property="og:description" content="Upload Markdown (.md, .markdown) documents and ask intelligent questions using AI-powered search and analysis." />
     <meta property="og:image" content="/og-image.png" />
     <meta property="og:site_name" content="RAG Document Search" />
     
@@ -42,7 +42,7 @@
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="/" />
     <meta property="twitter:title" content="RAG Document Search - AI-Powered Document Analysis" />
-    <meta property="twitter:description" content="Upload PDF documents and ask intelligent questions using AI-powered search and analysis." />
+    <meta property="twitter:description" content="Upload Markdown (.md, .markdown) documents and ask intelligent questions using AI-powered search and analysis." />
     <meta property="twitter:image" content="/twitter-image.png" />
     
     <!-- Performance optimizations -->
@@ -50,11 +50,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="//api.openai.com" />
     
-    <!-- Security headers -->
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <!-- Security policies (use HTTP headers in production for stronger guarantees) -->
+    <!-- Referrer Policy via supported meta attribute -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
@@ -64,8 +62,9 @@
       font-src 'self' https://fonts.gstatic.com;
       img-src 'self' data: blob: https:;
       connect-src 'self' http://localhost:8080 ws://localhost:* wss://localhost:*;
-      worker-src 'self';
+      worker-src 'self' blob:;
       manifest-src 'self';
+      frame-ancestors 'none';
     " />
     
     <!-- Preload critical resources -->

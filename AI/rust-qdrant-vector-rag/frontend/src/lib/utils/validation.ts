@@ -150,14 +150,14 @@ export class RealTimeValidator {
   static validateFile(file: File): ValidationError[] {
     const errors: ValidationError[] = [];
 
-    // File type validation - enhanced with MIME type checking
-    const isValidPDF = file.type === 'application/pdf' || 
-                      file.name.toLowerCase().endsWith('.pdf');
+    // File type validation - Markdown by extension
+    const lowerName = file.name.toLowerCase();
+    const isMarkdown = lowerName.endsWith('.md') || lowerName.endsWith('.markdown');
     
-    if (!isValidPDF) {
+    if (!isMarkdown) {
       errors.push({
         field: 'file',
-        message: 'Only PDF files are allowed. Please select a valid PDF document.',
+        message: 'Only Markdown files (.md, .markdown) are allowed. Please select a valid Markdown document.',
         code: 'invalid_file_type'
       });
     }
@@ -166,7 +166,7 @@ export class RealTimeValidator {
     if (file.size === 0) {
       errors.push({
         field: 'file',
-        message: 'File appears to be empty. Please select a valid PDF file.',
+        message: 'File appears to be empty. Please select a valid Markdown file.',
         code: 'empty_file'
       });
     } else if (file.size > env.MAX_FILE_SIZE) {
@@ -205,7 +205,7 @@ export class RealTimeValidator {
     if (this.hasSuspiciousExtension(file.name)) {
       errors.push({
         field: 'file',
-        message: 'File has suspicious extension pattern. Please ensure it is a valid PDF.',
+        message: 'File has suspicious extension pattern. Please ensure it is a valid Markdown file.',
         code: 'suspicious_extension'
       });
     }
@@ -459,11 +459,11 @@ export class RealTimeValidator {
   }
 
   private static hasSuspiciousExtension(filename: string): boolean {
-    // Check for double extensions like .pdf.exe, .pdf.js, etc.
+    // Check for double extensions like .md.exe, .markdown.js, etc.
     const suspiciousPatterns = [
-      /\.pdf\.(exe|bat|cmd|scr|com|pif|js|jar|vbs|ps1)$/i,
-      /\.(exe|bat|cmd|scr|com|pif|js|jar|vbs|ps1)\.pdf$/i,
-      /\.pdf\..*\.pdf$/i, // Multiple .pdf extensions
+      /\.(md|markdown)\.(exe|bat|cmd|scr|com|pif|js|jar|vbs|ps1)$/i,
+      /\.(exe|bat|cmd|scr|com|pif|js|jar|vbs|ps1)\.(md|markdown)$/i,
+      /\.(md|markdown)\..*\.(md|markdown)$/i, // Multiple .md/.markdown extensions
     ];
 
     return suspiciousPatterns.some(pattern => pattern.test(filename));

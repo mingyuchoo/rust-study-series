@@ -179,7 +179,7 @@
     <header class="page-header">
       <h1 class="page-title text-responsive-xl" id="upload-page-title">Upload Documents</h1>
       <p class="page-description text-responsive-base" aria-describedby="upload-page-title">
-        Upload PDF documents to make them searchable with AI-powered queries
+        Upload Markdown (.md, .markdown) documents to make them searchable with AI-powered queries
       </p>
     </header>
 
@@ -190,7 +190,7 @@
         <section class="upload-area" aria-labelledby="upload-area-title">
           <h2 id="upload-area-title" class="sr-only">File Upload Area</h2>
           <FileUpload
-            bind:selectedFile={$selectedFile}
+            selectedFile={$selectedFile}
             disabled={$isUploading}
             on:fileSelect={handleFileSelect}
             on:fileRemove={handleFileRemove}
@@ -306,7 +306,7 @@
       <h2 id="help-title" class="help-title text-responsive-base">Upload Guidelines</h2>
       <ul class="help-list" role="list">
         <li class="help-text text-responsive-sm">
-          <strong>Supported formats:</strong> PDF files up to 10MB
+          <strong>Supported formats:</strong> Markdown files (.md, .markdown) up to 10MB
         </li>
         <li class="help-text text-responsive-sm">
           <strong>Processing:</strong> Your documents will be processed and split into searchable chunks for AI-powered queries

@@ -5,7 +5,7 @@
 
 export const env = {
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '/api',
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10),
 
   // Application Configuration
@@ -14,7 +14,7 @@ export const env = {
 
   // File Upload Configuration
   MAX_FILE_SIZE: parseInt(import.meta.env.VITE_MAX_FILE_SIZE || '10485760', 10), // 10MB
-  SUPPORTED_FILE_TYPES: import.meta.env.VITE_SUPPORTED_FILE_TYPES || '.pdf',
+  SUPPORTED_FILE_TYPES: import.meta.env.VITE_SUPPORTED_FILE_TYPES || '.md,.markdown',
   MAX_FILES_PER_UPLOAD: parseInt(import.meta.env.VITE_MAX_FILES_PER_UPLOAD || '1', 10),
 
   // Search Configuration

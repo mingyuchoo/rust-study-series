@@ -15,10 +15,10 @@ import type {
 } from '../types/api.js';
 import type {
   AppError,
-  NetworkError,
   ApiError,
   RetryConfig
 } from '../types/errors.js';
+
 import { ErrorTypeValues, ErrorSeverityValues } from '../types/errors.js';
 
 // Request configuration interface
@@ -359,9 +359,11 @@ class ApiService {
         );
       }
 
-      if (!file.name.toLowerCase().endsWith('.pdf')) {
+      const lowerName = file.name.toLowerCase();
+      const isMarkdown = lowerName.endsWith('.md') || lowerName.endsWith('.markdown');
+      if (!isMarkdown) {
         throw errorHandler.createUploadError(
-          'Invalid file type. Please select a PDF file.',
+          'Invalid file type. Please select a Markdown (.md, .markdown) file.',
           file.name,
           'invalid_type',
           { fileType: file.type }

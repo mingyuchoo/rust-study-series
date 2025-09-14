@@ -139,7 +139,7 @@ async fn main() -> std::io::Result<()> {
                         origin.as_bytes().starts_with(b"https://")
                     })
                     .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-                    .allowed_headers(vec!["Content-Type", "Authorization", "Accept"])
+                    .allowed_headers(vec!["Content-Type", "Authorization", "Accept", "X-Requested-With"])
                     .expose_headers(vec!["X-Request-ID"])
                     .max_age(3600)
                     .supports_credentials()

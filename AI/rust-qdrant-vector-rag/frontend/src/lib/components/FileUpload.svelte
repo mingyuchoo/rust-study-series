@@ -66,9 +66,11 @@
       });
     }
 
-    if (!file.name.toLowerCase().endsWith('.pdf')) {
+    const lowerName = file.name.toLowerCase();
+    const isMarkdown = lowerName.endsWith('.md') || lowerName.endsWith('.markdown');
+    if (!isMarkdown) {
       const uploadError = errorHandler.createUploadError(
-        'Invalid file type. Please select a PDF file.',
+        'Invalid file type. Please select a Markdown (.md, .markdown) file.',
         file.name,
         'invalid_type',
         { fileType: file.type }
@@ -196,7 +198,7 @@
   <input
     bind:this={fileInput}
     type="file"
-    accept=".pdf"
+    accept=".md,.markdown"
     on:change={handleInputChange}
     style="display: none;"
     {disabled}
@@ -260,10 +262,10 @@
         />
         <div class="upload-text">
           <h3 class="upload-title">
-            {isDragOver ? 'Drop your PDF file here' : 'Upload PDF Document'}
+            {isDragOver ? 'Drop your Markdown file here' : 'Upload Markdown Document'}
           </h3>
           <p class="upload-description" id={instructionsId}>
-            Drag and drop a PDF file here, or click to browse. Only PDF files are accepted.
+            Drag and drop a Markdown file here, or click to browse. Only .md or .markdown files are accepted.
           </p>
           <p class="upload-limit">
             Maximum file size: {formatFileSize(env.MAX_FILE_SIZE)}

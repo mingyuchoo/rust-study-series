@@ -1,8 +1,7 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+  import { createEventDispatcher, onDestroy } from 'svelte';
   import { Upload, FileText, X, AlertCircle, CheckCircle, Shield } from 'lucide-svelte';
   import { 
-    RealTimeValidator, 
     InputSanitizer, 
     DebouncedValidation,
     debounce 
@@ -15,7 +14,7 @@
   export let disabled = false;
   export let selectedFile: File | null = null;
   export let showValidationFeedback = true;
-  export let allowedTypes = ['.pdf'];
+  export let allowedTypes = ['.md', '.markdown'];
   export let maxFileSize = env.MAX_FILE_SIZE;
 
   // Event dispatcher
@@ -43,7 +42,6 @@
   const warningsId = generateId('upload-warnings');
 
   // Reactive statements
-  $: dragActive = isDragOver;
   $: hasErrors = validationErrors.length > 0;
   $: hasWarnings = validationWarnings.length > 0;
   $: isValid = !hasErrors && selectedFile !== null;
@@ -80,11 +78,7 @@
     });
   }, 100);
 
-  // File validation function with enhanced security checks
-  function validateFile(file: File): ValidationError[] {
-    // Use real-time validator for comprehensive validation
-    return RealTimeValidator.validateFile(file);
-  }
+  // Validation is handled via DebouncedValidation and RealTimeValidator
 
   // Handle file selection with enhanced validation
   function handleFileSelect(file: File) {
@@ -190,8 +184,8 @@
   // Cleanup on destroy
   onDestroy(() => {
     debouncedFileValidation.cancel();
-  });</scr
-ipt>
+  });
+</script>
 
 <div class="file-upload-container">
   <input
@@ -222,10 +216,9 @@ ipt>
     on:drop={handleDrop}
     role="button"
     tabindex={disabled ? -1 : 0}
-    aria-label={selectedFile ? `Selected file: ${selectedFile.name}. ${isValid ? 'Valid file.' : 'File has validation errors.'} Click to change file or remove.` : 'Upload PDF file. Click to browse or drag and drop.'}
+    aria-label={selectedFile ? `Selected file: ${selectedFile.name}. ${isValid ? 'Valid file.' : 'File has validation errors.'} Click to change file or remove.` : 'Upload Markdown file. Click to browse or drag and drop.'}
     aria-describedby={`${instructionsId} ${hasErrors ? errorsId : ''} ${hasWarnings ? warningsId : ''}`}
     aria-disabled={disabled}
-    aria-invalid={hasErrors}
   >
     {#if selectedFile}
       <!-- Selected file display with validation status -->
@@ -285,7 +278,7 @@ ipt>
             class="btn btn-secondary btn-sm min-touch-target focus-visible"
             on:click|stopPropagation={handleClick}
             {disabled}
-            aria-label="Choose a different PDF file"
+            aria-label="Choose a different Markdown file"
           >
             <span>Choose Different File</span>
           </button>
@@ -309,10 +302,10 @@ ipt>
         
         <div class="upload-text">
           <h3 class="upload-title">
-            {isDragOver ? 'Drop your PDF file here' : 'Upload PDF Document'}
+            {isDragOver ? 'Drop your Markdown file here' : 'Upload Markdown Document'}
           </h3>
           <p class="upload-description" id={instructionsId}>
-            Drag and drop a PDF file here, or click to browse. Only PDF files are accepted.
+            Drag and drop a Markdown file here, or click to browse. Only .md or .markdown files are accepted.
           </p>
           <p class="upload-limit">
             Maximum file size: {formatFileSize(maxFileSize)}
