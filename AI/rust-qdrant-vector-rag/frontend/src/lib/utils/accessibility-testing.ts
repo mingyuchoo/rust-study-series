@@ -266,13 +266,14 @@ export class AccessibilityAuditor {
       // Check aria-labelledby references
       const labelledby = element.getAttribute('aria-labelledby');
       if (labelledby) {
-        const ids = labelledby.split(' ');
+        const ids = labelledby.split(' ').filter(id => id.trim() !== '');
         ids.forEach(id => {
-          if (!container.querySelector(`#${id}`)) {
+          const trimmedId = id.trim();
+          if (trimmedId && !container.querySelector(`#${trimmedId}`)) {
             this.addIssue({
               type: 'error',
               rule: 'aria-attributes',
-              message: `aria-labelledby references non-existent element: ${id}`,
+              message: `aria-labelledby references non-existent element: ${trimmedId}`,
               element: element,
               severity: 'serious',
             });
@@ -283,13 +284,14 @@ export class AccessibilityAuditor {
       // Check aria-describedby references
       const describedby = element.getAttribute('aria-describedby');
       if (describedby) {
-        const ids = describedby.split(' ');
+        const ids = describedby.split(' ').filter(id => id.trim() !== '');
         ids.forEach(id => {
-          if (!container.querySelector(`#${id}`)) {
+          const trimmedId = id.trim();
+          if (trimmedId && !container.querySelector(`#${trimmedId}`)) {
             this.addIssue({
               type: 'error',
               rule: 'aria-attributes',
-              message: `aria-describedby references non-existent element: ${id}`,
+              message: `aria-describedby references non-existent element: ${trimmedId}`,
               element: element,
               severity: 'serious',
             });
@@ -403,11 +405,11 @@ export class AccessibilityAuditor {
 
   private rgbToHex(rgb: string): string | null {
     const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-    if (!match) return null;
+    if (!match || !match[1] || !match[2] || !match[3]) return null;
     
-    const r = parseInt(match[1]);
-    const g = parseInt(match[2]);
-    const b = parseInt(match[3]);
+    const r = parseInt(match[1], 10);
+    const g = parseInt(match[2], 10);
+    const b = parseInt(match[3], 10);
     
     return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
   }

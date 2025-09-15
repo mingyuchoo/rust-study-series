@@ -1,6 +1,6 @@
 use crate::models::ServiceError;
 use actix_web::dev::{Service, ServiceRequest, ServiceResponse, Transform, forward_ready};
-use actix_web::{Error, ResponseError};
+use actix_web::Error;
 use futures_util::future::LocalBoxFuture;
 use std::future::{Ready, ready};
 use std::rc::Rc;

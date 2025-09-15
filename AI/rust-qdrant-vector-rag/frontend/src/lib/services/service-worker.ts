@@ -107,11 +107,13 @@ class ServiceWorkerManagerImpl implements ServiceWorkerManager {
 
   async getRegistration(): Promise<ServiceWorkerRegistration | null> {
     if (!this.isSupported()) {
+      console.warn('Service Worker not supported in this browser');
       return null;
     }
 
     try {
-      return await navigator.serviceWorker.getRegistration();
+      const registration = await navigator.serviceWorker.getRegistration();
+      return registration || null;
     } catch (error) {
       console.error('Service Worker: Failed to get registration', error);
       return null;
@@ -213,8 +215,10 @@ export async function initServiceWorker(): Promise<void> {
     } catch (error) {
       console.error('Service Worker: Initialization failed', error);
     }
+  } else if (!serviceWorkerManager.isSupported()) {
+    console.log('Service Worker: Skipped (not supported by browser)');
   } else {
-    console.log('Service Worker: Skipped (development mode or not supported)');
+    console.log('Service Worker: Skipped (development mode - service workers disabled for development)');
   }
 }
 
@@ -292,7 +296,9 @@ export function startPerformanceMonitoring(): void {
     const lcpObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       const lastEntry = entries[entries.length - 1];
-      console.log('LCP:', lastEntry.startTime);
+      if (lastEntry) {
+        console.log('LCP:', (lastEntry as PerformanceEntry).startTime);
+      }
     });
     lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
   } catch (error) {
@@ -304,7 +310,10 @@ export function startPerformanceMonitoring(): void {
     const fidObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        console.log('FID:', entry.processingStart - entry.startTime);
+        const fidEntry = entry as PerformanceEntry & { processingStart?: number };
+        if (fidEntry.processingStart !== undefined) {
+          console.log('FID:', fidEntry.processingStart - fidEntry.startTime);
+        }
       });
     });
     fidObserver.observe({ entryTypes: ['first-input'] });
