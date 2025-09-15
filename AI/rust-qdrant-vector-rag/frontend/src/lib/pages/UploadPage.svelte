@@ -1,14 +1,14 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ArrowRight, Search, Upload } from 'lucide-svelte';
+  import { Search, Upload } from 'lucide-svelte';
   import FileUpload from '../components/FileUpload.svelte';
-  import UploadProgress from '../components/UploadProgress.svelte';
   import UploadResult from '../components/UploadResult.svelte';
   import { InteractiveButton, ProgressIndicator, SuccessNotification, LoadingOverlay } from '../components/index.js';
   import { uploadActions, isUploading, uploadProgress, uploadResult, selectedFile } from '../stores/upload.store.js';
   import { toastActions } from '../stores/toast.store.js';
   import { apiService } from '../services/api.js';
   import { errorHandler } from '../services/error-handler.js';
+  import { appActions } from '../stores/app.store.js';
   import type { ValidationError } from '../types/state.js';
   import type { AppError } from '../types/errors.js';
 
@@ -156,11 +156,13 @@
 
   // Navigate to search page
   function navigateToSearch() {
-    // This would typically use a router
-    // For now, we'll just show a toast
+    // 앱 스토어를 통해 실제로 "Search Documents" 화면으로 이동
+    appActions.setCurrentPage('search');
+
+    // 사용자 피드백 토스트 (한국어)
     toastActions.add({
-      type: 'info',
-      message: 'Navigate to search page to query your uploaded documents',
+      type: 'success',
+      message: 'Search Documents 페이지로 이동했습니다',
       duration: 3000
     });
   }
