@@ -225,7 +225,9 @@ impl DocumentChunker {
         }
 
         // Try to find a good break point (sentence, paragraph, etc.)
-        let start_pos = content.len().saturating_sub(self.config.overlap_size);
+        // NOTE: UTF-8 안전성을 위해 문자 경계로 보정
+        let mut start_pos = content.len().saturating_sub(self.config.overlap_size);
+        start_pos = self.prev_char_boundary(content, start_pos);
         let overlap_section = &content[start_pos ..];
 
         // Look for sentence boundaries
@@ -263,14 +265,20 @@ impl DocumentChunker {
             return Ok(chunks);
         }
 
+        // 시작 인덱스를 UTF-8 문자 경계에 정렬
         let mut start = 0;
+        start = self.next_char_boundary(content, start);
         while start < content.len() {
-            let end = std::cmp::min(start + self.config.max_chunk_size, content.len());
+            let mut end = std::cmp::min(start + self.config.max_chunk_size, content.len());
+            // 끝 인덱스를 경계로 보정 (크기 제한을 넘지 않도록 왼쪽으로 보정)
+            end = self.prev_char_boundary(content, end);
             let mut chunk_end = end;
 
             // Try to find a good break point if we're not at the end
             if end < content.len() {
-                let search_start = std::cmp::max(start, end.saturating_sub(200));
+                let mut search_start = std::cmp::max(start, end.saturating_sub(200));
+                // 검색 구간도 경계로 보정
+                search_start = self.prev_char_boundary(content, search_start);
                 let search_section = &content[search_start .. end];
 
                 // Look for sentence boundaries
@@ -283,6 +291,8 @@ impl DocumentChunker {
                 }
             }
 
+            // 최종 청크 범위를 문자 경계에 보정
+            chunk_end = self.prev_char_boundary(content, chunk_end);
             let chunk_content = content[start .. chunk_end].trim();
             if chunk_content.len() >= self.config.min_chunk_size {
                 let metadata = ChunkMetadata::new(source_file.to_string(), *chunk_index, element.element_type.clone())
@@ -296,14 +306,16 @@ impl DocumentChunker {
             }
 
             // Move to next chunk with overlap
-            let next_start = if self.config.overlap_size > 0 && chunk_end > self.config.overlap_size {
+            let mut next_start = if self.config.overlap_size > 0 && chunk_end > self.config.overlap_size {
                 chunk_end.saturating_sub(self.config.overlap_size)
             } else {
                 chunk_end
             };
+            // 다음 시작 인덱스도 경계로 보정
+            next_start = self.prev_char_boundary(content, next_start);
 
             // Prevent infinite loop - ensure we always make progress
-            start = if next_start <= start { start + 1 } else { next_start };
+            start = if next_start <= start { self.next_char_boundary(content, start + 1) } else { next_start };
 
             // Safety check to prevent infinite loops
             if start >= content.len() {
@@ -312,6 +324,24 @@ impl DocumentChunker {
         }
 
         Ok(chunks)
+    }
+
+    /// 주어진 바이트 인덱스를 그 이전의 UTF-8 문자 경계로 보정
+    fn prev_char_boundary(&self, s: &str, mut idx: usize) -> usize {
+        if idx > s.len() { idx = s.len(); }
+        while idx > 0 && !s.is_char_boundary(idx) {
+            idx -= 1;
+        }
+        idx
+    }
+
+    /// 주어진 바이트 인덱스를 그 이후의 UTF-8 문자 경계로 보정
+    fn next_char_boundary(&self, s: &str, mut idx: usize) -> usize {
+        if idx > s.len() { return s.len(); }
+        while idx < s.len() && !s.is_char_boundary(idx) {
+            idx += 1;
+        }
+        idx
     }
 
     /// Estimates the token count for a text string

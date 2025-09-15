@@ -378,7 +378,10 @@ class ApiService {
         retryable: false // Don't retry file uploads
       });
 
-      return response.data;
+      // NOTE: 백엔드가 'SUCCESS' 같은 대문자 상태를 반환해도 일관되게 처리하기 위해 정규화
+      const data = response.data as unknown as { status?: string } & UploadResponse;
+      const normalizedStatus = (data.status || '').toLowerCase() === 'success' ? 'success' : 'failure';
+      return { ...data, status: normalizedStatus } as UploadResponse;
     } catch (error) {
       if (error instanceof Error && 'type' in error) {
         // Re-throw AppError as-is

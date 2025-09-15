@@ -16,8 +16,14 @@
   }>();
 
   // Reactive computations
-  $: isSuccess = result.status === 'success';
-  $: isFailure = result.status === 'failure';
+  // NOTE: 백엔드가 'SUCCESS' 같은 대문자 상태를 반환해도 정상 동작하도록 정규화
+  function normalizeStatus(status: string | undefined | null): 'success' | 'failure' {
+    if (typeof status === 'string' && status.toLowerCase() === 'success') return 'success';
+    return 'failure';
+  }
+  $: normalizedStatus = normalizeStatus(result?.status as unknown as string);
+  $: isSuccess = normalizedStatus === 'success';
+  $: isFailure = normalizedStatus === 'failure';
 
   // Format timestamp
   function formatTimestamp(timestamp: string): string {
@@ -72,7 +78,7 @@
     </div>
     
     <div class="status-badge {isSuccess ? 'success' : 'error'}">
-      {result.status}
+      {normalizedStatus.toUpperCase()}
     </div>
   </div>
 
