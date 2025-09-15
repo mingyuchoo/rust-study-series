@@ -195,12 +195,18 @@ pub async fn simple_query_handler_root(
 
 /// Helper function to create RAG service with all dependencies
 async fn create_rag_service(config: &AppConfig, azure_client: &AzureOpenAIClient) -> Result<RAGServiceImpl, ServiceError> {
-    // Create Qdrant repository
-    let qdrant_repo = std::sync::Arc::new(
-        QdrantRepository::new(config.qdrant.clone())
-            .await
-            .map_err(|e| ServiceError::database(format!("Failed to initialize Qdrant repository: {}", e)))?,
-    ) as std::sync::Arc<dyn VectorRepository>;
+    // Qdrant 리포지토리 생성
+    let qdrant = QdrantRepository::new(config.qdrant.clone())
+        .await
+        .map_err(|e| ServiceError::database(format!("Failed to initialize Qdrant repository: {}", e)))?;
+
+    // 업로드 경로와 동일하게 컬렉션 존재 여부 확인 후 초기화
+    // (방어 로직) 질의 시점에도 컬렉션이 없으면 생성하여 500 오류를 예방
+    if !qdrant.collection_exists().await? {
+        qdrant.initialize_collection().await?;
+    }
+
+    let qdrant_repo = std::sync::Arc::new(qdrant) as std::sync::Arc<dyn VectorRepository>;
 
     // Create embedding service
     let embedding_service = std::sync::Arc::new(EmbeddingServiceImpl::new(azure_client.clone())) as std::sync::Arc<dyn crate::services::EmbeddingService>;

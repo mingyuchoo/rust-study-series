@@ -178,18 +178,11 @@ where
                         "Request failed with error"
                     );
 
-                    // Return structured error response instead of generic Actix error
+                    // 구조화된 ServiceError가 있다면 이를 그대로 반환하여
+                    // 올바른 상태 코드/본문이 클라이언트로 전달되도록 합니다.
                     match service_error {
-                        | Some(service_err) => {
-                            let mut response = service_err.error_response();
-                            if let Ok(header_value) = actix_web::http::header::HeaderValue::from_str(&request_id) {
-                                response
-                                    .headers_mut()
-                                    .insert(actix_web::http::header::HeaderName::from_static("x-request-id"), header_value);
-                            }
-                            Err(actix_web::error::ErrorInternalServerError("Service error"))
-                        },
-                        | None => Err(err), // Pass through unhandled errors
+                        | Some(service_err) => Err(service_err.into()),
+                        | None => Err(err), // 처리하지 않는 에러는 그대로 전달
                     }
                 },
             }

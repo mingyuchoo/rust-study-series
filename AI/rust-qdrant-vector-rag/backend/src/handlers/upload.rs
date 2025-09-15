@@ -246,12 +246,26 @@ pub async fn upload_json_handler(
 
 /// Helper function to create document service with all dependencies
 async fn create_document_service(config: &AppConfig, azure_client: &AzureOpenAIClient) -> Result<DocumentServiceImpl, ServiceError> {
-    // Create Qdrant repository
-    let qdrant_repo = std::sync::Arc::new(
-        QdrantRepository::new(config.qdrant.clone())
+    // Qdrant 리포지토리 생성 및 컬렉션 초기화 보장
+    // - 서버 기동 시에도 컬렉션을 만들지만, 업로드 핸들러는 별도의 리포지토리를 생성하므로
+    //   방어적으로 컬렉션 존재 여부를 확인하고 없으면 생성합니다.
+    let repo = QdrantRepository::new(config.qdrant.clone())
+        .await
+        .map_err(|e| ServiceError::database(format!("Failed to initialize Qdrant repository: {}", e)))?;
+
+    // 컬렉션 존재 확인 후 미존재 시 생성
+    if !repo
+        .collection_exists()
+        .await
+        .map_err(|e| ServiceError::database(format!("Failed to check Qdrant collection existence: {}", e)))?
+    {
+        repo
+            .initialize_collection()
             .await
-            .map_err(|e| ServiceError::database(format!("Failed to initialize Qdrant repository: {}", e)))?,
-    ) as std::sync::Arc<dyn VectorRepository>;
+            .map_err(|e| ServiceError::database(format!("Failed to initialize Qdrant collection: {}", e)))?;
+    }
+
+    let qdrant_repo = std::sync::Arc::new(repo) as std::sync::Arc<dyn VectorRepository>;
 
     // Create embedding service
     let embedding_service = std::sync::Arc::new(EmbeddingServiceImpl::new(azure_client.clone())) as std::sync::Arc<dyn crate::services::EmbeddingService>;

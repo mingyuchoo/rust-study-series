@@ -98,6 +98,22 @@ class ApiClient {
   }
 
   /**
+   * 런타임에서 AppError 형태를 판별하기 위한 타입 가드
+   * Error 인스턴스가 아닌 평범한 객체로 던져진 경우도 올바르게 인식합니다.
+   */
+  private isAppErrorLike(error: unknown): error is AppError {
+    if (!error || typeof error !== 'object') return false;
+    const e = error as Record<string, unknown>;
+    return (
+      typeof e['type'] === 'string' &&
+      typeof e['retryable'] === 'boolean' &&
+      typeof e['severity'] === 'string' &&
+      // timestamp 는 Date 객체이거나 문자열로 직렬화되었을 수 있음
+      (e['timestamp'] instanceof Date || typeof e['timestamp'] === 'string')
+    );
+  }
+
+  /**
    * Create AppError from fetch error
    */
   private createErrorFromFetch(error: unknown, config: RequestConfig): AppError {
@@ -256,8 +272,8 @@ class ApiClient {
         return await this.responseInterceptor<T>(response);
 
       } catch (error) {
-        const appError = error instanceof Error && 'type' in error && 'retryable' in error && 'severity' in error && 'timestamp' in error
-          ? error as AppError
+        const appError = this.isAppErrorLike(error)
+          ? (error as AppError)
           : this.createErrorFromFetch(error, processedConfig);
 
         if (attempt < this.retryConfig.maxAttempts && this.isRetryableError(appError)) {
@@ -383,9 +399,9 @@ class ApiService {
       const normalizedStatus = (data.status || '').toLowerCase() === 'success' ? 'success' : 'failure';
       return { ...data, status: normalizedStatus } as UploadResponse;
     } catch (error) {
-      if (error instanceof Error && 'type' in error) {
-        // Re-throw AppError as-is
-        throw error;
+      // AppError 형태라면 그대로 재던지기
+      if (error && typeof error === 'object' && 'type' in (error as any)) {
+        throw error as AppError;
       }
       
       // Convert unknown errors to upload errors
@@ -424,20 +440,12 @@ class ApiService {
         retryable: true
       });
 
-      // Check if response indicates no results
-      if (response.data.sources.length === 0) {
-        throw errorHandler.createSearchError(
-          'No relevant information found for your query',
-          request.question,
-          'no_results'
-        );
-      }
-
+      // 결과가 0개여도 에러로 취급하지 않고 UI에서 빈 상태로 처리합니다.
       return response.data;
     } catch (error) {
-      if (error instanceof Error && 'type' in error) {
-        // Re-throw AppError as-is
-        throw error;
+      // AppError 형태라면 그대로 재던지기
+      if (error && typeof error === 'object' && 'type' in (error as any)) {
+        throw error as AppError;
       }
       
       // Convert unknown errors to search errors
@@ -461,9 +469,9 @@ class ApiService {
 
       return response.data;
     } catch (error) {
-      if (error instanceof Error && 'type' in error) {
-        // Re-throw AppError as-is
-        throw error;
+      // AppError 형태라면 그대로 재던지기
+      if (error && typeof error === 'object' && 'type' in (error as any)) {
+        throw error as AppError;
       }
       
       // Convert unknown errors to API errors
