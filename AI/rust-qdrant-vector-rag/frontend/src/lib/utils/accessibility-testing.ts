@@ -255,10 +255,13 @@ export class AccessibilityAuditor {
     });
   }
 
-  // Check ARIA attributes
+  // ARIA 속성 검사 (유효하지 않은 CSS 셀렉터 [aria-*] 대신 DOM 속성 순회를 사용)
   private checkAriaAttributes(container: Element): void {
-    const elementsWithAria = Array.from(container.querySelectorAll('[aria-*]'));
-    
+    // 모든 요소를 순회하며 aria-로 시작하는 속성을 가진 요소만 필터링
+    const elementsWithAria = Array.from(container.querySelectorAll('*')).filter((el) =>
+      Array.from(el.attributes).some((attr) => attr.name.toLowerCase().startsWith('aria-'))
+    );
+
     elementsWithAria.forEach(element => {
       // Check aria-labelledby references
       const labelledby = element.getAttribute('aria-labelledby');
@@ -294,7 +297,7 @@ export class AccessibilityAuditor {
         });
       }
 
-      // Check for redundant ARIA
+      // 불필요한 ARIA 속성 검사
       const role = element.getAttribute('role');
       const tagName = element.tagName.toLowerCase();
       if (role === 'button' && tagName === 'button') {

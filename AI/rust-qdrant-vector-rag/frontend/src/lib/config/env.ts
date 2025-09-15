@@ -4,8 +4,10 @@
  */
 
 export const env = {
-  // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '/api',
+  // API 설정
+  // 개발 모드에서는 Vite 프록시(`/api` → `http://localhost:8080`)를 사용해 CORS를 우회합니다.
+  // 프로덕션에서는 VITE_API_BASE_URL을 설정하여 실제 백엔드 주소를 사용하세요.
+  API_BASE_URL: (import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_BASE_URL || '/api')),
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000', 10),
 
   // Application Configuration
@@ -29,7 +31,7 @@ export const env = {
   THEME: import.meta.env.VITE_THEME || 'light',
   ENABLE_ANIMATIONS: import.meta.env.VITE_ENABLE_ANIMATIONS === 'true',
 
-  // Development flags
+  // 개발 플래그
   DEV: import.meta.env.DEV,
   PROD: import.meta.env.PROD,
 } as const;
@@ -39,12 +41,9 @@ export type EnvConfig = typeof env;
 
 // Validation function to ensure required environment variables are set
 export function validateEnv(): void {
-  const requiredVars = ['VITE_API_BASE_URL'];
-
-  const missing = requiredVars.filter(varName => !import.meta.env[varName]);
-
-  if (missing.length > 0) {
-    console.warn('Missing environment variables:', missing);
+  // 프로덕션에서만 API_BASE_URL 유효성 경고를 표시합니다.
+  if (import.meta.env.PROD && !import.meta.env.VITE_API_BASE_URL) {
+    console.warn('VITE_API_BASE_URL 값이 설정되지 않았습니다. 프로덕션에서는 필수입니다.');
   }
 }
 

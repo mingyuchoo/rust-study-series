@@ -6,8 +6,6 @@
     <!-- Favicon and icons -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-192x192.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/icon-16x16.png" />
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
@@ -50,9 +48,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="dns-prefetch" href="//api.openai.com" />
     
-    <!-- Security policies (use HTTP headers in production for stronger guarantees) -->
-    <!-- Referrer Policy via supported meta attribute -->
-    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- Security headers (note: some headers must be set by the server, not via meta) -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
     
     <!-- Content Security Policy -->
     <meta http-equiv="Content-Security-Policy" content="
