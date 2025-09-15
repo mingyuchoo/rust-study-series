@@ -229,7 +229,7 @@
           <button
             type="button"
             on:click={resetConfig}
-            class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+            class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-400 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
             {disabled}
             aria-label="Reset configuration to defaults"
           >
@@ -250,7 +250,7 @@
         <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
           <div class="config-label">
             <h4 class="font-medium text-gray-900 dark:text-white">Maximum Chunks</h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="text-sm text-gray-700 dark:text-gray-300">
               Number of document chunks to retrieve for context
             </p>
           </div>
@@ -264,7 +264,7 @@
                 max="20"
                 step="1"
                 {disabled}
-                class="w-full px-3 py-2 pr-8 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                class="w-full px-3 py-2 pr-8 border border-gray-400 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 class:border-red-500={getFieldError('max_chunks')}
                 class:border-orange-400={hasFieldWarning('max_chunks') && !getFieldError('max_chunks')}
                 class:border-green-500={isFieldValid('max_chunks') && localConfig.max_chunks > 0}
@@ -282,7 +282,7 @@
                 {/if}
               </div>
             </div>
-            <p id="max-chunks-help" class="text-xs text-gray-500 mt-1">
+            <p id="max-chunks-help" class="text-xs text-gray-600 mt-1">
               Range: 1-20 chunks
             </p>
             <div id="max-chunks-validation" class="mt-1">
@@ -307,7 +307,7 @@
         <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
           <div class="config-label">
             <h4 class="font-medium text-gray-900 dark:text-white">Similarity Threshold</h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="text-sm text-gray-700 dark:text-gray-300">
               Minimum relevance score for including chunks
             </p>
           </div>
@@ -329,7 +329,7 @@
                 aria-describedby="similarity-help similarity-validation"
                 aria-invalid={!!getFieldError('similarity_threshold')}
               />
-              <div class="flex justify-between text-xs text-gray-500">
+              <div class="flex justify-between text-xs text-gray-600">
                 <span>0.0</span>
                 <span>0.5</span>
                 <span>1.0</span>
@@ -344,7 +344,7 @@
                   <CheckCircle size={14} class="text-green-500" aria-hidden="true" />
                 {/if}
               </p>
-              <p id="similarity-help" class="text-xs text-gray-500">
+              <p id="similarity-help" class="text-xs text-gray-600">
                 Higher values = more relevant results
               </p>
               <div id="similarity-validation" class="mt-1">
@@ -373,7 +373,7 @@
         <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
           <div class="config-label">
             <h4 class="font-medium text-gray-900 dark:text-white">Max Response Tokens</h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="text-sm text-gray-700 dark:text-gray-300">
               Maximum length of AI response
             </p>
           </div>
@@ -386,12 +386,12 @@
               max="4000"
               step="50"
               {disabled}
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              class="w-full px-3 py-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               class:border-red-500={getFieldError('max_response_tokens')}
               aria-label="Maximum response tokens"
               aria-describedby="tokens-help"
             />
-            <p id="tokens-help" class="text-xs text-gray-500 mt-1">
+            <p id="tokens-help" class="text-xs text-gray-600 mt-1">
               Range: 50-4000 tokens (~{Math.round(localConfig.max_response_tokens * 0.75)} words)
             </p>
             {#if getFieldError('max_response_tokens')}
@@ -406,7 +406,7 @@
         <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
           <div class="config-label">
             <h4 class="font-medium text-gray-900 dark:text-white">Temperature</h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="text-sm text-gray-700 dark:text-gray-300">
               Controls randomness in AI responses
             </p>
           </div>
@@ -424,7 +424,7 @@
                 aria-label="Temperature setting"
                 aria-describedby="temperature-help"
               />
-              <div class="flex justify-between text-xs text-gray-500">
+              <div class="flex justify-between text-xs text-gray-600">
                 <span>Precise</span>
                 <span>Balanced</span>
                 <span>Creative</span>
@@ -432,7 +432,7 @@
               <p class="text-sm text-center text-gray-700 dark:text-gray-300">
                 Current: {localConfig.temperature.toFixed(1)}
               </p>
-              <p id="temperature-help" class="text-xs text-gray-500">
+              <p id="temperature-help" class="text-xs text-gray-600">
                 Lower = more focused, Higher = more creative
               </p>
             </div>
@@ -448,7 +448,7 @@
         <div class="flex justify-between items-center">
           <div class="config-label">
             <h4 class="font-medium text-gray-900 dark:text-white">Include Low Confidence Results</h4>
-            <p class="text-sm text-gray-600 dark:text-gray-400">
+            <p class="text-sm text-gray-700 dark:text-gray-300">
               Include results with lower relevance scores
             </p>
           </div>
@@ -462,10 +462,10 @@
               aria-label="Include low confidence results"
               aria-describedby="confidence-help"
             />
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-400 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
           </label>
         </div>
-        <p id="confidence-help" class="text-xs text-gray-500 flex items-center gap-1 mt-2">
+        <p id="confidence-help" class="text-xs text-gray-600 flex items-center gap-1 mt-2">
           <Info size={12} />
           May include less relevant but potentially useful information
         </p>

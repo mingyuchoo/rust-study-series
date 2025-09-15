@@ -209,6 +209,7 @@
         class="search-textarea"
         class:error={hasErrors}
         class:warning={isUnderLimit || isOverLimit}
+        aria-label="Search query input"
         aria-describedby="{helpTextId} {characterCountId} {hasErrors ? errorsId : ''}"
         aria-invalid={hasErrors}
         aria-required="true"

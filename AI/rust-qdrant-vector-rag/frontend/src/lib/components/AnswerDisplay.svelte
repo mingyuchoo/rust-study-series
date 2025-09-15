@@ -144,7 +144,7 @@
           </div>
 
           <!-- Response time -->
-          <div class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-300" 
+          <div class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded-full dark:bg-gray-600 dark:text-gray-200" 
                title="Response generation time">
             <Clock size={12} />
             {formattedResponseTime}
@@ -186,7 +186,7 @@
           <button
             type="button"
             on:click={shareResponse}
-            class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
+            class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-md transition-colors dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-600"
             title="Share this response"
             aria-label="Share response"
           >
@@ -197,7 +197,7 @@
         <button
           type="button"
           on:click={bookmarkResponse}
-          class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
+          class="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-md transition-colors dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-600"
           title="Bookmark this response"
           aria-label="Bookmark response"
         >
@@ -206,7 +206,7 @@
       </div>
 
       {#if showMetadata}
-        <p class="text-xs text-gray-500">
+        <p class="text-xs text-gray-600">
           Generated at {formattedTimestamp}
         </p>
       {/if}
@@ -214,10 +214,10 @@
 
     <!-- Query context (what was asked) -->
     <div class="query-context">
-      <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
         Your question:
       </p>
-      <p class="text-sm text-gray-600 dark:text-gray-400 italic">
+      <p class="text-sm text-gray-700 dark:text-gray-300 italic">
         "{response.query}"
       </p>
     </div>

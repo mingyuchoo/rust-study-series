@@ -38,7 +38,7 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.75;
   
-  /* Color system with WCAG AA compliant contrast ratios */
+  /* Color system with enhanced WCAG AA compliant contrast ratios */
   --color-primary-50: #e3f2fd;
   --color-primary-100: #bbdefb;
   --color-primary-200: #90caf9;
@@ -66,11 +66,11 @@
   --color-surface-200: #e5e7eb;
   --color-surface-300: #d1d5db;
   --color-surface-400: #9ca3af;
-  --color-surface-500: #6b7280;
-  --color-surface-600: #4b5563;
-  --color-surface-700: #374151;
-  --color-surface-800: #1f2937;
-  --color-surface-900: #111827;
+  --color-surface-500: #4b5563;  /* Darker for better contrast */
+  --color-surface-600: #374151;  /* Darker for better contrast */
+  --color-surface-700: #1f2937;  /* Darker for better contrast */
+  --color-surface-800: #111827;  /* Darker for better contrast */
+  --color-surface-900: #0f172a;  /* Even darker for maximum contrast */
   
   --color-success-50: #ecfdf5;
   --color-success-100: #d1fae5;
@@ -548,6 +548,27 @@ body {
 /* Enhanced accessibility utilities */
 .focus-ring-enhanced {
   transition: box-shadow var(--duration-fast) ease, outline var(--duration-fast) ease;
+}
+
+/* WCAG AA compliant text colors */
+.text-contrast-secondary {
+  color: var(--color-surface-600);
+}
+
+@media (prefers-color-scheme: dark) {
+  .text-contrast-secondary {
+    color: var(--color-surface-300);
+  }
+}
+
+.text-contrast-muted {
+  color: var(--color-surface-500);
+}
+
+@media (prefers-color-scheme: dark) {
+  .text-contrast-muted {
+    color: var(--color-surface-400);
+  }
 }
 
 .focus-ring-enhanced:focus-visible {

@@ -122,11 +122,11 @@
       <!-- Header -->
       <div class="flex justify-between items-center">
         <div class="flex items-center gap-2">
-          <FileText size={20} class="text-gray-600 dark:text-gray-400" />
+          <FileText size={20} class="text-gray-700 dark:text-gray-300" />
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Source References
           </h3>
-          <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-300">
+          <span class="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded-full dark:bg-gray-600 dark:text-gray-200">
             {sources.length} {sources.length === 1 ? 'source' : 'sources'}
           </span>
         </div>
@@ -135,7 +135,7 @@
           <button
             type="button"
             on:click={() => showAllSources = !showAllSources}
-            class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+            class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-400 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-600"
           >
             {showAllSources ? 'Show Less' : `Show All (${sources.length})`}
             {#if showAllSources}
@@ -165,7 +165,7 @@
                       <h4 class="text-sm font-medium text-gray-900 dark:text-white truncate source-filename">
                         {truncateFilename(source.source_file)}
                       </h4>
-                      <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full dark:bg-gray-700 dark:text-gray-300">
+                      <span class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-700 bg-gray-200 rounded-full dark:bg-gray-600 dark:text-gray-200">
                         <Hash size={10} />
                         Chunk {source.chunk_index + 1}
                       </span>
@@ -173,7 +173,7 @@
 
                     <!-- Headers (if available) -->
                     {#if source.headers.length > 0}
-                      <p class="text-xs text-gray-500 dark:text-gray-400 italic source-headers">
+                      <p class="text-xs text-gray-600 dark:text-gray-300 italic source-headers">
                         {source.headers.join(' > ')}
                       </p>
                     {/if}
@@ -201,7 +201,7 @@
                     <button
                       type="button"
                       on:click={() => viewDocument(source.document_id)}
-                      class="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
+                      class="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-600"
                       title="View full document"
                       aria-label="View full document"
                     >
@@ -212,7 +212,7 @@
                       <button
                         type="button"
                         on:click={() => toggleSourceExpansion(source.chunk_id)}
-                        class="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700"
+                        class="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-600"
                         title={expandedSources.has(source.chunk_id) ? 'Collapse snippet' : 'Expand snippet'}
                         aria-label={expandedSources.has(source.chunk_id) ? 'Collapse snippet' : 'Expand snippet'}
                         aria-expanded={expandedSources.has(source.chunk_id)}
@@ -231,7 +231,7 @@
               <!-- Snippet preview (always visible, truncated) -->
               {#if showSnippets}
                 <div class="snippet-preview">
-                  <div class="text-sm text-gray-600 dark:text-gray-400 snippet-text">
+                  <div class="text-sm text-gray-700 dark:text-gray-300 snippet-text">
                     {@html highlightSnippet(
                       expandedSources.has(source.chunk_id) 
                         ? source.snippet 
@@ -245,7 +245,7 @@
                 {#if expandedSources.has(source.chunk_id)}
                   <div class="snippet-full">
                     <div class="max-h-48 overflow-y-auto">
-                      <div class="text-sm text-gray-700 dark:text-gray-300 snippet-text">
+                      <div class="text-sm text-gray-800 dark:text-gray-200 snippet-text">
                         {@html highlightSnippet(source.snippet, highlightQuery)}
                       </div>
                     </div>
@@ -291,8 +291,8 @@
 {:else}
   <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm no-sources">
     <div class="flex items-center justify-center gap-2 text-center">
-      <FileText size={20} class="text-gray-500 dark:text-gray-400" />
-      <p class="text-sm text-gray-500 dark:text-gray-400">
+      <FileText size={20} class="text-gray-600 dark:text-gray-300" />
+      <p class="text-sm text-gray-600 dark:text-gray-300">
         No source references available
       </p>
     </div>

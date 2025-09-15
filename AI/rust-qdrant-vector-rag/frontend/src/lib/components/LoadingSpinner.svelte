@@ -21,7 +21,7 @@
     'Finding relevant information...',
     'Generating response...',
     'Crafting the perfect answer...',
-    'Almost ready...'
+    'Almost ready...',
   ];
 
   const uploadMessages = [
@@ -31,7 +31,7 @@
     'Storing in database...',
     'Finalizing upload...',
     'Optimizing for search...',
-    'Nearly complete...'
+    'Nearly complete...',
   ];
 
   const processingMessages = [
@@ -40,18 +40,19 @@
     'Almost done...',
     'Finishing up...',
     'Just a moment...',
-    'Wrapping up...'
+    'Wrapping up...',
   ];
 
   // Get messages based on variant
-  $: messages = variant === 'search' ? searchMessages : 
-                variant === 'upload' ? uploadMessages : 
-                processingMessages;
+  $: messages =
+    variant === 'search'
+      ? searchMessages
+      : variant === 'upload'
+        ? uploadMessages
+        : processingMessages;
 
   // Get icon based on variant
-  $: IconComponent = variant === 'search' ? Brain : 
-                     variant === 'upload' ? FileText : 
-                     Search;
+  $: IconComponent = variant === 'search' ? Brain : variant === 'upload' ? FileText : Search;
 
   // Animate through different messages
   onMount(() => {
@@ -67,23 +68,30 @@
   $: currentMessage = mounted && messages.length > 1 ? messages[animationPhase] : message;
 
   // Size mappings for different elements
-  $: loaderSize = size === 'xs' ? 16 : 
-                  size === 'sm' ? 20 : 
-                  size === 'md' ? 24 : 
-                  size === 'lg' ? 32 : 40;
+  $: loaderSize =
+    size === 'xs' ? 16 : size === 'sm' ? 20 : size === 'md' ? 24 : size === 'lg' ? 32 : 40;
 
-  $: iconSize = size === 'xs' ? 16 : 
-                size === 'sm' ? 20 : 
-                size === 'md' ? 24 : 
-                size === 'lg' ? 28 : 32;
+  $: iconSize =
+    size === 'xs' ? 16 : size === 'sm' ? 20 : size === 'md' ? 24 : size === 'lg' ? 28 : 32;
 
-  $: textSize = size === 'xs' ? 'xs' : 
-                size === 'sm' ? 'sm' : 
-                size === 'md' ? 'md' : 
-                size === 'lg' ? 'lg' : 'xl';
+  $: textSize =
+    size === 'xs'
+      ? 'xs'
+      : size === 'sm'
+        ? 'sm'
+        : size === 'md'
+          ? 'md'
+          : size === 'lg'
+            ? 'lg'
+            : 'xl';
 </script>
 
-<div class="loading-spinner" class:compact={size === 'xs' || size === 'sm'} role="status" aria-live="polite">
+<div
+  class="loading-spinner"
+  class:compact={size === 'xs' || size === 'sm'}
+  role="status"
+  aria-live="polite"
+>
   <div class="flex flex-col items-center space-y-4">
     <!-- Main loading indicator -->
     <div class="spinner-container">
@@ -99,7 +107,7 @@
 
     <!-- Loading message -->
     <div class="message-container">
-      <p 
+      <p
         class="text-center font-medium"
         class:text-sm={textSize === 'xs' || textSize === 'sm'}
         class:text-base={textSize === 'md'}
@@ -115,13 +123,13 @@
     {#if showProgress}
       <div class="progress-container w-full max-w-xs">
         <div class="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-          <div 
-            class="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out" 
+          <div
+            class="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
             style="width: {progress}%"
             aria-label="Progress: {progress}%"
           ></div>
         </div>
-        <p class="text-xs text-gray-500 text-center mt-1">
+        <p class="text-xs text-gray-600 text-center mt-1">
           {Math.round(progress)}%
         </p>
       </div>
@@ -156,14 +164,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--color-primary-100);
+    background: rgb(187 222 251); /* primary-100 */
     border-radius: 50%;
     padding: 0.5rem;
     z-index: 1;
   }
 
   .icon-background :global(.variant-icon) {
-    color: var(--color-primary-600);
+    color: rgb(30 136 229); /* primary-600 */
     animation: pulse 2s ease-in-out infinite;
   }
 
@@ -176,14 +184,20 @@
   .dot {
     width: 8px;
     height: 8px;
-    background-color: var(--color-primary-600);
+    background-color: rgb(30 136 229); /* primary-600 */
     border-radius: 50%;
     animation: bounce 1.4s ease-in-out infinite both;
   }
 
-  .dot:nth-child(1) { animation-delay: -0.32s; }
-  .dot:nth-child(2) { animation-delay: -0.16s; }
-  .dot:nth-child(3) { animation-delay: 0s; }
+  .dot:nth-child(1) {
+    animation-delay: -0.32s;
+  }
+  .dot:nth-child(2) {
+    animation-delay: -0.16s;
+  }
+  .dot:nth-child(3) {
+    animation-delay: 0s;
+  }
 
   .message-container {
     max-width: 300px;
@@ -197,7 +211,8 @@
 
   /* Animations */
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 0.7;
       transform: scale(1);
     }
@@ -208,7 +223,9 @@
   }
 
   @keyframes bounce {
-    0%, 80%, 100% {
+    0%,
+    80%,
+    100% {
       transform: scale(0);
     }
     40% {
@@ -219,15 +236,15 @@
   /* Dark mode support */
   @media (prefers-color-scheme: dark) {
     .icon-background {
-      background: var(--color-primary-900);
+      background: rgb(13 71 161); /* primary-900 */
     }
 
     .icon-background :global(.variant-icon) {
-      color: var(--color-primary-400);
+      color: rgb(66 165 245); /* primary-400 */
     }
 
     .dot {
-      background-color: var(--color-primary-400);
+      background-color: rgb(66 165 245); /* primary-400 */
     }
   }
 
@@ -260,7 +277,7 @@
   /* High contrast mode support */
   @media (prefers-contrast: high) {
     .icon-background {
-      border: 2px solid var(--color-primary-600);
+      border: 2px solid rgb(30 136 229); /* primary-600 */
     }
   }
 </style>

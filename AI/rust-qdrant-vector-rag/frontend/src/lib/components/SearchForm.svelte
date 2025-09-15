@@ -173,7 +173,7 @@
         placeholder="Ask a question about your documents..."
         {disabled}
         rows="3"
-        class="w-full px-4 py-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 min-touch-target focus-visible"
+        class="w-full px-4 py-3 border border-gray-400 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 min-touch-target focus-visible"
         class:border-red-500={validationErrors.length > 0}
         class:border-orange-400={validationWarnings.length > 0 && validationErrors.length === 0}
         class:border-green-500={isValid && query.length > 0}
@@ -193,7 +193,7 @@
             class:text-red-600={validationErrors.length > 0}
             class:text-orange-500={validationWarnings.length > 0 && validationErrors.length === 0}
             class:text-green-600={isValid && query.length > 0}
-            class:text-gray-500={query.length === 0}
+            class:text-gray-600={query.length === 0}
             aria-live="polite"
             aria-atomic="true"
             role="status"
@@ -223,7 +223,7 @@
           </span>
         </div>
         
-        <span id={searchHelpId} class="text-xs text-gray-500">
+        <span id={searchHelpId} class="text-xs text-gray-600">
           <span class="sr-only">Keyboard shortcut:</span>
           Press Ctrl+Enter to search
         </span>
@@ -236,7 +236,7 @@
         type="button"
         on:click={toggleAdvanced}
         on:keydown={handleAdvancedToggleKeydown}
-        class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 min-touch-target focus-visible"
+        class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-800 bg-white border border-gray-400 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 min-touch-target focus-visible"
         aria-expanded={showAdvanced}
         aria-controls={advancedOptionsId}
         aria-label={`${showAdvanced ? 'Hide' : 'Show'} advanced search options`}
