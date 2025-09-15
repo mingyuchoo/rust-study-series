@@ -1,0 +1,12 @@
+[package]
+  authors.workspace = true
+  edition.workspace = true
+  name              = "create-collection"
+  version.workspace = true
+
+[dependencies]
+  qdrant-client = {features = ["serde"], version = "1.15.0"}
+
+[[example]]
+name = "basic-usage"
+path = "examples/basic-usage.rs"

@@ -1,0 +1,10 @@
+[workspace]
+  members  = ["create-collection"]
+  resolver = "2"
+  [workspace.dependencies]
+    create-collection = {path = "./create-collection"}
+  [workspace.package]
+    authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+    edition = "2024"
+    name    = "qdrant-workspace-for-lib"
+    version = "0.1.0"
