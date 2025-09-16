@@ -1,12 +1,11 @@
-pub fn add(left: u64, right: u64) -> u64 { left + right }
+use qdrant_client::{Qdrant, QdrantError};
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub async fn delete_collection_default(url: &str, collection_name: &str) -> Result<(), QdrantError> { delete_collection(url, collection_name).await }
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub async fn delete_collection(url: &str, collection_name: &str) -> Result<(), QdrantError> {
+    let client = Qdrant::from_url(url).build()?;
+
+    client.delete_collection(collection_name).await?;
+
+    Ok(())
 }

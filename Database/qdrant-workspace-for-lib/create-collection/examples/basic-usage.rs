@@ -4,7 +4,7 @@ use qdrant_client::qdrant::Distance;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let url = "http://localhost:6334";
-    
+
     // Create a collection with default parameters
     println!("Creating collection 'my_collection' with default parameters...");
     create_collection_default(url, "my_collection").await?;
@@ -15,9 +15,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     create_collection(
         url,
         "custom_collection",
-        Some(384), // vector size
+        Some(384),           // vector size
         Some(Distance::Dot), // distance metric
-    ).await?;
+    )
+    .await?;
     println!("Collection 'custom_collection' created successfully!");
 
     Ok(())

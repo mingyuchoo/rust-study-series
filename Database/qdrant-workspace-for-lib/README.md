@@ -60,6 +60,12 @@ pub fn add(left: u64, right: u64) -> u64 {
 
 `Cargo.toml` 은 라이브러리 확장을 위한 Qdrant 클라이언트 사용을 지원하기 위해 `qdrant-client`(serde 기능)를 의존성으로 선언합니다:
 
+```powershell
+cargo add --package create-collection qdrant-client --features serde
+```
+
+`create-collection` 패키지에 아래와 같이 의존성이 추가됩니다.
+
 ```toml
 [dependencies]
 qdrant-client = { version = "1.15.0", features = ["serde"] }
