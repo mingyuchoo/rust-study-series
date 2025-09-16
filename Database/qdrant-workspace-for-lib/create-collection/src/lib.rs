@@ -1,6 +1,9 @@
 use qdrant_client::qdrant::{CreateCollectionBuilder, Distance, VectorParamsBuilder};
 use qdrant_client::{Qdrant, QdrantError};
 
+pub async fn create_collection_default(url: &str, collection_name: &str) -> Result<(), QdrantError> {
+    create_collection(url, collection_name, None, None).await
+}
 
 pub async fn create_collection(url: &str, collection_name: &str, vector_size: Option<u64>, distance: Option<Distance>) -> Result<(), QdrantError> {
     let client = Qdrant::from_url(url).build()?;
@@ -13,8 +16,4 @@ pub async fn create_collection(url: &str, collection_name: &str, vector_size: Op
         .await?;
 
     Ok(())
-}
-
-pub async fn create_collection_default(url: &str, collection_name: &str) -> Result<(), QdrantError> {
-    create_collection(url, collection_name, None, None).await
 }
