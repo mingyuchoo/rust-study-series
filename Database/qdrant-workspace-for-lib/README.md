@@ -163,7 +163,6 @@ cargo new --vcs none --name qdrant-workspace-for-lib --bin temp-bin
   [workspace.package]
     authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
     edition = "2024"
-    name    = "qdrant-workspace-for-lib"
     version = "0.1.0"
 ```
 

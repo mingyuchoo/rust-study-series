@@ -1,0 +1,7 @@
+[package]
+name = "delete-collection"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]

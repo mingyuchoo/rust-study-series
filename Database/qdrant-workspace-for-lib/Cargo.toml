@@ -1,5 +1,5 @@
 [workspace]
-  members  = ["create-collection"]
+  members  = ["create-collection", "delete-collection"]
   resolver = "2"
   [workspace.dependencies]
     create-collection = {path = "./create-collection"}
