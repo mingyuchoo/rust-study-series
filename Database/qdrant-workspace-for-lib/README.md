@@ -6,8 +6,9 @@
 - 라이브러리 크레이트 추가
 - 라이브러리 예제 추가
 - 워크스페이스 루트 또는 크레이트 디렉터리에서의 빌드 및 실행
+- .env 기반 설정으로 하드코딩 제거 (dotenvy)
 
-이 워크스페이스에는 `create-collection`이라는 라이브러리 크레이트와 `basic-usage` 예제가 포함되어 있습니다.
+이 워크스페이스에는 `create-collection`, `delete-collection` 두 개의 라이브러리 크레이트와 각 크레이트의 `basic-usage` 예제가 포함되어 있습니다. 예제는 `.env`로부터 설정을 읽어 실행됩니다.
 
 ## 사전 준비물
 
@@ -28,20 +29,44 @@ cargo install cargo-tree
 
 ```text
 .
-├─ Cargo.toml             # 워크스페이스 루트
+├─ Cargo.toml                  # 워크스페이스 루트
+├─ .env.example                # 환경 변수 예시 파일 (.env로 복사하여 사용)
 ├─ create-collection/
 │  ├─ Cargo.toml
 │  ├─ src/
 │  │  └─ lib.rs
 │  └─ examples/
 │     └─ basic-usage.rs
+└─ delete-collection/
+   ├─ Cargo.toml
+   ├─ src/
+   │  └─ lib.rs
+   └─ examples/
+      └─ basic-usage.rs
 ```
+
+## 환경 변수 설정 (.env)
+
+예제는 런타임에 `.env` 파일에서 설정을 읽습니다. 루트의 `.env.example`를 복사하여 `.env`를 생성하고 값을 채우세요.
+
+```powershell
+Copy-Item .env.example .env
+```
+
+필요한 키:
+
+- `QDRANT_URL` (예: `http://localhost:6334`)
+- `QDRANT_COLLECTION_NAME_1` (예: `my_collection`)
+- `QDRANT_COLLECTION_NAME_2` (예: `custom_collection`)
+- `QDRANT_VECTOR_SIZE` (선택, 기본값 384)
+
+두 예제 모두 시작 시 `dotenvy`로 `.env`를 로드하고, `std::env::var`로 환경 변수를 읽습니다.
 
 ## 워크스페이스 구성
 
 워크스페이스 루트 Cargo.toml
 
-- 멤버 선언: `create-collection`
+- 멤버 선언: `create-collection`, `delete-collection`
 - 워크스페이스 수준 패키지 메타데이터 설정
 - 멤버 크레이트에 대한 경로 의존성 선택적 노출
 - 루트에서 단일 `cargo` 명령으로 모든 크레이트를 빌드 가능
@@ -50,18 +75,14 @@ cargo install cargo-tree
 
 크레이트: create-collection
 
-`src/lib.rs` 현재 단순 함수만 노출합니다:
+Qdrant 클라이언트를 사용하여 컬렉션을 생성하는 API를 제공합니다.
 
-```rust
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-```
-
-`Cargo.toml` 은 라이브러리 확장을 위한 Qdrant 클라이언트 사용을 지원하기 위해 `qdrant-client`(serde 기능)를 의존성으로 선언합니다:
+`Cargo.toml` 은 `qdrant-client`(serde 기능) 및 예제 실행용 비동기 런타임 `tokio`, 환경 변수 로딩을 위한 `dotenvy`를 의존성으로 선언합니다:
 
 ```powershell
 cargo add --package create-collection qdrant-client --features serde
+cargo add --package create-collection tokio --features full --vers 1.0
+cargo add --package create-collection dotenvy --vers 0.15
 ```
 
 `create-collection` 패키지에 아래와 같이 의존성이 추가됩니다.
@@ -69,26 +90,24 @@ cargo add --package create-collection qdrant-client --features serde
 ```toml
 [dependencies]
 qdrant-client = { version = "1.15.0", features = ["serde"] }
+tokio = { version = "1.0", features = ["full"] }
+dotenvy = "0.15"
 ```
 
 > 참고: 필요에 따라 `src/lib.rs`에 Qdrant 기능을 통합해 나갈 수 있습니다.
 
+크레이트: delete-collection
+
+Qdrant 컬렉션을 삭제하는 API를 제공합니다. 의존성 구성은 `create-collection`과 유사하며, 예제는 동일한 `.env`를 사용합니다.
+
 ## 예제: basic-usage
 
 - 파일: `create-collection/examples/basic-usage.rs`
+- 파일: `delete-collection/examples/basic-usage.rs`
 
-라이브러리의 `add` 함수를 사용하는 간단 예제입니다:
+환경 변수를 사용하여 Qdrant에 접속하고, 컬렉션 생성/삭제를 수행합니다.
 
-```rust
-use create_collection::add;
-
-fn main() {
-    let a: u64 = 2;
-    let b: u64 = 3;
-    let sum = add(a, b);
-    println!("add({}, {}) = {}", a, b, sum);
-}
-```
+예제 실행 전 `.env`를 준비해야 합니다.
 
 > 중요: 러스트에서 크레이트 이름의 하이픈(`-`)은 코드에서는 언더스코어(`_`)로 변환됩니다. 따라서 패키지 `create-collection`은 코드에서 `create_collection`로 임포트합니다.
 
@@ -108,12 +127,22 @@ cargo build
 cargo build --package create-collection
 ```
 
+- 특정 크레이트만 빌드(`delete-collection`):
+
+```powershell
+cargo build --package delete-collection
+```
+
 ## 예제 실행
 
 - 워크스페이스 루트에서 실행:
 
 ```powershell
+# 컬렉션 생성 예제
 cargo run --package create-collection --example basic-usage
+
+# 컬렉션 삭제 예제
+cargo run --package delete-collection --example basic-usage
 ```
 
 - `create-collection/` 내부에서 실행:
@@ -122,11 +151,16 @@ cargo run --package create-collection --example basic-usage
 cargo run --example basic-usage
 ```
 
-예상 출력:
+- `delete-collection/` 내부에서 실행:
 
-```text
-add(2, 3) = 5
+```powershell
+cargo run --example basic-usage
 ```
+
+예상 동작:
+
+- 생성 예제: `.env`의 컬렉션 이름들로 컬렉션이 생성됩니다.
+- 삭제 예제: 동일한 컬렉션 이름들로 컬렉션이 삭제됩니다.
 
 ## 테스트
 
@@ -160,7 +194,7 @@ cargo new --vcs none --name qdrant-workspace-for-lib --bin temp-bin
 
 ```toml
 [workspace]
-  members  = ["create-collection"]
+  members  = ["create-collection", "delete-collection"]
   resolver = "2"
 
   [workspace.dependencies]
@@ -178,6 +212,7 @@ cargo new --vcs none --name qdrant-workspace-for-lib --bin temp-bin
 
 ```powershell
 cargo new create-collection --lib
+cargo new delete-collection --lib
 ```
 
 `create-collection/Cargo.toml`에 의존성과 예제 선언을 추가합니다:
@@ -191,21 +226,44 @@ cargo new create-collection --lib
 
 [dependencies]
   qdrant-client = { version = "1.15.0", features = ["serde"] }
+  tokio         = { version = "1.0", features = ["full"] }
+  dotenvy       = "0.15"
 
 [[example]]
 name = "basic-usage"
 path = "examples/basic-usage.rs"
 ```
 
-위와 같이 `src/lib.rs`와 `examples/basic-usage.rs`를 추가합니다.
+`delete-collection/Cargo.toml`에도 유사하게 의존성과 예제 선언을 추가합니다:
+
+```toml
+[package]
+  authors.workspace = true
+  edition.workspace = true
+  name              = "delete-collection"
+  version.workspace = true
+
+[dependencies]
+  qdrant-client = { version = "1.15.0", features = ["serde"] }
+  tokio         = { version = "1.47.1", features = ["full"] }
+  dotenvy       = "0.15"
+
+[[example]]
+  name = "basic-usage"
+  path = "examples/basic-usage.rs"
+```
+
+루트에 `.env.example`를 추가하고, `.env`로 복사하여 값을 채운 뒤 예제를 실행합니다.
 
 빌드 및 실행:
 
 ```powershell
-cargo build
+cargo build --workspace --examples
 cargo run --package create-collection --example basic-usage
+cargo run --package delete-collection --example basic-usage
 ```
 
 ## 참고
 
 - <https://github.com/qdrant/rust-client>
+- <https://www.geeksforgeeks.org/data-science/qdrant/>

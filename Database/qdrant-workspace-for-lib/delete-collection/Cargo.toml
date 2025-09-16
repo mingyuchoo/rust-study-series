@@ -7,6 +7,7 @@
 [dependencies]
   qdrant-client = {features = ["serde"], version = "1.15.0"}
   tokio         = {features = ["full"], version = "1.47.1"}
+  dotenvy       = "0.15"
 
 [[example]]
   name = "basic-usage"
