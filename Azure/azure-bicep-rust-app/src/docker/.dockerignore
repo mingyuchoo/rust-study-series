@@ -1,0 +1,17 @@
+backend/.env
+backend/.env.sample
+backend/test.http
+backend/bin/
+backend/obj/
+backend/node_modules/
+**/bin/
+**/obj/
+**/.git/
+**/.gitignore
+**/.dockerignore
+**/Dockerfile*
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.sln.docstates

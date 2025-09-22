@@ -1,0 +1,26 @@
+networks:
+  docker-link:
+    external: true
+
+volumes:
+  backend-wwwroot:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ../backend/wwwroot
+
+services:
+  backend:
+    image: azure-bicep-rust-app/backend:latest
+    container_name: backend
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - docker-link
+    volumes:
+      - backend-wwwroot:/app/wwwroot:ro
+    restart: unless-stopped

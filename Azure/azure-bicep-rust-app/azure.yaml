@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: azure-bicep-fsharp-app
+metadata:
+  template: azure-bice-lab-02@0.0.1-beta
+infra:
+  provider: bicep
+services:
+  backend:
+    project: ./src/backend
+    language: rust
+    host: containerapp
+    docker:
+      path: ./src/docker
+      context: ./src
+      image: backend
+      tag: latest
