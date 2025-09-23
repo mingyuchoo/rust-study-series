@@ -37,21 +37,44 @@ h1 {
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid #555;
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
   background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.87);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.25s ease;
 }
 button:hover {
   border-color: #646cff;
+  background-color: #2a2a2a;
+  transform: translateY(-1px);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+input {
+  border-radius: 6px;
+  border: 1px solid #404040;
+  padding: 0.5em;
+  font-size: 1em;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.87);
+  transition: border-color 0.25s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #646cff;
+}
+
+input::placeholder {
+  color: #888;
 }
 
 @media (prefers-color-scheme: light) {
