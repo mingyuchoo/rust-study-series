@@ -4,7 +4,7 @@ echo "Building integrated React + Rust application..."
 
 # Navigate to frontend directory and build
 echo "Building React frontend..."
-cd "/home/mgch/github/mingyuchoo/rust-study-series/Azure/azure-bicep-rust-app/src/frontend"
+cd "./frontend"
 pnpm install
 if [ $? -ne 0 ]; then
     echo "Failed to install frontend dependencies"
@@ -17,9 +17,11 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+cd ../
+
 # Navigate to backend directory and build
 echo "Building Rust backend..."
-cd "/home/mgch/github/mingyuchoo/rust-study-series/Azure/azure-bicep-rust-app/src/backend"
+cd "./backend"
 cargo build
 if [ $? -ne 0 ]; then
     echo "Failed to build backend"

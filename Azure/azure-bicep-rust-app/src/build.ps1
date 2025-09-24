@@ -4,7 +4,7 @@ Write-Host "Building integrated React + Rust application..." -ForegroundColor Gr
 
 # Navigate to frontend directory and build
 Write-Host "Building React frontend..." -ForegroundColor Yellow
-Set-Location "/home/mgch/github/mingyuchoo/rust-study-series/Azure/azure-bicep-rust-app/src/frontend"
+Set-Location "./frontend"
 pnpm install
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to install frontend dependencies" -ForegroundColor Red
@@ -17,9 +17,11 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+cd ../
+
 # Navigate to backend directory and build
 Write-Host "Building Rust backend..." -ForegroundColor Yellow
-Set-Location "/home/mgch/github/mingyuchoo/rust-study-series/Azure/azure-bicep-rust-app/src/backend"
+Set-Location "./backend"
 cargo build
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Failed to build backend" -ForegroundColor Red
