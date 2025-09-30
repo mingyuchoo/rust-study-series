@@ -185,3 +185,14 @@ cargo install cargo-modules
 ```bash
 cargo modules generate tree --types
 ```
+
+## How to upgrade modules
+
+```bash
+cargo install cargo-edit
+cargo install cargo-outdated
+cargo outdated
+cargo upgrade
+cargo build
+cargo test
+```
