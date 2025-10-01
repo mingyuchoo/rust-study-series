@@ -1,0 +1,32 @@
+# Git 관련
+.git
+.gitignore
+
+# Rust 빌드 아티팩트
+target/
+Cargo.lock
+
+# 환경 변수 파일
+.env
+.env.local
+
+# IDE 설정
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 문서
+*.md
+!README.md
+
+# Docker 관련
+docker/initdb/
+docker/DOCKER.md
+
+# 기타
+.projectile
+.taplo.toml
+rustfmt.toml
+Makefile.toml
