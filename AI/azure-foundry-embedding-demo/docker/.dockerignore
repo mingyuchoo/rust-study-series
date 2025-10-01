@@ -1,0 +1,28 @@
+# Git
+.git
+.gitignore
+
+# Rust
+target/
+Cargo.lock
+
+# IDE
+.vscode/
+.idea/
+
+# 환경 변수
+.env
+.env.local
+
+# 데이터
+data/
+
+# 문서
+*.md
+LICENSE
+
+# 테스트
+tests/
+
+# 기타
+.DS_Store

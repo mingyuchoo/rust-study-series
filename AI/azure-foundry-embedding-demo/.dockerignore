@@ -1,0 +1,22 @@
+# 빌드 산출물 제외
+/target
+
+# VCS
+/.git
+/.gitignore
+
+# IDE/에디터
+/.idea
+/.vscode
+
+# 환경파일(이미 compose에서 env_file로 주입)
+/.env
+/.env.*
+
+# 데이터 및 캐시
+/data
+**/.DS_Store
+**/Thumbs.db
+
+# Docker 내부에서만 필요한 디렉터리/파일이 있으면 여기에 추가
+# 예) /docker/tmp

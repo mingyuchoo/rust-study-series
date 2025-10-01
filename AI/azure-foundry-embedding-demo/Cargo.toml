@@ -4,9 +4,13 @@
   version = "0.1.0"
 
 [dependencies]
-  anyhow     = "1.0.100"
-  reqwest    = {features = ["json", "rustls-tls"], version = "0.12.23"}
-  serde      = {features = ["derive"], version = "1.0.228"}
-  tokio      = {features = ["full"], version = "1.47.1"}
-  dotenvy    = "0.15.7"
+  anyhow       = "1.0.100"
+  async-trait  = "0.1.83"
+  axum         = "0.7.9"
+  chrono       = {features = ["serde"], version = "0.4.39"}
+  dotenvy      = "0.15.7"
+  reqwest      = {features = ["json", "rustls-tls"], version = "0.12.23"}
+  serde        = {features = ["derive"], version = "1.0.228"}
+  sqlx         = {features = ["runtime-tokio-rustls", "sqlite"], version = "0.8.2"}
+  tokio        = {features = ["full"], version = "1.47.1"}
  
