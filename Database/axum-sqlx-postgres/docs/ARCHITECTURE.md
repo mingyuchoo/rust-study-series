@@ -160,7 +160,7 @@ classDiagram
     
     class Routes {
         +router() Router
-        +register(State, Json) Response
+        +post_user(State, Json) Response
     }
     
     PostgresPersistence ..|> UserPersistence
@@ -248,7 +248,7 @@ sequenceDiagram
     participant Persistence as PostgresPersistence<br/>(Adapter)
     participant DB as PostgreSQL<br/>(External)
     
-    Client->>Route: POST /api/user/register
+    Client->>Route: POST /api/user
     Route->>Route: JSON 파싱 (RegisterPayload)
     Route->>UseCase: add(username, email, password)
     UseCase->>Hasher: hash_password(password)

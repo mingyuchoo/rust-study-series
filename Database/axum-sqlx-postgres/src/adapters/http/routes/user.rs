@@ -14,7 +14,7 @@ use utoipa::ToSchema;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/register", post(register))
+        .route("/", post(post_user))
         .route("/", get(list_users))
         .route("/{id}", get(get_user))
         .route("/{id}", put(update_user))
@@ -38,14 +38,14 @@ pub(crate) struct RegisterResponse {
 #[instrument(skip(user_use_cases))]
 #[utoipa::path(
     post,
-    path = "/api/user/register",
+    path = "/api/user",
     request_body = RegisterPayload,
     responses(
         (status = 201, description = "User created", body = RegisterResponse)
     ),
     tag = "user"
 )]
-pub(crate) async fn register(State(user_use_cases): State<Arc<UserUseCases>>, Json(payload): Json<RegisterPayload>) -> AppResult<impl IntoResponse> {
+pub(crate) async fn post_user(State(user_use_cases): State<Arc<UserUseCases>>, Json(payload): Json<RegisterPayload>) -> AppResult<impl IntoResponse> {
     info!("Register user called");
     user_use_cases.add(&payload.username, &payload.email, &payload.password).await?;
 
@@ -68,7 +68,7 @@ pub(crate) struct UserListItemResponse {
 #[instrument(skip(user_use_cases))]
 #[utoipa::path(
     get,
-    path = "/api/user/",
+    path = "/api/user",
     responses(
         (status = 200, description = "Users listed", body = [UserListItemResponse])
     ),

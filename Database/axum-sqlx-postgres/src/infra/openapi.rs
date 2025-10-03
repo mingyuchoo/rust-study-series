@@ -4,7 +4,7 @@ use utoipa::OpenApi;
 #[openapi(
     info(title = "Axum SQLx Postgres API", version = "0.1.0"),
     paths(
-        crate::adapters::http::routes::user::register,
+        crate::adapters::http::routes::user::post_user,
         crate::adapters::http::routes::user::list_users,
         crate::adapters::http::routes::user::get_user,
         crate::adapters::http::routes::user::update_user,

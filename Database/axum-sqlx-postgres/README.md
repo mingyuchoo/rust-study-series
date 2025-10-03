@@ -7,11 +7,11 @@
 ## 주요 기능
 
 - 사용자 등록/목록/수정/삭제 API 제공
-  - `POST /api/user/register` (등록)
-  - `GET /api/user/` (목록)
-  - `GET /api/user/:id` (상세)
-  - `PUT /api/user/:id` (수정)
-  - `DELETE /api/user/:id` (삭제)
+  - `POST /api/user` (등록)
+  - `GET /api/user` (목록)
+  - `GET /api/user/{id}` (상세)
+  - `PUT /api/user/{id}` (수정)
+  - `DELETE /api/user/{id}` (삭제)
 
 ## 프로젝트 구조
 
@@ -123,7 +123,7 @@ cargo run
 
 ### 사용자 등록
 
-- 경로: `POST /api/user/register`
+- 경로: `POST /api/user/`
 - 요청 본문(JSON):
 
   ```json
@@ -140,7 +140,7 @@ cargo run
   { "success": true }
   ```
 
-핸들러: `adapters::http::routes::user::register`
+핸들러: `adapters::http::routes::user::post_user`
 
 - 입력 모델: `RegisterPayload { username, email, password }`
 - 유스케이스 호출: `UserUseCases::add(...)`
@@ -166,7 +166,7 @@ cargo run
 
 ### 사용자 수정
 
-- 경로: `PUT /api/user/:id`
+- 경로: `PUT /api/user/{id}`
 - 요청 본문(JSON): 일부 필드만 보내면 해당 필드만 수정됩니다.
 
   ```json
@@ -183,14 +183,14 @@ cargo run
 
 ### 사용자 삭제
 
-- 경로: `DELETE /api/user/:id`
+- 경로: `DELETE /api/user/{id}`
 - 응답: `204 No Content`
 
 핸들러: `adapters::http::routes::user::delete_user`
 
 ### 사용자 상세 조회
 
-- 경로: `GET /api/user/:id`
+- 경로: `GET /api/user/{id}`
 - 응답: 존재 시 `200 OK`, 미존재 시 `404 Not Found`
 
   존재 시 예시:
@@ -215,7 +215,7 @@ cargo run
 - 등록
 
   ```bash
-  curl -X POST http://127.0.0.1:8000/api/user/register \
+  curl -X POST http://127.0.0.1:8000/api/user/ \
     -H "Content-Type: application/json" \
     -d '{
       "username": "jane",
