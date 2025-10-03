@@ -5,8 +5,8 @@ use crate::infra::db::init_db;
 pub mod app;
 pub mod config;
 pub mod db;
-pub mod setup;
 pub mod openapi;
+pub mod setup;
 
 pub async fn postgres_persistence() -> anyhow::Result<PostgresPersistence> {
     let pool = init_db().await?;

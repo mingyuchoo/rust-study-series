@@ -1,14 +1,14 @@
 use crate::adapters::http::app_state::AppState;
 use crate::adapters::{self};
-use crate::infra::setup::init_tracing;
 use crate::infra::openapi::ApiDoc;
+use crate::infra::setup::init_tracing;
 use axum::{Router, http};
 use http::header::{AUTHORIZATION, CONTENT_TYPE};
 use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
-use uuid::Uuid;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
+use uuid::Uuid;
 
 pub fn create_app(app_state: AppState) -> Router {
     init_tracing();
@@ -32,13 +32,10 @@ pub fn create_app(app_state: AppState) -> Router {
                 version = ?request.version(),
                 request_id = %request_id
             )
-        }))
-        ;
+        }));
 
     // Mount Swagger UI and OpenAPI JSON
-    let swagger = SwaggerUi::new("/swagger-ui")
-        .url("/api-docs/openapi.json", ApiDoc::openapi())
-        .into_router();
+    let swagger = SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi());
 
     api_router.merge(swagger)
 }
