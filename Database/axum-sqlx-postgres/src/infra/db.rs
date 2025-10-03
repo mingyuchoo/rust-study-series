@@ -8,6 +8,8 @@ pub async fn init_db() -> anyhow::Result<PgPool> {
 
     let pool = PgPoolOptions::new().max_connections(5).connect(&database_url).await?;
 
-    info!("Connected to database!");
+    // Run migrations automatically on startup
+    sqlx::migrate!().run(&pool).await?;
+    info!("Connected to database and migrations applied!");
     Ok(pool)
 }

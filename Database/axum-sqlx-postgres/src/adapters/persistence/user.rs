@@ -1,7 +1,7 @@
 use crate::adapters::persistence::PostgresPersistence;
 use crate::app_error::{AppError, AppResult};
 use crate::entities::user::User;
-use crate::use_cases::user::UserPersistence;
+use crate::use_cases::user::{UserDetail, UserListItem, UserPersistence};
 use async_trait::async_trait;
 use chrono::NaiveDateTime;
 use serde::Serialize;
@@ -12,6 +12,7 @@ use uuid::Uuid;
 pub struct UserDb {
     pub id: Uuid,
     pub username: String,
+    pub email: String,
     pub password_hash: String,
     pub created_at: NaiveDateTime,
 }
@@ -41,6 +42,56 @@ impl UserPersistence for PostgresPersistence {
             .await
             .map_err(AppError::from)?;
 
+        Ok(())
+    }
+
+    async fn list_users(&self) -> AppResult<Vec<UserListItem>> {
+        let rows = sqlx::query_as::<_, UserListItem>(r#"SELECT id, username, email, created_at FROM users ORDER BY created_at DESC"#)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(AppError::from)?;
+
+        Ok(rows)
+    }
+
+    async fn get_user(&self, id: Uuid) -> AppResult<Option<UserDetail>> {
+        let row = sqlx::query_as::<_, UserDetail>(r#"SELECT id, username, email, created_at FROM users WHERE id = $1"#)
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(AppError::from)?;
+
+        Ok(row)
+    }
+
+    async fn update_user(&self, id: Uuid, username: Option<&str>, email: Option<&str>, password_hash: Option<&str>) -> AppResult<()> {
+        sqlx::query(
+            r#"
+            UPDATE users
+            SET
+                username = COALESCE($2, username),
+                email = COALESCE($3, email),
+                password_hash = COALESCE($4, password_hash)
+            WHERE id = $1
+            "#,
+        )
+        .bind(id)
+        .bind(username)
+        .bind(email)
+        .bind(password_hash)
+        .execute(&self.pool)
+        .await
+        .map_err(AppError::from)?;
+
+        Ok(())
+    }
+
+    async fn delete_user(&self, id: Uuid) -> AppResult<()> {
+        sqlx::query("DELETE FROM users WHERE id = $1")
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(AppError::from)?;
         Ok(())
     }
 }

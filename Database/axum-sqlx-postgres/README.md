@@ -6,10 +6,12 @@
 
 ## 주요 기능
 
-- 사용자 등록 API 제공
-  - `POST /api/user/register`
-  - 본문: `username`, `email`, `password`
-  - 응답: `{ "success": true }` (201 Created)
+- 사용자 등록/목록/수정/삭제 API 제공
+  - `POST /api/user/register` (등록)
+  - `GET /api/user/` (목록)
+  - `GET /api/user/:id` (상세)
+  - `PUT /api/user/:id` (수정)
+  - `DELETE /api/user/:id` (삭제)
 
 ## 프로젝트 구조
 
@@ -144,9 +146,112 @@ cargo run
 - 유스케이스 호출: `UserUseCases::add(...)`
 - 비밀번호는 어댑터 계층의 Argon2 해시기로 해시되어 `users.password_hash`에 저장됩니다.
 
+### 사용자 목록 조회
+
+- 경로: `GET /api/user/`
+- 응답: `200 OK`
+
+  ```json
+  [
+    {
+      "id": "2f24e7d4-6b0b-4a8e-b7a4-6e2f4b3b1f1a",
+      "username": "jane",
+      "email": "jane@example.com",
+      "created_at": "2025-08-19T20:00:00"
+    }
+  ]
+  ```
+
+핸들러: `adapters::http::routes::user::list_users`
+
+### 사용자 수정
+
+- 경로: `PUT /api/user/:id`
+- 요청 본문(JSON): 일부 필드만 보내면 해당 필드만 수정됩니다.
+
+  ```json
+  {
+    "username": "jane.doe",
+    "email": "jane.doe@example.com",
+    "password": "new-password"
+  }
+  ```
+
+- 응답: `200 OK` `{ "success": true }`
+
+핸들러: `adapters::http::routes::user::update_user`
+
+### 사용자 삭제
+
+- 경로: `DELETE /api/user/:id`
+- 응답: `204 No Content`
+
+핸들러: `adapters::http::routes::user::delete_user`
+
+### 사용자 상세 조회
+
+- 경로: `GET /api/user/:id`
+- 응답: 존재 시 `200 OK`, 미존재 시 `404 Not Found`
+
+  존재 시 예시:
+
+  ```json
+  {
+    "id": "2f24e7d4-6b0b-4a8e-b7a4-6e2f4b3b1f1a",
+    "username": "jane",
+    "email": "jane@example.com",
+    "created_at": "2025-08-19T20:00:00"
+  }
+  ```
+
+핸들러: `adapters::http::routes::user::get_user`
+
 ## CORS 및 로깅
 
-- CORS: `http://localhost:5173` 오리진 허용. 메서드 `GET`, `POST`, 헤더 `Content-Type`, `Authorization`, 크리덴셜 허용. (`infra::app::create_app`)
+- CORS: `http://localhost:5173` 오리진 허용. 메서드 `GET`, `POST`, `PUT`, `DELETE`, 헤더 `Content-Type`, `Authorization`, 크리덴셜 허용. (`infra::app::create_app`)
+
+## 예제 curl
+
+- 등록
+
+  ```bash
+  curl -X POST http://127.0.0.1:8000/api/user/register \
+    -H "Content-Type: application/json" \
+    -d '{
+      "username": "jane",
+      "email": "jane@example.com",
+      "password": "plain"
+    }'
+  ```
+
+- 목록
+
+  ```bash
+  curl http://127.0.0.1:8000/api/user/
+  ```
+
+- 단건 조회
+
+  ```bash
+  curl http://127.0.0.1:8000/api/user/<UUID>
+  ```
+
+- 수정
+
+  ```bash
+  curl -X PUT http://127.0.0.1:8000/api/user/<UUID> \
+    -H "Content-Type: application/json" \
+    -d '{
+      "username": "jane.doe"
+    }'
+  ```
+
+- 삭제
+
+  ```bash
+  curl -X DELETE http://127.0.0.1:8000/api/user/<UUID>
+  ```
+  
 - 로깅: 콘솔(프리티) + 파일(JSON, `app.log`). 환경 변수 필터(`RUST_LOG` 등)가 없으면 `axum_trainer=debug,tower_http=debug` 기본 필터 사용. (`infra::setup::init_tracing`)
 
 ## 아키텍처 연결 고리
