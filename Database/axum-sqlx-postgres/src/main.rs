@@ -1,5 +1,5 @@
-use clean_architecture::infra::app::create_app;
-use clean_architecture::infra::setup::init_app_state;
+use axum_sqlx_postgres::infra::app::create_app;
+use axum_sqlx_postgres::infra::setup::init_app_state;
 use dotenvy::dotenv;
 use tracing::info;
 
@@ -11,7 +11,7 @@ async fn main() -> anyhow::Result<()> {
 
     let app = create_app(app_state);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8000").await.unwrap();
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await.unwrap();
 
     info!("Backend listening at {}", &listener.local_addr().unwrap());
 
