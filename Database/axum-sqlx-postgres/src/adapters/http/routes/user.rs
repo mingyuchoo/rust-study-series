@@ -10,6 +10,7 @@ use secrecy::SecretString;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tracing::{info, instrument};
+use utoipa::ToSchema;
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -20,21 +21,31 @@ pub fn router() -> Router<AppState> {
         .route("/{id}", delete(delete_user))
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct RegisterPayload {
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub(crate) struct RegisterPayload {
     username: String,
     email: String,
+    #[schema(value_type = String)]
     password: SecretString,
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct RegisterResponse {
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub(crate) struct RegisterResponse {
     success: bool,
 }
 
 /// Creates a new user based on the submitted credentials.
 #[instrument(skip(user_use_cases))]
-async fn register(State(user_use_cases): State<Arc<UserUseCases>>, Json(payload): Json<RegisterPayload>) -> AppResult<impl IntoResponse> {
+#[utoipa::path(
+    post,
+    path = "/api/user/register",
+    request_body = RegisterPayload,
+    responses(
+        (status = 201, description = "User created", body = RegisterResponse)
+    ),
+    tag = "user"
+)]
+pub(crate) async fn register(State(user_use_cases): State<Arc<UserUseCases>>, Json(payload): Json<RegisterPayload>) -> AppResult<impl IntoResponse> {
     info!("Register user called");
     user_use_cases.add(&payload.username, &payload.email, &payload.password).await?;
 
@@ -46,8 +57,8 @@ async fn register(State(user_use_cases): State<Arc<UserUseCases>>, Json(payload)
     ))
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct UserListItemResponse {
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub(crate) struct UserListItemResponse {
     id: uuid::Uuid,
     username: String,
     email: String,
@@ -55,7 +66,15 @@ struct UserListItemResponse {
 }
 
 #[instrument(skip(user_use_cases))]
-async fn list_users(State(user_use_cases): State<Arc<UserUseCases>>) -> AppResult<impl IntoResponse> {
+#[utoipa::path(
+    get,
+    path = "/api/user/",
+    responses(
+        (status = 200, description = "Users listed", body = [UserListItemResponse])
+    ),
+    tag = "user"
+)]
+pub(crate) async fn list_users(State(user_use_cases): State<Arc<UserUseCases>>) -> AppResult<impl IntoResponse> {
     info!("List users called");
     let items: Vec<UserListItem> = user_use_cases.list().await?;
     let resp: Vec<UserListItemResponse> = items
@@ -71,20 +90,31 @@ async fn list_users(State(user_use_cases): State<Arc<UserUseCases>>) -> AppResul
     Ok((StatusCode::OK, Json(resp)))
 }
 
-#[derive(Debug, Clone, Deserialize)]
-struct UpdatePayload {
+#[derive(Debug, Clone, Deserialize, ToSchema)]
+pub(crate) struct UpdatePayload {
     username: Option<String>,
     email: Option<String>,
+    #[schema(value_type = Option<String>)]
     password: Option<SecretString>,
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct UpdateResponse {
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub(crate) struct UpdateResponse {
     success: bool,
 }
 
 #[instrument(skip(user_use_cases))]
-async fn update_user(
+#[utoipa::path(
+    put,
+    path = "/api/user/{id}",
+    request_body = UpdatePayload,
+    params(("id" = uuid::Uuid, Path, description = "User id")),
+    responses(
+        (status = 200, description = "User updated", body = UpdateResponse)
+    ),
+    tag = "user"
+)]
+pub(crate) async fn update_user(
     State(user_use_cases): State<Arc<UserUseCases>>,
     Path(id): Path<uuid::Uuid>,
     Json(payload): Json<UpdatePayload>,
@@ -102,13 +132,22 @@ async fn update_user(
     ))
 }
 
-#[derive(Debug, Clone, Serialize)]
-struct DeleteResponse {
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub(crate) struct DeleteResponse {
     success: bool,
 }
 
 #[instrument(skip(user_use_cases))]
-async fn delete_user(State(user_use_cases): State<Arc<UserUseCases>>, Path(id): Path<uuid::Uuid>) -> AppResult<impl IntoResponse> {
+#[utoipa::path(
+    delete,
+    path = "/api/user/{id}",
+    params(("id" = uuid::Uuid, Path, description = "User id")),
+    responses(
+        (status = 204, description = "User deleted", body = DeleteResponse)
+    ),
+    tag = "user"
+)]
+pub(crate) async fn delete_user(State(user_use_cases): State<Arc<UserUseCases>>, Path(id): Path<uuid::Uuid>) -> AppResult<impl IntoResponse> {
     info!("Delete user called");
     user_use_cases.delete(id).await?;
     Ok((
@@ -120,7 +159,17 @@ async fn delete_user(State(user_use_cases): State<Arc<UserUseCases>>, Path(id): 
 }
 
 #[instrument(skip(user_use_cases))]
-async fn get_user(State(user_use_cases): State<Arc<UserUseCases>>, Path(id): Path<uuid::Uuid>) -> AppResult<impl IntoResponse> {
+#[utoipa::path(
+    get,
+    path = "/api/user/{id}",
+    params(("id" = uuid::Uuid, Path, description = "User id")),
+    responses(
+        (status = 200, description = "User found", body = UserListItemResponse),
+        (status = 404, description = "User not found")
+    ),
+    tag = "user"
+)]
+pub(crate) async fn get_user(State(user_use_cases): State<Arc<UserUseCases>>, Path(id): Path<uuid::Uuid>) -> AppResult<impl IntoResponse> {
     info!("Get user called");
     let maybe = user_use_cases.get(id).await?;
     let resp = match maybe {
