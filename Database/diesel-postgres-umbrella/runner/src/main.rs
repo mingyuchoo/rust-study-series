@@ -1,25 +1,26 @@
-use persistence::*;
-use std::io::{stdin, Read};
+mod domain;
+mod application;
+mod adapters;
+mod infra;
 
-fn main() -> () {
-    let connection = &mut establish_connection();
+use crate::application::{create_todo::CreateTodoUseCase, list_todos::ListTodosUseCase};
+use crate::infra::db::DbProvider;
 
-    let mut title: String = String::new();
-    let mut body: String = String::new();
+fn main() {
+    // 1) 인프라: DB 연결 + 마이그레이션/시드
+    let mut conn = DbProvider::establish();
+    DbProvider::migrate_and_seed(&mut conn);
 
-    println!("What would you like your title to be?");
-    stdin().read_line(&mut title).unwrap();
-    let title: &str = title.trim_end(); // Remove the trailing newline
+    // 2) 유스케이스: Todo 생성
+    let create_uc = CreateTodoUseCase::new();
+    let todo = create_uc.execute(&mut conn, "Clean Architecture skeleton");
+    println!("Created todo id={} title={}", todo.id, todo.title);
 
-    println!("Ok! Let's write {} (Press {} when finished)", title, EOF);
-    stdin().read_to_string(&mut body).unwrap();
-
-    let todo = create_todo(connection, title);
-    println!("\nSaved draft {} with id {}", title, todo.id);
+    // 3) 유스케이스: Todo 목록 조회
+    let list_uc = ListTodosUseCase::new();
+    let items = list_uc.execute(&mut conn);
+    println!("Todos ({}):", items.len());
+    for t in items {
+        println!("- {}: {}", t.id, t.title);
+    }
 }
-
-#[cfg(not(windows))]
-const EOF: &str = "CTRL+D";
-
-#[cfg(windows)]
-const EOF: &str = "CTRL+Z";

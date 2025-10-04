@@ -6,6 +6,11 @@ use diesel::prelude::*;
 use dotenvy::dotenv;
 use models::{NewTodo, Todo};
 use std::env;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+
+pub use models::{NewTodo as PersistenceNewTodo, Todo as PersistenceTodo};
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
 pub fn establish_connection() -> PgConnection {
     dotenv().ok();
@@ -26,4 +31,35 @@ pub fn create_todo(conn: &mut PgConnection, title: &str) -> Todo {
         .returning(Todo::as_returning())
         .get_result(conn)
         .expect("Error saving new todo")
+}
+
+pub fn list_todos(conn: &mut PgConnection) -> Vec<Todo> {
+    use schema::todo::dsl::*;
+    todo
+        .select(Todo::as_select())
+        .load::<Todo>(conn)
+        .expect("Error loading todos")
+}
+
+pub fn run_migrations_and_seed(conn: &mut PgConnection) {
+    conn.run_pending_migrations(MIGRATIONS)
+        .expect("Failed to run migrations");
+
+    // Seed only if empty
+    use schema::todo::dsl::*;
+    let count: i64 = todo
+        .count()
+        .get_result(conn)
+        .expect("Failed to count todos");
+
+    if count == 0 {
+        let samples = [
+            "Learn Diesel",
+            "Model domain entities",
+            "Implement use cases",
+        ];
+        for t in samples {
+            let _ = create_todo(conn, t);
+        }
+    }
 }

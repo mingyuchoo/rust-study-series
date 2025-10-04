@@ -1,8 +1,9 @@
 [package]
-  edition = "2024"
+  edition = "2021"
   name    = "persistence"
   version = "0.1.0"
 
 [dependencies]
   diesel  = {workspace = true}
   dotenvy = {workspace = true}
+  diesel_migrations = "2.1.0"
