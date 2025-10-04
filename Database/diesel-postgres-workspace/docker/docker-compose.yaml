@@ -19,7 +19,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: diesel-postgres-umbrella:latest
+    image: diesel-postgres-workspace:latest
     depends_on:
       postgres:
         condition: service_healthy

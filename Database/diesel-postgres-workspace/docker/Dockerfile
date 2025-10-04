@@ -1,5 +1,5 @@
 # 프로젝트 이름을 ARG로 받아서 사용
-ARG PROJECT_NAME=diesel-postgres-umbrella
+ARG PROJECT_NAME=diesel-postgres-workspace
 # 빌드와 실행을 동일한 이미지에서 진행
 FROM rust:1.86-slim AS builder
 
