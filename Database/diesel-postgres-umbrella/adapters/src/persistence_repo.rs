@@ -1,9 +1,9 @@
 use diesel::pg::PgConnection;
 use domain::repositories::TodoRepository;
 use domain::entities::Todo as DomainTodo;
-use persistence::{self, PersistenceTodo};
+use infra::{self, InfraTodo};
 
-fn map(p: PersistenceTodo) -> DomainTodo {
+fn map(p: InfraTodo) -> DomainTodo {
     DomainTodo { id: p.id, title: p.title }
 }
 
@@ -19,10 +19,10 @@ impl<'a> PgTodoRepository<'a> {
 
 impl<'a> TodoRepository for PgTodoRepository<'a> {
     fn create(&mut self, title: &str) -> DomainTodo {
-        let p = persistence::create_todo(self.conn, title);
+        let p = infra::create_todo(self.conn, title);
         map(p)
     }
     fn list(&mut self) -> Vec<DomainTodo> {
-        persistence::list_todos(self.conn).into_iter().map(map).collect()
+        infra::list_todos(self.conn).into_iter().map(map).collect()
     }
 }

@@ -1,6 +1,6 @@
 [workspace]
-  members  = ["persistence", "domain", "application", "adapters", "infra", "runner"]
+  members  = ["domain", "application", "adapters", "infra", "main"]
   resolver = "2"
   [workspace.dependencies]
-    diesel  = {version = "2.3.2", features = ["postgres"]}
+    diesel  = {version = "2.3.2", features = ["postgres", "postgres_backend", "r2d2"]}
     dotenvy = "0.15.7"

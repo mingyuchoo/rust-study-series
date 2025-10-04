@@ -1,5 +1,5 @@
 use diesel::pg::PgConnection;
-use persistence::{establish_connection, run_migrations_and_seed};
+use crate::{establish_connection, run_migrations_and_seed};
 
 pub struct DbProvider;
 

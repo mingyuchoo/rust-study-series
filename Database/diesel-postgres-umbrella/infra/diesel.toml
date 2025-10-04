@@ -6,4 +6,4 @@ file = "src/schema.rs"
 custom_type_derives = ["diesel::query_builder::QueryId", "Clone"]
 
 [migrations_directory]
-dir = "/home/mgch/github/mingyuchoo/rust-study-series/database/diesel_postgres_umbrella/persistence/migrations"
+dir = "migrations"

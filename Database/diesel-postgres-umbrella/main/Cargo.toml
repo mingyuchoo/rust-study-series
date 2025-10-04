@@ -1,6 +1,6 @@
 [package]
   edition = "2024"
-  name    = "runner"
+  name    = "main"
   version = "0.1.0"
 
 [dependencies]
@@ -8,3 +8,5 @@
   application = {path = "../application"}
   adapters    = {path = "../adapters"}
   infra       = {path = "../infra"}
+  pq-sys      = {version = "0.6", features = ["bundled"]}
+  openssl-sys = {version = "0.9", features = ["vendored"]}
