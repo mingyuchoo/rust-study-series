@@ -13,12 +13,18 @@ WORKDIR /app
 
 # 1) 의존성 빌드 캐시 최적화: 매니페스트만 먼저 복사 후 더미 소스로 선빌드
 COPY Cargo.toml Cargo.toml
-COPY persistence/Cargo.toml persistence/Cargo.toml
+COPY domain/Cargo.toml domain/Cargo.toml
+COPY application/Cargo.toml application/Cargo.toml
+COPY adapters/Cargo.toml adapters/Cargo.toml
+COPY infra/Cargo.toml infra/Cargo.toml
 COPY main/Cargo.toml main/Cargo.toml
 
 # 더미 소스 파일 생성으로 의존성만 빌드
-RUN mkdir -p persistence/src main/src \
-    && echo "pub fn placeholder() {}" > persistence/src/lib.rs \
+RUN mkdir -p domain/src application/src adapters/src infra/src main/src \
+    && echo "pub fn placeholder() {}" > domain/src/lib.rs \
+    && echo "pub fn placeholder() {}" > application/src/lib.rs \
+    && echo "pub fn placeholder() {}" > adapters/src/lib.rs \
+    && echo "pub fn placeholder() {}" > infra/src/lib.rs \
     && echo "fn main() {}" > main/src/main.rs
 
 # 워크스페이스 의존성만 먼저 빌드 (main 타겟 기준)
