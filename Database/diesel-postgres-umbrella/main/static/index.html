@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List - Clean Architecture</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 Todo List</h1>
+            <p class="subtitle">Clean Architecture with Rust + Diesel + Axum</p>
+        </header>
+
+        <div class="add-todo">
+            <input type="text" id="newTodoInput" placeholder="새로운 할 일을 입력하세요..." />
+            <button id="addBtn">추가</button>
+        </div>
+
+        <div id="todoList" class="todo-list">
+            <!-- Todos will be loaded here -->
+        </div>
+
+        <div class="stats">
+            <span id="totalCount">총 0개</span>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>Todo 수정</h2>
+            <input type="text" id="editTodoInput" />
+            <div class="modal-actions">
+                <button id="saveEditBtn" class="btn-primary">저장</button>
+                <button id="cancelEditBtn" class="btn-secondary">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

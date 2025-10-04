@@ -4,9 +4,15 @@
   version = "0.1.0"
 
 [dependencies]
-  domain      = {path = "../domain"}
+  domain      = {path = "../domain", features = ["serde"]}
   application = {path = "../application"}
   adapters    = {path = "../adapters"}
   infra       = {path = "../infra"}
   pq-sys      = {version = "0.6", features = ["bundled"]}
   openssl-sys = {version = "0.9", features = ["vendored"]}
+  axum        = {workspace = true}
+  tokio       = {workspace = true}
+  tower       = {workspace = true}
+  tower-http  = {workspace = true}
+  serde       = {workspace = true}
+  serde_json  = {workspace = true}

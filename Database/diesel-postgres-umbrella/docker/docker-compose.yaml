@@ -26,6 +26,8 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/postgres
       RUST_LOG: info
+    ports:
+      - "3000:3000"
     stdin_open: true
     tty: true
     restart: "no"

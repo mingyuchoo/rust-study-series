@@ -44,10 +44,13 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# main 바이너리만 복사
+# main 바이너리와 static 파일 복사
 COPY --from=builder /app/target/release/main /app/main
+COPY --from=builder /app/main/static /app/main/static
 
 ENV RUST_LOG=info
 
-# CLI 앱이므로 포트 노출 불필요
+# 웹 서비스 포트 노출
+EXPOSE 3000
+
 CMD ["/app/main"]

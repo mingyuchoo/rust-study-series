@@ -25,4 +25,13 @@ impl<'a> TodoRepository for PgTodoRepository<'a> {
     fn list(&mut self) -> Vec<DomainTodo> {
         infra::list_todos(self.conn).into_iter().map(map).collect()
     }
+    fn get(&mut self, id: i32) -> Option<DomainTodo> {
+        infra::get_todo(self.conn, id).map(map)
+    }
+    fn update(&mut self, id: i32, title: &str) -> Option<DomainTodo> {
+        infra::update_todo(self.conn, id, title).map(map)
+    }
+    fn delete(&mut self, id: i32) -> bool {
+        infra::delete_todo(self.conn, id)
+    }
 }

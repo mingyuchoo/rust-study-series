@@ -42,6 +42,32 @@ pub fn list_todos(conn: &mut PgConnection) -> Vec<Todo> {
         .expect("Error loading todos")
 }
 
+pub fn get_todo(conn: &mut PgConnection, todo_id: i32) -> Option<Todo> {
+    use schema::todo::dsl::*;
+    todo
+        .find(todo_id)
+        .select(Todo::as_select())
+        .first(conn)
+        .ok()
+}
+
+pub fn update_todo(conn: &mut PgConnection, todo_id: i32, new_title: &str) -> Option<Todo> {
+    use schema::todo::dsl::*;
+    diesel::update(todo.find(todo_id))
+        .set(title.eq(new_title))
+        .returning(Todo::as_returning())
+        .get_result(conn)
+        .ok()
+}
+
+pub fn delete_todo(conn: &mut PgConnection, todo_id: i32) -> bool {
+    use schema::todo::dsl::*;
+    diesel::delete(todo.find(todo_id))
+        .execute(conn)
+        .map(|rows| rows > 0)
+        .unwrap_or(false)
+}
+
 pub fn run_migrations_and_seed(conn: &mut PgConnection) {
     conn.run_pending_migrations(MIGRATIONS)
         .expect("Failed to run migrations");
