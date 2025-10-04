@@ -2,7 +2,6 @@ mod web;
 
 use infra::db::DbProvider;
 use std::sync::{Arc, Mutex};
-use diesel::pg::PgConnection;
 
 #[tokio::main]
 async fn main() {

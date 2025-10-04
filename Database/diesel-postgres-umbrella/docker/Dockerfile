@@ -45,12 +45,12 @@ RUN apt-get update \
 WORKDIR /app
 
 # main 바이너리와 static 파일 복사
-COPY --from=builder /app/target/release/main /app/main
-COPY --from=builder /app/main/static /app/main/static
+COPY --from=builder /app/target/release/main /app/app
+COPY --from=builder /app/main/static /app/static
 
 ENV RUST_LOG=info
 
 # 웹 서비스 포트 노출
 EXPOSE 3000
 
-CMD ["/app/main"]
+CMD ["/app/app"]

@@ -12,7 +12,7 @@ use axum::{
     Json,
 };
 use domain::entities::Todo;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use super::DbConn;
 
 #[derive(Deserialize)]
@@ -23,11 +23,6 @@ pub struct CreateTodoRequest {
 #[derive(Deserialize)]
 pub struct UpdateTodoRequest {
     title: String,
-}
-
-#[derive(Serialize)]
-pub struct ErrorResponse {
-    error: String,
 }
 
 pub async fn list_todos(

@@ -8,8 +8,7 @@
   application = {path = "../application"}
   adapters    = {path = "../adapters"}
   infra       = {path = "../infra"}
-  pq-sys      = {version = "0.6", features = ["bundled"]}
-  openssl-sys = {version = "0.9", features = ["vendored"]}
+  diesel      = {workspace = true}
   axum        = {workspace = true}
   tokio       = {workspace = true}
   tower       = {workspace = true}
