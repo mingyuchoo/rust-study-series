@@ -1,8 +1,10 @@
 [package]
-  edition = "2021"
+  edition = "2024"
   name    = "runner"
   version = "0.1.0"
 
 [dependencies]
-  persistence = {path = "../persistence"}
-  diesel      = {workspace = true}
+  domain      = {path = "../domain"}
+  application = {path = "../application"}
+  adapters    = {path = "../adapters"}
+  infra       = {path = "../infra"}

@@ -1,0 +1,9 @@
+[package]
+  edition = "2024"
+  name    = "adapters"
+  version = "0.1.0"
+
+[dependencies]
+  domain      = {path = "../domain"}
+  persistence = {path = "../persistence"}
+  diesel      = {workspace = true}

@@ -1,5 +1,5 @@
 [workspace]
-  members  = ["persistence", "runner"]
+  members  = ["persistence", "domain", "application", "adapters", "infra", "runner"]
   resolver = "2"
   [workspace.dependencies]
     diesel  = {version = "2.3.2", features = ["postgres"]}

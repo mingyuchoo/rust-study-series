@@ -1,5 +1,5 @@
-use crate::domain::repositories::TodoRepository;
-use crate::domain::entities::Todo;
+use domain::repositories::TodoRepository;
+use domain::entities::Todo;
 
 pub struct ListTodosUseCase;
 
