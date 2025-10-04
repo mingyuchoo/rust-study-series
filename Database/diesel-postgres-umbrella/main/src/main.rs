@@ -13,8 +13,8 @@ async fn main() {
     let db_conn = Arc::new(Mutex::new(conn));
     
     println!("🚀 Starting Todo Web Service...");
-    println!("📝 API available at: http://localhost:3000/api/todos");
-    println!("🌐 Web UI available at: http://localhost:3000");
+    println!("📝 API available at: http://localhost:8000/api/todos");
+    println!("🌐 Web UI available at: http://localhost:8000");
     
     web::start_server(db_conn).await;
 }

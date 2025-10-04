@@ -91,8 +91,8 @@ cargo run -p main
 ```
 
 #### 접속
-- 웹 UI: http://localhost:3000
-- API: http://localhost:3000/api/todos
+- 웹 UI: http://localhost:8000
+- API: http://localhost:8000/api/todos
 
 #### API 테스트
 ```bash

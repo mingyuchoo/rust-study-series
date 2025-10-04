@@ -9,8 +9,8 @@ A Rust project demonstrating Clean Architecture principles with Diesel ORM and P
 docker-compose -f docker/docker-compose.yaml up --build
 
 # Open your browser
-# 🌐 Web UI: http://localhost:3000
-# 🔌 API: http://localhost:3000/api/todos
+# 🌐 Web UI: http://localhost:8000
+# 🔌 API: http://localhost:8000/api/todos
 ```
 
 That's it! The app will automatically set up the database, run migrations, and seed sample data.
@@ -54,11 +54,11 @@ docker-compose -f docker/docker-compose.yaml up --build
 make docker-up
 
 # The app will automatically run migrations and create sample data
-# Access the web UI at: http://localhost:3000
-# Access the API at: http://localhost:3000/api/todos
+# Access the web UI at: http://localhost:8000
+# Access the API at: http://localhost:8000/api/todos
 ```
 
-**That's it!** Open your browser and visit `http://localhost:3000` to see the Todo app in action.
+**That's it!** Open your browser and visit `http://localhost:8000` to see the Todo app in action.
 
 ### Local Development
 
@@ -119,20 +119,20 @@ The REST API provides full CRUD operations:
 
 ```bash
 # List all todos
-curl http://localhost:3000/api/todos
+curl http://localhost:8000/api/todos
 
 # Create a new todo
-curl -X POST http://localhost:3000/api/todos \
+curl -X POST http://localhost:8000/api/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"Learn Rust"}'
 
 # Update a todo
-curl -X PUT http://localhost:3000/api/todos/1 \
+curl -X PUT http://localhost:8000/api/todos/1 \
   -H "Content-Type: application/json" \
   -d '{"title":"Master Rust"}'
 
 # Delete a todo
-curl -X DELETE http://localhost:3000/api/todos/1
+curl -X DELETE http://localhost:8000/api/todos/1
 ```
 
 ## Web UI
@@ -144,7 +144,7 @@ The application includes a modern, responsive web interface:
 - **Delete todos**: Click the "삭제" button (with confirmation)
 - **Real-time updates**: The list updates automatically after each operation
 
-Access the web UI at `http://localhost:3000` after starting the server.
+Access the web UI at `http://localhost:8000` after starting the server.
 
 ## Development
 
@@ -209,10 +209,10 @@ Or test manually with curl:
 
 ```bash
 # Health check - list todos
-curl http://localhost:3000/api/todos
+curl http://localhost:8000/api/todos
 
 # Create a todo
-curl -X POST http://localhost:3000/api/todos \
+curl -X POST http://localhost:8000/api/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"My new task"}'
 ```

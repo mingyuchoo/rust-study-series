@@ -22,7 +22,7 @@
 
 ### List All Todos
 ```bash
-curl http://localhost:3000/api/todos
+curl http://localhost:8000/api/todos
 ```
 
 ```json
@@ -40,7 +40,7 @@ curl http://localhost:3000/api/todos
 
 ### Create a Todo
 ```bash
-curl -X POST http://localhost:3000/api/todos \
+curl -X POST http://localhost:8000/api/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"New Task"}'
 ```
@@ -54,7 +54,7 @@ curl -X POST http://localhost:3000/api/todos \
 
 ### Update a Todo
 ```bash
-curl -X PUT http://localhost:3000/api/todos/1 \
+curl -X PUT http://localhost:8000/api/todos/1 \
   -H "Content-Type: application/json" \
   -d '{"title":"Updated Task"}'
 ```
@@ -68,7 +68,7 @@ curl -X PUT http://localhost:3000/api/todos/1 \
 
 ### Delete a Todo
 ```bash
-curl -X DELETE http://localhost:3000/api/todos/1
+curl -X DELETE http://localhost:8000/api/todos/1
 ```
 
 Returns: `204 No Content`

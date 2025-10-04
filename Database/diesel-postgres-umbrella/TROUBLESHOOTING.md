@@ -22,7 +22,7 @@ export DATABASE_URL="postgres://postgres:postgres@localhost:5432/postgres"
 **해결**:
 ```bash
 # 포트를 사용 중인 프로세스 찾기
-lsof -i :3000
+lsof -i :8000
 
 # 프로세스 종료
 kill -9 <PID>
@@ -139,10 +139,10 @@ docker-compose -f docker/docker-compose.yaml up
 ### API 테스트
 ```bash
 # curl로 직접 테스트
-curl -v http://localhost:3000/api/todos
+curl -v http://localhost:8000/api/todos
 
 # JSON 응답 포맷팅
-curl http://localhost:3000/api/todos | jq '.'
+curl http://localhost:8000/api/todos | jq '.'
 
 # 테스트 스크립트 실행
 ./test_api.sh

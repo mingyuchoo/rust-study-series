@@ -14,7 +14,7 @@ pub async fn start_server(db_conn: DbConn) {
         .fallback_service(ServeDir::new("main/static"))
         .with_state(db_conn);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000")
         .await
         .unwrap();
     

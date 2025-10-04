@@ -2,7 +2,7 @@
 
 # API Test Script for Todo Service
 
-BASE_URL="http://localhost:3000/api/todos"
+BASE_URL="http://localhost:8000/api/todos"
 
 echo "🧪 Testing Todo API..."
 echo ""

@@ -51,6 +51,6 @@ COPY --from=builder /app/main/static /app/static
 ENV RUST_LOG=info
 
 # 웹 서비스 포트 노출
-EXPOSE 3000
+EXPOSE 8000
 
 CMD ["/app/app"]
