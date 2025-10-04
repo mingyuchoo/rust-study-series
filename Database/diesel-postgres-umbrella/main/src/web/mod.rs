@@ -11,7 +11,7 @@ pub type DbConn = Arc<Mutex<PgConnection>>;
 pub async fn start_server(db_conn: DbConn) {
     let app = Router::new()
         .nest("/api", routes::api_routes())
-        .fallback_service(ServeDir::new("main/static"))
+        .nest_service("/", ServeDir::new("static"))
         .with_state(db_conn);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000")
