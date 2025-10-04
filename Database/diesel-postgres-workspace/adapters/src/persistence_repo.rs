@@ -1,7 +1,7 @@
 use diesel::pg::PgConnection;
 use domain::repositories::TodoRepository;
 use domain::entities::Todo as DomainTodo;
-use infra::{self, InfraTodo};
+use infrastructure::{self, InfraTodo};
 
 fn map(p: InfraTodo) -> DomainTodo {
     DomainTodo { id: p.id, title: p.title }
@@ -19,19 +19,19 @@ impl<'a> PgTodoRepository<'a> {
 
 impl<'a> TodoRepository for PgTodoRepository<'a> {
     fn create(&mut self, title: &str) -> DomainTodo {
-        let p = infra::create_todo(self.conn, title);
+        let p = infrastructure::create_todo(self.conn, title);
         map(p)
     }
     fn list(&mut self) -> Vec<DomainTodo> {
-        infra::list_todos(self.conn).into_iter().map(map).collect()
+        infrastructure::list_todos(self.conn).into_iter().map(map).collect()
     }
     fn get(&mut self, id: i32) -> Option<DomainTodo> {
-        infra::get_todo(self.conn, id).map(map)
+        infrastructure::get_todo(self.conn, id).map(map)
     }
     fn update(&mut self, id: i32, title: &str) -> Option<DomainTodo> {
-        infra::update_todo(self.conn, id, title).map(map)
+        infrastructure::update_todo(self.conn, id, title).map(map)
     }
     fn delete(&mut self, id: i32) -> bool {
-        infra::delete_todo(self.conn, id)
+        infrastructure::delete_todo(self.conn, id)
     }
 }

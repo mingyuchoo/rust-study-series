@@ -71,7 +71,7 @@ psql postgres://postgres:postgres@localhost:5432/postgres
 cargo install diesel_cli --no-default-features --features postgres
 
 # 마이그레이션 재실행
-diesel migration redo --config-file infra/diesel.toml
+diesel migration redo --config-file infrastructure/diesel.toml
 
 # 또는 데이터베이스 초기화
 docker-compose -f docker/docker-compose.yaml down -v
@@ -178,7 +178,7 @@ CREATE INDEX idx_todo_id ON todo(id);
 ```
 
 2. **연결 풀 사용** (현재는 단일 연결)
-   - `infra/src/lib.rs`에서 r2d2 연결 풀 구현 고려
+   - `infrastructure/src/lib.rs`에서 r2d2 연결 풀 구현 고려
 
 3. **쿼리 최적화**
    - N+1 쿼리 문제 확인

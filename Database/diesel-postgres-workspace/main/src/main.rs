@@ -1,6 +1,6 @@
 mod web;
 
-use infra::db::DbProvider;
+use infrastructure::db::DbProvider;
 use std::sync::{Arc, Mutex};
 
 #[tokio::main]

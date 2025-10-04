@@ -16,15 +16,15 @@ COPY Cargo.toml Cargo.toml
 COPY domain/Cargo.toml domain/Cargo.toml
 COPY application/Cargo.toml application/Cargo.toml
 COPY adapters/Cargo.toml adapters/Cargo.toml
-COPY infra/Cargo.toml infra/Cargo.toml
+COPY infrastructure/Cargo.toml infrastructure/Cargo.toml
 COPY main/Cargo.toml main/Cargo.toml
 
 # 더미 소스 파일 생성으로 의존성만 빌드
-RUN mkdir -p domain/src application/src adapters/src infra/src main/src \
+RUN mkdir -p domain/src application/src adapters/src infrastructure/src main/src \
     && echo "pub fn placeholder() {}" > domain/src/lib.rs \
     && echo "pub fn placeholder() {}" > application/src/lib.rs \
     && echo "pub fn placeholder() {}" > adapters/src/lib.rs \
-    && echo "pub fn placeholder() {}" > infra/src/lib.rs \
+    && echo "pub fn placeholder() {}" > infrastructure/src/lib.rs \
     && echo "fn main() {}" > main/src/main.rs
 
 # 워크스페이스 의존성만 먼저 빌드 (main 타겟 기준)

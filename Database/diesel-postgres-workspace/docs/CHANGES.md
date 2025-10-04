@@ -40,7 +40,7 @@
 - `application/src/delete_todo.rs` - 새 파일: Todo 삭제 use case
 
 #### Infrastructure Layer
-- `infra/src/lib.rs` - get_todo, update_todo, delete_todo 함수 추가
+- `infrastructure/src/lib.rs` - get_todo, update_todo, delete_todo 함수 추가
 
 #### Adapters Layer
 - `adapters/src/persistence_repo.rs` - 새로운 repository 메서드 구현

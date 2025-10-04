@@ -1,5 +1,5 @@
 [workspace]
-  members  = ["domain", "application", "adapters", "infra", "main"]
+  members  = ["domain", "application", "adapters", "infrastructure", "main"]
   resolver = "2"
   [workspace.dependencies]
     diesel  = {version = "2.3.2", features = ["postgres", "postgres_backend", "r2d2"]}

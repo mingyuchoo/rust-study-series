@@ -4,14 +4,14 @@
   version = "0.1.0"
 
 [dependencies]
-  domain      = {path = "../domain", features = ["serde"]}
-  application = {path = "../application"}
   adapters    = {path = "../adapters"}
-  infra       = {path = "../infra"}
-  diesel      = {workspace = true}
+  application = {path = "../application"}
   axum        = {workspace = true}
+  diesel      = {workspace = true}
+  domain      = {features = ["serde"], path = "../domain"}
+  infrastructure       = {path = "../infrastructure"}
+  serde       = {workspace = true}
+  serde_json  = {workspace = true}
   tokio       = {workspace = true}
   tower       = {workspace = true}
   tower-http  = {workspace = true}
-  serde       = {workspace = true}
-  serde_json  = {workspace = true}

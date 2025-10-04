@@ -22,7 +22,7 @@ This project follows Clean Architecture with clear separation of concerns across
 - **domain**: Core business entities and repository traits
 - **application**: Use cases and business logic
 - **adapters**: Repository implementations and external adapters  
-- **infra**: Database infrastructure, migrations, and models
+- **infrastructure**: Database infrastructure, migrations, and models
 - **main**: Application entry point and dependency injection
 
 ## Features
@@ -73,7 +73,7 @@ cp .env.test .env
 docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:17.6
 
 # Run migrations
-diesel migration run --config-file infra/diesel.toml
+diesel migration run --config-file infrastructure/diesel.toml
 
 # Run the application
 cargo run -p main
@@ -85,7 +85,7 @@ cargo run -p main
 ├── adapters/           # Repository implementations
 ├── application/        # Use cases (CreateTodo, ListTodos)
 ├── domain/            # Entities and repository traits
-├── infra/             # Database infrastructure
+├── infrastructure/             # Database infrastructure
 │   ├── migrations/    # Diesel migrations
 │   └── src/          # DB models and schema
 ├── main/              # Application entry point
@@ -154,7 +154,7 @@ Access the web UI at `http://localhost:8000` after starting the server.
 2. Add repository traits in `domain/src/repositories.rs`
 3. Implement use cases in `application/src/`
 4. Create repository implementations in `adapters/src/`
-5. Update database schema in `infra/migrations/`
+5. Update database schema in `infrastructure/migrations/`
 6. Add API handlers in `main/src/web/handlers.rs`
 7. Register routes in `main/src/web/routes.rs`
 
@@ -244,7 +244,7 @@ This project demonstrates Clean Architecture with clear boundaries:
 │      Infrastructure Layer                │
 │  Adapters: Repository Implementations    │
 │  Infra: Database, Migrations, Models     │
-│    adapters/src/ + infra/src/            │
+│    adapters/src/ + infrastructure/src/            │
 └─────────────────────────────────────────┘
 ```
 
