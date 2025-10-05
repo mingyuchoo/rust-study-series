@@ -50,7 +50,7 @@ pnpm run preview
 `vite.config.ts`에서 다음과 같이 설정되어 있습니다:
 
 - **빌드 출력**: `../backend/wwwroot`로 설정하여 ASP.NET Core와 통합
-- **개발 프록시**: `/api` 요청을 `https://localhost:5000`으로 프록시
+- **개발 프록시**: `/api` 요청을 `https://localhost:5173`으로 프록시
 - **SWC 컴파일러**: 빠른 빌드를 위해 SWC 사용
 
 ## 🌐 API 통합

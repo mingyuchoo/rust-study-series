@@ -35,12 +35,12 @@ $response = Read-Host "Do you want to start the application now? (y/n)"
 if ($response -match "^[Yy]") {
     Write-Host "Starting Rust application..." -ForegroundColor Green
     Write-Host "Application will be available at:" -ForegroundColor Cyan
-    Write-Host "  - HTTPS: https://localhost:7000" -ForegroundColor White
-    Write-Host "  - HTTP:  http://localhost:5000" -ForegroundColor White
+    Write-Host "  - HTTPS: https://localhost:8000" -ForegroundColor White
+    Write-Host "  - HTTP:  http://localhost:5173" -ForegroundColor White
     Write-Host ""
     Write-Host "API endpoints:" -ForegroundColor Cyan
-    Write-Host "  - Products API: https://localhost:7000/api/products" -ForegroundColor White
-    Write-Host "  - Swagger UI:   https://localhost:7000/swagger" -ForegroundColor White
+    Write-Host "  - Products API: https://localhost:8000/api/products" -ForegroundColor White
+    Write-Host "  - Swagger UI:   https://localhost:8000/swagger" -ForegroundColor White
     Write-Host ""
     Write-Host "Press Ctrl+C to stop the application" -ForegroundColor Yellow
     Write-Host "----------------------------------------" -ForegroundColor Gray

@@ -24,12 +24,12 @@ if (-not (Test-Path "bin/Debug/net9.0/backend.dll")) {
 
 Write-Host "Starting ASP.NET Core application for testing..." -ForegroundColor Green
 Write-Host "Application will be available at:" -ForegroundColor Cyan
-Write-Host "  - HTTPS: https://localhost:7000" -ForegroundColor White
-Write-Host "  - HTTP:  http://localhost:5000" -ForegroundColor White
+Write-Host "  - HTTPS: https://localhost:8000" -ForegroundColor White
+Write-Host "  - HTTP:  http://localhost:5173" -ForegroundColor White
 Write-Host ""
 Write-Host "API endpoints:" -ForegroundColor Cyan
-Write-Host "  - Health check: https://localhost:7000/api/api/health" -ForegroundColor White
-Write-Host "  - Sample data:  https://localhost:7000/api/api/data" -ForegroundColor White
+Write-Host "  - Health check: https://localhost:8000/api/api/health" -ForegroundColor White
+Write-Host "  - Sample data:  https://localhost:8000/api/api/data" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Ctrl+C to stop the application" -ForegroundColor Yellow
 Write-Host "----------------------------------------" -ForegroundColor Gray
