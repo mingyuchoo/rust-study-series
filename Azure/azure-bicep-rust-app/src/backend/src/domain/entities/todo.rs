@@ -1,27 +1,63 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, ToSchema)]
+#[schema(example = json!({
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "title": "Learn Rust",
+    "description": "Study Rust programming language",
+    "completed": false,
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2023-01-01T00:00:00Z"
+}))]
 pub struct Todo {
+    #[schema(example = "550e8400-e29b-41d4-a716-446655440000")]
     pub id: String,
+    #[schema(example = "Learn Rust")]
     pub title: String,
+    #[schema(example = "Study Rust programming language")]
     pub description: Option<String>,
+    #[schema(example = false)]
     pub completed: bool,
+    #[schema(example = "2023-01-01T00:00:00Z")]
     pub created_at: DateTime<Utc>,
+    #[schema(example = "2023-01-01T00:00:00Z")]
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
+#[schema(example = json!({
+    "title": "Learn Rust",
+    "description": "Study Rust programming language"
+}))]
 pub struct CreateTodoRequest {
+    #[schema(example = "Learn Rust")]
     pub title: String,
+    #[schema(example = "Study Rust programming language")]
     pub description: Option<String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, ToSchema)]
+#[schema(example = json!({
+    "title": "Learn Advanced Rust",
+    "description": "Study advanced Rust concepts",
+    "completed": true
+}))]
 pub struct UpdateTodoRequest {
+    #[schema(example = "Learn Advanced Rust")]
     pub title: Option<String>,
+    #[schema(example = "Study advanced Rust concepts")]
     pub description: Option<String>,
+    #[schema(example = true)]
     pub completed: Option<bool>,
+}
+
+#[derive(Serialize, ToSchema)]
+#[schema(example = json!({"error": "Todo not found"}))]
+pub struct ErrorResponse {
+    #[schema(example = "Todo not found")]
+    pub error: String,
 }
 
 impl Todo {

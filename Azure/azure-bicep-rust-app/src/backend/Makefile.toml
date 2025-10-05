@@ -42,3 +42,11 @@
   args         = ["run"]
   command      = "cargo"
   dependencies = ["format"]
+
+[tasks.run-with-swagger]
+  script = '''
+    echo "Starting server with Swagger UI..."
+    echo "Swagger UI will be available at: http://localhost:8080/swagger-ui/"
+    cargo run
+  '''
+  dependencies = ["format"]
