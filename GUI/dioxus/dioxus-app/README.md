@@ -14,13 +14,26 @@ $ sudo apt install libwebkit2gtk-4.1-dev \
                    libsoup-3.0-dev \
                    libxdo-dev
 
-$ cargo install cargo-binstall
-$ cargo binstall dioxus-cli
+```
+
+For Fedora Linux
+
+```bash
+$ sudo dnf update
+$ sudo dnf install glib2-devel \
+                   gtk3-devel \
+                   webkit2gtk4.1-devel \
+                   libsoup3-devel \
+                   openssl-devel \
+                   pkg-config \
+                   libxdo-devel
 ```
 
 ## Create a new project
 
 ```bash
+$ cargo install cargo-binstall
+$ cargo binstall dioxus-cli
 $ dx new dioxus-app
 $ cd dioxus-app
 ```

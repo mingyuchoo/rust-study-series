@@ -69,11 +69,11 @@ pub fn TodosTab() -> Element {
     let handle_update = move |_| {
         if let Some(todo) = selected_todo() {
             let form_data = form();
-            let mut form_clone = form.clone();
-            let mut todos_clone = todos.clone();
-            let mut selected_todo_clone = selected_todo.clone();
-            let mut is_editing_clone = is_editing.clone();
-            let mut error_clone = error.clone();
+            let mut form_clone = form;
+            let mut todos_clone = todos;
+            let mut selected_todo_clone = selected_todo;
+            let mut is_editing_clone = is_editing;
+            let mut error_clone = error;
 
             spawn(async move {
                 match {
@@ -104,11 +104,11 @@ pub fn TodosTab() -> Element {
     };
 
     let handle_delete = move |id: i32| {
-        let mut todos_clone = todos.clone();
-        let mut selected_todo_clone = selected_todo.clone();
-        let mut form_clone = form.clone();
-        let mut is_editing_clone = is_editing.clone();
-        let mut error_clone = error.clone();
+        let mut todos_clone = todos;
+        let mut selected_todo_clone = selected_todo;
+        let mut form_clone = form;
+        let mut is_editing_clone = is_editing;
+        let mut error_clone = error;
 
         spawn(async move {
             match {
@@ -122,7 +122,7 @@ pub fn TodosTab() -> Element {
             {
                 | Ok(_) => {
                     todos_clone.write().retain(|todo| todo.id != id);
-                    if selected_todo_clone().map_or(false, |t| t.id == id) {
+                    if selected_todo_clone().is_some_and(|t| t.id == id) {
                         selected_todo_clone.set(None);
                         form_clone.set(TodoForm::default());
                         is_editing_clone.set(false);
@@ -152,8 +152,8 @@ pub fn TodosTab() -> Element {
     };
 
     let toggle_completed = move |todo: Todo| {
-        let mut todos_clone = todos.clone();
-        let mut error_clone = error.clone();
+        let mut todos_clone = todos;
+        let mut error_clone = error;
 
         spawn(async move {
             let updated_form = TodoForm {

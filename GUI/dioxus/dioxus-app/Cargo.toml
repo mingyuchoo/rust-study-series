@@ -5,22 +5,22 @@
   version = "0.1.0"
 
 [dependencies]
-rusqlite = { version = "0.30", optional = true }
-  async-trait = "0.1.74"
-  dioxus      = {version = "0.6.0", features = ["router", "fullstack"]}
+  async-trait = "0.1.89"
+  dioxus      = {features = ["router", "fullstack"], version = "0.6.3"}
   dirs        = "5.0"
   futures     = "0.3"
-  reqwest     = {version = "0.11", features = ["json"]}
-  serde       = {version = "1.0", features = ["derive"]}
+  reqwest     = {features = ["json"], version = "0.11"}
+  rusqlite    = {optional = true, version = "0.30"}
+  serde       = {features = ["derive"], version = "1.0"}
   serde_json  = "1.0"
 
 
 [features]
-  default = ["web"]
-  desktop = ["dioxus/desktop", "native-db"]
-  mobile  = ["dioxus/mobile", "native-db"]
-  web     = ["dioxus/web"]
+  default   = ["web"]
+  desktop   = ["dioxus/desktop", "native-db"]
+  mobile    = ["dioxus/mobile", "native-db"]
   native-db = ["rusqlite"]
+  web       = ["dioxus/web"]
 
 [profile]
 

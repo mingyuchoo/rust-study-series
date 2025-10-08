@@ -69,11 +69,11 @@ pub fn PostsTab() -> Element {
     let handle_update = move |_| {
         if let Some(post) = selected_post() {
             let form_data = form();
-            let mut form_clone = form.clone();
-            let mut posts_clone = posts.clone();
-            let mut selected_post_clone = selected_post.clone();
-            let mut is_editing_clone = is_editing.clone();
-            let mut error_clone = error.clone();
+            let mut form_clone = form;
+            let mut posts_clone = posts;
+            let mut selected_post_clone = selected_post;
+            let mut is_editing_clone = is_editing;
+            let mut error_clone = error;
 
             spawn(async move {
                 match {
@@ -104,11 +104,11 @@ pub fn PostsTab() -> Element {
     };
 
     let handle_delete = move |id: i32| {
-        let mut posts_clone = posts.clone();
-        let mut selected_post_clone = selected_post.clone();
-        let mut form_clone = form.clone();
-        let mut is_editing_clone = is_editing.clone();
-        let mut error_clone = error.clone();
+        let mut posts_clone = posts;
+        let mut selected_post_clone = selected_post;
+        let mut form_clone = form;
+        let mut is_editing_clone = is_editing;
+        let mut error_clone = error;
 
         spawn(async move {
             match {
@@ -122,7 +122,7 @@ pub fn PostsTab() -> Element {
             {
                 | Ok(_) => {
                     posts_clone.write().retain(|post| post.id != id);
-                    if selected_post_clone().map_or(false, |p| p.id == id) {
+                    if selected_post_clone().is_some_and(|p| p.id == id) {
                         selected_post_clone.set(None);
                         form_clone.set(PostForm::default());
                         is_editing_clone.set(false);

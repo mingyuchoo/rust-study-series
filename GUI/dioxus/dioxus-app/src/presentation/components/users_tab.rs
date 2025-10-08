@@ -39,9 +39,9 @@ pub fn UsersTab() -> Element {
 
     let handle_create = move |_| {
         let form_data = form();
-        let mut form_clone = form.clone();
-        let mut users_clone = users.clone();
-        let mut error_clone = error.clone();
+        let mut form_clone = form;
+        let mut users_clone = users;
+        let mut error_clone = error;
 
         spawn(async move {
             match {

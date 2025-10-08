@@ -8,8 +8,8 @@ use std::path::Path;
 #[component]
 pub fn DocsTab() -> Element {
     // State for the document form
-    let mut title = use_signal(|| String::new());
-    let mut contents = use_signal(|| String::new());
+    let mut title = use_signal(String::new);
+    let mut contents = use_signal(String::new);
 
     // State for the document list
     let mut documents = use_signal(Vec::new);
@@ -58,7 +58,7 @@ pub fn DocsTab() -> Element {
     use_effect(move || {
         load_documents();
         // Return empty cleanup function
-        (|| {})()
+        {}
     });
 
     // Handle form submission
@@ -114,7 +114,7 @@ pub fn DocsTab() -> Element {
     };
 
     // Handle document deletion
-    let handle_delete = move |id: String| {
+    let mut handle_delete = move |id: String| {
         let db_path_str = db_path();
         if let Ok(repo) = DocDbRepository::new(&db_path_str) {
             let doc_service = DocService::new(repo);
@@ -130,7 +130,7 @@ pub fn DocsTab() -> Element {
     };
 
     // Handle document editing
-    let handle_edit = move |id: String| {
+    let mut handle_edit = move |id: String| {
         let db_path_str = db_path();
         if let Ok(repo) = DocDbRepository::new(&db_path_str) {
             let doc_service = DocService::new(repo);
@@ -252,11 +252,11 @@ pub fn DocsTab() -> Element {
                                     td {
                                         div {
                                             button {
-                                                onclick: move |_| handle_edit.clone()(doc.id.to_string()),
+                                                onclick: move |_| handle_edit(doc.id.to_string()),
                                                 "Edit"
                                             }
                                             button {
-                                                onclick: move |_| handle_delete.clone()(doc.id.to_string()),
+                                                onclick: move |_| handle_delete(doc.id.to_string()),
                                                 "Delete"
                                             }
                                         }
