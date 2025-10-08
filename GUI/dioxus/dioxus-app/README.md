@@ -72,6 +72,20 @@ Install Visual Studio Build Tools or Visual Studio Community with C++ developmen
    cd dioxus-app
    ```
 
+## Key Dependencies
+
+Based on `Cargo.toml`, this project uses:
+
+- **Dioxus 0.6.3**: Main framework with router and fullstack features
+- **Reqwest 0.12**: HTTP client for API integration with JSON support
+- **Rusqlite 0.37**: SQLite database (optional, enabled with `native-db` feature)
+- **Serde 1.0**: Serialization/deserialization with derive macros
+- **Async-trait 0.1.89**: Async trait support
+- **Dirs 6.0**: Cross-platform directory paths
+- **Futures 0.3**: Async utilities
+
+**Author**: mingyuchoo <mingyuchoo@gmail.com> (Rust Edition 2024)
+
 ## Project Structure
 
 ```
@@ -81,9 +95,21 @@ dioxus-app/
 ├── assets/                  # Static assets (CSS, images, etc.)
 ├── src/
 │   ├── application/         # Application layer (services)
+│   │   ├── doc_application_service.rs
+│   │   ├── post_application_service.rs
+│   │   ├── todo_application_service.rs
+│   │   ├── user_application_service.rs
+│   │   └── mod.rs
 │   ├── domain/             # Domain layer (entities, repositories)
 │   ├── infrastructure/     # Infrastructure layer (API, DB)
 │   ├── presentation/       # Presentation layer (UI components)
+│   │   ├── docs.rs
+│   │   ├── home.rs
+│   │   ├── navbar.rs
+│   │   ├── posts.rs
+│   │   ├── todos.rs
+│   │   ├── users.rs
+│   │   └── mod.rs
 │   └── main.rs            # Application entry point
 ├── Cargo.toml             # Dependencies and features
 ├── Dioxus.toml           # Dioxus configuration
@@ -94,14 +120,16 @@ dioxus-app/
 
 ### Running the Application
 
-**Desktop (recommended for development):**
+**Web (WASM) - Default:**
 ```bash
-dx serve --platform desktop
+dx serve
+# or explicitly
+dx serve --platform web
 ```
 
-**Web (WASM):**
+**Desktop (recommended for full features):**
 ```bash
-dx serve --platform web
+dx serve --platform desktop
 ```
 
 **Mobile (requires additional setup):**
@@ -125,10 +153,10 @@ dx build --release --platform web
 
 The application supports different feature flags in `Cargo.toml`:
 
-- `desktop`: Desktop application with native database
-- `web`: Web application (WASM)
-- `mobile`: Mobile application
-- `native-db`: Enables SQLite database support
+- `desktop`: Desktop application with native database (includes `native-db`)
+- `web`: Web application (WASM) - **default feature**
+- `mobile`: Mobile application (includes `native-db`)
+- `native-db`: Enables SQLite database support via `rusqlite`
 
 ### Development Commands
 
@@ -136,6 +164,13 @@ The application supports different feature flags in `Cargo.toml`:
 - **Toggle auto-rebuild**: Press `p`
 - **Verbose logging**: Press `v`
 - **Exit**: Press `Ctrl+C`
+
+### Web Configuration
+
+The `Dioxus.toml` file configures web-specific settings:
+- **Port**: 8080 (default development server port)
+- **Output directory**: `dist/` for web builds
+- **Public URL**: `/` (can be changed for deployment to subdirectories)
 
 ## Application Features
 
@@ -158,7 +193,7 @@ The application supports different feature flags in `Cargo.toml`:
 ## Troubleshooting
 
 ### Linker Issues
-If you encounter linker errors, the project includes a `.cargo/config.toml` file that configures the linker to use `gcc` with `bfd` linker for compatibility.
+If you encounter linker errors on Linux, the project includes a `.cargo/config.toml` file that configures the linker to use `gcc` with `bfd` linker for x86_64-unknown-linux-gnu targets for compatibility.
 
 ### Missing Dependencies
 Ensure all system dependencies are installed for your platform. The error messages will typically indicate which libraries are missing.
