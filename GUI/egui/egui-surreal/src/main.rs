@@ -133,7 +133,7 @@ impl Database {
                     password: "root",
                 })
                 .await?;
-                Ok(format!("Back to root!"))
+                Ok("Back to root!".to_string())
             },
             | Command::Session => Ok(self
                 .query("RETURN <string>$session")

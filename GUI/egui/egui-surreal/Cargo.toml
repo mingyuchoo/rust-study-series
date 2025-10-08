@@ -4,12 +4,12 @@
   version = "0.1.0"
 
 [dependencies]
-  anyhow     = "1.0.93"
-  eframe     = "0.29.1"
-  egui       = "0.29.1"
+  anyhow     = "1.0.100"
+  eframe     = "0.32.3"
+  egui       = "0.32.3"
   faker_rand = "0.1.1"
   rand       = "0.8.5"
-  serde      = {version = "1.0.214", features = ["derive"]}
-  serde_json = "1.0.132"
-  surrealdb  = "2.0.4"
-  tokio      = {version = "1.44.2", features = ["full"]}
+  serde      = {version = "1.0.228", features = ["derive"]}
+  serde_json = "1.0.145"
+  surrealdb  = "2.3.10"
+  tokio      = {version = "1.47.1", features = ["full"]}
