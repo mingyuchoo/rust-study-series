@@ -1,3 +1,13 @@
+# Disable workspace mode to avoid task resolution issues
+[config]
+  skip_core_tasks     = false
+  skip_crate_env_info = false
+  skip_git_env_info   = false
+  skip_rust_env_info  = false
+
+[env]
+  CARGO_MAKE_WORKSPACE_SKIP_MEMBERS = "true"
+
 [tasks.clean]
   args    = ["clean"]
   command = "cargo"
@@ -33,12 +43,14 @@
 
 [tasks.watch-run]
   # `cargo install cargo-watch`로 설치
-  args          = ["watch", "-x", "tauri", "dev"]
+  args          = ["watch", "-x", "tauri dev"]
   command       = "cargo"
   dependencies  = ["format"]
   install_crate = "cargo-watch"
 
 [tasks.run]
-  args         = ["tauri", "dev"]
-  command      = "cargo"
-  dependencies = ["format"]
+  args          = ["tauri", "dev"]
+  command       = "cargo"
+  dependencies  = ["format"]
+  install_crate = "tauri-cli"
+  workspace     = false
