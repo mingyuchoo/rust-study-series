@@ -1,11 +1,9 @@
 use eframe::egui;
-use {egui_extras, env_logger};
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default()
-            .with_inner_size([320.0, 240.0]),
+        viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
         ..Default::default()
     };
     eframe::run_native(
@@ -22,14 +20,14 @@ fn main() -> eframe::Result {
 
 struct MyApp {
     name: String,
-    age:  u32,
+    age: u32,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         Self {
             name: "Choo".to_owned(),
-            age:  42,
+            age: 42,
         }
     }
 }
@@ -40,8 +38,7 @@ impl eframe::App for MyApp {
             ui.heading("My egui Application");
             ui.horizontal(|ui| {
                 let name_label = ui.label("Your name: ");
-                ui.text_edit_singleline(&mut self.name)
-                    .labelled_by(name_label.id);
+                ui.text_edit_singleline(&mut self.name).labelled_by(name_label.id);
             });
             ui.add(egui::Slider::new(&mut self.age, 0 ..= 120).text("age"));
             if ui.button("Increment").clicked() {
