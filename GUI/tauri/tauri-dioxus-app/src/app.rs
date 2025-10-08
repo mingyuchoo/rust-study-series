@@ -1,84 +1,199 @@
 #![allow(non_snake_case)]
 
+use crate::components::{ContactForm, ContactFormData, ContactList};
+use crate::services::ContactService;
+use crate::types::{Contact, CreateContactRequest, UpdateContactRequest};
 use dioxus::prelude::*;
-use serde::{Deserialize, Serialize};
-use wasm_bindgen::prelude::*;
 
 static CSS: Asset = asset!("/assets/styles.css");
-static TAURI_ICON: Asset = asset!("/assets/tauri.svg");
-static DIOXUS_ICON: Asset = asset!("/assets/dioxus.png");
 
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
-    async fn invoke(cmd: &str, args: JsValue) -> JsValue;
-}
-
-#[derive(Serialize, Deserialize)]
-struct GreetArgs<'a> {
-    name: &'a str,
+#[derive(Debug, Clone, PartialEq)]
+enum AppView {
+    List,
+    Add,
+    Edit(Contact),
 }
 
 pub fn App() -> Element {
-    let mut name = use_signal(|| String::new());
-    let mut greet_msg = use_signal(|| String::new());
+    let mut contacts = use_signal(Vec::<Contact>::new);
+    let mut current_view = use_signal(|| AppView::List);
+    let mut search_query = use_signal(String::new);
+    let mut loading = use_signal(|| false);
+    let mut error_message = use_signal(|| None::<String>);
 
-    let greet = move |_: FormEvent| async move {
-        if name.read().is_empty() {
-            return;
+    // Load contacts on app start
+    use_effect(move || {
+        spawn(async move {
+            loading.set(true);
+            match ContactService::list_contacts().await {
+                | Ok(contact_list) => {
+                    contacts.set(contact_list);
+                    error_message.set(None);
+                },
+                | Err(e) => {
+                    error_message.set(Some(format!("연락처를 불러오는데 실패했습니다: {}", e)));
+                },
+            }
+            loading.set(false);
+        });
+    });
+
+    let handle_search = move |_: FormEvent| {
+        let query = search_query.read().clone();
+        spawn(async move {
+            loading.set(true);
+            let result = if query.trim().is_empty() {
+                ContactService::list_contacts().await
+            } else {
+                ContactService::search_contacts(query).await
+            };
+
+            match result {
+                | Ok(contact_list) => {
+                    contacts.set(contact_list);
+                    error_message.set(None);
+                },
+                | Err(e) => {
+                    error_message.set(Some(format!("검색에 실패했습니다: {}", e)));
+                },
+            }
+            loading.set(false);
+        });
+    };
+
+    let handle_add_contact = move |form_data: ContactFormData| {
+        spawn(async move {
+            loading.set(true);
+            let request = CreateContactRequest {
+                name: form_data.name,
+                email: if form_data.email.is_empty() { None } else { Some(form_data.email) },
+                phone: if form_data.phone.is_empty() { None } else { Some(form_data.phone) },
+                address: if form_data.address.is_empty() { None } else { Some(form_data.address) },
+            };
+
+            match ContactService::create_contact(request).await {
+                | Ok(_) => {
+                    current_view.set(AppView::List);
+                    // Refresh contacts list
+                    if let Ok(contact_list) = ContactService::list_contacts().await {
+                        contacts.set(contact_list);
+                    }
+                    error_message.set(None);
+                },
+                | Err(e) => {
+                    error_message.set(Some(format!("연락처 추가에 실패했습니다: {}", e)));
+                },
+            }
+            loading.set(false);
+        });
+    };
+
+    let handle_edit_contact = move |form_data: ContactFormData| {
+        if let AppView::Edit(contact) = current_view.read().clone() {
+            spawn(async move {
+                loading.set(true);
+                let request = UpdateContactRequest {
+                    id: contact.id,
+                    name: Some(form_data.name),
+                    email: Some(form_data.email),
+                    phone: Some(form_data.phone),
+                    address: Some(form_data.address),
+                };
+
+                match ContactService::update_contact(request).await {
+                    | Ok(_) => {
+                        current_view.set(AppView::List);
+                        // Refresh contacts list
+                        if let Ok(contact_list) = ContactService::list_contacts().await {
+                            contacts.set(contact_list);
+                        }
+                        error_message.set(None);
+                    },
+                    | Err(e) => {
+                        error_message.set(Some(format!("연락처 수정에 실패했습니다: {}", e)));
+                    },
+                }
+                loading.set(false);
+            });
         }
+    };
 
-        let name = name.read();
-        let args = serde_wasm_bindgen::to_value(&GreetArgs {
-            name: &*name,
-        })
-        .unwrap();
-        // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-        let new_msg = invoke("greet", args).await.as_string().unwrap();
-        greet_msg.set(new_msg);
+    let handle_delete_contact = move |id: String| {
+        spawn(async move {
+            loading.set(true);
+            match ContactService::delete_contact(id).await {
+                | Ok(_) => {
+                    // Refresh contacts list
+                    if let Ok(contact_list) = ContactService::list_contacts().await {
+                        contacts.set(contact_list);
+                    }
+                    error_message.set(None);
+                },
+                | Err(e) => {
+                    error_message.set(Some(format!("연락처 삭제에 실패했습니다: {}", e)));
+                },
+            }
+            loading.set(false);
+        });
     };
 
     rsx! {
         link { rel: "stylesheet", href: CSS }
-        main {
-            class: "container",
-            h1 { "Welcome to Tauri + Dioxus" }
+        main { class: "app",
+            header { class: "app-header",
+                h1 { "주소록" }
 
-            div {
-                class: "row",
-                a {
-                    href: "https://tauri.app",
-                    target: "_blank",
-                    img {
-                        src: TAURI_ICON,
-                        class: "logo tauri",
-                         alt: "Tauri logo"
-                    }
-                }
-                a {
-                    href: "https://dioxuslabs.com/",
-                    target: "_blank",
-                    img {
-                        src: DIOXUS_ICON,
-                        class: "logo dioxus",
-                        alt: "Dioxus logo"
+                if let AppView::List = current_view.read().clone() {
+                    div { class: "header-actions",
+                        form { class: "search-form", onsubmit: handle_search,
+                            input {
+                                r#type: "text",
+                                placeholder: "연락처 검색...",
+                                value: "{search_query}",
+                                oninput: move |evt| search_query.set(evt.value())
+                            }
+                            button { r#type: "submit", "검색" }
+                        }
+                        button {
+                            class: "btn btn-primary",
+                            onclick: move |_| current_view.set(AppView::Add),
+                            "새 연락처"
+                        }
                     }
                 }
             }
-            p { "Click on the Tauri and Dioxus logos to learn more." }
 
-            form {
-                class: "row",
-                onsubmit: greet,
-                input {
-                    id: "greet-input",
-                    placeholder: "Enter a name...",
-                    value: "{name}",
-                    oninput: move |event| name.set(event.value())
-                }
-                button { r#type: "submit", "Greet" }
+            if *loading.read() {
+                div { class: "loading", "로딩 중..." }
             }
-            p { "{greet_msg}" }
+
+            if let Some(error) = error_message.read().clone() {
+                div { class: "error-message", "{error}" }
+            }
+
+            match current_view.read().clone() {
+                AppView::List => rsx! {
+                    ContactList {
+                        contacts: contacts.read().clone(),
+                        on_edit: move |contact| current_view.set(AppView::Edit(contact)),
+                        on_delete: handle_delete_contact
+                    }
+                },
+                AppView::Add => rsx! {
+                    ContactForm {
+                        contact: None,
+                        on_submit: handle_add_contact,
+                        on_cancel: move |_| current_view.set(AppView::List)
+                    }
+                },
+                AppView::Edit(contact) => rsx! {
+                    ContactForm {
+                        contact: Some(contact),
+                        on_submit: handle_edit_contact,
+                        on_cancel: move |_| current_view.set(AppView::List)
+                    }
+                }
+            }
         }
     }
 }
