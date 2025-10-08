@@ -1,7 +1,7 @@
 [package]
   authors = ["mingyuchoo <mingyuchoo@gmail.com>"]
   edition = "2024"
-  name    = "my-dioxus-app"
+  name    = "dioxus-app"
   version = "0.1.0"
 
 [dependencies]

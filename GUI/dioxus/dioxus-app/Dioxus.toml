@@ -5,7 +5,7 @@
 # =====================
 [web.app]
   # HTML title tag content
-  title = "my-dioxus-app"
+  title = "dioxus-app"
 
 [web.resource]
   # Additional CSS style files

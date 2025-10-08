@@ -21,8 +21,8 @@ $ cargo binstall dioxus-cli
 ## Create a new project
 
 ```bash
-$ dx new my-dioxus-app
-$ cd my-dioxus-app
+$ dx new dioxus-app
+$ cd dioxus-app
 ```
 
 Your new bare-bones project includes minimal organization with a single `main.rs` file and a few assets.

@@ -24,7 +24,7 @@ pub fn DocsTab() -> Element {
         | Some(mut path) => {
             path.push(".local");
             path.push("share");
-            path.push("my-dioxus-app");
+            path.push("dioxus-app");
             std::fs::create_dir_all(&path).unwrap_or_default();
             path.push("docs.db");
             path.to_str().unwrap_or("docs.db").to_string()
