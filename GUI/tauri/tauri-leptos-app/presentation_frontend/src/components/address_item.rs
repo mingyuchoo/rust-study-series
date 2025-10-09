@@ -85,7 +85,6 @@ where
                 <h3>{address.name.clone()}</h3>
                 <p><strong>"전화:"</strong> {address.phone.clone()}</p>
                 <p><strong>"이메일:"</strong> {address.email.clone()}</p>
-                <p><strong>"주소:"</strong> {format!("{}, {}, {} {}", address.street, address.city, address.postal_code, address.country)}</p>
             </div>
             <div class="address-actions">
                 <button 

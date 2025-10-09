@@ -17,10 +17,6 @@ where
     let (name, set_name) = signal(String::new());
     let (phone, set_phone) = signal(String::new());
     let (email, set_email) = signal(String::new());
-    let (street, set_street) = signal(String::new());
-    let (city, set_city) = signal(String::new());
-    let (postal_code, set_postal_code) = signal(String::new());
-    let (country, set_country) = signal(String::new());
     let (is_saving, set_is_saving) = signal(false);
 
     let submit_form = move |ev: leptos::ev::SubmitEvent| {
@@ -36,10 +32,6 @@ where
             name: name.get(),
             phone: phone.get(),
             email: email.get(),
-            street: street.get(),
-            city: city.get(),
-            postal_code: postal_code.get(),
-            country: country.get(),
         };
 
         spawn_local(async move {
@@ -64,10 +56,6 @@ where
                             set_name.set(String::new());
                             set_phone.set(String::new());
                             set_email.set(String::new());
-                            set_street.set(String::new());
-                            set_city.set(String::new());
-                            set_postal_code.set(String::new());
-                            set_country.set(String::new());
                             on_save();
                             set_is_saving.set(false);
                             return;
@@ -84,10 +72,6 @@ where
                             set_name.set(String::new());
                             set_phone.set(String::new());
                             set_email.set(String::new());
-                            set_street.set(String::new());
-                            set_city.set(String::new());
-                            set_postal_code.set(String::new());
-                            set_country.set(String::new());
                             on_save();
                         }
                         Ok(Err(err)) => {
@@ -136,46 +120,6 @@ where
                         type="email"
                         prop:value=email
                         on:input=move |ev| set_email.set(event_target_value(&ev))
-                        required
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label>"주소:"</label>
-                    <input 
-                        type="text"
-                        prop:value=street
-                        on:input=move |ev| set_street.set(event_target_value(&ev))
-                        required
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label>"도시:"</label>
-                    <input 
-                        type="text"
-                        prop:value=city
-                        on:input=move |ev| set_city.set(event_target_value(&ev))
-                        required
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label>"우편번호:"</label>
-                    <input 
-                        type="text"
-                        prop:value=postal_code
-                        on:input=move |ev| set_postal_code.set(event_target_value(&ev))
-                        required
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label>"국가:"</label>
-                    <input 
-                        type="text"
-                        prop:value=country
-                        on:input=move |ev| set_country.set(event_target_value(&ev))
                         required
                     />
                 </div>

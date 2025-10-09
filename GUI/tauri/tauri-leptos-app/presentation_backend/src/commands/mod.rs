@@ -13,10 +13,6 @@ pub async fn create_address(
             request.name,
             request.phone,
             request.email,
-            request.street,
-            request.city,
-            request.postal_code,
-            request.country,
         )
         .await
         .map_err(|e| e.to_string())?;
@@ -60,10 +56,6 @@ pub async fn update_address(
         name: request.name,
         phone: request.phone,
         email: request.email,
-        street: request.street,
-        city: request.city,
-        postal_code: request.postal_code,
-        country: request.country,
     };
 
     let updated_address = state

@@ -7,10 +7,6 @@ pub struct Address {
     pub name: String,
     pub phone: String,
     pub email: String,
-    pub street: String,
-    pub city: String,
-    pub postal_code: String,
-    pub country: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -18,10 +14,6 @@ pub struct CreateAddressRequest {
     pub name: String,
     pub phone: String,
     pub email: String,
-    pub street: String,
-    pub city: String,
-    pub postal_code: String,
-    pub country: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -30,10 +22,6 @@ pub struct UpdateAddressRequest {
     pub name: String,
     pub phone: String,
     pub email: String,
-    pub street: String,
-    pub city: String,
-    pub postal_code: String,
-    pub country: String,
 }
 
 // Type alias for backend compatibility

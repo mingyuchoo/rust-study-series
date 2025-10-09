@@ -7,10 +7,6 @@ pub struct Address {
     pub name: String,
     pub phone: String,
     pub email: String,
-    pub street: String,
-    pub city: String,
-    pub postal_code: String,
-    pub country: String,
 }
 
 impl Address {
@@ -18,20 +14,12 @@ impl Address {
         name: String,
         phone: String,
         email: String,
-        street: String,
-        city: String,
-        postal_code: String,
-        country: String,
     ) -> Self {
         Self {
             id: Uuid::new_v4(),
             name,
             phone,
             email,
-            street,
-            city,
-            postal_code,
-            country,
         }
     }
 }

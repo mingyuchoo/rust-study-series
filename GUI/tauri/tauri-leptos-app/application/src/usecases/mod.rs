@@ -17,12 +17,8 @@ impl AddressService {
         name: String,
         phone: String,
         email: String,
-        street: String,
-        city: String,
-        postal_code: String,
-        country: String,
     ) -> Result<Address> {
-        let address = Address::new(name, phone, email, street, city, postal_code, country);
+        let address = Address::new(name, phone, email);
         self.repository.create(address).await
     }
 

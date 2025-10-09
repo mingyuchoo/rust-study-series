@@ -19,11 +19,7 @@ impl SqliteAddressRepository {
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 phone TEXT NOT NULL,
-                email TEXT NOT NULL,
-                street TEXT NOT NULL,
-                city TEXT NOT NULL,
-                postal_code TEXT NOT NULL,
-                country TEXT NOT NULL
+                email TEXT NOT NULL
             )
             "#,
         )
@@ -38,18 +34,14 @@ impl AddressRepository for SqliteAddressRepository {
     async fn create(&self, address: Address) -> domain::repositories::Result<Address> {
         sqlx::query(
             r#"
-            INSERT INTO addresses (id, name, phone, email, street, city, postal_code, country)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO addresses (id, name, phone, email)
+            VALUES (?, ?, ?, ?)
             "#,
         )
         .bind(address.id.to_string())
         .bind(&address.name)
         .bind(&address.phone)
         .bind(&address.email)
-        .bind(&address.street)
-        .bind(&address.city)
-        .bind(&address.postal_code)
-        .bind(&address.country)
         .execute(&self.pool)
         .await?;
 
@@ -69,10 +61,6 @@ impl AddressRepository for SqliteAddressRepository {
                     name: row.get("name"),
                     phone: row.get("phone"),
                     email: row.get("email"),
-                    street: row.get("street"),
-                    city: row.get("city"),
-                    postal_code: row.get("postal_code"),
-                    country: row.get("country"),
                 };
                 Ok(Some(address))
             }
@@ -93,10 +81,6 @@ impl AddressRepository for SqliteAddressRepository {
                     name: row.get("name"),
                     phone: row.get("phone"),
                     email: row.get("email"),
-                    street: row.get("street"),
-                    city: row.get("city"),
-                    postal_code: row.get("postal_code"),
-                    country: row.get("country"),
                 })
             })
             .collect::<Result<Vec<_>, Box<dyn std::error::Error + Send + Sync>>>()?;
@@ -108,17 +92,13 @@ impl AddressRepository for SqliteAddressRepository {
         sqlx::query(
             r#"
             UPDATE addresses 
-            SET name = ?, phone = ?, email = ?, street = ?, city = ?, postal_code = ?, country = ?
+            SET name = ?, phone = ?, email = ?
             WHERE id = ?
             "#,
         )
         .bind(&address.name)
         .bind(&address.phone)
         .bind(&address.email)
-        .bind(&address.street)
-        .bind(&address.city)
-        .bind(&address.postal_code)
-        .bind(&address.country)
         .bind(address.id.to_string())
         .execute(&self.pool)
         .await?;
