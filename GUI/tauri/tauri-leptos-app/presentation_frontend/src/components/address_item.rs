@@ -39,9 +39,31 @@ where
             let args = serde_wasm_bindgen::to_value(&args).unwrap();
             let result = invoke("delete_address", args).await;
             
+            // Try direct deserialization first (Tauri unwraps Result automatically)
+            match serde_wasm_bindgen::from_value::<bool>(result.clone()) {
+                Ok(true) => {
+                    // Reset before triggering deletion callback to avoid setting a disposed signal
+                    set_is_deleting.set(false);
+                    on_delete(id);
+                    return;
+                }
+                Ok(false) => {
+                    web_sys::console::error_1(&"Failed to delete address".into());
+                    set_is_deleting.set(false);
+                    return;
+                }
+                Err(err) => {
+                    web_sys::console::log_1(&format!("Direct bool deserialization failed: {:?}", err).into());
+                }
+            }
+            
+            // Fallback to Result wrapper
             match serde_wasm_bindgen::from_value::<Result<bool, String>>(result) {
                 Ok(Ok(true)) => {
+                    // Reset before triggering deletion callback to avoid setting a disposed signal
+                    set_is_deleting.set(false);
                     on_delete(id);
+                    return;
                 }
                 Ok(Ok(false)) => {
                     web_sys::console::error_1(&"Failed to delete address".into());
