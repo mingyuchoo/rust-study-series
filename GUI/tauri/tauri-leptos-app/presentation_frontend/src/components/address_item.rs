@@ -115,20 +115,27 @@ where
 
         spawn_local(async move {
             #[derive(serde::Serialize)]
+            struct UpdateAddressArgs {
+                request: UpdateAddressRequest,
+            }
+
+            #[derive(serde::Serialize)]
             struct UpdateAddressRequest {
-                id: String,
+                id: Uuid,
                 name: String,
                 phone: String,
                 email: String,
             }
 
             let request = UpdateAddressRequest {
-                id: id.to_string(),
+                id,
                 name: name.clone(),
                 phone: phone.clone(),
                 email: email.clone(),
             };
-            let args = serde_wasm_bindgen::to_value(&request).unwrap();
+            
+            let args = UpdateAddressArgs { request };
+            let args = serde_wasm_bindgen::to_value(&args).unwrap();
             let result = invoke("update_address", args).await;
 
             // Try direct deserialization as AddressResponse first
