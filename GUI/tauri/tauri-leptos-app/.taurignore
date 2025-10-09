@@ -1,3 +1,6 @@
-/src
+/domain
+/application
+/infrastructure
+/presentation-frontend
 /public
-/Cargo.toml
+/backup

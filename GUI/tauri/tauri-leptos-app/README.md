@@ -1,12 +1,46 @@
-# Tauri + Leptos
+# Tauri + Leptos with Clean Architecture
 
-This template helps you get started developing with Tauri and Leptos.
+This project demonstrates a Clean Architecture implementation using Tauri and Leptos, with each layer separated into its own crate to enforce dependency rules.
 
-## Project Structure
+## Clean Architecture Structure
 
-- **Frontend**: Leptos (Rust-based web framework) compiled to WebAssembly
-- **Backend**: Tauri (Rust-based desktop app framework)
-- **Build Tool**: Trunk for frontend bundling
+The project follows Clean Architecture principles with strict dependency rules enforced through Cargo workspace separation:
+
+```
+project-root/
+├── Cargo.toml              # Workspace configuration
+├── domain/                 # 1. Domain Layer (innermost - no dependencies)
+│   ├── src/
+│   │   ├── entities.rs     # Core business entities
+│   │   ├── errors.rs       # Domain errors
+│   │   └── repositories.rs # Repository interfaces (traits)
+│   └── Cargo.toml
+├── application/            # 2. Application Layer (use cases)
+│   ├── src/usecases/       # Business logic implementation
+│   └── Cargo.toml          # Depends only on `domain`
+├── infrastructure/         # 3. Infrastructure Layer (external concerns)
+│   ├── src/database/       # Database implementations
+│   └── Cargo.toml          # Depends on `domain` and `application`
+├── presentation-frontend/  # 4. Frontend Presentation Layer
+│   ├── src/                # Leptos UI components and API clients
+│   └── Cargo.toml          # Depends on `domain` only
+└── presentation-backend/   # 4. Backend Presentation Layer
+    ├── src/                # Tauri command handlers
+    └── Cargo.toml          # Depends on all layers
+```
+
+### Dependency Rules
+
+- **Domain**: No dependencies (pure business logic)
+- **Application**: Depends only on Domain
+- **Infrastructure**: Depends on Domain and Application
+- **Presentation**: Can depend on Domain, Application, and Infrastructure as needed
+
+This structure ensures that:
+- Business logic is independent of frameworks and external concerns
+- Dependencies point inward (toward the domain)
+- Each layer can be tested in isolation
+- Changes in outer layers don't affect inner layers
 
 ## Prerequisites
 
@@ -23,6 +57,7 @@ cargo install trunk --locked
 Start the development server:
 
 ```shell
+cd presentation-backend
 cargo tauri dev
 ```
 
@@ -30,11 +65,14 @@ This will:
 1. Run `trunk serve` to serve the Leptos frontend on http://localhost:1420
 2. Launch the Tauri desktop application
 
+The frontend code is in `presentation-frontend/` and the backend code is in `presentation-backend/`.
+
 ## Build
 
 Build for production:
 
 ```shell
+cd presentation-backend
 cargo tauri build
 ```
 
