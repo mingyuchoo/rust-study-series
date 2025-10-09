@@ -5,6 +5,6 @@ members = [
     "infrastructure",
     "presentation_backend",
     "presentation_frontend",
-    "src-tauri"
+    "tauri-entrypoint"
 ]
 resolver = "2"
