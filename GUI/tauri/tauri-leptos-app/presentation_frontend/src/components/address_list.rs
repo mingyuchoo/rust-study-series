@@ -86,6 +86,10 @@ pub fn AddressList(refresh_trigger: ReadSignal<i32>) -> impl IntoView {
         load_addresses();
     };
 
+    let on_edit = move |_updated_address: Address| {
+        load_addresses();
+    };
+
     view! {
         <div class="address-list">
             <h2>"주소 목록"</h2>
@@ -104,6 +108,7 @@ pub fn AddressList(refresh_trigger: ReadSignal<i32>) -> impl IntoView {
                                 <AddressItem
                                     address=address
                                     on_delete=on_delete
+                                    on_edit=on_edit
                                 />
                             }
                         }
