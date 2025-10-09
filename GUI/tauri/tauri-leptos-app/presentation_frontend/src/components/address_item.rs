@@ -133,7 +133,7 @@ where
                 phone: phone.clone(),
                 email: email.clone(),
             };
-            
+
             let args = UpdateAddressArgs { request };
             let args = serde_wasm_bindgen::to_value(&args).unwrap();
             let result = invoke("update_address", args).await;
