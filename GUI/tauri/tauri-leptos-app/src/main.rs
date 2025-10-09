@@ -1,6 +1,4 @@
 mod app;
-mod domain;
-mod services;
 
 use app::*;
 use leptos::prelude::*;

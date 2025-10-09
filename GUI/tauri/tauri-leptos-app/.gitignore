@@ -1,6 +1,3 @@
 /dist/
 /target/
 /Cargo.lock
-
-# IDE
-.vscode/
