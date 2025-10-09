@@ -1,4 +1,4 @@
-use crate::models::Address;
+use crate::models::{Address, UpdateAddressRequest};
 use leptos::prelude::*;
 use uuid::Uuid;
 use wasm_bindgen::prelude::*;
@@ -117,14 +117,6 @@ where
             #[derive(serde::Serialize)]
             struct UpdateAddressArgs {
                 request: UpdateAddressRequest,
-            }
-
-            #[derive(serde::Serialize)]
-            struct UpdateAddressRequest {
-                id: Uuid,
-                name: String,
-                phone: String,
-                email: String,
             }
 
             let request = UpdateAddressRequest {
