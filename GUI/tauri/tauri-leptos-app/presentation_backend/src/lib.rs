@@ -9,12 +9,14 @@ use std::sync::Arc;
 pub type AppState = Arc<AddressService>;
 
 pub async fn create_app_state() -> Result<AppState, Box<dyn std::error::Error>> {
-    // Use in-memory database for development
-    let db_url = "sqlite::memory:";
+    // Use file-based database for persistent storage
+    // Create database in current directory for simplicity
+    let db_path = "./addressbook.db";
+    let db_url = format!("sqlite:{}?mode=rwc", db_path);
     
     println!("Database URL: {}", db_url);
     
-    let pool = SqlitePool::connect(db_url).await?;
+    let pool = SqlitePool::connect(&db_url).await?;
     let repository = SqliteAddressRepository::new(pool);
     repository.init_database().await?;
     
