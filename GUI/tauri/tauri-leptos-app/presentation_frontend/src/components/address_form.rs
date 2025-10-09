@@ -43,10 +43,42 @@ where
         };
 
         spawn_local(async move {
-            match serde_wasm_bindgen::to_value(&request) {
+            // Create a wrapper struct for the Tauri command arguments
+            #[derive(serde::Serialize)]
+            struct CreateAddressArgs {
+                request: CreateAddressRequest,
+            }
+            
+            let args = CreateAddressArgs { request };
+            match serde_wasm_bindgen::to_value(&args) {
                 Ok(args) => {
                     let result = invoke("create_address", args).await;
-                    match serde_wasm_bindgen::from_value::<Result<crate::models::Address, String>>(result) {
+                    // Debug: log the raw result
+                    web_sys::console::log_1(&format!("Raw result: {:?}", result).into());
+                    
+                    // Try direct deserialization first
+                    match serde_wasm_bindgen::from_value::<crate::models::AddressResponse>(result.clone()) {
+                        Ok(_address) => {
+                            web_sys::console::log_1(&"Direct deserialization worked for create!".into());
+                            // Clear form
+                            set_name.set(String::new());
+                            set_phone.set(String::new());
+                            set_email.set(String::new());
+                            set_street.set(String::new());
+                            set_city.set(String::new());
+                            set_postal_code.set(String::new());
+                            set_country.set(String::new());
+                            on_save();
+                            set_is_saving.set(false);
+                            return;
+                        }
+                        Err(err) => {
+                            web_sys::console::log_1(&format!("Direct deserialization failed: {:?}", err).into());
+                        }
+                    }
+                    
+                    // Fallback to Result wrapper
+                    match serde_wasm_bindgen::from_value::<Result<crate::models::AddressResponse, String>>(result) {
                         Ok(Ok(_)) => {
                             // Clear form
                             set_name.set(String::new());

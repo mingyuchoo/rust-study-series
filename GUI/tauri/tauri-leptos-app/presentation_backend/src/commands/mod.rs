@@ -85,3 +85,21 @@ pub async fn delete_address(
         .await
         .map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn test_command() -> Result<String, String> {
+    Ok("Hello from Tauri!".to_string())
+}
+
+#[tauri::command]
+pub async fn get_simple_addresses(
+    state: State<'_, AppState>,
+) -> Result<Vec<String>, String> {
+    let addresses = state
+        .get_all_addresses()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Return just the names to test without UUID issues
+    Ok(addresses.into_iter().map(|addr| addr.name).collect())
+}

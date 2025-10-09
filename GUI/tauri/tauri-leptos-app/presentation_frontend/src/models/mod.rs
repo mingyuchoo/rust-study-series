@@ -35,3 +35,6 @@ pub struct UpdateAddressRequest {
     pub postal_code: String,
     pub country: String,
 }
+
+// Type alias for backend compatibility
+pub type AddressResponse = Address;

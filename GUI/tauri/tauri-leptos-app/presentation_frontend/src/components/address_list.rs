@@ -1,8 +1,8 @@
+use crate::components::address_item::AddressItem;
+use crate::models::Address;
 use leptos::prelude::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::models::Address;
-use crate::components::address_item::AddressItem;
 
 #[wasm_bindgen]
 extern "C" {
@@ -18,8 +18,50 @@ pub fn AddressList(refresh_trigger: ReadSignal<i32>) -> impl IntoView {
     let load_addresses = move || {
         set_loading.set(true);
         spawn_local(async move {
+            // First test the simple command
+            let test_result = invoke("test_command", JsValue::NULL).await;
+            web_sys::console::log_1(&format!("Test result: {:?}", test_result).into());
+
+            // Test simple addresses without UUIDs
+            let simple_result = invoke("get_simple_addresses", JsValue::NULL).await;
+            web_sys::console::log_1(&format!("Simple result: {:?}", simple_result).into());
+
             let result = invoke("get_all_addresses", JsValue::NULL).await;
-            match serde_wasm_bindgen::from_value::<Result<Vec<Address>, String>>(result) {
+            // Debug: log the raw result
+            web_sys::console::log_1(&format!("Raw result: {:?}", result).into());
+
+            // Try to deserialize as a generic value first
+            match js_sys::JSON::stringify(&result) {
+                Ok(json_str) => {
+                    web_sys::console::log_1(&format!("JSON result: {}", json_str).into());
+                }
+                Err(_) => {
+                    web_sys::console::log_1(&"Failed to stringify result".into());
+                }
+            }
+
+            // Try deserializing directly as Vec<AddressResponse> first
+            match serde_wasm_bindgen::from_value::<Vec<crate::models::AddressResponse>>(
+                result.clone(),
+            ) {
+                Ok(addr_list) => {
+                    web_sys::console::log_1(&"Direct deserialization worked!".into());
+                    set_addresses.set(addr_list);
+                    set_loading.set(false);
+                    return;
+                }
+                Err(err) => {
+                    web_sys::console::log_1(
+                        &format!("Direct deserialization failed: {:?}", err).into(),
+                    );
+                }
+            }
+
+            // Fallback to Result wrapper
+            match serde_wasm_bindgen::from_value::<
+                Result<Vec<crate::models::AddressResponse>, String>,
+            >(result)
+            {
                 Ok(Ok(addr_list)) => {
                     set_addresses.set(addr_list);
                 }
@@ -47,7 +89,7 @@ pub fn AddressList(refresh_trigger: ReadSignal<i32>) -> impl IntoView {
     view! {
         <div class="address-list">
             <h2>"주소 목록"</h2>
-            
+
             <Show when=move || loading.get()>
                 <div class="loading">"로딩 중..."</div>
             </Show>
@@ -59,14 +101,14 @@ pub fn AddressList(refresh_trigger: ReadSignal<i32>) -> impl IntoView {
                         key=|address| address.id
                         children=move |address| {
                             view! {
-                                <AddressItem 
-                                    address=address 
+                                <AddressItem
+                                    address=address
                                     on_delete=on_delete
                                 />
                             }
                         }
                     />
-                    
+
                     <Show when=move || addresses.get().is_empty()>
                         <div class="empty-state">
                             "등록된 주소가 없습니다."

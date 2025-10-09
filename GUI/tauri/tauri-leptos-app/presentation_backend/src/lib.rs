@@ -28,6 +28,8 @@ pub fn setup_tauri_app(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<ta
         commands::get_address,
         commands::get_all_addresses,
         commands::update_address,
-        commands::delete_address
+        commands::delete_address,
+        commands::test_command,
+        commands::get_simple_addresses
     ])
 }

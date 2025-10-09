@@ -29,7 +29,14 @@ where
         let id = address.id;
         
         spawn_local(async move {
-            let args = serde_wasm_bindgen::to_value(&id.to_string()).unwrap();
+            // Create a wrapper struct for the Tauri command arguments
+            #[derive(serde::Serialize)]
+            struct DeleteAddressArgs {
+                id: String,
+            }
+            
+            let args = DeleteAddressArgs { id: id.to_string() };
+            let args = serde_wasm_bindgen::to_value(&args).unwrap();
             let result = invoke("delete_address", args).await;
             
             match serde_wasm_bindgen::from_value::<Result<bool, String>>(result) {
