@@ -1,7 +1,7 @@
 use application::usecases::AddressUseCases;
 use domain::entities::Address;
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
-use iced::{Element, Font, Length, Task};
+use iced::{Element, Length, Task};
 use infrastructure::database::SqliteAddressRepository;
 use std::sync::Arc;
 
@@ -158,30 +158,26 @@ impl AddressBook {
 
     fn view(&self) -> Element<'_, Message> {
         let input_form = column![
-            text("이름:").size(16),
-            text_input("이름을 입력하세요", &self.name_input).on_input(Message::NameChanged).padding(10),
-            text("전화번호:").size(16),
-            text_input("전화번호를 입력하세요", &self.phone_input)
-                .on_input(Message::PhoneChanged)
-                .padding(10),
-            text("이메일:").size(16),
-            text_input("이메일을 입력하세요", &self.email_input).on_input(Message::EmailChanged).padding(10),
-            text("주소:").size(16),
-            text_input("주소를 입력하세요", &self.address_input)
-                .on_input(Message::AddressChanged)
-                .padding(10),
+            text("Name:").size(16),
+            text_input("Enter name", &self.name_input).on_input(Message::NameChanged).padding(10),
+            text("Phone:").size(16),
+            text_input("Enter phone", &self.phone_input).on_input(Message::PhoneChanged).padding(10),
+            text("Email:").size(16),
+            text_input("Enter email", &self.email_input).on_input(Message::EmailChanged).padding(10),
+            text("Address:").size(16),
+            text_input("Enter address", &self.address_input).on_input(Message::AddressChanged).padding(10),
         ]
         .spacing(10)
         .padding(20);
 
         let action_buttons = if self.editing_id.is_some() {
             row![
-                button("수정").on_press(Message::UpdateAddress).padding(10),
-                button("취소").on_press(Message::CancelEdit).padding(10),
+                button("Update").on_press(Message::UpdateAddress).padding(10),
+                button("Cancel").on_press(Message::CancelEdit).padding(10),
             ]
             .spacing(10)
         } else {
-            row![button("추가").on_press(Message::CreateAddress).padding(10)]
+            row![button("Add").on_press(Message::CreateAddress).padding(10)]
         };
 
         let address_list: Element<_> = self
@@ -191,13 +187,13 @@ impl AddressBook {
                 col.push(
                     container(
                         column![
-                            text(format!("이름: {}", addr.name)).size(18),
-                            text(format!("전화: {}", addr.phone)).size(14),
-                            text(format!("이메일: {}", addr.email)).size(14),
-                            text(format!("주소: {}", addr.address)).size(14),
+                            text(format!("Name: {}", addr.name)).size(18),
+                            text(format!("Phone: {}", addr.phone)).size(14),
+                            text(format!("Email: {}", addr.email)).size(14),
+                            text(format!("Address: {}", addr.address)).size(14),
                             row![
-                                button("수정").on_press(Message::EditAddress(addr.clone())).padding(5),
-                                button("삭제").on_press(Message::DeleteAddress(addr.id.unwrap())).padding(5),
+                                button("Edit").on_press(Message::EditAddress(addr.clone())).padding(5),
+                                button("Delete").on_press(Message::DeleteAddress(addr.id.unwrap())).padding(5),
                             ]
                             .spacing(10),
                         ]
@@ -211,10 +207,10 @@ impl AddressBook {
             .into();
 
         let content = column![
-            text("주소록").size(32),
+            text("Address Book").size(32),
             input_form,
             action_buttons,
-            text("저장된 주소").size(24),
+            text("Saved Addresses").size(24),
             scrollable(address_list).height(Length::Fill),
         ]
         .spacing(20)
@@ -225,8 +221,7 @@ impl AddressBook {
 }
 
 fn main() -> iced::Result {
-    iced::application("주소록", AddressBook::update, AddressBook::view)
+    iced::application("Address Book", AddressBook::update, AddressBook::view)
         .font(NOTO_SANS_KR)
-        .default_font(Font::DEFAULT)
         .run_with(AddressBook::new)
 }
