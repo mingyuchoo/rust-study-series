@@ -27,36 +27,24 @@ pub fn run() {
 
             tauri::async_runtime::spawn(async move {
                 match setup_database().await {
-                    Ok(pool) => {
+                    | Ok(pool) => {
                         let repository = Arc::new(SqliteContactRepository::new(pool));
 
                         let app_state = AppState {
-                            create_contact_use_case: Arc::new(CreateContactUseCase::new(
-                                repository.clone(),
-                            )),
-                            get_contact_use_case: Arc::new(GetContactUseCase::new(
-                                repository.clone(),
-                            )),
-                            list_contacts_use_case: Arc::new(ListContactsUseCase::new(
-                                repository.clone(),
-                            )),
-                            update_contact_use_case: Arc::new(UpdateContactUseCase::new(
-                                repository.clone(),
-                            )),
-                            delete_contact_use_case: Arc::new(DeleteContactUseCase::new(
-                                repository.clone(),
-                            )),
-                            search_contacts_use_case: Arc::new(SearchContactsUseCase::new(
-                                repository,
-                            )),
+                            create_contact_use_case: Arc::new(CreateContactUseCase::new(repository.clone())),
+                            get_contact_use_case: Arc::new(GetContactUseCase::new(repository.clone())),
+                            list_contacts_use_case: Arc::new(ListContactsUseCase::new(repository.clone())),
+                            update_contact_use_case: Arc::new(UpdateContactUseCase::new(repository.clone())),
+                            delete_contact_use_case: Arc::new(DeleteContactUseCase::new(repository.clone())),
+                            search_contacts_use_case: Arc::new(SearchContactsUseCase::new(repository)),
                         };
 
                         handle.manage(app_state);
-                    }
-                    Err(e) => {
+                    },
+                    | Err(e) => {
                         eprintln!("Failed to setup database: {}", e);
                         std::process::exit(1);
-                    }
+                    },
                 }
             });
 

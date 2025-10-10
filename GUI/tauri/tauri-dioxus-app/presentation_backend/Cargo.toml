@@ -1,29 +1,29 @@
 [package]
-name = "presentation_backend"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-description = "A Tauri App"
+  authors.workspace = true
+  description       = "A Tauri App"
+  edition.workspace = true
+  name              = "presentation_backend"
+  version.workspace = true
 
 [lib]
-name = "presentation_backend_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+  crate-type = ["staticlib", "cdylib", "rlib"]
+  name       = "presentation_backend_lib"
 
 [build-dependencies]
-tauri-build.workspace = true
+  tauri-build.workspace = true
 
 [dependencies]
-# Presentation layer can depend on all lower layers
-domain = { path = "../domain" }
-application = { path = "../application" }
-infrastructure = { path = "../infrastructure" }
+  # Presentation layer can depend on all lower layers
+  application    = {path = "../application"}
+  domain         = {path = "../domain"}
+  infrastructure = {path = "../infrastructure"}
 
-# Tauri and web framework dependencies
-tauri.workspace = true
-tauri-plugin-opener.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-sqlx.workspace = true
-tokio.workspace = true
-uuid.workspace = true
-anyhow.workspace = true
+  # Tauri and web framework dependencies
+  anyhow.workspace              = true
+  serde.workspace               = true
+  serde_json.workspace          = true
+  sqlx.workspace                = true
+  tauri.workspace               = true
+  tauri-plugin-opener.workspace = true
+  tokio.workspace               = true
+  uuid.workspace                = true

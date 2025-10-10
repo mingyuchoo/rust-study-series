@@ -26,13 +26,13 @@ pub fn App() -> Element {
         spawn(async move {
             loading.set(true);
             match ContactService::list_contacts().await {
-                Ok(contact_list) => {
+                | Ok(contact_list) => {
                     contacts.set(contact_list);
                     error_message.set(None);
-                }
-                Err(e) => {
+                },
+                | Err(e) => {
                     error_message.set(Some(format!("연락처를 불러오는데 실패했습니다: {}", e)));
-                }
+                },
             }
             loading.set(false);
         });
@@ -49,13 +49,13 @@ pub fn App() -> Element {
             };
 
             match result {
-                Ok(contact_list) => {
+                | Ok(contact_list) => {
                     contacts.set(contact_list);
                     error_message.set(None);
-                }
-                Err(e) => {
+                },
+                | Err(e) => {
                     error_message.set(Some(format!("검색에 실패했습니다: {}", e)));
-                }
+                },
             }
             loading.set(false);
         });
@@ -66,34 +66,22 @@ pub fn App() -> Element {
             loading.set(true);
             let request = CreateContactRequest {
                 name: form_data.name,
-                email: if form_data.email.is_empty() {
-                    None
-                } else {
-                    Some(form_data.email)
-                },
-                phone: if form_data.phone.is_empty() {
-                    None
-                } else {
-                    Some(form_data.phone)
-                },
-                address: if form_data.address.is_empty() {
-                    None
-                } else {
-                    Some(form_data.address)
-                },
+                email: if form_data.email.is_empty() { None } else { Some(form_data.email) },
+                phone: if form_data.phone.is_empty() { None } else { Some(form_data.phone) },
+                address: if form_data.address.is_empty() { None } else { Some(form_data.address) },
             };
 
             match ContactService::create_contact(request).await {
-                Ok(_) => {
+                | Ok(_) => {
                     current_view.set(AppView::List);
                     if let Ok(contact_list) = ContactService::list_contacts().await {
                         contacts.set(contact_list);
                     }
                     error_message.set(None);
-                }
-                Err(e) => {
+                },
+                | Err(e) => {
                     error_message.set(Some(format!("연락처 추가에 실패했습니다: {}", e)));
-                }
+                },
             }
             loading.set(false);
         });
@@ -112,16 +100,16 @@ pub fn App() -> Element {
                 };
 
                 match ContactService::update_contact(request).await {
-                    Ok(_) => {
+                    | Ok(_) => {
                         current_view.set(AppView::List);
                         if let Ok(contact_list) = ContactService::list_contacts().await {
                             contacts.set(contact_list);
                         }
                         error_message.set(None);
-                    }
-                    Err(e) => {
+                    },
+                    | Err(e) => {
                         error_message.set(Some(format!("연락처 수정에 실패했습니다: {}", e)));
-                    }
+                    },
                 }
                 loading.set(false);
             });
@@ -132,15 +120,15 @@ pub fn App() -> Element {
         spawn(async move {
             loading.set(true);
             match ContactService::delete_contact(id).await {
-                Ok(_) => {
+                | Ok(_) => {
                     if let Ok(contact_list) = ContactService::list_contacts().await {
                         contacts.set(contact_list);
                     }
                     error_message.set(None);
-                }
-                Err(e) => {
+                },
+                | Err(e) => {
                     error_message.set(Some(format!("연락처 삭제에 실패했습니다: {}", e)));
-                }
+                },
             }
             loading.set(false);
         });

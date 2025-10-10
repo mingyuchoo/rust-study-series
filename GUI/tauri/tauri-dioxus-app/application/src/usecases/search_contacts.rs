@@ -7,10 +7,10 @@ pub struct SearchContactsUseCase {
 
 impl SearchContactsUseCase {
     pub fn new(repository: Arc<dyn ContactRepository>) -> Self {
-        Self { repository }
+        Self {
+            repository,
+        }
     }
 
-    pub async fn execute(&self, query: &str) -> Result<Vec<Contact>, DomainError> {
-        self.repository.search(query).await
-    }
+    pub async fn execute(&self, query: &str) -> Result<Vec<Contact>, DomainError> { self.repository.search(query).await }
 }

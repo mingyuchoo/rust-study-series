@@ -1,67 +1,155 @@
+# Clean Architecture Workspace Tasks
+
 [tasks.clean]
-command = "cargo"
-args = ["clean"]
-workspace = false
+  args        = ["clean"]
+  command     = "cargo"
+  description = "Clean all build artifacts"
+  workspace   = false
 
 [tasks.clippy]
-command = "cargo"
-args = ["clippy", "--workspace", "--all-targets"]
-workspace = false
+  args        = ["clippy", "--workspace", "--all-targets", "--", "-D", "warnings"]
+  command     = "cargo"
+  description = "Run clippy on all workspace crates"
+  workspace   = false
 
 [tasks.check]
-command = "cargo"
-args = ["check", "--workspace"]
-workspace = false
+  args        = ["check", "--workspace"]
+  command     = "cargo"
+  description = "Check all workspace crates"
+  workspace   = false
 
 [tasks.format]
-command = "cargo"
-args = ["fmt", "--all"]
-workspace = false
+  args        = ["fmt", "--all"]
+  command     = "cargo"
+  description = "Format all workspace code"
+  workspace   = false
+
+[tasks.format-check]
+  args        = ["fmt", "--all", "--check"]
+  command     = "cargo"
+  description = "Check code formatting without modifying files"
+  workspace   = false
 
 [tasks.build]
-command = "cargo"
-args = ["build", "--workspace"]
-workspace = false
+  args        = ["build", "--workspace"]
+  command     = "cargo"
+  description = "Build all workspace crates"
+  workspace   = false
 
 [tasks.release]
-command = "cargo"
-args = ["build", "--workspace", "--release"]
-workspace = false
+  args        = ["build", "--workspace", "--release"]
+  command     = "cargo"
+  description = "Build all workspace crates in release mode"
+  workspace   = false
 
+# Testing tasks per layer
 [tasks.test]
-command = "cargo"
-args = ["test", "--workspace"]
-workspace = false
+  args        = ["test", "--workspace"]
+  command     = "cargo"
+  description = "Run all tests in workspace"
+  workspace   = false
 
 [tasks.test-domain]
-command = "cargo"
-args = ["test", "-p", "domain"]
-workspace = false
+  args        = ["test", "-p", "domain"]
+  command     = "cargo"
+  description = "Test domain layer (business entities)"
+  workspace   = false
 
 [tasks.test-application]
-command = "cargo"
-args = ["test", "-p", "application"]
-workspace = false
+  args        = ["test", "-p", "application"]
+  command     = "cargo"
+  description = "Test application layer (use cases)"
+  workspace   = false
 
 [tasks.test-infrastructure]
-command = "cargo"
-args = ["test", "-p", "infrastructure"]
-workspace = false
+  args        = ["test", "-p", "infrastructure"]
+  command     = "cargo"
+  description = "Test infrastructure layer (repositories)"
+  workspace   = false
 
+[tasks.test-backend]
+  args        = ["test", "-p", "presentation_backend"]
+  command     = "cargo"
+  description = "Test presentation backend layer"
+  workspace   = false
+
+[tasks.test-frontend]
+  args        = ["test", "-p", "presentation_frontend"]
+  command     = "cargo"
+  description = "Test presentation frontend layer"
+  workspace   = false
+
+# Build tasks per layer
+[tasks.build-domain]
+  args        = ["build", "-p", "domain"]
+  command     = "cargo"
+  description = "Build domain layer only"
+  workspace   = false
+
+[tasks.build-application]
+  args        = ["build", "-p", "application"]
+  command     = "cargo"
+  description = "Build application layer only"
+  workspace   = false
+
+[tasks.build-infrastructure]
+  args        = ["build", "-p", "infrastructure"]
+  command     = "cargo"
+  description = "Build infrastructure layer only"
+  workspace   = false
+
+[tasks.build-backend]
+  args        = ["build", "-p", "presentation_backend"]
+  command     = "cargo"
+  description = "Build presentation backend only"
+  workspace   = false
+
+[tasks.build-frontend]
+  args        = ["build", "--platform", "web"]
+  command     = "dx"
+  cwd         = "presentation_frontend"
+  description = "Build presentation frontend (web) only"
+  workspace   = false
+
+# Development tasks
 [tasks.run]
-description = "Run the Tauri application in development mode"
-cwd = "presentation_backend"
-command = "cargo"
-args = ["tauri", "dev"]
-workspace = false
+  args        = ["tauri", "dev"]
+  command     = "cargo"
+  description = "Run the Tauri application in development mode"
+  workspace   = false
 
 [tasks.dev]
-description = "Alias for run task"
-alias = "run"
+  alias       = "run"
+  description = "Alias for run task"
 
+[tasks.dev-frontend]
+  args        = ["serve", "--platform", "web", "--hot-reload"]
+  command     = "dx"
+  cwd         = "presentation_frontend"
+  description = "Run frontend only in development mode (web server)"
+  workspace   = false
+
+# Production build tasks
 [tasks.build-app]
-description = "Build the Tauri application for production"
-cwd = "presentation_backend"
-command = "cargo"
-args = ["tauri", "build"]
-workspace = false
+  args = [
+    "tauri",
+    "build",
+    "--manifest-path",
+    "presentation_backend/Cargo.toml",
+  ]
+  command = "cargo"
+  description = "Build the Tauri application for production"
+  workspace = false
+
+[tasks.build-release]
+  alias       = "build-app"
+  description = "Alias for build-app"
+
+# Verification tasks
+[tasks.verify]
+  dependencies = ["format-check", "clippy", "test"]
+  description  = "Run all verification checks (format, clippy, test)"
+
+[tasks.ci]
+  dependencies = ["check", "clippy", "test"]
+  description  = "Run CI pipeline (check, clippy, test)"

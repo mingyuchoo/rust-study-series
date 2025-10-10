@@ -14,10 +14,7 @@ pub struct AppState {
 }
 
 #[tauri::command]
-pub async fn create_contact(
-    state: State<'_, AppState>,
-    request: CreateContactRequest,
-) -> Result<ContactDto, String> {
+pub async fn create_contact(state: State<'_, AppState>, request: CreateContactRequest) -> Result<ContactDto, String> {
     state
         .create_contact_use_case
         .execute(request.name, request.email, request.phone, request.address)
@@ -30,12 +27,7 @@ pub async fn create_contact(
 pub async fn get_contact(state: State<'_, AppState>, id: String) -> Result<ContactDto, String> {
     let uuid = Uuid::parse_str(&id).map_err(|e| e.to_string())?;
 
-    state
-        .get_contact_use_case
-        .execute(uuid)
-        .await
-        .map(ContactDto::from)
-        .map_err(|e| e.to_string())
+    state.get_contact_use_case.execute(uuid).await.map(ContactDto::from).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -49,10 +41,7 @@ pub async fn list_contacts(state: State<'_, AppState>) -> Result<Vec<ContactDto>
 }
 
 #[tauri::command]
-pub async fn update_contact(
-    state: State<'_, AppState>,
-    request: UpdateContactRequest,
-) -> Result<ContactDto, String> {
+pub async fn update_contact(state: State<'_, AppState>, request: UpdateContactRequest) -> Result<ContactDto, String> {
     let uuid = Uuid::parse_str(&request.id).map_err(|e| e.to_string())?;
 
     state
@@ -67,18 +56,11 @@ pub async fn update_contact(
 pub async fn delete_contact(state: State<'_, AppState>, id: String) -> Result<(), String> {
     let uuid = Uuid::parse_str(&id).map_err(|e| e.to_string())?;
 
-    state
-        .delete_contact_use_case
-        .execute(uuid)
-        .await
-        .map_err(|e| e.to_string())
+    state.delete_contact_use_case.execute(uuid).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub async fn search_contacts(
-    state: State<'_, AppState>,
-    query: String,
-) -> Result<Vec<ContactDto>, String> {
+pub async fn search_contacts(state: State<'_, AppState>, query: String) -> Result<Vec<ContactDto>, String> {
     state
         .search_contacts_use_case
         .execute(&query)

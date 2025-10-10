@@ -8,13 +8,10 @@ pub struct GetContactUseCase {
 
 impl GetContactUseCase {
     pub fn new(repository: Arc<dyn ContactRepository>) -> Self {
-        Self { repository }
+        Self {
+            repository,
+        }
     }
 
-    pub async fn execute(&self, id: Uuid) -> Result<Contact, DomainError> {
-        self.repository
-            .get_by_id(id)
-            .await?
-            .ok_or(DomainError::ContactNotFound)
-    }
+    pub async fn execute(&self, id: Uuid) -> Result<Contact, DomainError> { self.repository.get_by_id(id).await?.ok_or(DomainError::ContactNotFound) }
 }

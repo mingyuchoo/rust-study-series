@@ -7,10 +7,10 @@ pub struct ListContactsUseCase {
 
 impl ListContactsUseCase {
     pub fn new(repository: Arc<dyn ContactRepository>) -> Self {
-        Self { repository }
+        Self {
+            repository,
+        }
     }
 
-    pub async fn execute(&self) -> Result<Vec<Contact>, DomainError> {
-        self.repository.get_all().await
-    }
+    pub async fn execute(&self) -> Result<Vec<Contact>, DomainError> { self.repository.get_all().await }
 }

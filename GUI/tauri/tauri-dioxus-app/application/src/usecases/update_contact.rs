@@ -8,7 +8,9 @@ pub struct UpdateContactUseCase {
 
 impl UpdateContactUseCase {
     pub fn new(repository: Arc<dyn ContactRepository>) -> Self {
-        Self { repository }
+        Self {
+            repository,
+        }
     }
 
     pub async fn execute(
@@ -19,11 +21,7 @@ impl UpdateContactUseCase {
         phone: Option<String>,
         address: Option<String>,
     ) -> Result<Contact, DomainError> {
-        let mut contact = self
-            .repository
-            .get_by_id(id)
-            .await?
-            .ok_or(DomainError::ContactNotFound)?;
+        let mut contact = self.repository.get_by_id(id).await?.ok_or(DomainError::ContactNotFound)?;
 
         contact.update(name, email, phone, address);
         self.repository.update(contact).await

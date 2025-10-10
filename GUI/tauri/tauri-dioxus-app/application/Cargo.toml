@@ -1,13 +1,13 @@
 [package]
-name = "application"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
+  authors.workspace = true
+  edition.workspace = true
+  name              = "application"
+  version.workspace = true
 
 [dependencies]
-# Application layer depends ONLY on domain layer
-domain = { path = "../domain" }
+  # Application layer depends ONLY on domain layer
+  domain = {path = "../domain"}
 
-# External dependencies
-async-trait.workspace = true
-uuid.workspace = true
+  # External dependencies
+  async-trait.workspace = true
+  uuid.workspace        = true

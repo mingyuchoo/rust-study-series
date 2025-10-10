@@ -19,41 +19,13 @@ pub struct ContactFormData {
 }
 
 pub fn ContactForm(props: ContactFormProps) -> Element {
-    let mut name = use_signal(|| {
-        props
-            .contact
-            .as_ref()
-            .map(|c| c.name.clone())
-            .unwrap_or_default()
-    });
-    let mut email = use_signal(|| {
-        props
-            .contact
-            .as_ref()
-            .and_then(|c| c.email.clone())
-            .unwrap_or_default()
-    });
-    let mut phone = use_signal(|| {
-        props
-            .contact
-            .as_ref()
-            .and_then(|c| c.phone.clone())
-            .unwrap_or_default()
-    });
-    let mut address = use_signal(|| {
-        props
-            .contact
-            .as_ref()
-            .and_then(|c| c.address.clone())
-            .unwrap_or_default()
-    });
+    let mut name = use_signal(|| props.contact.as_ref().map(|c| c.name.clone()).unwrap_or_default());
+    let mut email = use_signal(|| props.contact.as_ref().and_then(|c| c.email.clone()).unwrap_or_default());
+    let mut phone = use_signal(|| props.contact.as_ref().and_then(|c| c.phone.clone()).unwrap_or_default());
+    let mut address = use_signal(|| props.contact.as_ref().and_then(|c| c.address.clone()).unwrap_or_default());
 
     let is_edit = props.contact.is_some();
-    let title = if is_edit {
-        "연락처 수정"
-    } else {
-        "새 연락처 추가"
-    };
+    let title = if is_edit { "연락처 수정" } else { "새 연락처 추가" };
 
     let handle_submit = move |_: FormEvent| {
         let form_data = ContactFormData {

@@ -8,10 +8,10 @@ pub struct DeleteContactUseCase {
 
 impl DeleteContactUseCase {
     pub fn new(repository: Arc<dyn ContactRepository>) -> Self {
-        Self { repository }
+        Self {
+            repository,
+        }
     }
 
-    pub async fn execute(&self, id: Uuid) -> Result<(), DomainError> {
-        self.repository.delete(id).await
-    }
+    pub async fn execute(&self, id: Uuid) -> Result<(), DomainError> { self.repository.delete(id).await }
 }

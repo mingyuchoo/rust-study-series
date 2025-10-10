@@ -1,19 +1,19 @@
 [application]
-name = "presentation_frontend"
-default_platform = "web"
+  default_platform = "web"
+  name             = "presentation_frontend"
 
 [web.app]
-title = "주소록 앱"
+  title = "주소록 앱"
 
 [web.watcher]
 
 [web.resource]
-style = ["/assets/styles.css"]
+  style = ["/assets/styles.css"]
 
-[web.resource.dev]
+  [web.resource.dev]
 
 [bundle]
-identifier = "com.addressbook.app"
-publisher = "Address Book"
-icon = ["assets/dioxus.png"]
-resources = ["assets/*"]
+  icon       = ["assets/dioxus.png"]
+  identifier = "com.addressbook.app"
+  publisher  = "Address Book"
+  resources  = ["assets/*"]

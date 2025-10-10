@@ -1,14 +1,14 @@
 [package]
-name = "domain"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
+  authors.workspace = true
+  edition.workspace = true
+  name              = "domain"
+  version.workspace = true
 
 [dependencies]
-# Domain layer has NO dependencies on other layers
-# Only external libraries for basic types
-serde.workspace = true
-chrono.workspace = true
-uuid.workspace = true
-thiserror.workspace = true
-async-trait.workspace = true
+  # Domain layer has NO dependencies on other layers
+  # Only external libraries for basic types
+  async-trait.workspace = true
+  chrono.workspace      = true
+  serde.workspace       = true
+  thiserror.workspace   = true
+  uuid.workspace        = true

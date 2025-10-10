@@ -7,16 +7,12 @@ pub struct CreateContactUseCase {
 
 impl CreateContactUseCase {
     pub fn new(repository: Arc<dyn ContactRepository>) -> Self {
-        Self { repository }
+        Self {
+            repository,
+        }
     }
 
-    pub async fn execute(
-        &self,
-        name: String,
-        email: Option<String>,
-        phone: Option<String>,
-        address: Option<String>,
-    ) -> Result<Contact, DomainError> {
+    pub async fn execute(&self, name: String, email: Option<String>, phone: Option<String>, address: Option<String>) -> Result<Contact, DomainError> {
         if name.trim().is_empty() {
             return Err(DomainError::InvalidContactData("Name cannot be empty".to_string()));
         }

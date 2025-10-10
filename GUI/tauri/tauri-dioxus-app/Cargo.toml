@@ -1,55 +1,55 @@
 [workspace]
-resolver = "2"
-members = [
+  exclude = ["src-tauri"]
+  members = [
     "domain",
     "application",
     "infrastructure",
     "presentation_backend",
     "presentation_frontend",
-]
-exclude = ["src-tauri"]
+  ]
+  resolver = "2"
 
-[workspace.package]
-version = "0.1.0"
-edition = "2024"
-authors = ["you"]
+  [workspace.package]
+    authors = ["you"]
+    edition = "2024"
+    version = "0.1.0"
 
-[workspace.dependencies]
-# Domain layer dependencies (minimal)
-serde = { version = "1", features = ["derive"] }
-chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "1", features = ["v4", "serde", "js"] }
-thiserror = "1.0"
+  [workspace.dependencies]
+    # Domain layer dependencies (minimal)
+    chrono    = {features = ["serde"], version = "0.4"}
+    serde     = {features = ["derive"], version = "1"}
+    thiserror = "1.0"
+    uuid      = {features = ["v4", "serde", "js"], version = "1"}
 
-# Application layer dependencies
-async-trait = "0.1"
+    # Application layer dependencies
+    async-trait = "0.1"
 
-# Infrastructure layer dependencies
-sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"] }
-tokio = { version = "1", features = ["full"] }
+    # Infrastructure layer dependencies
+    sqlx  = {features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"], version = "0.8"}
+    tokio = {features = ["full"], version = "1"}
 
-# Presentation backend dependencies
-tauri = { version = "2", features = [] }
-tauri-plugin-opener = "2"
-tauri-build = { version = "2", features = [] }
-serde_json = "1"
-anyhow = "1.0"
+    # Presentation backend dependencies
+    anyhow              = "1.0"
+    serde_json          = "1"
+    tauri               = {features = [], version = "2"}
+    tauri-build         = {features = [], version = "2"}
+    tauri-plugin-opener = "2"
 
-# Presentation frontend dependencies
-dioxus = { features = ["web"], version = "0.6" }
-dioxus-logger = "0.6"
-js-sys = "0.3"
-serde-wasm-bindgen = "0.6"
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
-web-sys = "0.3"
+    # Presentation frontend dependencies
+    dioxus               = {features = ["web"], version = "0.6"}
+    dioxus-logger        = "0.6"
+    js-sys               = "0.3"
+    serde-wasm-bindgen   = "0.6"
+    wasm-bindgen         = "0.2"
+    wasm-bindgen-futures = "0.4"
+    web-sys              = "0.3"
 
 [profile.wasm-dev]
-inherits = "dev"
-opt-level = 1
+  inherits  = "dev"
+  opt-level = 1
 
 [profile.server-dev]
-inherits = "dev"
+  inherits = "dev"
 
 [profile.android-dev]
-inherits = "dev"
+  inherits = "dev"
