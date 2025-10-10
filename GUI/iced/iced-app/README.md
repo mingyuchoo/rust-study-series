@@ -17,8 +17,8 @@ A simple counter application built with the Iced GUI framework for Rust. This pr
 
 1. Clone or create this project:
 ```shell
-cargo new iced-counter
-cd iced-counter
+cargo new iced-app
+cd iced-app
 ```
 
 2. Add the Iced dependency:
