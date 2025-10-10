@@ -145,6 +145,56 @@
   alias       = "build-app"
   description = "Alias for build-app"
 
+# Platform-specific packaging tasks
+[tasks.package-fedora]
+  args        = ["tauri", "build", "-b", "rpm"]
+  command     = "cargo"
+  cwd         = "presentation_backend"
+  description = "Package application for Fedora Linux (RPM)"
+  workspace   = false
+
+[tasks.package-ubuntu]
+  args        = ["tauri", "build", "-b", "deb"]
+  command     = "cargo"
+  cwd         = "presentation_backend"
+  description = "Package application for Ubuntu Linux (DEB)"
+  workspace   = false
+
+[tasks.package-linux]
+  args        = ["tauri", "build", "-b", "appimage"]
+  command     = "cargo"
+  cwd         = "presentation_backend"
+  description = "Package application for Linux (AppImage - universal)"
+  workspace   = false
+
+[tasks.package-macos]
+  args        = ["tauri", "build", "-b", "dmg"]
+  command     = "cargo"
+  cwd         = "presentation_backend"
+  description = "Package application for macOS (DMG)"
+  workspace   = false
+
+[tasks.package-windows]
+  args        = ["tauri", "build", "-b", "msi"]
+  command     = "cargo"
+  cwd         = "presentation_backend"
+  description = "Package application for Windows (MSI installer)"
+  workspace   = false
+
+[tasks.package-windows-nsis]
+  args        = ["tauri", "build", "-b", "nsis"]
+  command     = "cargo"
+  cwd         = "presentation_backend"
+  description = "Package application for Windows (NSIS installer)"
+  workspace   = false
+
+[tasks.package-all-linux]
+  args        = ["tauri", "build", "-b", "deb", "-b", "rpm", "-b", "appimage"]
+  command     = "cargo"
+  cwd         = "presentation_backend"
+  description = "Package application for all Linux distributions (DEB, RPM, AppImage)"
+  workspace   = false
+
 # Verification tasks
 [tasks.verify]
   dependencies = ["format-check", "clippy", "test"]

@@ -6,8 +6,8 @@
   "build": {
     "beforeDevCommand": "cd presentation_frontend && dx serve --port 1420",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "cd presentation_frontend && dx bundle --release",
-    "frontendDist": "../presentation_frontend/dist"
+    "beforeBuildCommand": "cd presentation_frontend && dx build --release --platform web",
+    "frontendDist": "../target/dx/presentation_frontend/release/web/public"
   },
   "app": {
     "withGlobalTauri": true,
