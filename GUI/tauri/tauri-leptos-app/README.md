@@ -27,7 +27,6 @@ project-root/
 ### 필수 요구사항
 
 - Rust (최신 stable 버전)
-    - `rustup target add wasm32-unknown-unknown`
 - Trunk (Leptos 빌드용): `cargo install trunk`
 - SQLx CLI (데이터베이스 마이그레이션용): `cargo install sqlx-cli --no-default-features --features sqlite`
 
@@ -49,6 +48,136 @@ cargo tauri dev
 cd tauri-entrypoint
 cargo tauri build
 ```
+
+## 빌드 및 릴리즈
+
+### 운영체제별 빌드
+
+#### Windows
+```bash
+# Windows에서 실행
+cd tauri-entrypoint
+cargo tauri build --target x86_64-pc-windows-msvc
+```
+
+#### macOS
+```bash
+# macOS에서 실행
+cd tauri-entrypoint
+cargo tauri build --target x86_64-apple-darwin
+
+# Apple Silicon (M1/M2) 지원
+cargo tauri build --target aarch64-apple-darwin
+
+# Universal Binary (Intel + Apple Silicon)
+cargo tauri build --target universal-apple-darwin
+```
+
+#### Linux
+```bash
+# Linux에서 실행
+cd tauri-entrypoint
+cargo tauri build --target x86_64-unknown-linux-gnu
+
+# AppImage 형태로 빌드 (권장)
+cargo tauri build --target x86_64-unknown-linux-gnu --bundles appimage
+```
+
+### 크로스 컴파일 설정
+
+다른 플랫폼용으로 빌드하려면 해당 타겟을 먼저 설치해야 합니다:
+
+```bash
+# Windows 타겟 추가
+rustup target add x86_64-pc-windows-msvc
+
+# macOS 타겟 추가
+rustup target add x86_64-apple-darwin
+rustup target add aarch64-apple-darwin
+
+# Linux 타겟 추가
+rustup target add x86_64-unknown-linux-gnu
+```
+
+### 릴리즈 파일 위치
+
+빌드 완료 후 실행 파일은 다음 위치에 생성됩니다:
+
+```
+tauri-entrypoint/src-tauri/target/release/bundle/
+├── msi/           # Windows Installer (.msi)
+├── nsis/          # Windows NSIS Installer (.exe)
+├── deb/           # Debian Package (.deb)
+├── rpm/           # RPM Package (.rpm)
+├── appimage/      # Linux AppImage
+├── dmg/           # macOS Disk Image (.dmg)
+└── macos/         # macOS App Bundle (.app)
+```
+
+### GitHub Actions를 통한 자동 릴리즈
+
+`.github/workflows/release.yml` 파일을 생성하여 자동 빌드 및 릴리즈를 설정할 수 있습니다:
+
+```yaml
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [macos-latest, ubuntu-20.04, windows-latest]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './tauri-entrypoint/src-tauri -> target'
+
+      - name: Install frontend dependencies
+        run: cargo install trunk
+
+      - name: Build the app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: tauri-entrypoint
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Address Book v__VERSION__'
+          releaseBody: 'See the assets to download and install this version.'
+          releaseDraft: true
+          prerelease: false
+```
+
+### 릴리즈 노트
+
+각 릴리즈에는 다음 정보를 포함하는 것을 권장합니다:
+
+- 새로운 기능
+- 버그 수정
+- 성능 개선
+- 호환성 변경사항
+- 설치 방법 및 시스템 요구사항
 
 ### 프로젝트 구조
 
