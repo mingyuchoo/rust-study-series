@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "com.mingyuchoo.tauri-leptos.app",
   "build": {
-    "beforeDevCommand": "sh -c 'cd presentation_frontend && trunk serve'",
+    "beforeDevCommand": "cd presentation_frontend && trunk serve",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "sh -c 'cd presentation_frontend && trunk build'",
+    "beforeBuildCommand": "cd presentation_frontend && trunk build",
     "frontendDist": "presentation_frontend/dist"
   },
   "app": {
