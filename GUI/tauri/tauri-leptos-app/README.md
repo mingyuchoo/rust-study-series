@@ -27,6 +27,7 @@ project-root/
 ### 필수 요구사항
 
 - Rust (최신 stable 버전)
+    - `rustup target add wasm32-unknown-unknown`
 - Trunk (Leptos 빌드용): `cargo install trunk`
 - SQLx CLI (데이터베이스 마이그레이션용): `cargo install sqlx-cli --no-default-features --features sqlite`
 
