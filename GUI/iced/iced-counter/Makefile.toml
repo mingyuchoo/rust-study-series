@@ -1,44 +1,78 @@
-[tasks.clean]
-  args    = ["clean"]
-  command = "cargo"
+[config]
+  skip_core_tasks = true
 
-[tasks.clippy]
-  args    = ["clippy"]
-  command = "cargo"
+[env]
+  CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+
+[tasks.clean]
+  args        = ["clean"]
+  command     = "cargo"
+  description = "프로젝트 빌드 아티팩트 정리"
+  run_task    = {name = "empty", fork = false}
 
 [tasks.check]
-  args    = ["check"]
-  command = "cargo"
+  args        = ["check", "--workspace"]
+  command     = "cargo"
+  description = "코드 컴파일 체크 (빌드 없이)"
+  workspace   = false
+
+[tasks.clippy]
+  args        = ["clippy", "--workspace", "--", "-D", "warnings"]
+  command     = "cargo"
+  description = "Clippy 린트 검사"
+  workspace   = false
 
 [tasks.format]
-  args          = ["fmt"]
-  command       = "cargo"
-  dependencies  = ["check", "clippy"]
-  install_crate = "rustfmt"
-
-[tasks.build]
-  args         = ["build", "--profile", "dev"]
+  args         = ["fmt", "--all"]
   command      = "cargo"
-  dependencies = ["format"]
-
-[tasks.release]
-  args         = ["build", "--profile", "release"]
-  command      = "cargo"
-  dependencies = ["format"]
+  dependencies = ["check", "clippy"]
+  description  = "코드 포맷팅"
+  workspace    = false
 
 [tasks.test]
-  args         = ["test"]
+  args         = ["test", "--workspace"]
   command      = "cargo"
   dependencies = ["format"]
+  description  = "테스트 실행"
+  workspace    = false
 
-[tasks.watch-run]
-  # `cargo install cargo-watch`로 설치
-  command       = "cargo"
-  args          = ["watch", "-x", "run"]
-  install_crate = "cargo-watch"
-  dependencies  = ["format"]
+[tasks.build]
+  args         = ["build", "--package", "presentation_frontend"]
+  command      = "cargo"
+  dependencies = ["format"]
+  description  = "개발 모드 빌드"
+  workspace    = false
+
+[tasks.release]
+  args         = ["build", "--package", "presentation_frontend", "--release"]
+  command      = "cargo"
+  dependencies = ["format"]
+  description  = "릴리즈 모드 빌드"
+  workspace    = false
 
 [tasks.run]
-  args         = ["run"]
+  args         = ["run", "--package", "presentation_frontend"]
   command      = "cargo"
-  dependencies = ["format"]
+  dependencies = ["build"]
+  description  = "애플리케이션 실행"
+  workspace    = false
+
+[tasks.watch-run]
+  args          = ["watch", "-x", "run --package presentation_frontend"]
+  command       = "cargo"
+  description   = "파일 변경 감지 및 자동 재실행"
+  install_crate = "cargo-watch"
+  workspace     = false
+
+[tasks.package]
+  dependencies = ["release"]
+  description = "릴리즈 바이너리 패키징"
+  script = '''
+    cargo build --package presentation_frontend --release
+    mkdir -p dist
+    cp target/release/presentation_frontend dist/
+    cp addresses.db dist/ 2>/dev/null || true
+    cp -r presentation_frontend/fonts dist/ 2>/dev/null || true
+    echo "패키지가 dist/ 디렉토리에 생성되었습니다"
+  '''
+  workspace = false

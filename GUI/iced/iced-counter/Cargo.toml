@@ -1,7 +1,8 @@
-[package]
-  edition = "2024"
-  name    = "iced-counter"
-  version = "0.1.0"
-
-[dependencies]
-  iced = "0.13.1"
+[workspace]
+  members = [
+    "domain",
+    "application",
+    "infrastructure",
+    "presentation_frontend",
+  ]
+  resolver = "2"

@@ -1,0 +1,10 @@
+[package]
+name = "presentation_frontend"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+domain = { path = "../domain" }
+application = { path = "../application" }
+infrastructure = { path = "../infrastructure" }
+iced = "0.13.1"

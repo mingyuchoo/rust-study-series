@@ -1,0 +1,8 @@
+[package]
+name = "infrastructure"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+domain = { path = "../domain" }
+rusqlite = { version = "0.32", features = ["bundled"] }
