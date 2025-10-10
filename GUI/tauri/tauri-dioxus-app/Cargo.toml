@@ -1,33 +1,55 @@
-[package]
-  edition = "2024"
-  name    = "tauri-dioxus-app-ui"
-  version = "0.1.0"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[dependencies]
-  dioxus               = {features = ["web"], version = "0.6"}
-  dioxus-logger        = "0.6"
-  js-sys               = "0.3"
-  serde                = {features = ["derive"], version = "1"}
-  serde_json           = "1"
-  serde-wasm-bindgen   = "0.6"
-  wasm-bindgen         = "0.2"
-  wasm-bindgen-futures = "0.4"
-  web-sys              = "0.3"
-  uuid                 = {version = "1", features = ["v4", "serde", "js"]}
-  chrono               = {version = "0.4", features = ["serde"]}
-
 [workspace]
-  members = ["src-tauri"]
+resolver = "2"
+members = [
+    "domain",
+    "application",
+    "infrastructure",
+    "presentation_backend",
+    "presentation_frontend",
+]
+exclude = ["src-tauri"]
 
-[profile]
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["you"]
 
-  [profile.wasm-dev]
-    inherits  = "dev"
-    opt-level = 1
+[workspace.dependencies]
+# Domain layer dependencies (minimal)
+serde = { version = "1", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4", "serde", "js"] }
+thiserror = "1.0"
 
-  [profile.server-dev]
-    inherits = "dev"
+# Application layer dependencies
+async-trait = "0.1"
 
-  [profile.android-dev]
-    inherits = "dev"
+# Infrastructure layer dependencies
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite", "chrono", "uuid"] }
+tokio = { version = "1", features = ["full"] }
+
+# Presentation backend dependencies
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+tauri-build = { version = "2", features = [] }
+serde_json = "1"
+anyhow = "1.0"
+
+# Presentation frontend dependencies
+dioxus = { features = ["web"], version = "0.6" }
+dioxus-logger = "0.6"
+js-sys = "0.3"
+serde-wasm-bindgen = "0.6"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = "0.3"
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"

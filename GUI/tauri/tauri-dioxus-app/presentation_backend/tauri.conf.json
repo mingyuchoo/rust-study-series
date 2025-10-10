@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "tauri-dioxus-app",
+  "version": "0.1.0",
+  "identifier": "com.mingyuchoo.tauri-dioxus-app",
+  "build": {
+    "beforeDevCommand": "cd presentation_frontend && dx serve --port 1420",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "cd presentation_frontend && dx bundle --release",
+    "frontendDist": "../presentation_frontend/dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "주소록 앱",
+        "width": 1200,
+        "height": 800
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+[package]
+name = "infrastructure"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+# Infrastructure depends on domain and application layers
+domain = { path = "../domain" }
+
+# External dependencies for database implementation
+sqlx.workspace = true
+tokio.workspace = true
+async-trait.workspace = true
+chrono.workspace = true
+uuid.workspace = true

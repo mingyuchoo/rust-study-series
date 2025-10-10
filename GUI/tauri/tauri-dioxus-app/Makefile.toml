@@ -1,44 +1,67 @@
 [tasks.clean]
-  args    = ["clean"]
-  command = "cargo"
+command = "cargo"
+args = ["clean"]
+workspace = false
 
 [tasks.clippy]
-  args    = ["clippy"]
-  command = "cargo"
+command = "cargo"
+args = ["clippy", "--workspace", "--all-targets"]
+workspace = false
 
 [tasks.check]
-  args    = ["check"]
-  command = "cargo"
+command = "cargo"
+args = ["check", "--workspace"]
+workspace = false
 
 [tasks.format]
-  args          = ["fmt"]
-  command       = "cargo"
-  dependencies  = ["check", "clippy"]
-  install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--all"]
+workspace = false
 
 [tasks.build]
-  args         = ["build", "--profile", "dev"]
-  command      = "cargo"
-  dependencies = ["format"]
+command = "cargo"
+args = ["build", "--workspace"]
+workspace = false
 
 [tasks.release]
-  args         = ["build", "--profile", "release"]
-  command      = "cargo"
-  dependencies = ["format"]
+command = "cargo"
+args = ["build", "--workspace", "--release"]
+workspace = false
 
 [tasks.test]
-  args         = ["test"]
-  command      = "cargo"
-  dependencies = ["format"]
+command = "cargo"
+args = ["test", "--workspace"]
+workspace = false
 
-[tasks.watch-run]
-  # `cargo install cargo-watch`로 설치
-  args          = ["watch", "-x", "tauri", "dev"]
-  command       = "cargo"
-  dependencies  = ["format"]
-  install_crate = "cargo-watch"
+[tasks.test-domain]
+command = "cargo"
+args = ["test", "-p", "domain"]
+workspace = false
+
+[tasks.test-application]
+command = "cargo"
+args = ["test", "-p", "application"]
+workspace = false
+
+[tasks.test-infrastructure]
+command = "cargo"
+args = ["test", "-p", "infrastructure"]
+workspace = false
 
 [tasks.run]
-  args         = ["tauri", "dev"]
-  command      = "cargo"
-  dependencies = ["format"]
+description = "Run the Tauri application in development mode"
+cwd = "presentation_backend"
+command = "cargo"
+args = ["tauri", "dev"]
+workspace = false
+
+[tasks.dev]
+description = "Alias for run task"
+alias = "run"
+
+[tasks.build-app]
+description = "Build the Tauri application for production"
+cwd = "presentation_backend"
+command = "cargo"
+args = ["tauri", "build"]
+workspace = false
