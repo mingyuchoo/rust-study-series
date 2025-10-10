@@ -79,8 +79,14 @@ cargo tauri build --target universal-apple-darwin
 cd tauri-entrypoint
 cargo tauri build --target x86_64-unknown-linux-gnu
 
-# AppImage 형태로 빌드 (권장)
+# AppImage 형태로 빌드
 cargo tauri build --target x86_64-unknown-linux-gnu --bundles appimage
+
+# RPM 패키지 빌드 (Fedora/RHEL/CentOS)
+cargo tauri build --target x86_64-unknown-linux-gnu --bundles rpm
+
+# DEB 패키지 빌드 (Ubuntu/Debian)
+cargo tauri build --target x86_64-unknown-linux-gnu --bundles deb
 ```
 
 ### 크로스 컴파일 설정
@@ -167,6 +173,154 @@ jobs:
           releaseBody: 'See the assets to download and install this version.'
           releaseDraft: true
           prerelease: false
+```
+
+### Fedora Linux 전용 RPM 패키지 빌드
+
+#### 1. Fedora 빌드 환경 설정
+
+```bash
+# Fedora에서 필요한 개발 도구 설치
+sudo dnf groupinstall "Development Tools" "C Development Tools and Libraries"
+sudo dnf install webkit2gtk4.0-devel openssl-devel curl wget libappindicator-gtk3-devel librsvg2-devel
+
+# Rust 설치 (rustup 사용 권장)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source ~/.cargo/env
+
+# Trunk 설치
+cargo install trunk
+```
+
+#### 2. RPM 패키지 빌드
+
+```bash
+# 1단계: 프론트엔드 빌드
+cd presentation_frontend
+trunk build
+
+# 2단계: RPM 패키지 생성
+cd ../tauri-entrypoint
+cargo tauri build --bundles rpm
+
+# 생성된 RPM 파일 위치 확인
+ls -la target/release/bundle/rpm/
+```
+
+**중요**: `tauri.conf.json`에서 `beforeBuildCommand`가 올바르게 설정되지 않은 경우, 위와 같이 수동으로 프론트엔드를 먼저 빌드해야 합니다.
+
+#### 3. RPM 패키지 설치
+
+```bash
+# 생성된 RPM 패키지 설치
+sudo dnf install ./target/release/bundle/rpm/tauri-leptos-app-*.rpm
+
+# 또는 rpm 명령어 사용
+sudo rpm -ivh ./target/release/bundle/rpm/tauri-leptos-app-*.rpm
+```
+
+#### 4. Tauri 설정 커스터마이징 (선택사항)
+
+`tauri-entrypoint/src-tauri/tauri.conf.json`에서 RPM 패키지 설정을 커스터마이징할 수 있습니다:
+
+```json
+{
+  "tauri": {
+    "bundle": {
+      "linux": {
+        "rpm": {
+          "license": "MIT",
+          "depends": ["webkit2gtk4.0"],
+          "files": {
+            "/usr/share/applications/": "assets/addressbook.desktop",
+            "/usr/share/icons/hicolor/256x256/apps/": "icons/256x256.png"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+#### 5. 데스크톱 엔트리 파일 생성
+
+`tauri-entrypoint/src-tauri/assets/addressbook.desktop` 파일을 생성:
+
+```desktop
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=주소록 앱
+Comment=SQLite 기반 주소록 관리 애플리케이션
+Exec=addressbook-app
+Icon=addressbook-app
+Terminal=false
+Categories=Office;Database;
+StartupWMClass=addressbook-app
+```
+
+#### 6. 패키지 검증
+
+```bash
+# RPM 패키지 정보 확인
+rpm -qip ./target/release/bundle/rpm/tauri-leptos-app-*.rpm
+
+# 패키지 내용 확인
+rpm -qlp ./target/release/bundle/rpm/tauri-leptos-app-*.rpm
+
+# 설치된 패키지 확인
+rpm -qa | grep tauri-leptos-app
+```
+
+#### 7. 자동화된 Fedora 빌드 (GitHub Actions)
+
+`.github/workflows/fedora-build.yml`:
+
+```yaml
+name: Fedora RPM Build
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-fedora:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    
+    steps:
+      - name: Install dependencies
+        run: |
+          dnf update -y
+          dnf groupinstall -y "Development Tools" "C Development Tools and Libraries"
+          dnf install -y webkit2gtk4.0-devel openssl-devel curl wget libappindicator-gtk3-devel librsvg2-devel git
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source ~/.cargo/env
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Trunk
+        run: |
+          source ~/.cargo/env
+          cargo install trunk
+
+      - name: Build RPM
+        run: |
+          source ~/.cargo/env
+          cd tauri-entrypoint
+          cargo tauri build --bundles rpm
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: fedora-rpm
+          path: tauri-entrypoint/src-tauri/target/release/bundle/rpm/*.rpm
 ```
 
 ### 릴리즈 노트

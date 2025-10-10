@@ -2,12 +2,12 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "tauri-leptos-app",
   "version": "0.1.0",
-  "identifier": "com.mingyuchoo.tauri-leptos.app",
+  "identifier": "com.mingyuchoo.tauri-leptos-app",
   "build": {
-    "beforeDevCommand": "cd presentation_frontend && trunk serve",
+    "beforeDevCommand": "",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "cd presentation_frontend && trunk build",
-    "frontendDist": "presentation_frontend/dist"
+    "beforeBuildCommand": "",
+    "frontendDist": "../presentation_frontend/dist"
   },
   "app": {
     "withGlobalTauri": true,
