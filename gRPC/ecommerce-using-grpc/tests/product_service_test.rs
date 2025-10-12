@@ -6,8 +6,8 @@ use ecommerce_using_grpc::product_info_proto::{Product, ProductId};
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::time::sleep;
-use tonic::transport::Server;
 use tonic::Request;
+use tonic::transport::Server;
 
 #[tokio::test]
 async fn test_add_product() {

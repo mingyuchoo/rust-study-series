@@ -2,10 +2,10 @@
 
 extern crate test;
 
+use ecommerce_using_grpc::MyProductInfo;
 use ecommerce_using_grpc::product_info_proto::product_info_client::ProductInfoClient;
 use ecommerce_using_grpc::product_info_proto::product_info_server::ProductInfoServer;
 use ecommerce_using_grpc::product_info_proto::{Product, ProductId};
-use ecommerce_using_grpc::MyProductInfo;
 use std::net::SocketAddr;
 use std::time::Duration;
 use test::Bencher;
