@@ -1,7 +1,7 @@
+use crate::models::CreateAddressRequest;
 use leptos::prelude::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::models::CreateAddressRequest;
 
 #[wasm_bindgen]
 extern "C" {
@@ -10,7 +10,7 @@ extern "C" {
 }
 
 #[component]
-pub fn AddressForm<F>(on_save: F) -> impl IntoView 
+pub fn AddressForm<F>(on_save: F) -> impl IntoView
 where
     F: Fn() + 'static + Copy,
 {
@@ -21,7 +21,7 @@ where
 
     let submit_form = move |ev: leptos::ev::SubmitEvent| {
         ev.prevent_default();
-        
+
         if is_saving.get() {
             return;
         }
@@ -40,17 +40,19 @@ where
             struct CreateAddressArgs {
                 request: CreateAddressRequest,
             }
-            
-            let args = CreateAddressArgs { request };
+
+            let args = CreateAddressArgs {
+                request,
+            };
             match serde_wasm_bindgen::to_value(&args) {
-                Ok(args) => {
+                | Ok(args) => {
                     let result = invoke("create_address", args).await;
                     // Debug: log the raw result
                     web_sys::console::log_1(&format!("Raw result: {:?}", result).into());
-                    
+
                     // Try direct deserialization first
                     match serde_wasm_bindgen::from_value::<crate::models::AddressResponse>(result.clone()) {
-                        Ok(_address) => {
+                        | Ok(_address) => {
                             web_sys::console::log_1(&"Direct deserialization worked for create!".into());
                             // Clear form
                             set_name.set(String::new());
@@ -59,32 +61,32 @@ where
                             on_save();
                             set_is_saving.set(false);
                             return;
-                        }
-                        Err(err) => {
+                        },
+                        | Err(err) => {
                             web_sys::console::log_1(&format!("Direct deserialization failed: {:?}", err).into());
-                        }
+                        },
                     }
-                    
+
                     // Fallback to Result wrapper
                     match serde_wasm_bindgen::from_value::<Result<crate::models::AddressResponse, String>>(result) {
-                        Ok(Ok(_)) => {
+                        | Ok(Ok(_)) => {
                             // Clear form
                             set_name.set(String::new());
                             set_phone.set(String::new());
                             set_email.set(String::new());
                             on_save();
-                        }
-                        Ok(Err(err)) => {
+                        },
+                        | Ok(Err(err)) => {
                             web_sys::console::error_1(&format!("Error: {}", err).into());
-                        }
-                        Err(err) => {
+                        },
+                        | Err(err) => {
                             web_sys::console::error_1(&format!("Parse error: {:?}", err).into());
-                        }
+                        },
                     }
-                }
-                Err(err) => {
+                },
+                | Err(err) => {
                     web_sys::console::error_1(&format!("Serialization error: {:?}", err).into());
-                }
+                },
             }
             set_is_saving.set(false);
         });
@@ -96,7 +98,7 @@ where
             <form on:submit=submit_form>
                 <div class="form-group">
                     <label>"이름:"</label>
-                    <input 
+                    <input
                         type="text"
                         prop:value=name
                         on:input=move |ev| set_name.set(event_target_value(&ev))
@@ -106,7 +108,7 @@ where
 
                 <div class="form-group">
                     <label>"전화번호:"</label>
-                    <input 
+                    <input
                         type="tel"
                         prop:value=phone
                         on:input=move |ev| set_phone.set(event_target_value(&ev))
@@ -116,7 +118,7 @@ where
 
                 <div class="form-group">
                     <label>"이메일:"</label>
-                    <input 
+                    <input
                         type="email"
                         prop:value=email
                         on:input=move |ev| set_email.set(event_target_value(&ev))
@@ -124,8 +126,8 @@ where
                     />
                 </div>
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     class="btn btn-primary"
                     disabled=is_saving
                 >

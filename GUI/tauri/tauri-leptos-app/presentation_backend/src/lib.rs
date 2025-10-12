@@ -1,5 +1,5 @@
-pub mod models;
 pub mod commands;
+pub mod models;
 
 use application::usecases::AddressService;
 use infrastructure::database::SqliteAddressRepository;
@@ -13,13 +13,13 @@ pub async fn create_app_state() -> Result<AppState, Box<dyn std::error::Error>> 
     // Create database in current directory for simplicity
     let db_path = "./addressbook.db";
     let db_url = format!("sqlite:{}?mode=rwc", db_path);
-    
+
     println!("Database URL: {}", db_url);
-    
+
     let pool = SqlitePool::connect(&db_url).await?;
     let repository = SqliteAddressRepository::new(pool);
     repository.init_database().await?;
-    
+
     let service = AddressService::new(Box::new(repository));
     Ok(Arc::new(service))
 }

@@ -32,45 +32,38 @@ pub fn AddressList(refresh_trigger: ReadSignal<i32>) -> impl IntoView {
 
             // Try to deserialize as a generic value first
             match js_sys::JSON::stringify(&result) {
-                Ok(json_str) => {
+                | Ok(json_str) => {
                     web_sys::console::log_1(&format!("JSON result: {}", json_str).into());
-                }
-                Err(_) => {
+                },
+                | Err(_) => {
                     web_sys::console::log_1(&"Failed to stringify result".into());
-                }
+                },
             }
 
             // Try deserializing directly as Vec<AddressResponse> first
-            match serde_wasm_bindgen::from_value::<Vec<crate::models::AddressResponse>>(
-                result.clone(),
-            ) {
-                Ok(addr_list) => {
+            match serde_wasm_bindgen::from_value::<Vec<crate::models::AddressResponse>>(result.clone()) {
+                | Ok(addr_list) => {
                     web_sys::console::log_1(&"Direct deserialization worked!".into());
                     set_addresses.set(addr_list);
                     set_loading.set(false);
                     return;
-                }
-                Err(err) => {
-                    web_sys::console::log_1(
-                        &format!("Direct deserialization failed: {:?}", err).into(),
-                    );
-                }
+                },
+                | Err(err) => {
+                    web_sys::console::log_1(&format!("Direct deserialization failed: {:?}", err).into());
+                },
             }
 
             // Fallback to Result wrapper
-            match serde_wasm_bindgen::from_value::<
-                Result<Vec<crate::models::AddressResponse>, String>,
-            >(result)
-            {
-                Ok(Ok(addr_list)) => {
+            match serde_wasm_bindgen::from_value::<Result<Vec<crate::models::AddressResponse>, String>>(result) {
+                | Ok(Ok(addr_list)) => {
                     set_addresses.set(addr_list);
-                }
-                Ok(Err(err)) => {
+                },
+                | Ok(Err(err)) => {
                     web_sys::console::error_1(&format!("Error loading addresses: {}", err).into());
-                }
-                Err(err) => {
+                },
+                | Err(err) => {
                     web_sys::console::error_1(&format!("Parse error: {:?}", err).into());
-                }
+                },
             }
             set_loading.set(false);
         });

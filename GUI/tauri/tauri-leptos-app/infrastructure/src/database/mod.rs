@@ -1,5 +1,6 @@
 use async_trait::async_trait;
-use domain::{entities::Address, repositories::AddressRepository};
+use domain::entities::Address;
+use domain::repositories::AddressRepository;
 use sqlx::{Row, SqlitePool};
 use uuid::Uuid;
 
@@ -9,7 +10,9 @@ pub struct SqliteAddressRepository {
 
 impl SqliteAddressRepository {
     pub fn new(pool: SqlitePool) -> Self {
-        Self { pool }
+        Self {
+            pool,
+        }
     }
 
     pub async fn init_database(&self) -> Result<(), sqlx::Error> {
@@ -55,7 +58,7 @@ impl AddressRepository for SqliteAddressRepository {
             .await?;
 
         match row {
-            Some(row) => {
+            | Some(row) => {
                 let address = Address {
                     id: Uuid::parse_str(&row.get::<String, _>("id"))?,
                     name: row.get("name"),
@@ -63,15 +66,13 @@ impl AddressRepository for SqliteAddressRepository {
                     email: row.get("email"),
                 };
                 Ok(Some(address))
-            }
-            None => Ok(None),
+            },
+            | None => Ok(None),
         }
     }
 
     async fn get_all(&self) -> domain::repositories::Result<Vec<Address>> {
-        let rows = sqlx::query("SELECT * FROM addresses ORDER BY name")
-            .fetch_all(&self.pool)
-            .await?;
+        let rows = sqlx::query("SELECT * FROM addresses ORDER BY name").fetch_all(&self.pool).await?;
 
         let addresses = rows
             .into_iter()

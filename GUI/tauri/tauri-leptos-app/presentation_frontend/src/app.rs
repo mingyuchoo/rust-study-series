@@ -1,6 +1,6 @@
-use leptos::prelude::*;
-use crate::components::address_list::AddressList;
 use crate::components::address_form::AddressForm;
+use crate::components::address_list::AddressList;
+use leptos::prelude::*;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -20,7 +20,7 @@ pub fn App() -> impl IntoView {
         <div class="container">
             <header class="header">
                 <h1>"주소록 앱"</h1>
-                <button 
+                <button
                     class="btn btn-primary"
                     on:click=toggle_form
                 >
@@ -32,7 +32,7 @@ pub fn App() -> impl IntoView {
                 <Show when=move || show_form.get()>
                     <AddressForm on_save=on_address_saved />
                 </Show>
-                
+
                 <AddressList refresh_trigger=refresh_trigger />
             </main>
         </div>

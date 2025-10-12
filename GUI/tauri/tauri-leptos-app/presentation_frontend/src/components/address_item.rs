@@ -45,47 +45,47 @@ where
                 id: String,
             }
 
-            let args = DeleteAddressArgs { id: id.to_string() };
+            let args = DeleteAddressArgs {
+                id: id.to_string(),
+            };
             let args = serde_wasm_bindgen::to_value(&args).unwrap();
             let result = invoke("delete_address", args).await;
 
             // Try direct deserialization first (Tauri unwraps Result automatically)
             match serde_wasm_bindgen::from_value::<bool>(result.clone()) {
-                Ok(true) => {
+                | Ok(true) => {
                     // Reset before triggering deletion callback to avoid setting a disposed signal
                     set_is_deleting.set(false);
                     on_delete(id);
                     return;
-                }
-                Ok(false) => {
+                },
+                | Ok(false) => {
                     web_sys::console::error_1(&"Failed to delete address".into());
                     set_is_deleting.set(false);
                     return;
-                }
-                Err(err) => {
-                    web_sys::console::log_1(
-                        &format!("Direct bool deserialization failed: {:?}", err).into(),
-                    );
-                }
+                },
+                | Err(err) => {
+                    web_sys::console::log_1(&format!("Direct bool deserialization failed: {:?}", err).into());
+                },
             }
 
             // Fallback to Result wrapper
             match serde_wasm_bindgen::from_value::<Result<bool, String>>(result) {
-                Ok(Ok(true)) => {
+                | Ok(Ok(true)) => {
                     // Reset before triggering deletion callback to avoid setting a disposed signal
                     set_is_deleting.set(false);
                     on_delete(id);
                     return;
-                }
-                Ok(Ok(false)) => {
+                },
+                | Ok(Ok(false)) => {
                     web_sys::console::error_1(&"Failed to delete address".into());
-                }
-                Ok(Err(err)) => {
+                },
+                | Ok(Err(err)) => {
                     web_sys::console::error_1(&format!("Error: {}", err).into());
-                }
-                Err(err) => {
+                },
+                | Err(err) => {
                     web_sys::console::error_1(&format!("Parse error: {:?}", err).into());
-                }
+                },
             }
             set_is_deleting.set(false);
         });
@@ -126,13 +126,15 @@ where
                 email: email.clone(),
             };
 
-            let args = UpdateAddressArgs { request };
+            let args = UpdateAddressArgs {
+                request,
+            };
             let args = serde_wasm_bindgen::to_value(&args).unwrap();
             let result = invoke("update_address", args).await;
 
             // Try direct deserialization as AddressResponse first
             match serde_wasm_bindgen::from_value::<crate::models::AddressResponse>(result.clone()) {
-                Ok(address_response) => {
+                | Ok(address_response) => {
                     let updated_address = Address::from(address_response);
                     // Update local signals
                     set_name.set(updated_address.name.clone());
@@ -142,19 +144,15 @@ where
                     set_is_editing.set(false);
                     on_edit(updated_address);
                     return;
-                }
-                Err(err) => {
-                    web_sys::console::log_1(
-                        &format!("Direct AddressResponse deserialization failed: {:?}", err).into(),
-                    );
-                }
+                },
+                | Err(err) => {
+                    web_sys::console::log_1(&format!("Direct AddressResponse deserialization failed: {:?}", err).into());
+                },
             }
 
             // Fallback to Result wrapper
-            match serde_wasm_bindgen::from_value::<Result<crate::models::AddressResponse, String>>(
-                result,
-            ) {
-                Ok(Ok(address_response)) => {
+            match serde_wasm_bindgen::from_value::<Result<crate::models::AddressResponse, String>>(result) {
+                | Ok(Ok(address_response)) => {
                     let updated_address = Address::from(address_response);
                     // Update local signals
                     set_name.set(updated_address.name.clone());
@@ -164,13 +162,13 @@ where
                     set_is_editing.set(false);
                     on_edit(updated_address);
                     return;
-                }
-                Ok(Err(err)) => {
+                },
+                | Ok(Err(err)) => {
                     web_sys::console::error_1(&format!("Error: {}", err).into());
-                }
-                Err(err) => {
+                },
+                | Err(err) => {
                     web_sys::console::error_1(&format!("Parse error: {:?}", err).into());
-                }
+                },
             }
             set_is_saving.set(false);
         });

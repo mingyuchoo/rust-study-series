@@ -10,11 +10,7 @@ pub struct Address {
 }
 
 impl Address {
-    pub fn new(
-        name: String,
-        phone: String,
-        email: String,
-    ) -> Self {
+    pub fn new(name: String, phone: String, email: String) -> Self {
         Self {
             id: Uuid::new_v4(),
             name,
