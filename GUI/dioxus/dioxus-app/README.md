@@ -17,11 +17,11 @@ A full-stack Dioxus application with desktop, web, and mobile support featuring 
 ```bash
 sudo apt update
 sudo apt install libwebkit2gtk-4.1-dev \
-                 build-essential \
-                 pkg-config \
-                 libgtk-3-dev \
-                 libssl-dev \
-                 libsoup-3.0-dev \
+                 build-essential       \
+                 pkg-config            \
+                 libgtk-3-dev          \
+                 libssl-dev            \
+                 libsoup-3.0-dev       \
                  libxdo-dev
 ```
 
@@ -29,12 +29,12 @@ sudo apt install libwebkit2gtk-4.1-dev \
 
 ```bash
 sudo dnf update
-sudo dnf install glib2-devel \
-                 gtk3-devel \
+sudo dnf install glib2-devel         \
+                 gtk3-devel          \
                  webkit2gtk4.1-devel \
-                 libsoup3-devel \
-                 openssl-devel \
-                 pkg-config \
+                 libsoup3-devel      \
+                 openssl-devel       \
+                 pkg-config          \
                  libxdo-devel
 ```
 
@@ -112,7 +112,7 @@ dioxus-app/
 │   │   └── mod.rs
 │   └── main.rs            # Application entry point
 ├── Cargo.toml             # Dependencies and features
-├── Dioxus.toml           # Dioxus configuration
+├── Dioxus.toml            # Dioxus configuration
 └── README.md
 ```
 

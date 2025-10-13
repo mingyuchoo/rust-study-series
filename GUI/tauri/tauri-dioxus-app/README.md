@@ -6,45 +6,45 @@ SQLite를 사용하는 Clean Architecture 기반의 크로스 플랫폼 주소�
 
 ```
 tauri-dioxus-app/
-├── src/                    # Dioxus frontend source
-│   ├── main.rs            # Frontend entry point
-│   ├── app.rs             # Main app component
-│   ├── types.rs           # Type definitions
-│   ├── components/        # UI components
+├── src/                       # Dioxus frontend source
+│   ├── main.rs                # Frontend entry point
+│   ├── app.rs                 # Main app component
+│   ├── types.rs               # Type definitions
+│   ├── components/            # UI components
 │   │   ├── mod.rs
 │   │   ├── contact_form.rs    # Contact form component
 │   │   └── contact_list.rs    # Contact list component
-│   └── services/          # Backend communication services
+│   └── services/              # Backend communication services
 │       ├── mod.rs
 │       └── contact_service.rs # Contact service for Tauri commands
-├── src-tauri/             # Tauri backend source (Clean Architecture)
+├── src-tauri/                 # Tauri backend source (Clean Architecture)
 │   ├── src/
-│   │   ├── main.rs        # Backend entry point
-│   │   ├── lib.rs         # Tauri setup and configuration
-│   │   ├── domain/        # Domain layer
-│   │   │   ├── entities/  # Domain entities
-│   │   │   ├── repositories/ # Repository interfaces
-│   │   │   └── errors.rs  # Domain errors
-│   │   ├── application/   # Application layer
-│   │   │   └── use_cases/ # Business logic use cases
-│   │   ├── infrastructure/ # Infrastructure layer
-│   │   │   └── database/  # SQLite repository implementations
-│   │   └── presentation/  # Presentation layer
-│   │       ├── dto/       # Data transfer objects
-│   │       └── commands/  # Tauri command handlers
-│   ├── Cargo.toml         # Backend dependencies
-│   └── tauri.conf.json    # Tauri configuration
-├── assets/                # Static assets (CSS, images)
-├── Cargo.toml            # Frontend dependencies
-├── Dioxus.toml           # Dioxus configuration
-└── Makefile.toml         # Build tasks
+│   │   ├── main.rs            # Backend entry point
+│   │   ├── lib.rs             # Tauri setup and configuration
+│   │   ├── domain/            # Domain layer
+│   │   │   ├── entities/      # Domain entities
+│   │   │   ├── repositories/  # Repository interfaces
+│   │   │   └── errors.rs      # Domain errors
+│   │   ├── application/       # Application layer
+│   │   │   └── use_cases/     # Business logic use cases
+│   │   ├── infrastructure/    # Infrastructure layer
+│   │   │   └── database/      # SQLite repository implementations
+│   │   └── presentation/      # Presentation layer
+│   │       ├── dto/           # Data transfer objects
+│   │       └── commands/      # Tauri command handlers
+│   ├── Cargo.toml             # Backend dependencies
+│   └── tauri.conf.json        # Tauri configuration
+├── assets/                    # Static assets (CSS, images)
+├── Cargo.toml                 # Frontend dependencies
+├── Dioxus.toml                # Dioxus configuration
+└── Makefile.toml              # Build tasks
 ```
 
 ## Prerequisites
 
 - [Rust](https://rustup.rs/) (latest stable)
-- [Dioxus CLI](https://dioxuslabs.com/learn/0.6/getting_started): `cargo install dioxus-cli`
 - [Tauri CLI](https://tauri.app/start/prerequisites/): `cargo install tauri-cli`
+- [Dioxus CLI](https://dioxuslabs.com/learn/0.6/getting_started): `cargo install dioxus-cli`
 
 ## Development
 
@@ -129,28 +129,28 @@ dx bundle --release         # Build Dioxus bundle only
 ### 백엔드 구조 (Backend Structure)
 ```
 src-tauri/src/
-├── domain/                 # 도메인 계층
-│   ├── entities/          # 도메인 엔티티
-│   │   └── contact.rs     # Contact 엔티티
-│   ├── repositories/      # 리포지토리 인터페이스
-│   │   └── contact_repository.rs # Contact 리포지토리 트레이트
-│   └── errors.rs          # 도메인 에러 정의
-├── application/           # 애플리케이션 계층
-│   └── use_cases/         # 비즈니스 로직 유스케이스
-│       ├── create_contact.rs    # 연락처 생성
-│       ├── get_contact.rs       # 연락처 조회
-│       ├── list_contacts.rs     # 연락처 목록
-│       ├── update_contact.rs    # 연락처 수정
-│       ├── delete_contact.rs    # 연락처 삭제
-│       └── search_contacts.rs   # 연락처 검색
-├── infrastructure/        # 인프라 계층
-│   └── database/          # 데이터베이스 구현
+├── domain/                              # 도메인 계층
+│   ├── entities/                        # 도메인 엔티티
+│   │   └── contact.rs                   # Contact 엔티티
+│   ├── repositories/                    # 리포지토리 인터페이스
+│   │   └── contact_repository.rs        # Contact 리포지토리 트레이트
+│   └── errors.rs                        # 도메인 에러 정의
+├── application/                         # 애플리케이션 계층
+│   └── use_cases/                       # 비즈니스 로직 유스케이스
+│       ├── create_contact.rs            # 연락처 생성
+│       ├── get_contact.rs               # 연락처 조회
+│       ├── list_contacts.rs             # 연락처 목록
+│       ├── update_contact.rs            # 연락처 수정
+│       ├── delete_contact.rs            # 연락처 삭제
+│       └── search_contacts.rs           # 연락처 검색
+├── infrastructure/                      # 인프라 계층
+│   └── database/                        # 데이터베이스 구현
 │       └── sqlite_contact_repository.rs # SQLite 리포지토리 구현
-└── presentation/          # 프레젠테이션 계층
-    ├── dto/               # 데이터 전송 객체
-    │   └── contact_dto.rs # Contact DTO 정의
-    └── commands/          # Tauri 명령어 핸들러
-        └── contact_commands.rs # Contact 관련 명령어
+└── presentation/                        # 프레젠테이션 계층
+    ├── dto/                             # 데이터 전송 객체
+    │   └── contact_dto.rs               # Contact DTO 정의
+    └── commands/                        # Tauri 명령어 핸들러
+        └── contact_commands.rs          # Contact 관련 명령어
 ```
 
 ### 프론트엔드 구조 (Frontend Structure)
@@ -160,11 +160,11 @@ src/
 ├── app.rs                 # 메인 앱 컴포넌트 (상태 관리 및 라우팅)
 ├── types.rs               # 타입 정의 (Contact, Request/Response 타입)
 ├── components/            # UI 컴포넌트
-│   ├── mod.rs            # 컴포넌트 모듈 정의
+│   ├── mod.rs             # 컴포넌트 모듈 정의
 │   ├── contact_form.rs    # 연락처 추가/수정 폼
 │   └── contact_list.rs    # 연락처 목록 및 카드 컴포넌트
 └── services/              # 백엔드 통신 서비스
-    ├── mod.rs            # 서비스 모듈 정의
+    ├── mod.rs             # 서비스 모듈 정의
     └── contact_service.rs # Tauri 명령어 호출 서비스
 ```
 
