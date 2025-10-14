@@ -37,28 +37,28 @@
   workspace    = false
 
 [tasks.build]
-  args         = ["build", "--package", "presentation_frontend"]
+  args         = ["build", "--package", "presentation"]
   command      = "cargo"
   dependencies = ["format"]
   description  = "개발 모드 빌드"
   workspace    = false
 
 [tasks.release]
-  args         = ["build", "--package", "presentation_frontend", "--release"]
+  args         = ["build", "--package", "presentation", "--release"]
   command      = "cargo"
   dependencies = ["format"]
   description  = "릴리즈 모드 빌드"
   workspace    = false
 
 [tasks.run]
-  args         = ["run", "--package", "presentation_frontend"]
+  args         = ["run", "--package", "presentation"]
   command      = "cargo"
   dependencies = ["build"]
   description  = "애플리케이션 실행"
   workspace    = false
 
 [tasks.watch-run]
-  args          = ["watch", "-x", "run --package presentation_frontend"]
+  args          = ["watch", "-x", "run --package presentation"]
   command       = "cargo"
   description   = "파일 변경 감지 및 자동 재실행"
   install_crate = "cargo-watch"
@@ -68,11 +68,11 @@
   dependencies = ["release"]
   description = "릴리즈 바이너리 패키징"
   script = '''
-    cargo build --package presentation_frontend --release
+    cargo build --package presentation --release
     mkdir -p dist
-    cp target/release/presentation_frontend dist/
+    cp target/release/presentation dist/
     cp addresses.db dist/ 2>/dev/null || true
-    cp -r presentation_frontend/fonts dist/ 2>/dev/null || true
+    cp -r presentation/fonts dist/ 2>/dev/null || true
     echo "패키지가 dist/ 디렉토리에 생성되었습니다"
   '''
   workspace = false

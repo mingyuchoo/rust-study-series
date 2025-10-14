@@ -3,6 +3,6 @@
     "domain",
     "application",
     "infrastructure",
-    "presentation_frontend",
+    "presentation",
   ]
   resolver = "2"
