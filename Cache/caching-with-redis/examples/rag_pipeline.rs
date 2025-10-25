@@ -45,7 +45,7 @@ impl RAGPipeline {
         Ok(())
     }
 
-    async fn search(&self, query: &str, top_k: usize) -> Result<Vec<(String, f32)>> {
+    async fn search(&self, query: &str, top_k: usize) -> Result<Vec<(String, String, f32)>> {
         let query_embedding_func = |text: String| async move {
             tokio::time::sleep(tokio::time::Duration::from_millis(30)).await;
             Ok::<Vec<f32>, anyhow::Error>(
@@ -59,14 +59,14 @@ impl RAGPipeline {
             .get_or_compute(query, "sentence-transformer", query_embedding_func)
             .await?;
 
-        let mut scores: Vec<(String, f32)> = Vec::new();
+        let mut scores: Vec<(String, String, f32)> = Vec::new();
         for doc in &self.documents {
             if let Some(ref doc_emb) = doc.embedding {
                 let sim = cosine_similarity(&query_embedding, doc_emb);
-                scores.push((doc.id.clone(), sim));
+                scores.push((doc.id.clone(), doc.content.clone(), sim));
             }
         }
-        scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
+        scores.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(Ordering::Equal));
         scores.truncate(top_k);
         Ok(scores)
     }
@@ -123,8 +123,9 @@ async fn main() -> Result<()> {
     for query in queries {
         println!("\n쿼리: \"{}\"", query);
         let results = rag.search(query, 3).await?;
-        for (i, (doc_id, score)) in results.iter().enumerate() {
+        for (i, (doc_id, content, score)) in results.iter().enumerate() {
             println!("  {}. {} (유사도: {:.3})", i + 1, doc_id, score);
+            println!("     \"{}\"", content);
         }
     }
 
