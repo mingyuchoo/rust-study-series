@@ -1,7 +1,12 @@
 # Dockerfile - 멀티스테이지 빌드
 
 # Stage 1) 빌드 단계: Rust 툴체인 포함 이미지 사용
-FROM rust:1.91-slim AS builder
+FROM rust:slim-bookworm AS builder
+
+# OpenSSL 개발 라이브러리 및 pkg-config 설치
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends pkg-config libssl-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -31,8 +36,8 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# Stage 3) 런타임 단계: 빌더에서 바이너리만 추출 (패키지명과 동일: caching_with_redis)
-COPY --from=builder /app/target/release/caching_with_redis /usr/local/bin/caching_with_redis
+# Stage 3) 런타임 단계: 빌더에서 바이너리만 추출 (패키지명과 동일: caching-with-redis)
+COPY --from=builder /app/target/release/caching-with-redis /usr/local/bin/caching-with-redis
 
 # 기본 환경 변수 설정
 ENV REDIS_URL=redis://redis:6379 \
@@ -43,5 +48,5 @@ ENV REDIS_URL=redis://redis:6379 \
 EXPOSE 8080
 
 # 기본 실행 커맨드(도움말 확인을 위해 빈 실행 또는 status 사용 가능)
-ENTRYPOINT ["/usr/local/bin/caching_with_redis"]
+ENTRYPOINT ["/usr/local/bin/caching-with-redis"]
 CMD ["status"]

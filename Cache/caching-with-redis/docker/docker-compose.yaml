@@ -28,7 +28,9 @@ services:
 
   # Rust 임베딩 캐시 서비스
   embedding-cache:
-    build: .
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
     image: caching_with_redis:latest
     container_name: embedding-cache-rust
     depends_on:
@@ -48,7 +50,7 @@ services:
     networks:
       - embedding_network
     restart: unless-stopped
-    # Dockerfile에서 ENTRYPOINT가 /usr/local/bin/caching_with_redis 이므로
+    # Dockerfile에서 ENTRYPOINT가 /usr/local/bin/caching-with-redis 이므로
     # 여기서는 서브커맨드만 지정
     command: ["status"]
 
