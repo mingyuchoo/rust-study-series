@@ -1,0 +1,8 @@
+[package]
+name = "core-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+libloading = "0.8"
+plugin-interface = { path = "../plugin-interface" }

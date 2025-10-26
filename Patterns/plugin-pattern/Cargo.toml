@@ -1,0 +1,9 @@
+[workspace]
+members = [
+    "plugin-interface",
+    "core-app",
+    "plugins/hello-plugin",
+    "plugins/math-plugin",
+]
+
+resolver = "2"
