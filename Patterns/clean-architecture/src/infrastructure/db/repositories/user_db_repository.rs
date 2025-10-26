@@ -105,10 +105,8 @@ impl UserRepository for UserDbRepository {
             | Err(_) => return Vec::new(),
         };
         let mut users = Vec::new();
-        for user in users_iter {
-            if let Ok(u) = user {
-                users.push(u);
-            }
+        for u in users_iter.flatten() {
+            users.push(u);
         }
         users
     }

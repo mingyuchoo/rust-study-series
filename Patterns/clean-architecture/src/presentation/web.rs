@@ -39,7 +39,7 @@ async fn get_user(Path(id): Path<String>, State(controller): State<SharedControl
 async fn create_user(State(controller): State<SharedController>, Json(user): Json<UserInput>) -> Response {
     let ctrl = controller.lock().await;
     match ctrl.register_user(user.username, user.email) {
-        | Ok(msg) => Html(format!("{}", msg)).into_response(),
+        | Ok(msg) => Html(msg.to_string()).into_response(),
         | Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
@@ -47,7 +47,7 @@ async fn create_user(State(controller): State<SharedController>, Json(user): Jso
 async fn update_user(Path(id): Path<String>, State(controller): State<SharedController>) -> Response {
     let ctrl = controller.lock().await;
     match ctrl.deactivate_user(&id) {
-        | Ok(msg) => Html(format!("{}", msg)).into_response(),
+        | Ok(msg) => Html(msg.to_string()).into_response(),
         | Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
@@ -55,7 +55,7 @@ async fn update_user(Path(id): Path<String>, State(controller): State<SharedCont
 async fn delete_user(Path(id): Path<String>, State(controller): State<SharedController>) -> Response {
     let ctrl = controller.lock().await;
     match ctrl.delete_user(&id) {
-        | Ok(msg) => Html(format!("{}", msg)).into_response(),
+        | Ok(msg) => Html(msg.to_string()).into_response(),
         | Err(e) => (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     }
 }
