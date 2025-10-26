@@ -1,3 +1,9 @@
+[config]
+  default_to_workspace = false
+
+[tasks.default]
+  alias = "deploy-plugins"
+
 [tasks.clean]
   args    = ["clean"]
   command = "cargo"
