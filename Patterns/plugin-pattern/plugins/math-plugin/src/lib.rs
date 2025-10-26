@@ -41,8 +41,9 @@ pub struct MathPlugin {
 impl MathPlugin {
     /// Creates a new `MathPlugin` instance.
     ///
-    /// The plugin starts in an uninitialized state with an operation count of zero.
-    /// The `on_load()` method must be called to initialize the plugin before execution.
+    /// The plugin starts in an uninitialized state with an operation count of
+    /// zero. The `on_load()` method must be called to initialize the plugin
+    /// before execution.
     pub fn new() -> Self {
         Self {
             initialized: false,
@@ -52,17 +53,11 @@ impl MathPlugin {
 }
 
 impl Plugin for MathPlugin {
-    fn name(&self) -> &str {
-        "Math Plugin"
-    }
+    fn name(&self) -> &str { "Math Plugin" }
 
-    fn version(&self) -> &str {
-        "0.1.0"
-    }
+    fn version(&self) -> &str { "0.1.0" }
 
-    fn description(&self) -> &str {
-        "A plugin that performs mathematical calculations based on context data"
-    }
+    fn description(&self) -> &str { "A plugin that performs mathematical calculations based on context data" }
 
     fn on_load(&mut self) -> Result<(), Box<dyn Error>> {
         println!("[MathPlugin] Initializing...");
@@ -80,38 +75,33 @@ impl Plugin for MathPlugin {
 
         // Extract operation type from context data
         // Returns an error if the key is missing
-        let operation = context.data.get("operation")
-            .ok_or("Missing 'operation' in context data")?;
+        let operation = context.data.get("operation").ok_or("Missing 'operation' in context data")?;
 
         // Extract operands from context data
         // Returns errors if either operand is missing
-        let a_str = context.data.get("a")
-            .ok_or("Missing operand 'a' in context data")?;
-        let b_str = context.data.get("b")
-            .ok_or("Missing operand 'b' in context data")?;
+        let a_str = context.data.get("a").ok_or("Missing operand 'a' in context data")?;
+        let b_str = context.data.get("b").ok_or("Missing operand 'b' in context data")?;
 
         // Parse operands as floating-point numbers
         // Returns descriptive errors if parsing fails
-        let a: f64 = a_str.parse()
-            .map_err(|_| format!("Invalid number for operand 'a': {}", a_str))?;
-        let b: f64 = b_str.parse()
-            .map_err(|_| format!("Invalid number for operand 'b': {}", b_str))?;
+        let a: f64 = a_str.parse().map_err(|_| format!("Invalid number for operand 'a': {}", a_str))?;
+        let b: f64 = b_str.parse().map_err(|_| format!("Invalid number for operand 'b': {}", b_str))?;
 
         // Perform calculation based on the requested operation
         // Each operation is validated and handled appropriately
         let result = match operation.as_str() {
-            "add" => a + b,
-            "subtract" => a - b,
-            "multiply" => a * b,
-            "divide" => {
+            | "add" => a + b,
+            | "subtract" => a - b,
+            | "multiply" => a * b,
+            | "divide" => {
                 // Validate divisor to prevent division by zero
                 if b == 0.0 {
                     return Err("Division by zero".into());
                 }
                 a / b
-            }
+            },
             // Return an error for unsupported operations
-            _ => return Err(format!("Unknown operation: {}", operation).into()),
+            | _ => return Err(format!("Unknown operation: {}", operation).into()),
         };
 
         // Format and return the result as a string
@@ -129,14 +119,14 @@ impl Plugin for MathPlugin {
 
 /// Plugin constructor function for dynamic loading.
 ///
-/// This function is called by the plugin manager to create an instance of the plugin.
-/// It must be exported with C ABI and no name mangling to be discoverable by
-/// the dynamic loader.
+/// This function is called by the plugin manager to create an instance of the
+/// plugin. It must be exported with C ABI and no name mangling to be
+/// discoverable by the dynamic loader.
 ///
 /// # Safety
 ///
-/// This function returns a raw pointer to a trait object. The caller (plugin manager)
-/// is responsible for:
+/// This function returns a raw pointer to a trait object. The caller (plugin
+/// manager) is responsible for:
 /// - Converting the pointer back to a `Box<dyn Plugin>`
 /// - Managing the lifetime of the plugin instance
 /// - Calling `on_unload()` before dropping the plugin

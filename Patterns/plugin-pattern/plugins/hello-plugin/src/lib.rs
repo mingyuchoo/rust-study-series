@@ -39,17 +39,11 @@ impl HelloPlugin {
 }
 
 impl Plugin for HelloPlugin {
-    fn name(&self) -> &str {
-        "Hello Plugin"
-    }
+    fn name(&self) -> &str { "Hello Plugin" }
 
-    fn version(&self) -> &str {
-        "0.1.0"
-    }
+    fn version(&self) -> &str { "0.1.0" }
 
-    fn description(&self) -> &str {
-        "A simple plugin that generates personalized greeting messages"
-    }
+    fn description(&self) -> &str { "A simple plugin that generates personalized greeting messages" }
 
     fn on_load(&mut self) -> Result<(), Box<dyn Error>> {
         println!("[HelloPlugin] Initializing...");
@@ -67,10 +61,10 @@ impl Plugin for HelloPlugin {
         // Get the name from context data, or use a default
         // This demonstrates how plugins can access runtime data
         let name = context.data.get("name").map(|s| s.as_str()).unwrap_or("World");
-        
+
         // Generate a personalized greeting
         let greeting = format!("Hello, {}! Welcome to the plugin system.", name);
-        
+
         Ok(greeting)
     }
 
@@ -84,14 +78,14 @@ impl Plugin for HelloPlugin {
 
 /// Plugin constructor function for dynamic loading.
 ///
-/// This function is called by the plugin manager to create an instance of the plugin.
-/// It must be exported with C ABI and no name mangling to be discoverable by
-/// the dynamic loader.
+/// This function is called by the plugin manager to create an instance of the
+/// plugin. It must be exported with C ABI and no name mangling to be
+/// discoverable by the dynamic loader.
 ///
 /// # Safety
 ///
-/// This function returns a raw pointer to a trait object. The caller (plugin manager)
-/// is responsible for:
+/// This function returns a raw pointer to a trait object. The caller (plugin
+/// manager) is responsible for:
 /// - Converting the pointer back to a `Box<dyn Plugin>`
 /// - Managing the lifetime of the plugin instance
 /// - Calling `on_unload()` before dropping the plugin

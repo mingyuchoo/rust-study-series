@@ -33,12 +33,14 @@
 
 [tasks.watch-run]
   # `cargo install cargo-watch`로 설치
+  args          = ["watch", "-x", "run", "--bin", "core-app"]
   command       = "cargo"
-  args          = ["watch", "-x", "run"]
-  install_crate = "cargo-watch"
   dependencies  = ["format"]
+  install_crate = "cargo-watch"
+  workspace     = false
 
 [tasks.run]
-  args         = ["run"]
+  args         = ["run", "--bin", "core-app"]
   command      = "cargo"
   dependencies = ["format"]
+  workspace    = false

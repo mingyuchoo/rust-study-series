@@ -5,7 +5,8 @@ use std::error::Error;
 ///
 /// The `PluginContext` provides a way to pass runtime data to plugins
 /// through a key-value store. This allows the core application to provide
-/// configuration, user input, or other dynamic data to plugins at execution time.
+/// configuration, user input, or other dynamic data to plugins at execution
+/// time.
 ///
 /// # Examples
 ///
@@ -49,7 +50,8 @@ impl PluginContext {
 ///
 /// Plugins follow a three-phase lifecycle:
 /// 1. **Loading**: The plugin is dynamically loaded and `on_load()` is called
-/// 2. **Execution**: The plugin's `execute()` method is called with context data
+/// 2. **Execution**: The plugin's `execute()` method is called with context
+///    data
 /// 3. **Unloading**: The plugin's `on_unload()` method is called for cleanup
 ///
 /// # Implementation Requirements
@@ -68,18 +70,23 @@ impl PluginContext {
 ///
 /// impl Plugin for MyPlugin {
 ///     fn name(&self) -> &str { "My Plugin" }
+///
 ///     fn version(&self) -> &str { "1.0.0" }
+///
 ///     fn description(&self) -> &str { "A sample plugin" }
-///     
+///
 ///     fn on_load(&mut self) -> Result<(), Box<dyn Error>> {
 ///         println!("Plugin loaded");
 ///         Ok(())
 ///     }
-///     
-///     fn execute(&self, context: &PluginContext) -> Result<String, Box<dyn Error>> {
+///
+///     fn execute(
+///         &self,
+///         context: &PluginContext,
+///     ) -> Result<String, Box<dyn Error>> {
 ///         Ok("Plugin executed".to_string())
 ///     }
-///     
+///
 ///     fn on_unload(&mut self) -> Result<(), Box<dyn Error>> {
 ///         println!("Plugin unloaded");
 ///         Ok(())
@@ -91,17 +98,17 @@ pub trait Plugin: Send + Sync {
     ///
     /// This should be a human-readable identifier for the plugin.
     fn name(&self) -> &str;
-    
+
     /// Returns the version of the plugin.
     ///
     /// Use semantic versioning (e.g., "1.0.0") for consistency.
     fn version(&self) -> &str;
-    
+
     /// Returns a description of the plugin.
     ///
     /// This should briefly explain what the plugin does.
     fn description(&self) -> &str;
-    
+
     /// Called when the plugin is loaded.
     ///
     /// Use this method to perform any initialization logic such as:
@@ -114,7 +121,7 @@ pub trait Plugin: Send + Sync {
     /// Return an error if initialization fails. The plugin manager will
     /// log the error but continue loading other plugins.
     fn on_load(&mut self) -> Result<(), Box<dyn Error>>;
-    
+
     /// Execute the plugin's main functionality.
     ///
     /// This method is called by the plugin manager to perform the plugin's
@@ -133,7 +140,7 @@ pub trait Plugin: Send + Sync {
     /// Return an error if execution fails. The plugin manager will handle
     /// the error gracefully without crashing the application.
     fn execute(&self, context: &PluginContext) -> Result<String, Box<dyn Error>>;
-    
+
     /// Called when the plugin is unloaded.
     ///
     /// Use this method to perform any cleanup logic such as:
@@ -156,8 +163,8 @@ pub trait Plugin: Send + Sync {
 ///
 /// # Safety
 ///
-/// This function is `unsafe` because it returns a raw pointer to a trait object.
-/// The caller (plugin manager) is responsible for:
+/// This function is `unsafe` because it returns a raw pointer to a trait
+/// object. The caller (plugin manager) is responsible for:
 /// - Converting the raw pointer back to a `Box<dyn Plugin>`
 /// - Ensuring the pointer is not null
 /// - Managing the lifetime of the plugin instance

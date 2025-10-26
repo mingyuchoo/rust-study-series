@@ -66,13 +66,15 @@ impl PluginManager {
 
     /// Discovers all plugin libraries in the specified directory.
     ///
-    /// Scans the directory for files with platform-specific dynamic library extensions:
+    /// Scans the directory for files with platform-specific dynamic library
+    /// extensions:
     /// - `.so` on Linux
     /// - `.dll` on Windows
     /// - `.dylib` on macOS
     ///
-    /// For each discovered library, attempts to load it as a plugin. If a plugin
-    /// fails to load, logs an error and continues with the next plugin.
+    /// For each discovered library, attempts to load it as a plugin. If a
+    /// plugin fails to load, logs an error and continues with the next
+    /// plugin.
     ///
     /// # Arguments
     ///
@@ -81,7 +83,8 @@ impl PluginManager {
     /// # Returns
     ///
     /// Returns `Ok(())` if the directory was successfully scanned, even if some
-    /// plugins failed to load. Returns an error only if the directory cannot be read.
+    /// plugins failed to load. Returns an error only if the directory cannot be
+    /// read.
     ///
     /// # Examples
     ///
@@ -99,11 +102,11 @@ impl PluginManager {
         }
 
         let entries = fs::read_dir(plugin_dir)?;
-        
+
         for entry in entries {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.is_file() {
                 if let Some(extension) = path.extension() {
                     let ext = extension.to_string_lossy();
@@ -115,7 +118,7 @@ impl PluginManager {
                 }
             }
         }
-        
+
         Ok(())
     }
 
@@ -156,30 +159,26 @@ impl PluginManager {
     pub fn load_plugin(&mut self, path: &Path) -> Result<(), Box<dyn Error>> {
         unsafe {
             let library = Library::new(path)?;
-            
+
             let constructor: Symbol<PluginCreate> = library.get(b"_plugin_create")?;
             let plugin_ptr = constructor();
-            
+
             if plugin_ptr.is_null() {
                 return Err("Plugin constructor returned null".into());
             }
-            
+
             let mut plugin = Box::from_raw(plugin_ptr);
-            
+
             // Call on_load
             if let Err(e) = plugin.on_load() {
                 eprintln!("Plugin {} on_load failed: {}", plugin.name(), e);
             } else {
-                println!("Loaded plugin: {} v{} - {}", 
-                    plugin.name(), 
-                    plugin.version(), 
-                    plugin.description()
-                );
+                println!("Loaded plugin: {} v{} - {}", plugin.name(), plugin.version(), plugin.description());
             }
-            
+
             self.plugins.push(plugin);
             self.libraries.push(library);
-            
+
             Ok(())
         }
     }
@@ -211,16 +210,13 @@ impl PluginManager {
     /// let results = manager.execute_all(&context);
     /// for (i, result) in results.iter().enumerate() {
     ///     match result {
-    ///         Ok(output) => println!("Plugin {}: {}", i, output),
-    ///         Err(e) => eprintln!("Plugin {} error: {}", i, e),
+    ///         | Ok(output) => println!("Plugin {}: {}", i, output),
+    ///         | Err(e) => eprintln!("Plugin {} error: {}", i, e),
     ///     }
     /// }
     /// ```
     pub fn execute_all(&self, context: &PluginContext) -> Vec<Result<String, Box<dyn Error>>> {
-        self.plugins
-            .iter()
-            .map(|plugin| plugin.execute(context))
-            .collect()
+        self.plugins.iter().map(|plugin| plugin.execute(context)).collect()
     }
 
     /// Shuts down all plugins in reverse order of loading.
@@ -254,41 +250,41 @@ impl PluginManager {
 
 fn main() {
     println!("=== Core Application Starting ===\n");
-    
+
     // Initialize PluginManager
     let mut plugin_manager = PluginManager::new();
-    
+
     // Create plugins directory path
     let plugin_dir = PathBuf::from("target/debug/plugins");
-    
+
     // Discover and load plugins
     println!("Discovering plugins in: {:?}\n", plugin_dir);
     if let Err(e) = plugin_manager.discover_plugins(&plugin_dir) {
         eprintln!("Error discovering plugins: {}", e);
     }
-    
+
     // Create PluginContext with sample data
     let mut context = PluginContext::new();
     context.data.insert("user".to_string(), "Alice".to_string());
     context.data.insert("value1".to_string(), "10".to_string());
     context.data.insert("value2".to_string(), "5".to_string());
-    
+
     // Execute all plugins
     println!("\n=== Executing Plugins ===\n");
     let results = plugin_manager.execute_all(&context);
-    
+
     for (i, result) in results.iter().enumerate() {
         match result {
-            Ok(output) => println!("Plugin {} output: {}", i + 1, output),
-            Err(e) => eprintln!("Plugin {} error: {}", i + 1, e),
+            | Ok(output) => println!("Plugin {} output: {}", i + 1, output),
+            | Err(e) => eprintln!("Plugin {} error: {}", i + 1, e),
         }
     }
-    
+
     // Shutdown
     println!("\n=== Shutting Down ===\n");
     if let Err(e) = plugin_manager.shutdown() {
         eprintln!("Error during shutdown: {}", e);
     }
-    
+
     println!("\n=== Core Application Exiting ===");
 }

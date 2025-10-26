@@ -6,7 +6,7 @@ A dynamic plugin system for Rust that enables runtime feature extension through 
 
 This project uses a Cargo workspace with the following structure:
 
-```
+```bash
 rust-plugin-system/
 ├── plugin-interface/     # Shared trait definitions for plugins
 ├── core-app/            # Main application that loads and manages plugins
