@@ -196,4 +196,5 @@ pub trait Plugin: Send + Sync {
 ///     Box::into_raw(Box::new(MyPlugin))
 /// }
 /// ```
-pub type PluginCreate = unsafe fn() -> *mut dyn Plugin;
+#[allow(improper_ctypes_definitions)]
+pub type PluginCreate = extern "C" fn() -> *mut dyn Plugin;

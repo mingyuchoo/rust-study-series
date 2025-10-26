@@ -269,9 +269,10 @@ fn main() {
 
     // Create PluginContext with sample data
     let mut context = PluginContext::new();
-    context.data.insert("user".to_string(), "Alice".to_string());
-    context.data.insert("value1".to_string(), "10".to_string());
-    context.data.insert("value2".to_string(), "5".to_string());
+    context.data.insert("name".to_string(), "Alice".to_string());
+    context.data.insert("operation".to_string(), "add".to_string());
+    context.data.insert("a".to_string(), "10".to_string());
+    context.data.insert("b".to_string(), "5".to_string());
 
     // Execute all plugins
     println!("\n=== Executing Plugins ===\n");
