@@ -22,6 +22,10 @@ pub struct PluginContext {
     pub data: HashMap<String, String>,
 }
 
+impl Default for PluginContext {
+    fn default() -> Self { Self::new() }
+}
+
 impl PluginContext {
     /// Creates a new empty `PluginContext`.
     ///

@@ -38,6 +38,10 @@ pub struct MathPlugin {
     operation_count: u32,
 }
 
+impl Default for MathPlugin {
+    fn default() -> Self { Self::new() }
+}
+
 impl MathPlugin {
     /// Creates a new `MathPlugin` instance.
     ///

@@ -26,6 +26,10 @@ pub struct HelloPlugin {
     initialized: bool,
 }
 
+impl Default for HelloPlugin {
+    fn default() -> Self { Self::new() }
+}
+
 impl HelloPlugin {
     /// Creates a new `HelloPlugin` instance.
     ///

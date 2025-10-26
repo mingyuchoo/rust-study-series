@@ -45,6 +45,10 @@ pub struct PluginManager {
     libraries: Vec<Library>,
 }
 
+impl Default for PluginManager {
+    fn default() -> Self { Self::new() }
+}
+
 impl PluginManager {
     /// Creates a new `PluginManager` instance.
     ///
@@ -107,14 +111,14 @@ impl PluginManager {
             let entry = entry?;
             let path = entry.path();
 
-            if path.is_file() {
-                if let Some(extension) = path.extension() {
-                    let ext = extension.to_string_lossy();
-                    if ext == "so" || ext == "dll" || ext == "dylib" {
-                        if let Err(e) = self.load_plugin(&path) {
-                            eprintln!("Failed to load plugin {:?}: {}", path, e);
-                        }
-                    }
+            if path.is_file()
+                && let Some(extension) = path.extension()
+            {
+                let ext = extension.to_string_lossy();
+                if (ext == "so" || ext == "dll" || ext == "dylib")
+                    && let Err(e) = self.load_plugin(&path)
+                {
+                    eprintln!("Failed to load plugin {:?}: {}", path, e);
                 }
             }
         }
