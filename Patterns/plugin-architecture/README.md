@@ -1,4 +1,4 @@
-# Rust Plugin System
+# Rust Plugin Architecture System
 
 A dynamic plugin system for Rust that enables runtime feature extension through a workspace architecture. The system allows the core application to load and execute plugins without recompilation.
 
