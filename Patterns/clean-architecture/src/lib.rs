@@ -17,6 +17,6 @@ pub mod infrastructure {
 }
 
 // UI layer
-pub mod ui {
+pub mod presentation {
     pub mod web;
 }

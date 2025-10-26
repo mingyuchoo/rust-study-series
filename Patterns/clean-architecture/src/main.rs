@@ -1,7 +1,7 @@
 // main.rs - 애플리케이션 진입점
 //
 
-use onion_arch_example::ui::web;
+use onion_arch_example::presentation::web;
 
 #[tokio::main]
 async fn main() {

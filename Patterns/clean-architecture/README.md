@@ -1,4 +1,4 @@
-# Onion Architecture Example
+# Clean Architecture Example
 
 ## Project Structure
 

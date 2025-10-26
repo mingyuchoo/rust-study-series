@@ -63,19 +63,16 @@ impl UserRepository for UserDbRepository {
         let conn = self.conn.lock().unwrap();
 
         if let Some(id) = user.id {
-            conn.execute("INSERT OR REPLACE INTO users (id, username, email, active) VALUES (?, ?, ?, ?)", params![
-                id,
-                user.username,
-                user.email,
-                if user.active { 1 } else { 0 }
-            ])
+            conn.execute(
+                "INSERT OR REPLACE INTO users (id, username, email, active) VALUES (?, ?, ?, ?)",
+                params![id, user.username, user.email, if user.active { 1 } else { 0 }],
+            )
             .map_err(|e| format!("Failed to save user: {}", e))?;
         } else {
-            conn.execute("INSERT INTO users (username, email, active) VALUES (?, ?, ?)", params![
-                user.username,
-                user.email,
-                if user.active { 1 } else { 0 }
-            ])
+            conn.execute(
+                "INSERT INTO users (username, email, active) VALUES (?, ?, ?)",
+                params![user.username, user.email, if user.active { 1 } else { 0 }],
+            )
             .map_err(|e| format!("Failed to save user: {}", e))?;
         }
         Ok(())

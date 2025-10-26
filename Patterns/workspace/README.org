@@ -1,4 +1,4 @@
-* Workspace Pattern project
+* Workspace project
 How to create a workspace project
 ** List
 1. Create a workspace
