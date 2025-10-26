@@ -9,7 +9,7 @@ This project uses a Cargo workspace with the following structure:
 ```bash
 rust-plugin-system/
 ├── plugin-interface/     # Shared trait definitions for plugins
-├── core-app/            # Main application that loads and manages plugins
+├── plugin-manager/            # Main application that loads and manages plugins
 ├── plugins/             # Plugin implementations
 │   ├── hello-plugin/   # Example: Simple greeting plugin
 │   └── math-plugin/    # Example: Mathematical operations plugin
@@ -27,53 +27,60 @@ rust-plugin-system/
 ### Building the Project
 
 1. **Build all workspace members:**
+
    ```bash
    cargo build
    ```
 
    This command builds:
+
    - `plugin-interface` crate (library)
-   - `core-app` executable
+   - `plugin-manager` executable
    - `hello-plugin` dynamic library
    - `math-plugin` dynamic library
 
 2. **Deploy plugins to runtime directory:**
+
    ```bash
    ./deploy-plugins.sh
    ```
-   
+
    Or on Windows:
+
    ```cmd
    deploy-plugins.bat
    ```
 
    This script:
+
    - Creates the `target/debug/plugins/` directory if it doesn't exist
    - Copies plugin libraries to the runtime directory
    - Handles platform-specific library extensions (.so, .dll, .dylib)
 
 3. **Run the core application:**
    ```bash
-   cargo run --bin core-app
+   cargo run --bin plugin-manager
    ```
 
 ### Build Order
 
 The workspace automatically handles build dependencies:
+
 1. `plugin-interface` is built first (dependency for all other crates)
 2. Plugin implementations are built next
-3. `core-app` is built last
+3. `plugin-manager` is built last
 
 ## Running the Application
 
 After building and deploying plugins:
 
 ```bash
-cd core-app
+cd plugin-manager
 cargo run
 ```
 
 The application will:
+
 1. Discover plugins in `target/debug/plugins/`
 2. Load each plugin dynamically
 3. Execute plugin functionality
@@ -82,12 +89,14 @@ The application will:
 ## Creating a New Plugin
 
 1. **Create a new crate in the plugins directory:**
+
    ```bash
    cd plugins
    cargo new --lib my-plugin
    ```
 
 2. **Configure Cargo.toml:**
+
    ```toml
    [package]
    name = "my-plugin"
@@ -102,6 +111,7 @@ The application will:
    ```
 
 3. **Implement the Plugin trait:**
+
    ```rust
    use plugin_interface::{Plugin, PluginContext};
    use std::error::Error;
@@ -144,11 +154,12 @@ The application will:
    ```
 
 4. **Add to workspace members in root Cargo.toml:**
+
    ```toml
    [workspace]
    members = [
        "plugin-interface",
-       "core-app",
+       "plugin-manager",
        "plugins/hello-plugin",
        "plugins/math-plugin",
        "plugins/my-plugin",  # Add your plugin here
@@ -164,29 +175,35 @@ The application will:
 ## Platform-Specific Notes
 
 ### Linux
+
 - Plugin libraries have `.so` extension
 - Example: `libhello_plugin.so`
 
 ### Windows
+
 - Plugin libraries have `.dll` extension
 - Example: `hello_plugin.dll`
 
 ### macOS
+
 - Plugin libraries have `.dylib` extension
 - Example: `libhello_plugin.dylib`
 
 ## Troubleshooting
 
 ### Plugin not loading
+
 - Ensure the plugin is built with `crate-type = ["cdylib"]`
 - Verify the plugin library is in `target/debug/plugins/`
 - Check that `_plugin_create` function is exported with `#[no_mangle]` and `extern "C"`
 
 ### Symbol not found errors
-- Ensure plugin-interface versions match between core-app and plugins
+
+- Ensure plugin-interface versions match between plugin-manager and plugins
 - Rebuild all workspace members: `cargo clean && cargo build`
 
 ### Runtime errors
+
 - Check plugin implementation of the Plugin trait
 - Review error messages in plugin's `on_load` or `execute` methods
 
@@ -195,19 +212,21 @@ The application will:
 1. Make changes to plugin code
 2. Rebuild: `cargo build`
 3. Deploy: `./deploy-plugins.sh`
-4. Run: `cargo run --bin core-app`
+4. Run: `cargo run --bin plugin-manager`
 
 ## Testing
 
 Run tests for all workspace members:
+
 ```bash
 cargo test
 ```
 
 Run tests for a specific crate:
+
 ```bash
 cargo test -p plugin-interface
-cargo test -p core-app
+cargo test -p plugin-manager
 cargo test -p hello-plugin
 ```
 

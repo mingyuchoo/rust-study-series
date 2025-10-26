@@ -1,9 +1,9 @@
 [workspace]
-members = [
+  members = [
     "plugin-interface",
-    "core-app",
+    "plugin-manager",
     "plugins/hello-plugin",
     "plugins/math-plugin",
-]
+  ]
 
-resolver = "2"
+  resolver = "2"

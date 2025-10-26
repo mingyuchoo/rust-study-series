@@ -64,4 +64,4 @@ echo "Plugin libraries:"
 ls -lh "${PLUGINS_DIR}"
 
 echo ""
-echo "You can now run the core application with: cargo run --bin core-app"
+echo "You can now run the core application with: cargo run --bin plugin-manager"

@@ -21,6 +21,12 @@
   command      = "cargo"
   dependencies = ["format"]
 
+[tasks.deploy-plugins]
+  args         = ["./deploy-plugins.sh"]
+  command      = "bash"
+  dependencies = ["build"]
+  workspace    = false
+
 [tasks.release]
   args         = ["build", "--profile", "release"]
   command      = "cargo"
@@ -33,14 +39,14 @@
 
 [tasks.watch-run]
   # `cargo install cargo-watch`로 설치
-  args          = ["watch", "-x", "run", "--bin", "core-app"]
+  args          = ["watch", "-x", "run", "--bin", "plugin-manager"]
   command       = "cargo"
-  dependencies  = ["format"]
+  dependencies  = ["deploy-plugins"]
   install_crate = "cargo-watch"
   workspace     = false
 
 [tasks.run]
-  args         = ["run", "--bin", "core-app"]
+  args         = ["run", "--bin", "plugin-manager"]
   command      = "cargo"
-  dependencies = ["format"]
+  dependencies = ["deploy-plugins"]
   workspace    = false

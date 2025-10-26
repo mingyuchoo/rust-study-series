@@ -22,7 +22,7 @@ use std::path::{Path, PathBuf};
 ///
 /// ```no_run
 /// use std::path::PathBuf;
-/// # use core_app::PluginManager;
+/// # use plugin_manager::PluginManager;
 /// # use plugin_interface::PluginContext;
 ///
 /// let mut manager = PluginManager::new();
@@ -58,7 +58,7 @@ impl PluginManager {
     /// # Examples
     ///
     /// ```
-    /// # use core_app::PluginManager;
+    /// # use plugin_manager::PluginManager;
     /// let manager = PluginManager::new();
     /// ```
     pub fn new() -> Self {
@@ -94,7 +94,7 @@ impl PluginManager {
     ///
     /// ```no_run
     /// # use std::path::PathBuf;
-    /// # use core_app::PluginManager;
+    /// # use plugin_manager::PluginManager;
     /// let mut manager = PluginManager::new();
     /// let plugin_dir = PathBuf::from("target/debug/plugins");
     /// manager.discover_plugins(&plugin_dir).unwrap();
@@ -155,7 +155,7 @@ impl PluginManager {
     ///
     /// ```no_run
     /// # use std::path::PathBuf;
-    /// # use core_app::PluginManager;
+    /// # use plugin_manager::PluginManager;
     /// let mut manager = PluginManager::new();
     /// let plugin_path = PathBuf::from("target/debug/plugins/libhello_plugin.so");
     /// manager.load_plugin(&plugin_path).unwrap();
@@ -205,7 +205,7 @@ impl PluginManager {
     /// # Examples
     ///
     /// ```no_run
-    /// # use core_app::PluginManager;
+    /// # use plugin_manager::PluginManager;
     /// # use plugin_interface::PluginContext;
     /// # let manager = PluginManager::new();
     /// let mut context = PluginContext::new();
@@ -236,7 +236,7 @@ impl PluginManager {
     /// # Examples
     ///
     /// ```no_run
-    /// # use core_app::PluginManager;
+    /// # use plugin_manager::PluginManager;
     /// # let mut manager = PluginManager::new();
     /// manager.shutdown().unwrap();
     /// ```

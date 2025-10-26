@@ -15,7 +15,7 @@ rust-plugin-system/
 │   ├── Cargo.toml
 │   └── src/
 │       └── lib.rs
-├── core-app/                  # Main application
+├── plugin-manager/                  # Main application
 │   ├── Cargo.toml
 │   └── src/
 │       └── main.rs
@@ -72,6 +72,7 @@ pub type PluginCreate = unsafe fn() -> *mut dyn Plugin;
 ```
 
 **Design Decisions**:
+
 - Use trait objects for dynamic dispatch
 - Require Send + Sync for thread safety
 - Use Result types for error handling
@@ -85,6 +86,7 @@ pub type PluginCreate = unsafe fn() -> *mut dyn Plugin;
 **Key Components**:
 
 **PluginManager**:
+
 ```rust
 pub struct PluginManager {
     plugins: Vec<Box<dyn Plugin>>,
@@ -101,6 +103,7 @@ impl PluginManager {
 ```
 
 **Main Application Flow**:
+
 1. Initialize PluginManager
 2. Discover plugins in designated directory
 3. Load each plugin dynamically
@@ -108,6 +111,7 @@ impl PluginManager {
 5. Cleanup on shutdown
 
 **Design Decisions**:
+
 - Store both plugin instances and library handles to prevent premature unloading
 - Use Vec for simple sequential plugin execution
 - Graceful error handling - one plugin failure doesn't crash the system
@@ -118,16 +122,19 @@ impl PluginManager {
 **Purpose**: Demonstrate plugin system with concrete examples
 
 **Hello Plugin**:
+
 - Simple greeting functionality
 - Demonstrates basic plugin structure
 - Uses context data for personalization
 
 **Math Plugin**:
+
 - Performs calculations
 - Demonstrates stateful plugin behavior
 - Shows error handling in plugin execution
 
 **Plugin Structure Pattern**:
+
 ```rust
 pub struct MyPlugin {
     // Plugin state
@@ -144,6 +151,7 @@ pub extern "C" fn _plugin_create() -> *mut dyn Plugin {
 ```
 
 **Design Decisions**:
+
 - Use `#[no_mangle]` to preserve symbol names
 - Use `extern "C"` for stable ABI
 - Compile as `cdylib` for dynamic loading
@@ -210,7 +218,7 @@ match plugin_manager.load_plugin(&plugin_path) {
 ### Test Organization
 
 ```
-core-app/
+plugin-manager/
 ├── src/
 │   └── main.rs
 └── tests/
@@ -236,7 +244,7 @@ plugins/hello-plugin/
 [workspace]
 members = [
     "plugin-interface",
-    "core-app",
+    "plugin-manager",
     "plugins/hello-plugin",
     "plugins/math-plugin",
 ]
@@ -246,7 +254,7 @@ members = [
 
 ```
 target/debug/
-├── core-app              # Main executable
+├── plugin-manager              # Main executable
 └── plugins/              # Plugin libraries
     ├── libhello_plugin.so
     └── libmath_plugin.so
