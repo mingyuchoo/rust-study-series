@@ -12,13 +12,13 @@ fn main() -> Result<(), eframe::Error> {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1024.0, 768.0])
             .with_min_inner_size([800.0, 600.0])
-            .with_title("파일 변환기"),
+            .with_title("Egui File Converter"),
         ..Default::default()
     };
     
     // 애플리케이션 실행
     eframe::run_native(
-        "파일 변환기",
+        "Egui File Converter",
         options,
         Box::new(|cc| {
             // egui 스타일 설정

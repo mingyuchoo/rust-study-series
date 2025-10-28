@@ -1,5 +1,5 @@
 use plugin_manager::{ConversionEngine, PluginRegistry};
-use database::{ConversionHistoryEntry, HistoryManager, SettingsManager};
+use database_manager::{ConversionHistoryEntry, HistoryManager, SettingsManager};
 use eframe::egui;
 use plugin_interface::{ConversionOptions, FileFormat, PluginMetadata};
 use std::sync::mpsc::{channel, Receiver, Sender};

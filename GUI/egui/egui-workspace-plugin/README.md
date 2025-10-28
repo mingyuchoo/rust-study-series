@@ -27,7 +27,7 @@ file-converter-app/
 ├── plugin-interface/          # 플러그인 트레이트 정의
 │   └── src/
 │       └── lib.rs             # Plugin 트레이트 및 관련 타입
-├── database/                  # sqlite 데이터 관리
+├── database-manager/          # sqlite 데이터 관리
 │   └── src/
 │       ├── schema.rs          # 데이터베이스 스키마
 │       ├── history.rs         # 변환 이력 관리

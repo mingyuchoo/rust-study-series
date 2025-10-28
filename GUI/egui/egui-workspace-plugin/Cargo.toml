@@ -2,7 +2,7 @@
 members = [
     "plugin-manager",
     "plugin-interface",
-    "database",
+    "database-manager",
     "gui",
     "plugins/text-converter",
 ]
