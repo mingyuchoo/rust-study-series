@@ -28,10 +28,10 @@ cargo build
 
 ```bash
 # 릴리스 버전 실행
-cargo run -p gui --release
+cargo run -p app-gui --release
 
 # 또는 개발 버전 실행
-cargo run -p gui
+cargo run -p app-gui
 ```
 
 ### 4. 첫 번째 변환 실행
@@ -115,7 +115,7 @@ cargo build --release
 cargo build -p text-converter --lib
 
 # 로그 확인
-RUST_LOG=debug cargo run -p gui
+RUST_LOG=debug cargo run -p app-gui
 ```
 
 ### 변환이 실패함
@@ -123,7 +123,7 @@ RUST_LOG=debug cargo run -p gui
 1. 이력 탭에서 에러 메시지 확인
 2. 입력 파일 권한 확인
 3. 출력 디렉토리 쓰기 권한 확인
-4. 로그 확인: `RUST_LOG=debug cargo run -p gui`
+4. 로그 확인: `RUST_LOG=debug cargo run -p app-gui`
 
 ## 다음 단계
 

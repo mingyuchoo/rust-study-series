@@ -36,7 +36,7 @@ git checkout -b feature/your-feature-name
 - `plugin-manager/`: 핵심 비즈니스 로직
 - `plugin-interface/`: 플러그인 인터페이스
 - `database-manager/`: 데이터베이스 관리
-- `gui/`: GUI 애플리케이션
+- `app-gui/`: GUI 애플리케이션
 - `plugins/`: 플러그인 구현체
 
 ### 3. 코드 포맷팅
@@ -89,10 +89,10 @@ cargo build --workspace --release
 
 ```bash
 # GUI 애플리케이션 실행
-cargo run -p gui
+cargo run -p app-gui
 
 # 로그 레벨 설정하여 실행
-RUST_LOG=debug cargo run -p gui
+RUST_LOG=debug cargo run -p app-gui
 ```
 
 ## 코딩 가이드라인

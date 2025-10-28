@@ -32,7 +32,7 @@ file-converter-app/
 │       ├── schema.rs          # 데이터베이스 스키마
 │       ├── history.rs         # 변환 이력 관리
 │       └── settings.rs        # 사용자 설정 관리
-├── gui/                       # egui 기반 UI
+├── app-gui/                   # egui 기반 UI
 │   └── src/
 │       ├── main.rs            # 애플리케이션 진입점
 │       └── app.rs             # GUI 애플리케이션 로직
@@ -60,7 +60,7 @@ cargo build --release
 cargo build
 
 # 특정 크레이트만 빌드
-cargo build -p gui
+cargo build -p app-gui
 cargo build -p plugin-manager
 ```
 
@@ -68,10 +68,10 @@ cargo build -p plugin-manager
 
 ```bash
 # GUI 애플리케이션 실행
-cargo run -p gui --release
+cargo run -p app-gui --release
 
 # 개발 모드로 실행
-cargo run -p gui
+cargo run -p app-gui
 ```
 
 ### 테스트 실행
@@ -91,7 +91,7 @@ cargo test -p plugin-manager --test integration_test
 
 ### 기본 사용법
 
-1. **애플리케이션 실행**: `cargo run -p gui`
+1. **애플리케이션 실행**: `cargo run -p app-gui`
 2. **파일 선택**: "파일 선택..." 버튼을 클릭하여 변환할 파일 선택
 3. **출력 형식 선택**: 드롭다운 메뉴에서 원하는 출력 형식 선택
 4. **변환 실행**: "변환 시작" 버튼 클릭
@@ -287,10 +287,10 @@ cargo clippy --all-targets --all-features
 
 ```bash
 # 로그 레벨 설정하여 실행
-RUST_LOG=debug cargo run -p gui
+RUST_LOG=debug cargo run -p app-gui
 
 # 특정 모듈만 로깅
-RUST_LOG=plugin_manager=debug cargo run -p gui
+RUST_LOG=plugin_manager=debug cargo run -p app-gui
 ```
 
 ## 라이선스

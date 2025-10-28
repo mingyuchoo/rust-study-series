@@ -3,7 +3,7 @@ members = [
     "plugin-manager",
     "plugin-interface",
     "database-manager",
-    "gui",
+    "app-gui",
     "plugins/text-converter",
 ]
 resolver = "2"
