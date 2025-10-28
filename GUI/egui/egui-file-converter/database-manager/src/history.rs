@@ -1,5 +1,5 @@
-use rusqlite::{Connection, Result, params};
 use chrono::{DateTime, Utc};
+use rusqlite::{Connection, Result, params};
 
 /// 변환 이력 항목
 #[derive(Debug, Clone)]
@@ -27,9 +27,11 @@ impl HistoryManager {
     pub fn new(db_path: &str) -> Result<Self> {
         let conn = Connection::open(db_path)?;
         crate::schema::initialize_database(&conn)?;
-        Ok(Self { conn })
+        Ok(Self {
+            conn,
+        })
     }
-    
+
     /// 변환 이력 추가
     pub fn add_entry(&self, entry: &ConversionHistoryEntry) -> Result<i64> {
         self.conn.execute(
@@ -52,26 +54,26 @@ impl HistoryManager {
         )?;
         Ok(self.conn.last_insert_rowid())
     }
-    
+
     /// 최근 이력 조회 (최대 100개)
     pub fn get_recent_entries(&self, limit: usize) -> Result<Vec<ConversionHistoryEntry>> {
         let limit = limit.min(100); // 최대 100개로 제한
-        
+
         let mut stmt = self.conn.prepare(
             "SELECT id, timestamp, input_file, output_file, input_format, 
                     output_format, plugin_name, status, error_message, 
                     bytes_processed, duration_ms
              FROM conversion_history
              ORDER BY timestamp DESC
-             LIMIT ?1"
+             LIMIT ?1",
         )?;
-        
+
         let entries = stmt.query_map([limit], |row| {
             let timestamp_str: String = row.get(1)?;
             let timestamp = DateTime::parse_from_rfc3339(&timestamp_str)
                 .map(|dt| dt.with_timezone(&Utc))
                 .unwrap_or_else(|_| Utc::now());
-            
+
             Ok(ConversionHistoryEntry {
                 id: row.get(0)?,
                 timestamp,
@@ -86,7 +88,7 @@ impl HistoryManager {
                 duration_ms: row.get::<_, i64>(10)? as u64,
             })
         })?;
-        
+
         entries.collect()
     }
 }

@@ -19,7 +19,7 @@ pub fn initialize_database(conn: &Connection) -> Result<()> {
         )",
         [],
     )?;
-    
+
     // 사용자 설정 테이블
     conn.execute(
         "CREATE TABLE IF NOT EXISTS settings (
@@ -29,13 +29,13 @@ pub fn initialize_database(conn: &Connection) -> Result<()> {
         )",
         [],
     )?;
-    
+
     // 인덱스 생성
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_history_timestamp 
          ON conversion_history(timestamp DESC)",
         [],
     )?;
-    
+
     Ok(())
 }

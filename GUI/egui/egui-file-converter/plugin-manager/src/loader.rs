@@ -1,8 +1,8 @@
 //! Plugin loading and management
 //!
-//! This module provides functionality for dynamically loading plugins from shared libraries.
-//! It supports scanning plugin directories, loading plugins, and registering them with the
-//! plugin registry.
+//! This module provides functionality for dynamically loading plugins from
+//! shared libraries. It supports scanning plugin directories, loading plugins,
+//! and registering them with the plugin registry.
 //!
 //! # Example
 //!
@@ -23,9 +23,11 @@
 //!     if info.success {
 //!         println!("Successfully loaded: {} v{}", info.name, info.version);
 //!     } else {
-//!         eprintln!("Failed to load {:?}: {}", 
-//!                   info.file_path, 
-//!                   info.error_message.unwrap_or_default());
+//!         eprintln!(
+//!             "Failed to load {:?}: {}",
+//!             info.file_path,
+//!             info.error_message.unwrap_or_default()
+//!         );
 //!     }
 //! }
 //!
@@ -37,7 +39,8 @@
 //! # Error Handling
 //!
 //! The plugin loader implements graceful error handling:
-//! - If a plugin fails to load, the error is logged and the loader continues with other plugins
+//! - If a plugin fails to load, the error is logged and the loader continues
+//!   with other plugins
 //! - If the plugin directory doesn't exist, an empty result is returned
 //! - The application continues to run even if all plugins fail to load
 //!
@@ -50,10 +53,10 @@
 
 use crate::error::{ConversionError, ConversionResult};
 use crate::registry::PluginRegistry;
-use plugin_interface::{Plugin, PluginConstructor};
-use std::path::{Path, PathBuf};
-use std::fs;
 use libloading::{Library, Symbol};
+use plugin_interface::{Plugin, PluginConstructor};
+use std::fs;
+use std::path::{Path, PathBuf};
 
 /// Plugin loader handles dynamic loading of plugins from shared libraries
 pub struct PluginLoader {
@@ -79,169 +82,165 @@ impl PluginLoader {
             loaded_libraries: Vec::new(),
         }
     }
-    
+
     /// Scan the plugin directory for plugin files
     /// Returns a list of paths to potential plugin files
     pub fn scan_plugin_directory(&self) -> ConversionResult<Vec<PathBuf>> {
         log::info!("Scanning plugin directory: {:?}", self.plugin_dir);
-        
+
         if !self.plugin_dir.exists() {
             log::warn!("Plugin directory does not exist: {:?}", self.plugin_dir);
             return Ok(Vec::new());
         }
-        
+
         if !self.plugin_dir.is_dir() {
-            return Err(ConversionError::InvalidInput(
-                format!("Plugin path is not a directory: {:?}", self.plugin_dir)
-            ));
+            return Err(ConversionError::InvalidInput(format!("Plugin path is not a directory: {:?}", self.plugin_dir)));
         }
-        
+
         let mut plugin_files = Vec::new();
-        
-        let entries = fs::read_dir(&self.plugin_dir)
-            .map_err(|e| ConversionError::FileReadError(e))?;
-        
+
+        let entries = fs::read_dir(&self.plugin_dir).map_err(|e| ConversionError::FileReadError(e))?;
+
         for entry in entries {
             let entry = entry.map_err(|e| ConversionError::FileReadError(e))?;
             let path = entry.path();
-            
+
             // Check if the file is a dynamic library
             if self.is_plugin_file(&path) {
                 log::debug!("Found potential plugin file: {:?}", path);
                 plugin_files.push(path);
             }
         }
-        
+
         log::info!("Found {} potential plugin files", plugin_files.len());
         Ok(plugin_files)
     }
-    
+
     /// Check if a file is a potential plugin file based on extension
     fn is_plugin_file(&self, path: &Path) -> bool {
         if !path.is_file() {
             return false;
         }
-        
+
         let extension = path.extension().and_then(|e| e.to_str());
-        
+
         match extension {
             // Unix/Linux shared libraries
-            Some("so") => true,
+            | Some("so") => true,
             // macOS dynamic libraries
-            Some("dylib") => true,
+            | Some("dylib") => true,
             // Windows DLLs
-            Some("dll") => true,
-            _ => false,
+            | Some("dll") => true,
+            | _ => false,
         }
     }
-    
+
     /// Get metadata from a plugin file without fully loading it
     /// This is a placeholder for future implementation
     pub fn read_plugin_metadata(&self, _plugin_path: &Path) -> ConversionResult<PluginMetadata> {
         // For now, we need to load the plugin to get metadata
-        // In a more advanced implementation, we could read metadata from a separate file
-        // or from a specific section of the binary
-        Err(ConversionError::InvalidInput(
-            "Metadata reading not yet implemented".to_string()
-        ))
+        // In a more advanced implementation, we could read metadata from a separate
+        // file or from a specific section of the binary
+        Err(ConversionError::InvalidInput("Metadata reading not yet implemented".to_string()))
     }
-    
+
     /// Load a single plugin from a file
     /// Returns the loaded plugin instance or an error
     pub fn load_plugin(&mut self, plugin_path: &Path) -> ConversionResult<Box<dyn Plugin>> {
         log::info!("Loading plugin from: {:?}", plugin_path);
-        
+
         // Load the dynamic library
-        let library = unsafe {
-            Library::new(plugin_path)
-                .map_err(|e| ConversionError::PluginInitError(
-                    format!("Failed to load library {:?}: {}", plugin_path, e)
-                ))?
-        };
-        
+        let library =
+            unsafe { Library::new(plugin_path).map_err(|e| ConversionError::PluginInitError(format!("Failed to load library {:?}: {}", plugin_path, e)))? };
+
         // Get the plugin constructor function
         let constructor: Symbol<PluginConstructor> = unsafe {
-            library.get(b"create_plugin")
-                .map_err(|e| ConversionError::PluginInitError(
-                    format!("Failed to find create_plugin function in {:?}: {}", plugin_path, e)
-                ))?
+            library
+                .get(b"create_plugin")
+                .map_err(|e| ConversionError::PluginInitError(format!("Failed to find create_plugin function in {:?}: {}", plugin_path, e)))?
         };
-        
+
         // Call the constructor to create the plugin instance
         let mut plugin = constructor();
-        
+
         // Initialize the plugin
-        plugin.initialize()
-            .map_err(|e| ConversionError::PluginInitError(
-                format!("Plugin initialization failed for {:?}: {}", plugin_path, e)
-            ))?;
-        
+        plugin
+            .initialize()
+            .map_err(|e| ConversionError::PluginInitError(format!("Plugin initialization failed for {:?}: {}", plugin_path, e)))?;
+
         log::info!("Successfully loaded plugin: {}", plugin.metadata().name);
-        
+
         // Store the library to keep it loaded
         self.loaded_libraries.push(library);
-        
+
         Ok(plugin)
     }
-    
+
     /// Load all plugins from the plugin directory and register them
-    /// 
+    ///
     /// This method implements graceful error handling:
-    /// - If the plugin directory doesn't exist or can't be read, it logs an error and returns empty results
-    /// - If a plugin fails to load, it logs the error and continues with other plugins
-    /// - If a plugin fails to register, it logs the error and continues with other plugins
+    /// - If the plugin directory doesn't exist or can't be read, it logs an
+    ///   error and returns empty results
+    /// - If a plugin fails to load, it logs the error and continues with other
+    ///   plugins
+    /// - If a plugin fails to register, it logs the error and continues with
+    ///   other plugins
     /// - The application continues to run even if all plugins fail to load
-    /// 
-    /// Returns a list of loaded plugin information including success/failure status
+    ///
+    /// Returns a list of loaded plugin information including success/failure
+    /// status
     pub fn load_all_plugins(&mut self, registry: &PluginRegistry) -> Vec<LoadedPluginInfo> {
         log::info!("Loading all plugins from directory: {:?}", self.plugin_dir);
-        
+
         let mut results = Vec::new();
-        
+
         // Scan for plugin files
         let plugin_files = match self.scan_plugin_directory() {
-            Ok(files) => files,
-            Err(e) => {
+            | Ok(files) => files,
+            | Err(e) => {
                 log::error!("Failed to scan plugin directory: {}", e);
                 // Application continues even if directory scan fails
                 return results;
-            }
+            },
         };
-        
+
         if plugin_files.is_empty() {
             log::warn!("No plugin files found in directory: {:?}", self.plugin_dir);
             return results;
         }
-        
+
         // Load each plugin - failures are logged but don't stop the process
         for plugin_path in plugin_files {
             let info = self.load_and_register_plugin(&plugin_path, registry);
             results.push(info);
         }
-        
+
         let success_count = results.iter().filter(|r| r.success).count();
         let total_count = results.len();
-        
-        log::info!("Plugin loading complete: {} successful, {} failed out of {} total", 
-                   success_count,
-                   total_count - success_count,
-                   total_count);
-        
+
+        log::info!(
+            "Plugin loading complete: {} successful, {} failed out of {} total",
+            success_count,
+            total_count - success_count,
+            total_count
+        );
+
         results
     }
-    
+
     /// Load and register a single plugin with comprehensive error handling
-    /// This is a helper method that ensures errors are properly logged and handled
+    /// This is a helper method that ensures errors are properly logged and
+    /// handled
     fn load_and_register_plugin(&mut self, plugin_path: &Path, registry: &PluginRegistry) -> LoadedPluginInfo {
         match self.load_plugin(plugin_path) {
-            Ok(plugin) => {
+            | Ok(plugin) => {
                 let metadata = plugin.metadata();
                 let name = metadata.name.clone();
                 let version = metadata.version.clone();
-                
+
                 // Attempt to register the plugin
                 match registry.register_plugin(plugin) {
-                    Ok(_) => {
+                    | Ok(_) => {
                         log::info!("✓ Successfully loaded and registered plugin: {} v{}", name, version);
                         LoadedPluginInfo {
                             name,
@@ -250,8 +249,8 @@ impl PluginLoader {
                             success: true,
                             error_message: None,
                         }
-                    }
-                    Err(e) => {
+                    },
+                    | Err(e) => {
                         log::error!("✗ Failed to register plugin {}: {}", name, e);
                         LoadedPluginInfo {
                             name,
@@ -260,10 +259,10 @@ impl PluginLoader {
                             success: false,
                             error_message: Some(format!("Registration failed: {}", e)),
                         }
-                    }
+                    },
                 }
-            }
-            Err(e) => {
+            },
+            | Err(e) => {
                 log::error!("✗ Failed to load plugin from {:?}: {}", plugin_path, e);
                 LoadedPluginInfo {
                     name: "Unknown".to_string(),
@@ -272,16 +271,16 @@ impl PluginLoader {
                     success: false,
                     error_message: Some(format!("Load failed: {}", e)),
                 }
-            }
+            },
         }
     }
-    
+
     /// Get statistics about loaded plugins
     pub fn get_load_statistics(results: &[LoadedPluginInfo]) -> PluginLoadStatistics {
         let total = results.len();
         let successful = results.iter().filter(|r| r.success).count();
         let failed = total - successful;
-        
+
         PluginLoadStatistics {
             total,
             successful,
@@ -312,57 +311,57 @@ mod tests {
     use super::*;
     use std::fs::File;
     use tempfile::TempDir;
-    
+
     #[test]
     fn test_scan_empty_directory() {
         let temp_dir = TempDir::new().unwrap();
         let loader = PluginLoader::new(temp_dir.path());
-        
+
         let plugins = loader.scan_plugin_directory().unwrap();
         assert_eq!(plugins.len(), 0);
     }
-    
+
     #[test]
     fn test_scan_nonexistent_directory() {
         let loader = PluginLoader::new("/nonexistent/path");
         let plugins = loader.scan_plugin_directory().unwrap();
         assert_eq!(plugins.len(), 0);
     }
-    
+
     #[test]
     fn test_is_plugin_file() {
         let temp_dir = TempDir::new().unwrap();
         let loader = PluginLoader::new(temp_dir.path());
-        
+
         // Create test files
         let so_file = temp_dir.path().join("plugin.so");
         let dylib_file = temp_dir.path().join("plugin.dylib");
         let dll_file = temp_dir.path().join("plugin.dll");
         let txt_file = temp_dir.path().join("readme.txt");
-        
+
         File::create(&so_file).unwrap();
         File::create(&dylib_file).unwrap();
         File::create(&dll_file).unwrap();
         File::create(&txt_file).unwrap();
-        
+
         assert!(loader.is_plugin_file(&so_file));
         assert!(loader.is_plugin_file(&dylib_file));
         assert!(loader.is_plugin_file(&dll_file));
         assert!(!loader.is_plugin_file(&txt_file));
     }
-    
+
     #[test]
     fn test_scan_directory_with_plugins() {
         let temp_dir = TempDir::new().unwrap();
-        
+
         // Create some plugin files
         File::create(temp_dir.path().join("plugin1.so")).unwrap();
         File::create(temp_dir.path().join("plugin2.so")).unwrap();
         File::create(temp_dir.path().join("readme.txt")).unwrap();
-        
+
         let loader = PluginLoader::new(temp_dir.path());
         let plugins = loader.scan_plugin_directory().unwrap();
-        
+
         assert_eq!(plugins.len(), 2);
     }
 }

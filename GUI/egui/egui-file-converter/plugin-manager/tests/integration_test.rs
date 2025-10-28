@@ -1,5 +1,5 @@
-use plugin_manager::{ConversionEngine, PluginRegistry};
 use plugin_interface::{ConversionOptions, FileFormat, Plugin, PluginMetadata};
+use plugin_manager::{ConversionEngine, PluginRegistry};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -35,9 +35,7 @@ impl Plugin for MockTextPlugin {
         }]
     }
 
-    fn can_convert(&self, from: &FileFormat, to: &FileFormat) -> bool {
-        from.extension == "txt" && to.extension == "txt"
-    }
+    fn can_convert(&self, from: &FileFormat, to: &FileFormat) -> bool { from.extension == "txt" && to.extension == "txt" }
 
     fn convert(
         &self,
@@ -48,10 +46,7 @@ impl Plugin for MockTextPlugin {
         let content = fs::read_to_string(input_path)?;
         let converted = content.to_uppercase();
 
-        let output_path = options
-            .output_path
-            .clone()
-            .unwrap_or_else(|| format!("{}_converted.txt", input_path.display()));
+        let output_path = options.output_path.clone().unwrap_or_else(|| format!("{}_converted.txt", input_path.display()));
 
         fs::write(&output_path, &converted)?;
 
@@ -69,9 +64,7 @@ fn setup_test_environment() -> (ConversionEngine, TempDir, PathBuf) {
     let registry = Arc::new(PluginRegistry::new());
 
     // Register mock plugin
-    registry
-        .register_plugin(Box::new(MockTextPlugin))
-        .unwrap();
+    registry.register_plugin(Box::new(MockTextPlugin)).unwrap();
 
     let engine = ConversionEngine::new(registry);
 
@@ -101,9 +94,7 @@ fn test_end_to_end_single_file_conversion() {
     };
 
     // Execute conversion
-    let result = engine
-        .convert_file(&input_file, &output_format, "Mock Text Plugin", &options)
-        .unwrap();
+    let result = engine.convert_file(&input_file, &output_format, "Mock Text Plugin", &options).unwrap();
 
     // Verify results
     assert!(result.success);
@@ -142,12 +133,7 @@ fn test_end_to_end_batch_conversion() {
     };
 
     // Execute batch conversion
-    let results = engine.batch_convert(
-        vec![&file1, &file2, &file3],
-        &output_format,
-        "Mock Text Plugin",
-        &options,
-    );
+    let results = engine.batch_convert(vec![&file1, &file2, &file3], &output_format, "Mock Text Plugin", &options);
 
     // Verify all conversions succeeded
     assert_eq!(results.len(), 3);
@@ -178,12 +164,7 @@ fn test_end_to_end_error_handling() {
     };
 
     // Try to convert non-existent file
-    let result = engine.convert_file(
-        &nonexistent_file,
-        &output_format,
-        "Mock Text Plugin",
-        &options,
-    );
+    let result = engine.convert_file(&nonexistent_file, &output_format, "Mock Text Plugin", &options);
 
     // Should return an error
     assert!(result.is_err());
@@ -215,12 +196,7 @@ fn test_end_to_end_batch_with_partial_failure() {
     };
 
     // Execute batch conversion
-    let results = engine.batch_convert(
-        vec![&file1, &file2, &file3],
-        &output_format,
-        "Mock Text Plugin",
-        &options,
-    );
+    let results = engine.batch_convert(vec![&file1, &file2, &file3], &output_format, "Mock Text Plugin", &options);
 
     // Verify results: 2 success, 1 failure
     assert_eq!(results.len(), 3);
@@ -234,9 +210,7 @@ fn test_plugin_registry_integration() {
     let registry = Arc::new(PluginRegistry::new());
 
     // Register plugin
-    registry
-        .register_plugin(Box::new(MockTextPlugin))
-        .unwrap();
+    registry.register_plugin(Box::new(MockTextPlugin)).unwrap();
 
     // List plugins
     let plugins = registry.list_plugins();

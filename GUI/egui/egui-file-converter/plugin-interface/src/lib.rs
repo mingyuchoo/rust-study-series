@@ -1,8 +1,8 @@
 //! # Plugin Interface
 //!
-//! This crate defines the standard interface that all file converter plugins must implement.
-//! It provides the core traits, types, and structures needed to create plugins that can
-//! convert files between different formats.
+//! This crate defines the standard interface that all file converter plugins
+//! must implement. It provides the core traits, types, and structures needed to
+//! create plugins that can convert files between different formats.
 //!
 //! ## Example
 //!
@@ -109,11 +109,13 @@ pub struct ConversionResult {
 /// various parameters and custom key-value pairs.
 #[derive(Debug, Clone)]
 pub struct ConversionOptions {
-    /// Optional custom output path. If None, the plugin should generate a default path.
+    /// Optional custom output path. If None, the plugin should generate a
+    /// default path.
     pub output_path: Option<String>,
     /// Whether to overwrite existing files at the output path
     pub overwrite: bool,
-    /// Optional quality setting (0-100) for formats that support quality adjustment
+    /// Optional quality setting (0-100) for formats that support quality
+    /// adjustment
     pub quality: Option<u8>,
     /// Custom parameters specific to the plugin or format
     pub custom_params: HashMap<String, String>,
@@ -170,7 +172,8 @@ pub trait Plugin: Send + Sync {
 
     /// Returns a list of file formats that this plugin can read as input.
     ///
-    /// Each format should include the file extension, MIME type, and description.
+    /// Each format should include the file extension, MIME type, and
+    /// description.
     ///
     /// # Example
     ///
@@ -189,7 +192,8 @@ pub trait Plugin: Send + Sync {
 
     /// Returns a list of file formats that this plugin can write as output.
     ///
-    /// Each format should include the file extension, MIME type, and description.
+    /// Each format should include the file extension, MIME type, and
+    /// description.
     ///
     /// # Example
     ///
@@ -285,12 +289,7 @@ pub trait Plugin: Send + Sync {
     ///     })
     /// }
     /// ```
-    fn convert(
-        &self,
-        input_path: &Path,
-        output_format: &FileFormat,
-        options: &ConversionOptions,
-    ) -> Result<ConversionResult, Box<dyn Error>>;
+    fn convert(&self, input_path: &Path, output_format: &FileFormat, options: &ConversionOptions) -> Result<ConversionResult, Box<dyn Error>>;
 
     /// Initializes the plugin.
     ///
@@ -308,9 +307,7 @@ pub trait Plugin: Send + Sync {
     ///
     /// Should return an error if initialization fails and the plugin
     /// cannot be used.
-    fn initialize(&mut self) -> Result<(), Box<dyn Error>> {
-        Ok(())
-    }
+    fn initialize(&mut self) -> Result<(), Box<dyn Error>> { Ok(()) }
 
     /// Cleans up plugin resources.
     ///
@@ -323,9 +320,7 @@ pub trait Plugin: Send + Sync {
     /// # Returns
     ///
     /// A `Result` indicating whether cleanup succeeded
-    fn cleanup(&mut self) -> Result<(), Box<dyn Error>> {
-        Ok(())
-    }
+    fn cleanup(&mut self) -> Result<(), Box<dyn Error>> { Ok(()) }
 }
 
 /// Type alias for a function that creates a new plugin instance.

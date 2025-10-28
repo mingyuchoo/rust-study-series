@@ -1,9 +1,9 @@
-use plugin_manager::{ConversionEngine, PluginRegistry};
 use database_manager::{ConversionHistoryEntry, HistoryManager, SettingsManager};
 use eframe::egui;
 use plugin_interface::{ConversionOptions, FileFormat, PluginMetadata};
-use std::sync::mpsc::{channel, Receiver, Sender};
+use plugin_manager::{ConversionEngine, PluginRegistry};
 use std::sync::Arc;
+use std::sync::mpsc::{Receiver, Sender, channel};
 use std::thread;
 
 /// Main application tabs
@@ -18,14 +18,8 @@ pub enum AppTab {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ConversionStatus {
     Idle,
-    InProgress {
-        current_file: String,
-        progress: f32,
-    },
-    Completed {
-        success_count: usize,
-        total_count: usize,
-    },
+    InProgress { current_file: String, progress: f32 },
+    Completed { success_count: usize, total_count: usize },
 }
 
 /// Messages sent to worker thread
@@ -188,10 +182,7 @@ impl FileConverterApp {
     }
 
     /// Register a plugin
-    pub fn register_plugin(
-        &mut self,
-        plugin: Box<dyn plugin_interface::Plugin>,
-    ) -> Result<(), String> {
+    pub fn register_plugin(&mut self, plugin: Box<dyn plugin_interface::Plugin>) -> Result<(), String> {
         let result = self.plugin_registry.register_plugin(plugin);
         if result.is_ok() {
             self.refresh_plugins();
@@ -200,9 +191,7 @@ impl FileConverterApp {
     }
 
     /// Refresh plugin list
-    pub fn refresh_plugins(&mut self) {
-        self.available_plugins = self.plugin_registry.list_plugins();
-    }
+    pub fn refresh_plugins(&mut self) { self.available_plugins = self.plugin_registry.list_plugins(); }
 
     /// Refresh history list
     pub fn refresh_history(&mut self) {
@@ -214,32 +203,27 @@ impl FileConverterApp {
     }
 
     /// Worker thread function - performs conversion tasks in a separate thread
-    fn worker_thread(
-        worker_rx: Receiver<WorkerMessage>,
-        progress_tx: Sender<ProgressMessage>,
-        engine: Arc<ConversionEngine>,
-    ) {
+    fn worker_thread(worker_rx: Receiver<WorkerMessage>, progress_tx: Sender<ProgressMessage>, engine: Arc<ConversionEngine>) {
         log::info!("Worker thread started");
 
         // Worker thread waits until it receives a message
         while let Ok(message) = worker_rx.recv() {
             match message {
-                WorkerMessage::StartConversion {
+                | WorkerMessage::StartConversion {
                     files,
                     output_format,
                     plugin_name,
                     options,
                 } => {
-                    log::info!(
-                        "Worker thread received conversion request for {} files",
-                        files.len()
-                    );
+                    log::info!("Worker thread received conversion request for {} files", files.len());
 
                     let total_files = files.len();
 
                     // Notify conversion start
                     if progress_tx
-                        .send(ProgressMessage::Started { total_files })
+                        .send(ProgressMessage::Started {
+                            total_files,
+                        })
                         .is_err()
                     {
                         log::error!("Failed to send Started message");
@@ -251,11 +235,7 @@ impl FileConverterApp {
                     // Convert each file sequentially
                     for (idx, file_path) in files.iter().enumerate() {
                         let path = std::path::PathBuf::from(file_path);
-                        let current_file = path
-                            .file_name()
-                            .and_then(|n| n.to_str())
-                            .unwrap_or("Unknown")
-                            .to_string();
+                        let current_file = path.file_name().and_then(|n| n.to_str()).unwrap_or("Unknown").to_string();
 
                         // Update progress status (file processing started)
                         if progress_tx
@@ -272,7 +252,7 @@ impl FileConverterApp {
 
                         // Execute conversion
                         match engine.convert_file(&path, &output_format, &plugin_name, &options) {
-                            Ok(result) => {
+                            | Ok(result) => {
                                 let success = result.success;
                                 if success {
                                     success_count += 1;
@@ -306,13 +286,11 @@ impl FileConverterApp {
                                     })
                                     .is_err()
                                 {
-                                    log::error!(
-                                        "Failed to send Progress update after file completion"
-                                    );
+                                    log::error!("Failed to send Progress update after file completion");
                                     break;
                                 }
-                            }
-                            Err(e) => {
+                            },
+                            | Err(e) => {
                                 log::error!("Failed to convert {:?}: {}", path, e);
 
                                 // Notify file failure
@@ -342,12 +320,10 @@ impl FileConverterApp {
                                     })
                                     .is_err()
                                 {
-                                    log::error!(
-                                        "Failed to send Progress update after file failure"
-                                    );
+                                    log::error!("Failed to send Progress update after file failure");
                                     break;
                                 }
-                            }
+                            },
                         }
                     }
 
@@ -363,12 +339,8 @@ impl FileConverterApp {
                         break;
                     }
 
-                    log::info!(
-                        "Worker thread completed conversion: {}/{} files successful",
-                        success_count,
-                        total_files
-                    );
-                }
+                    log::info!("Worker thread completed conversion: {}/{} files successful", success_count, total_files);
+                },
             }
         }
 
@@ -399,9 +371,7 @@ impl eframe::App for FileConverterApp {
                 .default_width(400.0)
                 .show(ctx, |ui| {
                     ui.vertical(|ui| {
-                        ui.label(
-                            egui::RichText::new(&error_clone.message).color(egui::Color32::RED),
-                        );
+                        ui.label(egui::RichText::new(&error_clone.message).color(egui::Color32::RED));
 
                         if let Some(ref details) = error_clone.details {
                             ui.add_space(10.0);
@@ -410,15 +380,9 @@ impl eframe::App for FileConverterApp {
                             ui.label("Details:");
                             ui.add_space(5.0);
 
-                            egui::ScrollArea::vertical()
-                                .max_height(200.0)
-                                .show(ui, |ui| {
-                                    ui.label(
-                                        egui::RichText::new(details)
-                                            .small()
-                                            .color(egui::Color32::GRAY),
-                                    );
-                                });
+                            egui::ScrollArea::vertical().max_height(200.0).show(ui, |ui| {
+                                ui.label(egui::RichText::new(details).small().color(egui::Color32::GRAY));
+                            });
                         }
 
                         ui.add_space(10.0);
@@ -446,9 +410,9 @@ impl eframe::App for FileConverterApp {
 
             // Tab content area
             match self.active_tab {
-                AppTab::Converter => self.show_converter_tab(ui),
-                AppTab::History => self.show_history_tab(ui),
-                AppTab::Settings => self.show_settings_tab(ui),
+                | AppTab::Converter => self.show_converter_tab(ui),
+                | AppTab::History => self.show_history_tab(ui),
+                | AppTab::Settings => self.show_settings_tab(ui),
             }
         });
     }
@@ -490,29 +454,27 @@ impl FileConverterApp {
 
                 ui.add_space(5.0);
 
-                egui::ScrollArea::vertical()
-                    .max_height(150.0)
-                    .show(ui, |ui| {
-                        let mut to_remove = None;
+                egui::ScrollArea::vertical().max_height(150.0).show(ui, |ui| {
+                    let mut to_remove = None;
 
-                        for (idx, file) in self.selected_files.iter().enumerate() {
-                            ui.horizontal(|ui| {
-                                ui.label(format!("{}.", idx + 1));
-                                ui.label(file);
+                    for (idx, file) in self.selected_files.iter().enumerate() {
+                        ui.horizontal(|ui| {
+                            ui.label(format!("{}.", idx + 1));
+                            ui.label(file);
 
-                                if ui.small_button("❌").clicked() {
-                                    to_remove = Some(idx);
-                                }
-                            });
-                        }
-
-                        if let Some(idx) = to_remove {
-                            self.selected_files.remove(idx);
-                            if self.selected_files.is_empty() {
-                                self.selected_output_format = None;
+                            if ui.small_button("❌").clicked() {
+                                to_remove = Some(idx);
                             }
+                        });
+                    }
+
+                    if let Some(idx) = to_remove {
+                        self.selected_files.remove(idx);
+                        if self.selected_files.is_empty() {
+                            self.selected_output_format = None;
                         }
-                    });
+                    }
+                });
             }
         });
 
@@ -562,13 +524,8 @@ impl FileConverterApp {
                                 ui.label("No formats available.");
                             } else {
                                 for format in &formats {
-                                    let label =
-                                        format!("{} ({})", format.extension, format.description);
-                                    let is_selected = self
-                                        .selected_output_format
-                                        .as_ref()
-                                        .map(|f| f.extension == format.extension)
-                                        .unwrap_or(false);
+                                    let label = format!("{} ({})", format.extension, format.description);
+                                    let is_selected = self.selected_output_format.as_ref().map(|f| f.extension == format.extension).unwrap_or(false);
 
                                     if ui.selectable_label(is_selected, label).clicked() {
                                         new_format = Some(format.clone());
@@ -589,11 +546,7 @@ impl FileConverterApp {
                     ui.add_space(5.0);
                     ui.horizontal(|ui| {
                         ui.label("Using plugin:");
-                        ui.label(
-                            egui::RichText::new(plugin_name)
-                                .strong()
-                                .color(egui::Color32::from_rgb(100, 200, 100)),
-                        );
+                        ui.label(egui::RichText::new(plugin_name).strong().color(egui::Color32::from_rgb(100, 200, 100)));
                     });
                 }
             });
@@ -602,10 +555,7 @@ impl FileConverterApp {
         }
 
         // Conversion execution button
-        if !self.selected_files.is_empty()
-            && self.selected_output_format.is_some()
-            && self.selected_plugin.is_some()
-        {
+        if !self.selected_files.is_empty() && self.selected_output_format.is_some() && self.selected_plugin.is_some() {
             ui.group(|ui| {
                 ui.heading("🚀 Execute Conversion");
 
@@ -629,26 +579,19 @@ impl FileConverterApp {
         ui.group(|ui| {
             ui.heading("📊 Status");
 
-            ui.label(format!(
-                "Available plugins: {}",
-                self.available_plugins.len()
-            ));
+            ui.label(format!("Available plugins: {}", self.available_plugins.len()));
 
             ui.add_space(5.0);
 
             match &self.conversion_status {
-                ConversionStatus::Idle => {
+                | ConversionStatus::Idle => {
                     ui.label("⏸ Idle");
-                }
-                ConversionStatus::InProgress {
+                },
+                | ConversionStatus::InProgress {
                     current_file,
                     progress,
                 } => {
-                    ui.label(
-                        egui::RichText::new("⏳ Converting...")
-                            .strong()
-                            .color(egui::Color32::from_rgb(100, 150, 255)),
-                    );
+                    ui.label(egui::RichText::new("⏳ Converting...").strong().color(egui::Color32::from_rgb(100, 150, 255)));
 
                     ui.add_space(5.0);
 
@@ -657,9 +600,7 @@ impl FileConverterApp {
                     ui.add_space(5.0);
 
                     // Progress bar - show percentage and animation
-                    let progress_bar = egui::ProgressBar::new(*progress)
-                        .show_percentage()
-                        .animate(true);
+                    let progress_bar = egui::ProgressBar::new(*progress).show_percentage().animate(true);
                     ui.add(progress_bar);
 
                     ui.add_space(3.0);
@@ -670,27 +611,21 @@ impl FileConverterApp {
                             .small()
                             .color(egui::Color32::GRAY),
                     );
-                }
-                ConversionStatus::Completed {
+                },
+                | ConversionStatus::Completed {
                     success_count,
                     total_count,
                 } => {
                     let (icon, text, color) = if *success_count == *total_count {
                         (
                             "✅",
-                            format!(
-                                "Completed: {}/{} files successful",
-                                success_count, total_count
-                            ),
+                            format!("Completed: {}/{} files successful", success_count, total_count),
                             egui::Color32::from_rgb(100, 200, 100),
                         )
                     } else if *success_count > 0 {
                         (
                             "⚠",
-                            format!(
-                                "Partially completed: {}/{} files successful",
-                                success_count, total_count
-                            ),
+                            format!("Partially completed: {}/{} files successful", success_count, total_count),
                             egui::Color32::from_rgb(255, 200, 100),
                         )
                     } else {
@@ -701,29 +636,26 @@ impl FileConverterApp {
                         )
                     };
 
-                    ui.label(
-                        egui::RichText::new(format!("{} {}", icon, text))
-                            .strong()
-                            .color(color),
-                    );
+                    ui.label(egui::RichText::new(format!("{} {}", icon, text)).strong().color(color));
 
                     if ui.button("🔄 Start New").clicked() {
                         self.conversion_status = ConversionStatus::Idle;
                     }
-                }
+                },
             }
         });
     }
 
     /// Process progress messages from worker thread
     ///
-    /// This function receives and processes progress status messages sent by the worker thread.
-    /// Progress is calculated as completed files / total files,
-    /// and updates the UI progress bar and status text.
+    /// This function receives and processes progress status messages sent by
+    /// the worker thread. Progress is calculated as completed files / total
+    /// files, and updates the UI progress bar and status text.
     ///
     /// # Progress Calculation
     /// - File processing start: file_index / total_files (0%, 33%, 66%, etc.)
-    /// - File processing complete: (file_index + 1) / total_files (33%, 66%, 100%, etc.)
+    /// - File processing complete: (file_index + 1) / total_files (33%, 66%,
+    ///   100%, etc.)
     /// - All files complete: 100%
     fn process_progress_messages(&mut self) {
         // Collect messages first, then process (solves borrow checker issues)
@@ -739,21 +671,24 @@ impl FileConverterApp {
         // Process collected messages
         for message in messages {
             match message {
-                ProgressMessage::Started { total_files } => {
+                | ProgressMessage::Started {
+                    total_files,
+                } => {
                     log::info!("Conversion started: {} files", total_files);
                     self.conversion_status = ConversionStatus::InProgress {
                         current_file: "Preparing...".to_string(),
                         progress: 0.0,
                     };
-                }
-                ProgressMessage::Progress {
+                },
+                | ProgressMessage::Progress {
                     current_file,
                     file_index,
                     total_files,
                 } => {
                     // Calculate progress: current file index / total files
-                    // file_index starts from 0, so it shows the progress of the current file being processed
-                    // When complete (file_index == total_files), show 100%
+                    // file_index starts from 0, so it shows the progress of the current file being
+                    // processed When complete (file_index == total_files), show
+                    // 100%
                     let progress = if file_index >= total_files {
                         1.0
                     } else {
@@ -770,14 +705,11 @@ impl FileConverterApp {
 
                     let display_index = file_index.min(total_files);
                     self.conversion_status = ConversionStatus::InProgress {
-                        current_file: format!(
-                            "[{}/{}] {}",
-                            display_index, total_files, current_file
-                        ),
+                        current_file: format!("[{}/{}] {}", display_index, total_files, current_file),
                         progress,
                     };
-                }
-                ProgressMessage::FileCompleted {
+                },
+                | ProgressMessage::FileCompleted {
                     file_path,
                     success,
                     output_path,
@@ -788,26 +720,15 @@ impl FileConverterApp {
                     // Save to history
                     if let Some(ref output_format) = self.selected_output_format {
                         if let Some(ref plugin_name) = self.selected_plugin {
-                            self.save_to_history(
-                                file_path,
-                                output_path,
-                                output_format,
-                                plugin_name,
-                                success,
-                                error,
-                            );
+                            self.save_to_history(file_path, output_path, output_format, plugin_name, success, error);
                         }
                     }
-                }
-                ProgressMessage::Completed {
+                },
+                | ProgressMessage::Completed {
                     success_count,
                     total_count,
                 } => {
-                    log::info!(
-                        "Conversion completed: {}/{} files successful",
-                        success_count,
-                        total_count
-                    );
+                    log::info!("Conversion completed: {}/{} files successful", success_count, total_count);
                     self.conversion_status = ConversionStatus::Completed {
                         success_count,
                         total_count,
@@ -817,25 +738,17 @@ impl FileConverterApp {
                     if success_count < total_count && success_count > 0 {
                         self.show_error(
                             "Some Files Failed",
-                            &format!(
-                                "{}/{} files were successfully converted.",
-                                success_count, total_count
-                            ),
-                            Some(
-                                "Some files failed to convert. Check the History tab for details."
-                                    .to_string(),
-                            ),
+                            &format!("{}/{} files were successfully converted.", success_count, total_count),
+                            Some("Some files failed to convert. Check the History tab for details.".to_string()),
                         );
                     } else if success_count == 0 {
                         self.show_error(
                             "Conversion Failed",
                             "All files failed to convert.",
-                            Some(
-                                "Check the History tab for detailed error information.".to_string(),
-                            ),
+                            Some("Check the History tab for detailed error information.".to_string()),
                         );
                     }
-                }
+                },
             }
         }
     }
@@ -844,27 +757,27 @@ impl FileConverterApp {
     fn start_conversion(&mut self) {
         // Check if all required information is available
         let output_format = match &self.selected_output_format {
-            Some(f) => f.clone(),
-            None => {
+            | Some(f) => f.clone(),
+            | None => {
                 self.show_error(
                     "Conversion Failed",
                     "No output format selected.",
                     Some("Please select a format to convert to and try again.".to_string()),
                 );
                 return;
-            }
+            },
         };
 
         let plugin_name = match &self.selected_plugin {
-            Some(p) => p.clone(),
-            None => {
+            | Some(p) => p.clone(),
+            | None => {
                 self.show_error(
                     "Conversion Failed",
                     "No plugin selected.",
                     Some("Could not find a plugin to perform the conversion.".to_string()),
                 );
                 return;
-            }
+            },
         };
 
         if self.selected_files.is_empty() {
@@ -946,11 +859,7 @@ impl FileConverterApp {
                     .unwrap_or_else(|| "unknown".to_string()),
                 output_format: output_format.extension.clone(),
                 plugin_name: plugin_name.to_string(),
-                status: if success {
-                    "success".to_string()
-                } else {
-                    "failed".to_string()
-                },
+                status: if success { "success".to_string() } else { "failed".to_string() },
                 error_message,
                 bytes_processed: 0,
                 duration_ms: 0,
@@ -975,15 +884,10 @@ impl FileConverterApp {
     fn open_file_dialog(&mut self, multiple: bool) {
         let files = if multiple {
             // Multiple file selection
-            rfd::FileDialog::new()
-                .set_title("Select Files to Convert")
-                .pick_files()
+            rfd::FileDialog::new().set_title("Select Files to Convert").pick_files()
         } else {
             // Single file selection
-            rfd::FileDialog::new()
-                .set_title("Select File to Convert")
-                .pick_file()
-                .map(|f| vec![f])
+            rfd::FileDialog::new().set_title("Select File to Convert").pick_file().map(|f| vec![f])
         };
 
         if let Some(paths) = files {
@@ -1017,7 +921,7 @@ impl FileConverterApp {
 
         // Detect input format
         match self.conversion_engine.get_available_formats(path) {
-            Ok(formats) => {
+            | Ok(formats) => {
                 self.available_output_formats = formats;
 
                 // Also detect input format
@@ -1030,8 +934,8 @@ impl FileConverterApp {
                 // Initialize output format
                 self.selected_output_format = None;
                 self.selected_plugin = None;
-            }
-            Err(e) => {
+            },
+            | Err(e) => {
                 log::error!("Failed to get available formats: {}", e);
                 self.detected_input_format = None;
                 self.available_output_formats.clear();
@@ -1044,7 +948,7 @@ impl FileConverterApp {
                     "Unable to detect the format of the selected file.",
                     Some(e.to_string()),
                 );
-            }
+            },
         }
     }
 
@@ -1071,13 +975,9 @@ impl FileConverterApp {
 
     /// Select plugin matching the selected output format
     fn update_selected_plugin(&mut self) {
-        if let (Some(ref input_format), Some(ref output_format)) =
-            (&self.detected_input_format, &self.selected_output_format)
-        {
+        if let (Some(ref input_format), Some(ref output_format)) = (&self.detected_input_format, &self.selected_output_format) {
             // Find plugin that supports the conversion
-            let plugins = self
-                .plugin_registry
-                .find_plugins_for_conversion(input_format, output_format);
+            let plugins = self.plugin_registry.find_plugins_for_conversion(input_format, output_format);
 
             if !plugins.is_empty() {
                 self.selected_plugin = Some(plugins[0].clone());
@@ -1092,10 +992,7 @@ impl FileConverterApp {
         ui.heading("📋 Conversion History");
 
         if self.history_manager.is_none() {
-            ui.colored_label(
-                egui::Color32::YELLOW,
-                "⚠ Database connection failed: History features unavailable.",
-            );
+            ui.colored_label(egui::Color32::YELLOW, "⚠ Database connection failed: History features unavailable.");
             return;
         }
 
@@ -1111,10 +1008,7 @@ impl FileConverterApp {
             ui.separator();
 
             // Display history count
-            ui.label(format!(
-                "Total {} history entries",
-                self.history_entries.len()
-            ));
+            ui.label(format!("Total {} history entries", self.history_entries.len()));
         });
 
         ui.add_space(10.0);
@@ -1125,11 +1019,7 @@ impl FileConverterApp {
         if self.history_entries.is_empty() {
             ui.vertical_centered(|ui| {
                 ui.add_space(50.0);
-                ui.label(
-                    egui::RichText::new("📭 No conversion history.")
-                        .size(16.0)
-                        .color(egui::Color32::GRAY),
-                );
+                ui.label(egui::RichText::new("📭 No conversion history.").size(16.0).color(egui::Color32::GRAY));
                 ui.add_space(10.0);
                 ui.label("History will appear here when you convert files.");
             });
@@ -1144,96 +1034,76 @@ impl FileConverterApp {
                 ui.add_space(5.0);
 
                 // Scrollable history list
-                egui::ScrollArea::vertical()
-                    .auto_shrink([false; 2])
-                    .show(ui, |ui| {
-                        for (idx, entry) in self.history_entries.iter().enumerate() {
-                            let is_selected = self.selected_history_entry == Some(entry.id);
+                egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| {
+                    for (idx, entry) in self.history_entries.iter().enumerate() {
+                        let is_selected = self.selected_history_entry == Some(entry.id);
 
-                            // Display each history entry as a selectable group
-                            let response = ui.group(|ui| {
-                                ui.set_min_width(ui.available_width());
+                        // Display each history entry as a selectable group
+                        let response = ui.group(|ui| {
+                            ui.set_min_width(ui.available_width());
 
-                                // Highlight selected item
-                                if is_selected {
-                                    ui.visuals_mut().override_text_color =
-                                        Some(egui::Color32::WHITE);
-                                }
+                            // Highlight selected item
+                            if is_selected {
+                                ui.visuals_mut().override_text_color = Some(egui::Color32::WHITE);
+                            }
 
-                                // Status icon and timestamp
-                                ui.horizontal(|ui| {
-                                    // Status icon
-                                    let (icon, color) = if entry.status == "success" {
-                                        ("✅", egui::Color32::from_rgb(100, 200, 100))
-                                    } else {
-                                        ("❌", egui::Color32::from_rgb(255, 100, 100))
-                                    };
-
-                                    ui.label(egui::RichText::new(icon).size(14.0).color(color));
-
-                                    // Timestamp
-                                    let timestamp_str =
-                                        entry.timestamp.format("%m-%d %H:%M").to_string();
-                                    ui.label(
-                                        egui::RichText::new(timestamp_str)
-                                            .color(egui::Color32::GRAY)
-                                            .size(11.0),
-                                    );
-                                });
-
-                                ui.add_space(3.0);
-
-                                // Input filename (shortened)
-                                let input_filename = std::path::Path::new(&entry.input_file)
-                                    .file_name()
-                                    .and_then(|n| n.to_str())
-                                    .unwrap_or(&entry.input_file);
-
-                                let short_filename = if input_filename.len() > 25 {
-                                    format!("{}...", &input_filename[..22])
+                            // Status icon and timestamp
+                            ui.horizontal(|ui| {
+                                // Status icon
+                                let (icon, color) = if entry.status == "success" {
+                                    ("✅", egui::Color32::from_rgb(100, 200, 100))
                                 } else {
-                                    input_filename.to_string()
+                                    ("❌", egui::Color32::from_rgb(255, 100, 100))
                                 };
 
-                                ui.label(egui::RichText::new(short_filename).size(12.0));
+                                ui.label(egui::RichText::new(icon).size(14.0).color(color));
 
-                                // Conversion info (brief)
-                                ui.horizontal(|ui| {
-                                    ui.label(
-                                        egui::RichText::new(&entry.input_format)
-                                            .small()
-                                            .color(egui::Color32::from_rgb(100, 150, 255)),
-                                    );
-                                    ui.label(egui::RichText::new("→").small());
-                                    ui.label(
-                                        egui::RichText::new(&entry.output_format)
-                                            .small()
-                                            .color(egui::Color32::from_rgb(100, 200, 100)),
-                                    );
-                                });
+                                // Timestamp
+                                let timestamp_str = entry.timestamp.format("%m-%d %H:%M").to_string();
+                                ui.label(egui::RichText::new(timestamp_str).color(egui::Color32::GRAY).size(11.0));
                             });
 
-                            // Select on click
-                            if response.response.interact(egui::Sense::click()).clicked() {
-                                self.selected_history_entry = Some(entry.id);
-                            }
+                            ui.add_space(3.0);
 
-                            // Change background color for selected item
-                            if is_selected {
-                                let rect = response.response.rect;
-                                ui.painter().rect_filled(
-                                    rect,
-                                    3.0,
-                                    egui::Color32::from_rgba_premultiplied(100, 150, 255, 30),
-                                );
-                            }
+                            // Input filename (shortened)
+                            let input_filename = std::path::Path::new(&entry.input_file)
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .unwrap_or(&entry.input_file);
 
-                            // Spacing between items
-                            if idx < self.history_entries.len() - 1 {
-                                ui.add_space(5.0);
-                            }
+                            let short_filename = if input_filename.len() > 25 {
+                                format!("{}...", &input_filename[.. 22])
+                            } else {
+                                input_filename.to_string()
+                            };
+
+                            ui.label(egui::RichText::new(short_filename).size(12.0));
+
+                            // Conversion info (brief)
+                            ui.horizontal(|ui| {
+                                ui.label(egui::RichText::new(&entry.input_format).small().color(egui::Color32::from_rgb(100, 150, 255)));
+                                ui.label(egui::RichText::new("→").small());
+                                ui.label(egui::RichText::new(&entry.output_format).small().color(egui::Color32::from_rgb(100, 200, 100)));
+                            });
+                        });
+
+                        // Select on click
+                        if response.response.interact(egui::Sense::click()).clicked() {
+                            self.selected_history_entry = Some(entry.id);
                         }
-                    });
+
+                        // Change background color for selected item
+                        if is_selected {
+                            let rect = response.response.rect;
+                            ui.painter().rect_filled(rect, 3.0, egui::Color32::from_rgba_premultiplied(100, 150, 255, 30));
+                        }
+
+                        // Spacing between items
+                        if idx < self.history_entries.len() - 1 {
+                            ui.add_space(5.0);
+                        }
+                    }
+                });
             });
 
             // Right panel: Details
@@ -1248,21 +1118,14 @@ impl FileConverterApp {
                     } else {
                         ui.vertical_centered(|ui| {
                             ui.add_space(50.0);
-                            ui.label(
-                                egui::RichText::new("Selected item not found.")
-                                    .color(egui::Color32::GRAY),
-                            );
+                            ui.label(egui::RichText::new("Selected item not found.").color(egui::Color32::GRAY));
                         });
                     }
                 } else {
                     // When no item is selected
                     ui.vertical_centered(|ui| {
                         ui.add_space(50.0);
-                        ui.label(
-                            egui::RichText::new("👈 Select an item from the left")
-                                .size(14.0)
-                                .color(egui::Color32::GRAY),
-                        );
+                        ui.label(egui::RichText::new("👈 Select an item from the left").size(14.0).color(egui::Color32::GRAY));
                     });
                 }
             });
@@ -1271,172 +1134,137 @@ impl FileConverterApp {
 
     /// Show history detail information
     fn show_history_detail(&self, ui: &mut egui::Ui, entry: &ConversionHistoryEntry) {
-        egui::ScrollArea::vertical()
-            .auto_shrink([false; 2])
-            .show(ui, |ui| {
-                // Status header
-                ui.group(|ui| {
-                    ui.set_min_width(ui.available_width());
+        egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| {
+            // Status header
+            ui.group(|ui| {
+                ui.set_min_width(ui.available_width());
 
-                    let (icon, status_text, status_color) = if entry.status == "success" {
-                        (
-                            "✅",
-                            "Conversion Successful",
-                            egui::Color32::from_rgb(100, 200, 100),
-                        )
-                    } else {
-                        (
-                            "❌",
-                            "Conversion Failed",
-                            egui::Color32::from_rgb(255, 100, 100),
-                        )
-                    };
+                let (icon, status_text, status_color) = if entry.status == "success" {
+                    ("✅", "Conversion Successful", egui::Color32::from_rgb(100, 200, 100))
+                } else {
+                    ("❌", "Conversion Failed", egui::Color32::from_rgb(255, 100, 100))
+                };
 
-                    ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new(icon).size(20.0).color(status_color));
-                        ui.label(
-                            egui::RichText::new(status_text)
-                                .size(16.0)
-                                .strong()
-                                .color(status_color),
-                        );
-                    });
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new(icon).size(20.0).color(status_color));
+                    ui.label(egui::RichText::new(status_text).size(16.0).strong().color(status_color));
                 });
-
-                ui.add_space(10.0);
-
-                // Basic information
-                ui.group(|ui| {
-                    ui.set_min_width(ui.available_width());
-                    ui.label(egui::RichText::new("📋 Basic Information").strong());
-                    ui.add_space(5.0);
-
-                    // ID
-                    ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("ID:").strong());
-                        ui.label(format!("#{}", entry.id));
-                    });
-
-                    // Timestamp
-                    ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("Time:").strong());
-                        ui.label(entry.timestamp.format("%Y-%m-%d %H:%M:%S").to_string());
-                    });
-
-                    // Plugin
-                    ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("Plugin:").strong());
-                        ui.label(&entry.plugin_name);
-                    });
-                });
-
-                ui.add_space(10.0);
-
-                // File information
-                ui.group(|ui| {
-                    ui.set_min_width(ui.available_width());
-                    ui.label(egui::RichText::new("📁 File Information").strong());
-                    ui.add_space(5.0);
-
-                    // Input file
-                    ui.label(egui::RichText::new("Input file:").strong());
-                    ui.indent("input_file", |ui| {
-                        ui.label(&entry.input_file);
-                        ui.horizontal(|ui| {
-                            ui.label("Format:");
-                            ui.label(
-                                egui::RichText::new(&entry.input_format)
-                                    .color(egui::Color32::from_rgb(100, 150, 255)),
-                            );
-                        });
-                    });
-
-                    ui.add_space(5.0);
-
-                    // Output file
-                    ui.label(egui::RichText::new("Output file:").strong());
-                    ui.indent("output_file", |ui| {
-                        if let Some(ref output_file) = entry.output_file {
-                            ui.label(output_file);
-                        } else {
-                            ui.label(
-                                egui::RichText::new("(not created)")
-                                    .color(egui::Color32::GRAY)
-                                    .italics(),
-                            );
-                        }
-                        ui.horizontal(|ui| {
-                            ui.label("Format:");
-                            ui.label(
-                                egui::RichText::new(&entry.output_format)
-                                    .color(egui::Color32::from_rgb(100, 200, 100)),
-                            );
-                        });
-                    });
-                });
-
-                ui.add_space(10.0);
-
-                // Processing information
-                ui.group(|ui| {
-                    ui.set_min_width(ui.available_width());
-                    ui.label(egui::RichText::new("⚙ Processing Information").strong());
-                    ui.add_space(5.0);
-
-                    // Processed bytes
-                    ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("Data processed:").strong());
-                        let size_text = if entry.bytes_processed > 1024 * 1024 {
-                            format!("{:.2} MB", entry.bytes_processed as f64 / (1024.0 * 1024.0))
-                        } else if entry.bytes_processed > 1024 {
-                            format!("{:.2} KB", entry.bytes_processed as f64 / 1024.0)
-                        } else {
-                            format!("{} bytes", entry.bytes_processed)
-                        };
-                        ui.label(size_text);
-                    });
-
-                    // Duration
-                    ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("Duration:").strong());
-                        let duration_text = if entry.duration_ms > 1000 {
-                            format!("{:.2}s", entry.duration_ms as f64 / 1000.0)
-                        } else {
-                            format!("{}ms", entry.duration_ms)
-                        };
-                        ui.label(duration_text);
-                    });
-                });
-
-                // Error message (if failed)
-                if let Some(ref error_msg) = entry.error_message {
-                    ui.add_space(10.0);
-
-                    ui.group(|ui| {
-                        ui.set_min_width(ui.available_width());
-                        ui.horizontal(|ui| {
-                            ui.label(egui::RichText::new("⚠").color(egui::Color32::YELLOW));
-                            ui.label(
-                                egui::RichText::new("Error Message")
-                                    .strong()
-                                    .color(egui::Color32::from_rgb(255, 150, 100)),
-                            );
-                        });
-                        ui.add_space(5.0);
-
-                        // Display error message in scrollable area
-                        egui::ScrollArea::vertical()
-                            .max_height(150.0)
-                            .show(ui, |ui| {
-                                ui.label(
-                                    egui::RichText::new(error_msg)
-                                        .color(egui::Color32::from_rgb(255, 100, 100))
-                                        .monospace(),
-                                );
-                            });
-                    });
-                }
             });
+
+            ui.add_space(10.0);
+
+            // Basic information
+            ui.group(|ui| {
+                ui.set_min_width(ui.available_width());
+                ui.label(egui::RichText::new("📋 Basic Information").strong());
+                ui.add_space(5.0);
+
+                // ID
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("ID:").strong());
+                    ui.label(format!("#{}", entry.id));
+                });
+
+                // Timestamp
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("Time:").strong());
+                    ui.label(entry.timestamp.format("%Y-%m-%d %H:%M:%S").to_string());
+                });
+
+                // Plugin
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("Plugin:").strong());
+                    ui.label(&entry.plugin_name);
+                });
+            });
+
+            ui.add_space(10.0);
+
+            // File information
+            ui.group(|ui| {
+                ui.set_min_width(ui.available_width());
+                ui.label(egui::RichText::new("📁 File Information").strong());
+                ui.add_space(5.0);
+
+                // Input file
+                ui.label(egui::RichText::new("Input file:").strong());
+                ui.indent("input_file", |ui| {
+                    ui.label(&entry.input_file);
+                    ui.horizontal(|ui| {
+                        ui.label("Format:");
+                        ui.label(egui::RichText::new(&entry.input_format).color(egui::Color32::from_rgb(100, 150, 255)));
+                    });
+                });
+
+                ui.add_space(5.0);
+
+                // Output file
+                ui.label(egui::RichText::new("Output file:").strong());
+                ui.indent("output_file", |ui| {
+                    if let Some(ref output_file) = entry.output_file {
+                        ui.label(output_file);
+                    } else {
+                        ui.label(egui::RichText::new("(not created)").color(egui::Color32::GRAY).italics());
+                    }
+                    ui.horizontal(|ui| {
+                        ui.label("Format:");
+                        ui.label(egui::RichText::new(&entry.output_format).color(egui::Color32::from_rgb(100, 200, 100)));
+                    });
+                });
+            });
+
+            ui.add_space(10.0);
+
+            // Processing information
+            ui.group(|ui| {
+                ui.set_min_width(ui.available_width());
+                ui.label(egui::RichText::new("⚙ Processing Information").strong());
+                ui.add_space(5.0);
+
+                // Processed bytes
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("Data processed:").strong());
+                    let size_text = if entry.bytes_processed > 1024 * 1024 {
+                        format!("{:.2} MB", entry.bytes_processed as f64 / (1024.0 * 1024.0))
+                    } else if entry.bytes_processed > 1024 {
+                        format!("{:.2} KB", entry.bytes_processed as f64 / 1024.0)
+                    } else {
+                        format!("{} bytes", entry.bytes_processed)
+                    };
+                    ui.label(size_text);
+                });
+
+                // Duration
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("Duration:").strong());
+                    let duration_text = if entry.duration_ms > 1000 {
+                        format!("{:.2}s", entry.duration_ms as f64 / 1000.0)
+                    } else {
+                        format!("{}ms", entry.duration_ms)
+                    };
+                    ui.label(duration_text);
+                });
+            });
+
+            // Error message (if failed)
+            if let Some(ref error_msg) = entry.error_message {
+                ui.add_space(10.0);
+
+                ui.group(|ui| {
+                    ui.set_min_width(ui.available_width());
+                    ui.horizontal(|ui| {
+                        ui.label(egui::RichText::new("⚠").color(egui::Color32::YELLOW));
+                        ui.label(egui::RichText::new("Error Message").strong().color(egui::Color32::from_rgb(255, 150, 100)));
+                    });
+                    ui.add_space(5.0);
+
+                    // Display error message in scrollable area
+                    egui::ScrollArea::vertical().max_height(150.0).show(ui, |ui| {
+                        ui.label(egui::RichText::new(error_msg).color(egui::Color32::from_rgb(255, 100, 100)).monospace());
+                    });
+                });
+            }
+        });
     }
 
     /// Show settings tab UI
@@ -1444,10 +1272,7 @@ impl FileConverterApp {
         ui.heading("⚙ Settings");
 
         if self.settings_manager.is_none() {
-            ui.colored_label(
-                egui::Color32::YELLOW,
-                "⚠ Database connection failed: Settings features unavailable.",
-            );
+            ui.colored_label(egui::Color32::YELLOW, "⚠ Database connection failed: Settings features unavailable.");
             return;
         }
 
@@ -1459,20 +1284,14 @@ impl FileConverterApp {
         // Default output directory setting
         ui.group(|ui| {
             ui.set_min_width(ui.available_width());
-            ui.label(
-                egui::RichText::new("📁 Default Output Directory")
-                    .strong()
-                    .size(14.0),
-            );
+            ui.label(egui::RichText::new("📁 Default Output Directory").strong().size(14.0));
             ui.add_space(5.0);
 
             ui.label("Set the default directory where converted files will be saved.");
             ui.label(
-                egui::RichText::new(
-                    "(If empty, files will be saved in the same location as the original)",
-                )
-                .small()
-                .color(egui::Color32::GRAY),
+                egui::RichText::new("(If empty, files will be saved in the same location as the original)")
+                    .small()
+                    .color(egui::Color32::GRAY),
             );
 
             ui.add_space(5.0);
@@ -1484,10 +1303,7 @@ impl FileConverterApp {
                 }
 
                 if ui.button("📂 Browse...").clicked() {
-                    if let Some(path) = rfd::FileDialog::new()
-                        .set_title("Select Default Output Directory")
-                        .pick_folder()
-                    {
+                    if let Some(path) = rfd::FileDialog::new().set_title("Select Default Output Directory").pick_folder() {
                         self.default_output_dir = path.to_string_lossy().to_string();
                         settings_changed = true;
                     }
@@ -1528,22 +1344,13 @@ impl FileConverterApp {
             let old_theme = self.theme.clone();
 
             ui.horizontal(|ui| {
-                if ui
-                    .selectable_label(self.theme == "Light", "☀ Light")
-                    .clicked()
-                {
+                if ui.selectable_label(self.theme == "Light", "☀ Light").clicked() {
                     self.theme = "Light".to_string();
                 }
-                if ui
-                    .selectable_label(self.theme == "Dark", "🌙 Dark")
-                    .clicked()
-                {
+                if ui.selectable_label(self.theme == "Dark", "🌙 Dark").clicked() {
                     self.theme = "Dark".to_string();
                 }
-                if ui
-                    .selectable_label(self.theme == "System", "💻 System")
-                    .clicked()
-                {
+                if ui.selectable_label(self.theme == "System", "💻 System").clicked() {
                     self.theme = "System".to_string();
                 }
             });
@@ -1555,11 +1362,7 @@ impl FileConverterApp {
             }
 
             ui.add_space(5.0);
-            ui.label(
-                egui::RichText::new(format!("Current theme: {}", self.theme))
-                    .small()
-                    .color(egui::Color32::GRAY),
-            );
+            ui.label(egui::RichText::new(format!("Current theme: {}", self.theme)).small().color(egui::Color32::GRAY));
         });
 
         ui.add_space(10.0);
@@ -1571,11 +1374,7 @@ impl FileConverterApp {
             ui.add_space(5.0);
 
             ui.label("Select the application's display language.");
-            ui.label(
-                egui::RichText::new("(Currently only English is supported)")
-                    .small()
-                    .color(egui::Color32::GRAY),
-            );
+            ui.label(egui::RichText::new("(Currently only English is supported)").small().color(egui::Color32::GRAY));
 
             ui.add_space(5.0);
 
@@ -1583,29 +1382,20 @@ impl FileConverterApp {
 
             egui::ComboBox::from_id_source("language_combo")
                 .selected_text(match self.language.as_str() {
-                    "ko" => "🇰🇷 한국어",
-                    "en" => "🇺🇸 English",
-                    "ja" => "🇯🇵 日本語",
-                    _ => "Unknown",
+                    | "ko" => "🇰🇷 한국어",
+                    | "en" => "🇺🇸 English",
+                    | "ja" => "🇯🇵 日本語",
+                    | _ => "Unknown",
                 })
                 .width(200.0)
                 .show_ui(ui, |ui| {
-                    if ui
-                        .selectable_label(self.language == "ko", "🇰🇷 한국어")
-                        .clicked()
-                    {
+                    if ui.selectable_label(self.language == "ko", "🇰🇷 한국어").clicked() {
                         self.language = "ko".to_string();
                     }
-                    if ui
-                        .selectable_label(self.language == "en", "🇺🇸 English")
-                        .clicked()
-                    {
+                    if ui.selectable_label(self.language == "en", "🇺🇸 English").clicked() {
                         self.language = "en".to_string();
                     }
-                    if ui
-                        .selectable_label(self.language == "ja", "🇯🇵 日本語")
-                        .clicked()
-                    {
+                    if ui.selectable_label(self.language == "ja", "🇯🇵 日本語").clicked() {
                         self.language = "ja".to_string();
                     }
                 });
@@ -1623,10 +1413,7 @@ impl FileConverterApp {
             ui.add_space(10.0);
 
             ui.horizontal(|ui| {
-                ui.label(
-                    egui::RichText::new("⚠ Settings have been changed.")
-                        .color(egui::Color32::from_rgb(255, 200, 100)),
-                );
+                ui.label(egui::RichText::new("⚠ Settings have been changed.").color(egui::Color32::from_rgb(255, 200, 100)));
 
                 if ui.button("💾 Save").clicked() {
                     self.save_settings();
@@ -1658,9 +1445,7 @@ impl FileConverterApp {
     fn save_settings(&self) {
         if let Some(ref settings_manager) = self.settings_manager {
             // Save default output directory
-            if let Err(e) =
-                settings_manager.save_setting("default_output_dir", &self.default_output_dir)
-            {
+            if let Err(e) = settings_manager.save_setting("default_output_dir", &self.default_output_dir) {
                 log::error!("Failed to save default_output_dir: {}", e);
             }
 
@@ -1681,20 +1466,20 @@ impl FileConverterApp {
     /// Apply theme
     fn apply_theme(&self, ctx: &egui::Context) {
         match self.theme.as_str() {
-            "Light" => {
+            | "Light" => {
                 ctx.set_visuals(egui::Visuals::light());
-            }
-            "Dark" => {
+            },
+            | "Dark" => {
                 ctx.set_visuals(egui::Visuals::dark());
-            }
-            "System" => {
+            },
+            | "System" => {
                 // Use default for System theme
                 // In reality, OS settings should be detected, but here we use Dark as default
                 ctx.set_visuals(egui::Visuals::dark());
-            }
-            _ => {
+            },
+            | _ => {
                 ctx.set_visuals(egui::Visuals::dark());
-            }
+            },
         }
     }
 }

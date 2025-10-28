@@ -17,28 +17,57 @@
   install_crate = "rustfmt"
 
 [tasks.build]
-  args         = ["build", "--profile", "dev"]
+  args         = ["build", "--workspace"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.build-gui]
+  args         = ["build", "-p", "app-gui"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.release]
-  args         = ["build", "--profile", "release"]
+  args         = ["build", "--release", "--workspace"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.release-gui]
+  args         = ["build", "-p", "app-gui", "--release"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.test]
-  args         = ["test"]
+  args         = ["test", "--workspace"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.test-plugin-manager]
+  args         = ["test", "-p", "plugin-manager"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.test-integration]
+  args         = ["test", "-p", "plugin-manager", "--test", "integration_test"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.watch-run]
   # `cargo install cargo-watch`로 설치
+  args          = ["watch", "-x", "run -p app-gui"]
   command       = "cargo"
-  args          = ["watch", "-x", "run"]
-  install_crate = "cargo-watch"
   dependencies  = ["format"]
+  install_crate = "cargo-watch"
+  run_task      = {name = "empty"}
+  workspace     = false
 
 [tasks.run]
-  args         = ["run"]
+  args         = ["run", "-p", "app-gui"]
   command      = "cargo"
   dependencies = ["format"]
+  workspace    = false
+
+[tasks.run-release]
+  args         = ["run", "-p", "app-gui", "--release"]
+  command      = "cargo"
+  dependencies = ["format"]
+  workspace    = false

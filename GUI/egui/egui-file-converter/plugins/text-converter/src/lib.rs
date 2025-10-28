@@ -19,15 +19,11 @@ pub struct TextConverterPlugin;
 
 impl TextConverterPlugin {
     /// Creates a new instance of the TextConverterPlugin.
-    pub fn new() -> Self {
-        Self
-    }
+    pub fn new() -> Self { Self }
 }
 
 impl Default for TextConverterPlugin {
-    fn default() -> Self {
-        Self::new()
-    }
+    fn default() -> Self { Self::new() }
 }
 
 impl Plugin for TextConverterPlugin {
@@ -61,12 +57,7 @@ impl Plugin for TextConverterPlugin {
         from.extension == "txt" && to.extension == "txt"
     }
 
-    fn convert(
-        &self,
-        input_path: &Path,
-        _output_format: &FileFormat,
-        options: &ConversionOptions,
-    ) -> Result<ConversionResult, Box<dyn Error>> {
+    fn convert(&self, input_path: &Path, _output_format: &FileFormat, options: &ConversionOptions) -> Result<ConversionResult, Box<dyn Error>> {
         // 1. Read the input file
         let input_bytes = fs::read(input_path)?;
 
@@ -81,11 +72,7 @@ impl Plugin for TextConverterPlugin {
         let (decoded_text, _, had_errors) = source_encoding.decode(&input_bytes);
 
         if had_errors {
-            return Err(format!(
-                "Failed to decode input file with encoding: {}",
-                source_encoding.name()
-            )
-            .into());
+            return Err(format!("Failed to decode input file with encoding: {}", source_encoding.name()).into());
         }
 
         // 3. Get target encoding from options (default to UTF-8)
@@ -99,11 +86,7 @@ impl Plugin for TextConverterPlugin {
         let (encoded_bytes, _, had_errors) = target_encoding.encode(&decoded_text);
 
         if had_errors {
-            return Err(format!(
-                "Failed to encode to target encoding: {}",
-                target_encoding.name()
-            )
-            .into());
+            return Err(format!("Failed to encode to target encoding: {}", target_encoding.name()).into());
         }
 
         // 5. Determine output path
@@ -115,11 +98,7 @@ impl Plugin for TextConverterPlugin {
 
         // 6. Check if output file exists and handle overwrite option
         if output_path.exists() && !options.overwrite {
-            return Err(format!(
-                "Output file already exists: {}. Use overwrite option to replace it.",
-                output_path.display()
-            )
-            .into());
+            return Err(format!("Output file already exists: {}. Use overwrite option to replace it.", output_path.display()).into());
         }
 
         // 7. Write the output file
@@ -129,11 +108,7 @@ impl Plugin for TextConverterPlugin {
         Ok(ConversionResult {
             success: true,
             output_path: Some(output_path.to_string_lossy().to_string()),
-            message: format!(
-                "Successfully converted from {} to {}",
-                source_encoding.name(),
-                target_encoding.name()
-            ),
+            message: format!("Successfully converted from {} to {}", source_encoding.name(), target_encoding.name()),
             bytes_processed: encoded_bytes.len(),
         })
     }
@@ -197,14 +172,9 @@ fn generate_output_path(input_path: &Path, encoding_name: &str) -> Result<PathBu
         .to_str()
         .ok_or("Invalid UTF-8 in file name")?;
 
-    let extension = input_path
-        .extension()
-        .and_then(|e| e.to_str())
-        .unwrap_or("txt");
+    let extension = input_path.extension().and_then(|e| e.to_str()).unwrap_or("txt");
 
-    let parent = input_path
-        .parent()
-        .ok_or("Invalid input file path")?;
+    let parent = input_path.parent().ok_or("Invalid input file path")?;
 
     let encoding_suffix = encoding_name.to_lowercase().replace(' ', "-");
     let output_filename = format!("{}_{}.{}", file_stem, encoding_suffix, extension);
@@ -217,6 +187,4 @@ fn generate_output_path(input_path: &Path, encoding_name: &str) -> Result<PathBu
 /// This function is exported with C linkage to allow the plugin to be
 /// dynamically loaded by the core system.
 #[no_mangle]
-pub fn create_plugin() -> Box<dyn Plugin> {
-    Box::new(TextConverterPlugin::new())
-}
+pub fn create_plugin() -> Box<dyn Plugin> { Box::new(TextConverterPlugin::new()) }
