@@ -1,0 +1,17 @@
+[package]
+name = "gui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+converter-core = { path = "../core" }
+database = { path = "../database" }
+plugin-interface = { path = "../plugin-interface" }
+text-converter = { path = "../plugins/text-converter" }
+eframe = { workspace = true }
+egui = { workspace = true }
+rfd = { workspace = true }
+anyhow = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+chrono = { workspace = true }

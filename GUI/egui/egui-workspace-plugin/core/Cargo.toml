@@ -1,0 +1,15 @@
+[package]
+name = "converter-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+plugin-interface = { path = "../plugin-interface" }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+uuid = { workspace = true }
+libloading = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.8"
