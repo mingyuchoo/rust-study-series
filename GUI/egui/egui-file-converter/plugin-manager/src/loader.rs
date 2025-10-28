@@ -99,10 +99,10 @@ impl PluginLoader {
 
         let mut plugin_files = Vec::new();
 
-        let entries = fs::read_dir(&self.plugin_dir).map_err(|e| ConversionError::FileReadError(e))?;
+        let entries = fs::read_dir(&self.plugin_dir).map_err(ConversionError::FileReadError)?;
 
         for entry in entries {
-            let entry = entry.map_err(|e| ConversionError::FileReadError(e))?;
+            let entry = entry.map_err(ConversionError::FileReadError)?;
             let path = entry.path();
 
             // Check if the file is a dynamic library

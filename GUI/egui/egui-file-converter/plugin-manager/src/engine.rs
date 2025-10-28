@@ -160,10 +160,10 @@ impl ConversionEngine {
         for plugin_meta in plugins {
             if let Some(plugin) = self.registry.get_plugin(&plugin_meta.name) {
                 for output_format in plugin.supported_output_formats() {
-                    if plugin.can_convert(&input_format, &output_format) {
-                        if !formats.iter().any(|f: &FileFormat| f.extension == output_format.extension) {
-                            formats.push(output_format);
-                        }
+                    if plugin.can_convert(&input_format, &output_format)
+                        && !formats.iter().any(|f: &FileFormat| f.extension == output_format.extension)
+                    {
+                        formats.push(output_format);
                     }
                 }
             }

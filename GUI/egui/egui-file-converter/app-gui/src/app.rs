@@ -277,7 +277,7 @@ impl FileConverterApp {
                                 if progress_tx
                                     .send(ProgressMessage::Progress {
                                         current_file: if idx + 1 < total_files {
-                                            format!("Preparing next file...")
+                                            "Preparing next file...".to_string()
                                         } else {
                                             "All files processed".to_string()
                                         },
@@ -311,7 +311,7 @@ impl FileConverterApp {
                                 if progress_tx
                                     .send(ProgressMessage::Progress {
                                         current_file: if idx + 1 < total_files {
-                                            format!("Preparing next file...")
+                                            "Preparing next file...".to_string()
                                         } else {
                                             "Processing complete".to_string()
                                         },

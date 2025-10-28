@@ -107,7 +107,7 @@ pub struct ConversionResult {
 ///
 /// This structure allows customization of the conversion process through
 /// various parameters and custom key-value pairs.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ConversionOptions {
     /// Optional custom output path. If None, the plugin should generate a
     /// default path.
@@ -119,17 +119,6 @@ pub struct ConversionOptions {
     pub quality: Option<u8>,
     /// Custom parameters specific to the plugin or format
     pub custom_params: HashMap<String, String>,
-}
-
-impl Default for ConversionOptions {
-    fn default() -> Self {
-        Self {
-            output_path: None,
-            overwrite: false,
-            quality: None,
-            custom_params: HashMap::new(),
-        }
-    }
 }
 
 /// The main trait that all file converter plugins must implement.
