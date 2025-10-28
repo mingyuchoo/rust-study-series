@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-converter-core = { path = "../core" }
+plugin-manager = { path = "../plugin-manager" }
 database = { path = "../database" }
 plugin-interface = { path = "../plugin-interface" }
 text-converter = { path = "../plugins/text-converter" }

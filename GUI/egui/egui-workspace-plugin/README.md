@@ -16,7 +16,7 @@ Rust 기반 플러그인 아키텍처를 사용한 파일 확장자 변환 데�
 ```
 file-converter-app/
 ├── Cargo.toml                 # Workspace 루트
-├── core/                      # 핵심 비즈니스 로직
+├── plugin-manager/            # 핵심 비즈니스 로직
 │   ├── src/
 │   │   ├── engine.rs          # 변환 엔진
 │   │   ├── registry.rs        # 플러그인 레지스트리
@@ -61,7 +61,7 @@ cargo build
 
 # 특정 크레이트만 빌드
 cargo build -p gui
-cargo build -p converter-core
+cargo build -p plugin-manager
 ```
 
 ### 실행 방법
@@ -81,10 +81,10 @@ cargo run -p gui
 cargo test --workspace
 
 # 특정 크레이트 테스트
-cargo test -p converter-core
+cargo test -p plugin-manager
 
 # 통합 테스트만 실행
-cargo test -p converter-core --test integration_test
+cargo test -p plugin-manager --test integration_test
 ```
 
 ## 사용 방법
@@ -121,7 +121,7 @@ cargo test -p converter-core --test integration_test
 ### 플러그인 사용 방법
 
 ```rust
-use converter_core::{PluginLoader, PluginRegistry};
+use plugin_manager::{PluginLoader, PluginRegistry};
 use std::sync::Arc;
 
 // 플러그인 레지스트리 생성
@@ -290,7 +290,7 @@ cargo clippy --all-targets --all-features
 RUST_LOG=debug cargo run -p gui
 
 # 특정 모듈만 로깅
-RUST_LOG=converter_core=debug cargo run -p gui
+RUST_LOG=plugin_manager=debug cargo run -p gui
 ```
 
 ## 라이선스

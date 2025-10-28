@@ -33,7 +33,7 @@ git checkout -b feature/your-feature-name
 
 프로젝트는 Cargo workspace로 구성되어 있습니다:
 
-- `core/`: 핵심 비즈니스 로직
+- `plugin-manager/`: 핵심 비즈니스 로직
 - `plugin-interface/`: 플러그인 인터페이스
 - `database/`: 데이터베이스 관리
 - `gui/`: GUI 애플리케이션
@@ -46,7 +46,7 @@ git checkout -b feature/your-feature-name
 cargo fmt --all
 
 # 특정 크레이트만 포맷팅
-cargo fmt -p converter-core
+cargo fmt -p plugin-manager
 ```
 
 ### 4. 린트 실행
@@ -56,7 +56,7 @@ cargo fmt -p converter-core
 cargo clippy --all-targets --all-features -- -D warnings
 
 # 특정 크레이트만 검사
-cargo clippy -p converter-core
+cargo clippy -p plugin-manager
 ```
 
 ### 5. 테스트 실행
@@ -66,10 +66,10 @@ cargo clippy -p converter-core
 cargo test --workspace
 
 # 특정 크레이트 테스트
-cargo test -p converter-core
+cargo test -p plugin-manager
 
 # 통합 테스트만 실행
-cargo test -p converter-core --test integration_test
+cargo test -p plugin-manager --test integration_test
 
 # 테스트 출력 표시
 cargo test -- --nocapture
@@ -143,7 +143,7 @@ RUST_LOG=debug cargo run -p gui
 /// # Example
 ///
 /// ```no_run
-/// use converter_core::ConversionEngine;
+/// use plugin_manager::ConversionEngine;
 /// 
 /// let engine = ConversionEngine::new(registry);
 /// let result = engine.convert_file(&input, &format, "plugin", &options)?;
@@ -183,8 +183,8 @@ mod tests {
 `tests/` 디렉토리에 작성:
 
 ```rust
-// core/tests/integration_test.rs
-use converter_core::*;
+// plugin-manager/tests/integration_test.rs
+use plugin_manager::*;
 
 #[test]
 fn test_end_to_end_conversion() {

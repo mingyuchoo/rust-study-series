@@ -7,7 +7,7 @@
 //! # Example
 //!
 //! ```no_run
-//! use converter_core::{PluginLoader, PluginRegistry};
+//! use plugin_manager::{PluginLoader, PluginRegistry};
 //!
 //! // Create a plugin registry
 //! let registry = PluginRegistry::new();

@@ -1,4 +1,4 @@
-use converter_core::{ConversionEngine, PluginRegistry};
+use plugin_manager::{ConversionEngine, PluginRegistry};
 use plugin_interface::{ConversionOptions, FileFormat, Plugin, PluginMetadata};
 use std::collections::HashMap;
 use std::fs;

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "core",
+    "plugin-manager",
     "plugin-interface",
     "database",
     "gui",
