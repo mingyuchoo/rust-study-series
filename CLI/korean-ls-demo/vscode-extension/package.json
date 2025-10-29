@@ -1,0 +1,34 @@
+{
+  "name": "korean-language",
+  "displayName": "Korean Language Support",
+  "description": "한국어 프로그래밍 언어 지원",
+  "version": "0.1.0",
+  "publisher": "korean-lang",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": ["Programming Languages"],
+  "activationEvents": ["onLanguage:korean"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [{
+      "id": "korean",
+      "extensions": [".kr", ".한국어"],
+      "aliases": ["Korean", "한국어"]
+    }]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^5.0.0"
+  }
+}

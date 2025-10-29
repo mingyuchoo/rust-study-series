@@ -1,0 +1,22 @@
+# Rust
+rust-server/target/
+rust-server/Cargo.lock
+
+# Node.js
+vscode-extension/node_modules/
+vscode-extension/out/
+vscode-extension/*.vsix
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Old files (루트 레벨)
+/target/
+/Cargo.lock
+/node_modules/
+/out/
