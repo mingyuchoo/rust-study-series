@@ -1,9 +1,10 @@
 [workspace]
   members = [
-    "plugin-interface",
-    "plugin-manager",
-    "plugins/hello-plugin",
-    "plugins/math-plugin",
+    "crates/plugin-interface",
+    "crates/plugin-manager",
+    "crates/plugins/hello-plugin",
+    "crates/plugins/math-plugin",
+    "apps/cli",
   ]
 
   resolver = "2"

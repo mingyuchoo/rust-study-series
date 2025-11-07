@@ -48,6 +48,6 @@ echo Plugin libraries:
 dir /B "%PLUGINS_DIR%\*.dll"
 
 echo.
-echo You can now run the core application with: cargo run --bin plugin-manager
+echo You can now run the core application with: cargo run --bin cli
 
 endlocal

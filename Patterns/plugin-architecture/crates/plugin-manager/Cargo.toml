@@ -6,3 +6,7 @@
 [dependencies]
   libloading       = "0.8"
   plugin-interface = {path = "../plugin-interface"}
+
+[lib]
+  name = "plugin_manager"
+  path = "src/lib.rs"

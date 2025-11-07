@@ -11,27 +11,37 @@ TARGET_DIR="target/${PROFILE}"
 PLUGINS_DIR="${TARGET_DIR}/plugins"
 
 # Detect the operating system and set the library extension
-case "$(uname -s)" in
-    Linux*)
-        LIB_PREFIX="lib"
-        LIB_EXT="so"
-        ;;
-    Darwin*)
-        LIB_PREFIX="lib"
-        LIB_EXT="dylib"
-        ;;
-    MINGW*|MSYS*|CYGWIN*)
-        LIB_PREFIX=""
-        LIB_EXT="dll"
-        ;;
-    *)
-        echo "Unsupported operating system"
-        exit 1
-        ;;
-esac
+# Check for Windows first by looking for .exe files or OS environment variable
+if [[ "$OS" == "Windows_NT" ]] || [[ -f "${TARGET_DIR}/cli.exe" ]]; then
+    LIB_PREFIX=""
+    LIB_EXT="dll"
+    PLATFORM="Windows"
+else
+    case "$(uname -s)" in
+        Linux*)
+            LIB_PREFIX="lib"
+            LIB_EXT="so"
+            PLATFORM="Linux"
+            ;;
+        Darwin*)
+            LIB_PREFIX="lib"
+            LIB_EXT="dylib"
+            PLATFORM="macOS"
+            ;;
+        MINGW*|MSYS*|CYGWIN*)
+            LIB_PREFIX=""
+            LIB_EXT="dll"
+            PLATFORM="Windows"
+            ;;
+        *)
+            echo "Unsupported operating system"
+            exit 1
+            ;;
+    esac
+fi
 
 echo "Deploying plugins for ${PROFILE} build..."
-echo "Platform: $(uname -s)"
+echo "Platform: ${PLATFORM}"
 echo "Library extension: .${LIB_EXT}"
 
 # Create the plugins directory if it doesn't exist
@@ -64,4 +74,4 @@ echo "Plugin libraries:"
 ls -lh "${PLUGINS_DIR}"
 
 echo ""
-echo "You can now run the core application with: cargo run --bin plugin-manager"
+echo "You can now run the core application with: cargo run --bin cli"

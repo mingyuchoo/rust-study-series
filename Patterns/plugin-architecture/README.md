@@ -7,14 +7,19 @@ A dynamic plugin system for Rust that enables runtime feature extension through 
 This project uses a Cargo workspace with the following structure:
 
 ```bash
-rust-plugin-system/
-├── plugin-interface/     # Shared trait definitions for plugins
-├── plugin-manager/            # Main application that loads and manages plugins
-├── plugins/             # Plugin implementations
-│   ├── hello-plugin/   # Example: Simple greeting plugin
-│   └── math-plugin/    # Example: Mathematical operations plugin
+plugin-architecture/
+├── Cargo.toml           # Workspace root (virtual manifest)
+├── Cargo.lock
+├── crates/
+│   ├── plugin-interface/     # Shared trait definitions for plugins
+│   ├── plugin-manager/       # Plugin management library
+│   └── plugins/              # Plugin implementations
+│       ├── hello-plugin/     # Example: Simple greeting plugin
+│       └── math-plugin/      # Example: Mathematical operations plugin
+├── apps/
+│   └── cli/                  # Main application that loads and manages plugins
 └── target/debug/
-    └── plugins/        # Runtime directory for plugin libraries
+    └── plugins/              # Runtime directory for plugin libraries
 ```
 
 ## Build Process
@@ -59,7 +64,7 @@ rust-plugin-system/
 
 3. **Run the core application:**
    ```bash
-   cargo run --bin plugin-manager
+   cargo run --bin cli
    ```
 
 ### Build Order
@@ -67,16 +72,16 @@ rust-plugin-system/
 The workspace automatically handles build dependencies:
 
 1. `plugin-interface` is built first (dependency for all other crates)
-2. Plugin implementations are built next
-3. `plugin-manager` is built last
+2. `plugin-manager` library is built next
+3. Plugin implementations are built
+4. `cli` application is built last
 
 ## Running the Application
 
 After building and deploying plugins:
 
 ```bash
-cd plugin-manager
-cargo run
+cargo run --bin cli
 ```
 
 The application will:
@@ -91,7 +96,7 @@ The application will:
 1. **Create a new crate in the plugins directory:**
 
    ```bash
-   cd plugins
+   cd crates/plugins
    cargo new --lib my-plugin
    ```
 
@@ -158,11 +163,12 @@ The application will:
    ```toml
    [workspace]
    members = [
-       "plugin-interface",
-       "plugin-manager",
-       "plugins/hello-plugin",
-       "plugins/math-plugin",
-       "plugins/my-plugin",  # Add your plugin here
+       "crates/plugin-interface",
+       "crates/plugin-manager",
+       "crates/plugins/hello-plugin",
+       "crates/plugins/math-plugin",
+       "crates/plugins/my-plugin",  # Add your plugin here
+       "apps/cli",
    ]
    ```
 
@@ -211,8 +217,8 @@ The application will:
 
 1. Make changes to plugin code
 2. Rebuild: `cargo build`
-3. Deploy: `./deploy-plugins.sh`
-4. Run: `cargo run --bin plugin-manager`
+3. Deploy: `./deploy-plugins.sh` (or `deploy-plugins.bat` on Windows)
+4. Run: `cargo run --bin cli`
 
 ## Testing
 
@@ -228,6 +234,7 @@ Run tests for a specific crate:
 cargo test -p plugin-interface
 cargo test -p plugin-manager
 cargo test -p hello-plugin
+cargo test -p cli
 ```
 
 ## License
