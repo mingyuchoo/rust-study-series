@@ -1,8 +1,0 @@
-[package]
-  edition = "2024"
-  name    = "plugin-manager"
-  version = "0.1.0"
-
-[dependencies]
-  libloading       = "0.8"
-  plugin-interface = {path = "../plugin-interface"}

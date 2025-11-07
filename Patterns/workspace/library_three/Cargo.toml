@@ -1,6 +1,0 @@
-[package]
-  edition = "2024"
-  name    = "library_three"
-  version = "0.1.0"
-
-[dependencies]

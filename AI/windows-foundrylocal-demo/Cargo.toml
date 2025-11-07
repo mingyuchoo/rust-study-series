@@ -1,0 +1,19 @@
+[workspace]
+  members  = ["crates/foundry-types", "crates/foundry-client", "apps/cli"]
+  resolver = "2"
+
+  [workspace.dependencies]
+    # Shared dependencies
+    anyhow             = "1.0.100"
+    foundry-local      = "0.1"
+    reqwest            = {features = ["json"], version = "0.12.24"}
+    serde              = {features = ["derive"], version = "1.0"}
+    serde_json         = "1.0.145"
+    thiserror          = "2.0"
+    tokio              = {features = ["full"], version = "1.48.0"}
+    tracing            = "0.1"
+    tracing-subscriber = {features = ["env-filter"], version = "0.3"}
+
+    # Workspace crates
+    foundry-client = {path = "crates/foundry-client"}
+    foundry-types  = {path = "crates/foundry-types"}

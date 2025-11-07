@@ -1,0 +1,53 @@
+[config]
+  default_to_workspace = true
+
+[tasks.default]
+  alias = "build"
+
+[tasks.clean]
+  args    = ["clean"]
+  command = "cargo"
+
+[tasks.clippy]
+  args    = ["clippy", "--all-targets", "--all-features"]
+  command = "cargo"
+
+[tasks.check]
+  args    = ["check", "--all-targets"]
+  command = "cargo"
+
+[tasks.format]
+  args          = ["fmt", "--all"]
+  command       = "cargo"
+  install_crate = "rustfmt"
+
+[tasks.build]
+  args         = ["build"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.release]
+  args         = ["build", "--release"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.test]
+  args         = ["test", "--all"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.watch-run]
+  # `cargo install cargo-watch`로 설치
+  args          = ["watch", "-x", "run"]
+  command       = "cargo"
+  install_crate = "cargo-watch"
+  workspace     = false
+
+[tasks.run]
+  args      = ["run"]
+  command   = "cargo"
+  workspace = false
+
+[tasks.example]
+  args    = ["run", "--example", "main"]
+  command = "cargo"
