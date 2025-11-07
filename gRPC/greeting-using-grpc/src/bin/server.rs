@@ -1,5 +1,5 @@
-use greeting_using_rpc::error::AppError;
-use greeting_using_rpc::server_service::{parse_socket_address, start_server};
+use greeting_using_grpc::error::AppError;
+use greeting_using_grpc::server_service::{parse_socket_address, start_server};
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
