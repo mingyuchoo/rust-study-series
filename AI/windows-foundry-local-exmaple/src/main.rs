@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
 
     // Use the OpenAI compatible API to interact with the model
     let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(120)) // 2분 타임아웃 설정
+        .timeout(Duration::from_secs(360)) // 6분 타임아웃 설정 (3배 증가)
         .build()
         .context("Failed to build HTTP client")?;
 
