@@ -1,0 +1,9 @@
+[package]
+name    = "infrastructure"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+application = {path = "../application"}
+domain      = {path = "../domain"}
+rusqlite.workspace = true

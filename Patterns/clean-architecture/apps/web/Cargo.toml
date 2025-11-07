@@ -1,0 +1,8 @@
+[package]
+name    = "web"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+presentation = {path = "../../crates/presentation"}
+tokio.workspace = true

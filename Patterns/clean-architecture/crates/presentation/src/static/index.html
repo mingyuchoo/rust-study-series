@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>User CRUD UI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+
+        .user-table th,
+        .user-table td {
+            border: 1px solid var(--border);
+            padding: 0.6em 0.5em;
+            text-align: left;
+        }
+
+        .user-table th {
+            background: #f0f4fa;
+            font-weight: 700;
+        }
+
+        .user-table tr:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        .mini-btn {
+            padding: 0.3em 0.8em;
+            font-size: 0.96em;
+            border-radius: 4px;
+            margin-right: 0.3em;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .mini-btn:disabled {
+            background: #b0b0b0;
+            cursor: not-allowed;
+        }
+
+        .mini-btn.danger {
+            background: var(--error);
+        }
+
+        .mini-btn.danger:hover {
+            background: #b71c1c;
+        }
+
+        :root {
+            --primary: #1976d2;
+            --primary-dark: #115293;
+            --accent: #fff;
+            --bg: #f5f7fa;
+            --card: #fff;
+            --border: #e0e0e0;
+            --error: #d32f2f;
+            --success: #388e3c;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--primary);
+            color: var(--accent);
+            padding: 1.2rem 1rem;
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.08);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem 1rem;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            padding: 2rem 1.5rem 1.5rem 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.3rem;
+        }
+
+        form,
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        input[type="text"],
+        input[type="email"] {
+            flex: 1 1 130px;
+            padding: 0.7em;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 1em;
+            background: #f8fafc;
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            border: 1.5px solid var(--primary);
+            outline: none;
+        }
+
+        button {
+            background: var(--primary);
+            color: var(--accent);
+            border: none;
+            padding: 0.7em 1.2em;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover,
+        button:focus {
+            background: var(--primary-dark);
+        }
+
+        .feedback {
+            margin: 0.5em 0 0.2em 0;
+            font-size: 0.98em;
+            min-height: 1.5em;
+        }
+
+        .feedback.error {
+            color: var(--error);
+        }
+
+        .feedback.success {
+            color: var(--success);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            border: 3px solid #eee;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 0.5em;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        pre {
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 1em;
+            font-size: 1em;
+            overflow-x: auto;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                max-width: 100%;
+                padding: 0 0.3rem 2rem 0.3rem;
+            }
+
+            .card {
+                padding: 1.2rem 0.7rem 1.2rem 0.7rem;
+            }
+
+            form,
+            .actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+
+        .user-detail-card {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.1em 1.5em;
+            margin: 0.5em 0 0.2em 0;
+            font-size: 1.07em;
+            box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 0.3em;
+            max-width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>User CRUD UI</header>
+    <div class="container">
+        <div class="card">
+            <h2>Create User</h2>
+            <form id="create-form" autocomplete="off">
+                <input type="text" id="username" placeholder="Username" required>
+                <input type="email" id="email" placeholder="Email" required>
+                <button type="submit">Create</button>
+            </form>
+            <div id="create-feedback" class="feedback"></div>
+        </div>
+        <div class="card">
+            <h2>Get User</h2>
+            <div class="actions">
+                <input type="text" id="get-id" placeholder="User ID">
+                <button type="button" onclick="getUser()">Get</button>
+            </div>
+            <pre id="user-detail"></pre>
+            <div id="get-feedback" class="feedback"></div>
+        </div>
+        <div class="card">
+            <h2>All Users <button type="button" onclick="fetchUsers()" style="float:right;">Refresh</button></h2>
+            <div id="users-list"></div>
+            <div id="users-feedback" class="feedback"></div>
+        </div>
+    </div>
+    <script>
+        async function deactivateUserFromList(id, isActive) {
+            if (!isActive) return;
+            setFeedback('users-feedback', '', '');
+            try {
+                const resp = await fetch(`/api/users/${id}`, { method: 'PUT' });
+                const txt = await resp.text();
+                setFeedback('users-feedback', txt, resp.ok ? 'success' : 'error');
+                fetchUsers();
+            } catch (e) {
+                setFeedback('users-feedback', 'Failed to deactivate user.', 'error');
+            }
+        }
+        async function deleteUserFromList(id) {
+            setFeedback('users-feedback', '', '');
+            if (!confirm('Are you sure you want to delete this user?')) return;
+            try {
+                const resp = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+                const txt = await resp.text();
+                setFeedback('users-feedback', txt, resp.ok ? 'success' : 'error');
+                fetchUsers();
+            } catch (e) {
+                setFeedback('users-feedback', 'Failed to delete user.', 'error');
+            }
+        }
+
+        function showSpinner(el) {
+            el.innerHTML = '<span class="spinner"></span>';
+        }
+        function setFeedback(id, msg, type) {
+            const el = document.getElementById(id);
+            el.textContent = msg;
+            el.className = 'feedback' + (type ? ' ' + type : '');
+        }
+        async function fetchUsers() {
+            const usersDiv = document.getElementById('users-list');
+            showSpinner(usersDiv);
+            setFeedback('users-feedback', '', '');
+            try {
+                const resp = await fetch('/api/users');
+                if (!resp.ok) throw new Error('Failed to fetch users');
+                const users = await resp.json();
+                if (!Array.isArray(users)) throw new Error('Invalid user list');
+                if (users.length === 0) {
+                    usersDiv.innerHTML = '<div style="text-align:center; color:#888;">No users found.</div>';
+                    return;
+                }
+                let html = `<table class="user-table"><thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
+                for (const user of users) {
+                    html += `<tr>
+                <td>${user.id}</td>
+                <td>${user.username}</td>
+                <td>${user.email}</td>
+                <td>${user.active ? 'Active' : '<span style=\'color:#d32f2f\'>Inactive</span>'}</td>
+                <td>
+                    <button class="mini-btn" onclick="deactivateUserFromList('${user.id}', ${user.active})" ${!user.active ? 'disabled' : ''}>Deactivate</button>
+                    <button class="mini-btn danger" onclick="deleteUserFromList('${user.id}')">Delete</button>
+                </td>
+            </tr>`;
+                }
+                html += '</tbody></table>';
+                usersDiv.innerHTML = html;
+            } catch (e) {
+                usersDiv.innerHTML = '';
+                setFeedback('users-feedback', 'Failed to fetch users.', 'error');
+            }
+        }
+        async function getUser() {
+            setFeedback('get-feedback', '', '');
+            const id = document.getElementById('get-id').value;
+            const detailDiv = document.getElementById('user-detail');
+            if (!id) return setFeedback('get-feedback', 'Please enter a User ID.', 'error');
+            showSpinner(detailDiv);
+            try {
+                const r = await fetch(`/api/users/${id}`);
+                if (!r.ok) {
+                    detailDiv.innerHTML = '';
+                    setFeedback('get-feedback', 'User not found.', 'error');
+                    return;
+                }
+                const user = await r.json();
+                detailDiv.innerHTML = `
+            <div class="user-detail-card">
+                <div><b>ID:</b> ${user.id}</div>
+                <div><b>Username:</b> ${user.username}</div>
+                <div><b>Email:</b> ${user.email}</div>
+                <div><b>Status:</b> <span style="color:${user.active ? '#388e3c' : '#d32f2f'}">${user.active ? 'Active' : 'Inactive'}</span></div>
+            </div>
+        `;
+            } catch (e) {
+                detailDiv.innerHTML = '';
+                setFeedback('get-feedback', 'Failed to get user.', 'error');
+            }
+        }
+        async function deactivateUser() {
+            setFeedback('deactivate-feedback', '', '');
+            const id = document.getElementById('deactivate-id').value;
+            if (!id) return setFeedback('deactivate-feedback', 'Please enter a User ID.', 'error');
+            showSpinner(document.getElementById('deactivate-result'));
+            try {
+                const r = await fetch(`/api/users/${id}`, { method: 'PUT' });
+                document.getElementById('deactivate-result').textContent = await r.text();
+            } catch (e) {
+                setFeedback('deactivate-feedback', 'Failed to deactivate user.', 'error');
+            }
+        }
+        async function deleteUser() {
+            setFeedback('delete-feedback', '', '');
+            const id = document.getElementById('delete-id').value;
+            if (!id) return setFeedback('delete-feedback', 'Please enter a User ID.', 'error');
+            showSpinner(document.getElementById('delete-result'));
+            try {
+                const r = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+                document.getElementById('delete-result').textContent = await r.text();
+            } catch (e) {
+                setFeedback('delete-feedback', 'Failed to delete user.', 'error');
+            }
+        }
+        document.getElementById('create-form').onsubmit = async (e) => {
+            e.preventDefault();
+            setFeedback('create-feedback', '', '');
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            showSpinner(document.getElementById('create-feedback'));
+            try {
+                const r = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email })
+                });
+                const feedbackDiv = document.getElementById('create-feedback');
+                feedbackDiv.className = 'feedback ' + (r.ok ? 'success' : 'error');
+                if (r.ok) {
+                    try {
+                        const data = await r.clone().json();
+                        // UserDto 형태라면 카드로 출력
+                        if (data && data.id && data.username) {
+                            feedbackDiv.innerHTML = `
+                                <div class="user-detail-card">
+                                    <div><b>ID:</b> ${data.id}</div>
+                                    <div><b>Username:</b> ${data.username}</div>
+                                    <div><b>Email:</b> ${data.email}</div>
+                                    <div><b>Status:</b> <span style=\"color:${data.active ? '#388e3c' : '#d32f2f'}\">${data.active ? 'Active' : 'Inactive'}</span></div>
+                                </div>
+                            `;
+                        } else {
+                            feedbackDiv.textContent = data.message || JSON.stringify(data);
+                        }
+                    } catch {
+                        // fallback to text
+                        const msg = await r.text();
+                        feedbackDiv.textContent = msg;
+                    }
+                } else {
+                    const msg = await r.text();
+                    feedbackDiv.textContent = msg;
+                }
+                fetchUsers();
+            } catch (e) {
+                setFeedback('create-feedback', 'Failed to create user.', 'error');
+            }
+        };
+        window.onload = fetchUsers;
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,13 @@
+[package]
+name    = "presentation"
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+application    = {path = "../application"}
+domain         = {path = "../domain"}
+infrastructure = {path = "../infrastructure"}
+axum.workspace       = true
+serde.workspace      = true
+serde_json.workspace = true
+tokio.workspace      = true

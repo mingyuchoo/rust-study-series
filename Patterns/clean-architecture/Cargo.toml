@@ -1,15 +1,24 @@
-[package]
-  edition = "2024"
-  name    = "onion-arch-example"
-  version = "0.1.0"
+[workspace]
+resolver = "2"
+members = [
+    "crates/domain",
+    "crates/application",
+    "crates/infrastructure",
+    "crates/presentation",
+    "apps/web",
+]
 
-[dependencies]
-  # Core dependencies 
-  rusqlite = "0.29"
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
 
-  # Web UI dependencies
-  axum       = {version = "0.7", features = ["macros"]}
-  hyper      = "1"
-  serde      = {version = "1.0", features = ["derive"]}
-  serde_json = "1.0"
-  tokio      = {version = "1.37", features = ["full"]}
+[workspace.dependencies]
+# Core dependencies
+rusqlite = {version = "0.29", features = ["bundled"]}
+
+# Web UI dependencies
+axum       = {version = "0.7", features = ["macros"]}
+hyper      = "1"
+serde      = {version = "1.0", features = ["derive"]}
+serde_json = "1.0"
+tokio      = {version = "1.37", features = ["full"]}
