@@ -13,3 +13,10 @@
   greeting-proto  = {path = "../proto"}
   tokio.workspace = true
   tonic.workspace = true
+
+[dev-dependencies]
+  criterion.workspace = true
+
+[[bench]]
+  harness = false
+  name    = "server_benchmark"

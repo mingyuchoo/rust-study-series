@@ -21,3 +21,7 @@
 [[bench]]
   harness = false
   name    = "client_benchmark"
+
+[[bench]]
+  harness = false
+  name    = "concurrent_benchmark"
