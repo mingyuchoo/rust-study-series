@@ -14,28 +14,18 @@ async fn main() -> Result<()> {
 
     // Create a FoundryLocalManager instance using the builder pattern
     println!("\nFoundry Local 매니저 초기화 중...");
-    let mut manager = FoundryLocalManager::builder()
+    let manager = FoundryLocalManager::builder()
         .bootstrap(true) // Start the service if not running
         .build()
         .await?;
-
-    // List all the models in the catalog
-    println!("\n카탈로그에서 사용 가능한 모델:");
-    let models = manager.list_catalog_models().await?;
-    for model in models {
-        println!("- {model}");
-    }
-
-    // List available models in the local cache
-    println!("\n로컬 캐시에서 사용 가능한 모델:");
-    let models = manager.list_cached_models().await?;
-    for model in models {
-        println!("- {model}");
-    }
-
-    // Get the model information - 로컬에 캐시된 모델 사용
-    let model_info = manager.get_model_info("phi-4-mini", true).await?;
-    println!("\n사용 중인 모델: {model_info}");
+    
+    // Use the actual model ID from the service
+    // Available models:
+    // - gpt-oss-20b-cuda-gpu:1
+    // - Phi-4-mini-instruct-cuda-gpu:4
+    // - qwen2.5-7b-instruct-cuda-gpu:3
+    let model_id = "qwen2.5-7b-instruct-cuda-gpu:3";
+    println!("\n사용 중인 모델: {}", model_id);
 
     // Build the prompt
     let prompt = "황금비율이란 무엇인가요?";
@@ -50,7 +40,7 @@ async fn main() -> Result<()> {
     // API 요청 데이터 준비
     let endpoint = format!("{}/chat/completions", manager.endpoint()?);
     let request_body = serde_json::json!({
-        "model": model_info.id,
+        "model": model_id,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
         "max_tokens": 500
