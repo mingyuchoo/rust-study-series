@@ -1,11 +1,11 @@
-# Foundry Local Workspace
+# Windows FoundryLocal Demo
 
 Cargo 워크스페이스 구조로 구성된 Foundry Local SDK 사용 예제입니다.
 
 ## 프로젝트 구조
 
 ```
-plugin-architecture/
+windows-foundrylocal-demo/
 ├─ Cargo.toml              # 워크스페이스 루트 (virtual manifest)
 ├─ Cargo.lock
 ├─ crates/
