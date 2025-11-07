@@ -1,3 +1,8 @@
 [workspace]
-  members  = ["library_one", "library_three", "library_two", "mainer"]
+  members = [
+    "crates/library-one",
+    "crates/library-two",
+    "crates/library-three",
+    "apps/cli",
+  ]
   resolver = "2"

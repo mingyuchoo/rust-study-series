@@ -1,0 +1,9 @@
+[package]
+  edition = "2024"
+  name    = "server"
+  version = "0.1.0"
+
+[dependencies]
+  library-one   = {path = "../../crates/library-one"}
+  library-three = {path = "../../crates/library-three"}
+  library-two   = {path = "../../crates/library-two"}

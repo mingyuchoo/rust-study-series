@@ -1,4 +1,4 @@
-* Workspace project
+* Workspace monorepo project
 How to create a workspace project
 ** List
 1. Create a workspace
@@ -22,67 +22,73 @@ Edit ~Cargo.toml~
 #+END_SRC
 *** 2. Create a main project
 #+BEGIN_SRC shell
-  cargo new --bin {mainer}
+  mkdir apps
+  cd apps
+  cargo new --bin cli
+  cd ..
 #+END_SRC
 The project name will be added to =members= of ~Cargo.toml~ automatically.
 #+BEGIN_SRC toml
   [workspace]
-  members = ["mainer"]
+  members = ["apps/cli"]
   resolver = "2"
 #+END_SRC
 Create three library projects
 #+BEGIN_SRC shell
-  cargo new --lib {library_one}
-  cargo new --lib {library_two}
-  cargo new --lib {library_three}
+  mkdir crates
+  cd crates
+  cargo new --lib library-one
+  cargo new --lib library-two
+  cargo new --lib library-three
+  cd ..
 #+END_SRC
 The project name will be added to =members= of ~Cargo.toml~ automatically.
 #+BEGIN_SRC toml
   [workspace]
   members = [
-    "library_one",
-    "library_two",
-    "library_three",
-    "mainer"
+    "crates/library-one",
+    "crates/library-two",
+    "crates/library-three",
+    "apps/cli"
   ]
   resolver = "2"
 #+END_SRC
 *** 3. Implement the three libraries
 Let's implement the three libraries
-- ~library_one/src/lib.rs~
+- ~crates/library-one/src/lib.rs~
 #+BEGIN_SRC rust
   pub fn add_one(x: i32) -> i32 {
     x + 1
   }
 #+END_SRC
-- ~library_two/src/lib.rs~
+- ~crates/library-two/src/lib.rs~
 #+BEGIN_SRC rust
   pub fn add_two(x: i32) -> i32 {
     x + 2
   }
 #+END_SRC
-- ~library_three/src/lib.rs~
+- ~crates/library-three/src/lib.rs~
 #+BEGIN_SRC rust
   pub fn add_three(x: i32) -> i32 {
     x + 3
   }
 #+END_SRC
 *** 4. Add dependencies main project
-Add dependencies in ~Cargo.toml~ file of ={mainer}= project
+Add dependencies in ~Cargo.toml~ file of =apps/cli= project
 #+BEGIN_SRC toml
   [package]
-  name = "mainer"
+  name = "server"
   version = "0.1.0"
   edition = "2024"
 
   [dependencies]
-  library_one   = { path = "../library_one"}
-  library_two   = { path = "../library_two"}
-  library_three = { path = "../library_three"}
+  library-one   = { path = "../../crates/library-one"}
+  library-two   = { path = "../../crates/library-two"}
+  library-three = { path = "../../crates/library-three"}
 #+END_SRC
 *** 5. Use three libraries main project
-Use three libraries in ={mainer}= project
-- ~mainer/src/main.rs~
+Use three libraries in =apps/cli= project
+- ~apps/cli/src/main.rs~
 #+BEGIN_SRC rust
   fn main() {
     let num = 10;
@@ -94,10 +100,9 @@ Use three libraries in ={mainer}= project
 *** 6. Run the workspace
 Run the workspace
 #+BEGIN_SRC shell
-  $ cd workspace
   $ cargo run
       Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
-     Running `target/debug/mainer`
+     Running `target/debug/server`
   10 plus one is 11!
   10 plus two is 12!
   10 plus three is 13!
