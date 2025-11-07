@@ -1,14 +1,14 @@
 [package]
-name = "server"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
+  authors.workspace = true
+  edition.workspace = true
+  name              = "server"
+  version.workspace = true
 
 [dependencies]
-proto = { path = "../proto" }
-anyhow.workspace = true
-thiserror.workspace = true
-tokio.workspace = true
-tonic.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true
+  anyhow.workspace             = true
+  proto                        = {path = "../proto"}
+  thiserror.workspace          = true
+  tokio.workspace              = true
+  tonic.workspace              = true
+  tracing.workspace            = true
+  tracing-subscriber.workspace = true

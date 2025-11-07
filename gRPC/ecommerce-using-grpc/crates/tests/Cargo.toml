@@ -1,11 +1,11 @@
 [package]
-name = "tests"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
+  authors.workspace = true
+  edition.workspace = true
+  name              = "tests"
+  version.workspace = true
 
 [dependencies]
-proto = { path = "../proto" }
-server = { path = "../server" }
-tokio.workspace = true
-tonic.workspace = true
+  proto           = {path = "../proto"}
+  server          = {path = "../server"}
+  tokio.workspace = true
+  tonic.workspace = true

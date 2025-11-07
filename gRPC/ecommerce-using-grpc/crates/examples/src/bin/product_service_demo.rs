@@ -24,7 +24,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Added product with ID: {}", add_response.into_inner().id);
 
     // Get the product details
-    let get_request = Request::new(ProductId { id: 2 });
+    let get_request = Request::new(ProductId {
+        id: 2,
+    });
     let get_response: Response<Product> = client.get_product(get_request).await?;
     let product = get_response.into_inner();
 

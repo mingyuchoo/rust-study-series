@@ -5,8 +5,8 @@ use server::MyProductInfo;
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::time::sleep;
-use tonic::transport::Server;
 use tonic::Request;
+use tonic::transport::Server;
 
 #[tokio::test]
 async fn test_add_product() {
@@ -26,9 +26,7 @@ async fn test_add_product() {
     sleep(Duration::from_millis(100)).await;
 
     // Connect to the server
-    let mut client = ProductInfoClient::connect(format!("http://{}", server_addr))
-        .await
-        .unwrap();
+    let mut client = ProductInfoClient::connect(format!("http://{}", server_addr)).await.unwrap();
 
     // Test adding a product
     let test_product = Product {
@@ -45,7 +43,9 @@ async fn test_add_product() {
     assert_eq!(response.into_inner().id, 3);
 
     // Test getting a product
-    let get_request = Request::new(ProductId { id: 3 });
+    let get_request = Request::new(ProductId {
+        id: 3,
+    });
     let get_response = client.get_product(get_request).await.unwrap();
     let retrieved_product = get_response.into_inner();
 

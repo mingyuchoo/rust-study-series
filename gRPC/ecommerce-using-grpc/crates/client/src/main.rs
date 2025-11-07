@@ -1,9 +1,9 @@
 use anyhow::{Context, Result};
 use proto::product_info_client::ProductInfoClient;
 use proto::{Product, ProductId};
-use tonic::transport::Channel;
 use tonic::Request;
-use tracing::{info, Level};
+use tonic::transport::Channel;
+use tracing::{Level, info};
 use tracing_subscriber::FmtSubscriber;
 
 /// Client configuration
@@ -47,7 +47,9 @@ async fn connect_to_server(config: &ClientConfig) -> Result<ProductInfoClient<Ch
 /// Get a product by ID
 async fn get_product(client: &mut ProductInfoClient<Channel>, id: i32) -> Result<Product> {
     // Create the request
-    let request = Request::new(ProductId { id });
+    let request = Request::new(ProductId {
+        id,
+    });
 
     // Send the request and handle the response with Railway Oriented Programming
     let response = client.get_product(request).await.context("Failed to get product")?;

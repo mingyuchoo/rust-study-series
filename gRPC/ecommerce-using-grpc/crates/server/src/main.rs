@@ -3,7 +3,7 @@ use proto::product_info_server::ProductInfoServer;
 use server::MyProductInfo;
 use std::net::SocketAddr;
 use tonic::transport::Server;
-use tracing::{info, Level};
+use tracing::{Level, info};
 use tracing_subscriber::FmtSubscriber;
 
 /// Server configuration
@@ -16,7 +16,9 @@ impl ServerConfig {
     fn new() -> Result<Self> {
         let addr = "[::1]:50051".parse().context("Failed to parse server address")?;
 
-        Ok(Self { addr })
+        Ok(Self {
+            addr,
+        })
     }
 }
 

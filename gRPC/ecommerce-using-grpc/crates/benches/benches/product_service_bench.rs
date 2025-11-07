@@ -11,8 +11,8 @@ use std::time::Duration;
 use test::Bencher;
 use tokio::runtime::Runtime;
 use tokio::time::sleep;
-use tonic::transport::Server;
 use tonic::Request;
+use tonic::transport::Server;
 
 // Helper function to set up the test environment
 fn setup_test_env() -> (Runtime, String) {
@@ -24,11 +24,7 @@ fn setup_test_env() -> (Runtime, String) {
     let product_info = MyProductInfo::default();
 
     rt.spawn(async move {
-        Server::builder()
-            .add_service(ProductInfoServer::new(product_info))
-            .serve(addr)
-            .await
-            .unwrap();
+        Server::builder().add_service(ProductInfoServer::new(product_info)).serve(addr).await.unwrap();
     });
 
     // Give the server a moment to start
@@ -68,7 +64,9 @@ fn bench_get_product(b: &mut Bencher) {
         rt.block_on(async {
             let mut client = ProductInfoClient::connect(server_url.clone()).await.unwrap();
 
-            let request = Request::new(ProductId { id: 1 });
+            let request = Request::new(ProductId {
+                id: 1,
+            });
             let _response = client.get_product(request).await.unwrap();
         });
     });
