@@ -18,6 +18,5 @@
 
 [lib]
   crate-type = ["cdylib"]
-  patch      = "src/lib.rs"
 
 [dependencies]
