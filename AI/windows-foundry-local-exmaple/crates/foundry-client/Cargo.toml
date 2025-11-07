@@ -1,0 +1,15 @@
+[package]
+  description = "API client library for Foundry Local"
+  edition     = "2021"
+  name        = "foundry-client"
+  version     = "0.1.0"
+
+[dependencies]
+  anyhow        = {workspace = true}
+  foundry-local = {workspace = true}
+  foundry-types = {workspace = true}
+  reqwest       = {workspace = true}
+  serde_json    = {workspace = true}
+  thiserror     = {workspace = true}
+  tokio         = {workspace = true}
+  tracing       = {workspace = true}

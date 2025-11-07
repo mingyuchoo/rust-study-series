@@ -3,42 +3,42 @@
   command = "cargo"
 
 [tasks.clippy]
-  args    = ["clippy"]
+  args    = ["clippy", "--workspace", "--all-targets"]
   command = "cargo"
 
 [tasks.check]
-  args    = ["check"]
+  args    = ["check", "--workspace"]
   command = "cargo"
 
 [tasks.format]
-  args          = ["fmt"]
+  args          = ["fmt", "--all"]
   command       = "cargo"
   dependencies  = ["check", "clippy"]
   install_crate = "rustfmt"
 
 [tasks.build]
-  args         = ["build", "--profile", "dev"]
+  args         = ["build", "--workspace", "--profile", "dev"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.release]
-  args         = ["build", "--profile", "release"]
+  args         = ["build", "--workspace", "--profile", "release"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.test]
-  args         = ["test"]
+  args         = ["test", "--workspace"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.watch-run]
   # `cargo install cargo-watch`로 설치
-  args          = ["watch", "-x", "run"]
+  args          = ["watch", "-x", "run", "-p", "foundry-cli"]
   command       = "cargo"
   dependencies  = ["format"]
   install_crate = "cargo-watch"
 
 [tasks.run]
-  args         = ["run"]
+  args         = ["run", "-p", "foundry-cli"]
   command      = "cargo"
   dependencies = ["format"]

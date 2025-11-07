@@ -1,0 +1,10 @@
+[package]
+  description = "Common types for Foundry API interactions"
+  edition     = "2021"
+  name        = "foundry-types"
+  version     = "0.1.0"
+
+[dependencies]
+  serde      = {workspace = true}
+  serde_json = {workspace = true}
+  thiserror  = {workspace = true}

@@ -1,0 +1,13 @@
+[package]
+  description = "CLI application demonstrating Foundry Local usage"
+  edition     = "2021"
+  name        = "foundry-cli"
+  version     = "0.1.0"
+
+[dependencies]
+  anyhow             = {workspace = true}
+  foundry-client     = {workspace = true}
+  foundry-types      = {workspace = true}
+  tokio              = {workspace = true}
+  tracing            = {workspace = true}
+  tracing-subscriber = {workspace = true}
