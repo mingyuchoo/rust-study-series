@@ -24,7 +24,7 @@ async fn main() -> Result<()> {
     // - gpt-oss-20b-cuda-gpu:1
     // - Phi-4-mini-instruct-cuda-gpu:4
     // - qwen2.5-7b-instruct-cuda-gpu:3
-    let model_id = "qwen2.5-7b-instruct-cuda-gpu:3";
+    let model_id = "Phi-4-mini-instruct-cuda-gpu:4";
     println!("\n사용 중인 모델: {}", model_id);
 
     // Build the prompt
