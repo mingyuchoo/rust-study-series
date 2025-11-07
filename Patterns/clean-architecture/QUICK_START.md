@@ -15,6 +15,8 @@ cargo run -p web
 
 ## 개발 명령어
 
+### Cargo 직접 사용
+
 ```bash
 # 특정 크레이트만 빌드
 cargo build -p domain
@@ -36,6 +38,59 @@ cargo fmt --all
 
 # Clippy 린트
 cargo clippy --workspace
+```
+
+### Cargo Make 사용 (권장)
+
+```bash
+# 개발 환경 준비 (포맷 + 체크 + 린트 + 빌드)
+cargo make dev
+
+# CI 파이프라인 (포맷 + 린트 + 테스트 + 빌드)
+cargo make ci
+
+# 전체 워크스페이스 빌드
+cargo make build
+
+# 릴리즈 빌드
+cargo make release
+
+# 전체 테스트
+cargo make test
+
+# Web 애플리케이션 실행
+cargo make run
+
+# Watch 모드로 실행 (파일 변경 시 자동 재시작)
+cargo make watch-run
+
+# 개별 크레이트 빌드
+cargo make build-domain
+cargo make build-application
+cargo make build-infrastructure
+cargo make build-presentation
+cargo make build-web
+
+# 개별 크레이트 테스트
+cargo make test-domain
+cargo make test-application
+cargo make test-infrastructure
+cargo make test-presentation
+
+# 코드 검사
+cargo make check
+
+# 포맷팅
+cargo make format
+
+# Clippy 린트
+cargo make clippy
+
+# 의존성 업데이트
+cargo make update
+
+# 클린
+cargo make clean
 ```
 
 ## 워크스페이스 구조

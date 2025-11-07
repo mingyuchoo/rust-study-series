@@ -2,7 +2,7 @@
 
 use domain::models::User;
 use domain::repositories::UserRepository;
-use rusqlite::{params, Connection};
+use rusqlite::{Connection, params};
 use std::sync::{Arc, Mutex};
 
 // SQLite 저장소 구현 (추가)

@@ -1,11 +1,11 @@
 // presentation/web.rs - Web server for User CRUD UI
 
-use infrastructure::controllers::UserDbController;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse, Response};
 use axum::routing::get;
 use axum::{Json, Router};
+use infrastructure::controllers::UserDbController;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;

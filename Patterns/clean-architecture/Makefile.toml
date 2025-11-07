@@ -1,44 +1,112 @@
+# Workspace 전체 작업
+
 [tasks.clean]
   args    = ["clean"]
   command = "cargo"
 
-[tasks.clippy]
-  args    = ["clippy"]
+[tasks.check]
+  args    = ["check", "--workspace"]
   command = "cargo"
 
-[tasks.check]
-  args    = ["check"]
+[tasks.clippy]
+  args    = ["clippy", "--workspace"]
   command = "cargo"
 
 [tasks.format]
-  args          = ["fmt"]
+  args          = ["fmt", "--all"]
   command       = "cargo"
-  dependencies  = ["check", "clippy"]
   install_crate = "rustfmt"
 
 [tasks.build]
-  args         = ["build", "--profile", "dev"]
+  args         = ["build", "--workspace"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.release]
-  args         = ["build", "--profile", "release"]
+  args         = ["build", "--workspace", "--release"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.test]
-  args         = ["test"]
+  args         = ["test", "--workspace"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.update]
+  args    = ["update"]
+  command = "cargo"
+
+# Web 애플리케이션 실행
+
+[tasks.run]
+  args         = ["run", "-p", "web"]
   command      = "cargo"
   dependencies = ["format"]
 
 [tasks.watch-run]
   # `cargo install cargo-watch`로 설치
   command       = "cargo"
-  args          = ["watch", "-x", "run"]
+  args          = ["watch", "-x", "run -p web"]
   install_crate = "cargo-watch"
   dependencies  = ["format"]
 
-[tasks.run]
-  args         = ["run"]
-  command      = "cargo"
-  dependencies = ["format"]
+# 개별 크레이트 빌드
+
+[tasks.build-domain]
+  workspace = false
+  args      = ["build", "-p", "domain"]
+  command   = "cargo"
+
+[tasks.build-application]
+  workspace = false
+  args      = ["build", "-p", "application"]
+  command   = "cargo"
+
+[tasks.build-infrastructure]
+  workspace = false
+  args      = ["build", "-p", "infrastructure"]
+  command   = "cargo"
+
+[tasks.build-presentation]
+  workspace = false
+  args      = ["build", "-p", "presentation"]
+  command   = "cargo"
+
+[tasks.build-web]
+  workspace = false
+  args      = ["build", "-p", "web"]
+  command   = "cargo"
+
+# 개별 크레이트 테스트
+
+[tasks.test-domain]
+  workspace = false
+  args      = ["test", "-p", "domain"]
+  command   = "cargo"
+
+[tasks.test-application]
+  workspace = false
+  args      = ["test", "-p", "application"]
+  command   = "cargo"
+
+[tasks.test-infrastructure]
+  workspace = false
+  args      = ["test", "-p", "infrastructure"]
+  command   = "cargo"
+
+[tasks.test-presentation]
+  workspace = false
+  args      = ["test", "-p", "presentation"]
+  command   = "cargo"
+
+# 유틸리티 작업
+
+[tasks.dev]
+  description  = "개발 환경 준비 (포맷, 체크, 빌드)"
+  workspace    = false
+  dependencies = ["format", "check", "clippy", "build"]
+
+[tasks.ci]
+  description  = "CI 파이프라인 (포맷 체크, 린트, 테스트, 빌드)"
+  workspace    = false
+  dependencies = ["format", "clippy", "test", "build"]

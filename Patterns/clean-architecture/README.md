@@ -60,9 +60,27 @@ clean-architecture/
 
 ## 빌드 및 실행
 
+### 빠른 시작 (cargo-make 사용 권장)
+
+```bash
+# cargo-make 설치 (최초 1회)
+cargo install cargo-make
+
+# 개발 환경 준비 (포맷 + 체크 + 린트 + 빌드)
+cargo make dev
+
+# Web 애플리케이션 실행
+cargo make run
+
+# 브라우저에서 접속
+# http://localhost:3000
+```
+
+### Cargo 직접 사용
+
 ```bash
 # 전체 워크스페이스 빌드
-cargo build
+cargo build --workspace
 
 # Web 애플리케이션 실행
 cargo run -p web
@@ -74,8 +92,15 @@ cargo build -p infrastructure
 cargo build -p presentation
 
 # 테스트 실행
-cargo test
+cargo test --workspace
 ```
+
+## 문서
+
+- **[QUICK_START.md](QUICK_START.md)** - 빠른 시작 가이드 및 명령어 레퍼런스
+- **[MAKEFILE_GUIDE.md](MAKEFILE_GUIDE.md)** - cargo-make 사용 가이드 및 워크플로우
+- **[MIGRATION.md](MIGRATION.md)** - 모놀리식에서 워크스페이스로의 마이그레이션 가이드
+- **[.cleanup-old-structure.md](.cleanup-old-structure.md)** - 기존 구조 정리 방법
 
 ## 의존성 관리
 
