@@ -1,23 +1,23 @@
 [package]
-name = "greeting-client"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
+  authors.workspace = true
+  edition.workspace = true
+  name              = "greeting-client"
+  version.workspace = true
 
 [[bin]]
-name = "client"
-path = "src/main.rs"
+  name = "client"
+  path = "src/main.rs"
 
 [dependencies]
-greeting-proto = { path = "../proto" }
-greeting-common = { path = "../common" }
-tokio.workspace = true
-tonic.workspace = true
+  greeting-common = {path = "../common"}
+  greeting-proto  = {path = "../proto"}
+  tokio.workspace = true
+  tonic.workspace = true
 
 [dev-dependencies]
-greeting-server = { path = "../server" }
-criterion.workspace = true
+  criterion.workspace = true
+  greeting-server     = {path = "../server"}
 
 [[bench]]
-name = "client_benchmark"
-harness = false
+  harness = false
+  name    = "client_benchmark"

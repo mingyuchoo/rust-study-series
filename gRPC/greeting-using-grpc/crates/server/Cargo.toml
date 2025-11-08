@@ -1,15 +1,15 @@
 [package]
-name = "greeting-server"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
+  authors.workspace = true
+  edition.workspace = true
+  name              = "greeting-server"
+  version.workspace = true
 
 [[bin]]
-name = "server"
-path = "src/main.rs"
+  name = "server"
+  path = "src/main.rs"
 
 [dependencies]
-greeting-proto = { path = "../proto" }
-greeting-common = { path = "../common" }
-tokio.workspace = true
-tonic.workspace = true
+  greeting-common = {path = "../common"}
+  greeting-proto  = {path = "../proto"}
+  tokio.workspace = true
+  tonic.workspace = true
