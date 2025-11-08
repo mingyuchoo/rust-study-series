@@ -1,35 +1,32 @@
-[package]
-  authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
-  edition = "2024"
-  name    = "greeting-using-grpc"
-  version = "0.1.0"
+[workspace]
+resolver = "2"
+members = [
+  "crates/proto",
+  "crates/common",
+  "crates/server",
+  "crates/client",
+]
 
-[[bin]]
-  name = "server"
-  path = "src/bin/server.rs"
+[workspace.package]
+authors = ["Mingyu Choo <mingyuchoo@gmail.com>"]
+edition = "2024"
+version = "0.1.0"
 
-[[bin]]
-  name = "client"
-  path = "src/bin/client.rs"
+[workspace.dependencies]
+# Proto dependencies
+prost = "0.14.1"
+prost-types = "0.14.1"
+tonic = "0.14.2"
+tonic-prost = "0.14.2"
+tonic-build = "0.14.2"
+tonic-prost-build = "0.14.2"
 
-[dependencies]
-  prost       = "0.14.1"
-  prost-types = "0.14.1"
-  thiserror   = "2.0.17"
-  tokio       = {version = "1.48.0", features = ["macros", "rt-multi-thread"]}
-  tonic       = "0.14.2"
-  tonic-prost = "0.14.2"
+# Common dependencies
+thiserror = "2.0.17"
+tokio = { version = "1.48.0", features = ["macros", "rt-multi-thread"] }
 
-[build-dependencies]
-  tonic-build = "0.14.2"
-  tonic-prost-build = "0.14.2"
-
-[dev-dependencies]
-  criterion   = {version = "0.7.0", features = ["html_reports"]}
-
-[[bench]]
-  name = "client_benchmark"
-  harness = false
+# Dev dependencies
+criterion = { version = "0.7.0", features = ["html_reports"] }
 
 [profile.dev]
   codegen-units = 256

@@ -1,0 +1,9 @@
+[package]
+name = "greeting-common"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+tonic.workspace = true

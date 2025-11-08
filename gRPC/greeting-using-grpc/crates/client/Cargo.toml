@@ -1,0 +1,23 @@
+[package]
+name = "greeting-client"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "client"
+path = "src/main.rs"
+
+[dependencies]
+greeting-proto = { path = "../proto" }
+greeting-common = { path = "../common" }
+tokio.workspace = true
+tonic.workspace = true
+
+[dev-dependencies]
+greeting-server = { path = "../server" }
+criterion.workspace = true
+
+[[bench]]
+name = "client_benchmark"
+harness = false
