@@ -1,0 +1,14 @@
+[package]
+name = "examples"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[[bin]]
+name = "product_service_demo"
+path = "src/bin/product_service_demo.rs"
+
+[dependencies]
+proto = { path = "../proto" }
+tokio.workspace = true
+tonic.workspace = true

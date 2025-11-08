@@ -1,13 +1,12 @@
-use ecommerce_using_grpc::MyProductInfo;
-// Import the server code
-use ecommerce_using_grpc::product_info_proto::product_info_client::ProductInfoClient;
-use ecommerce_using_grpc::product_info_proto::product_info_server::ProductInfoServer;
-use ecommerce_using_grpc::product_info_proto::{Product, ProductId};
+use proto::product_info_client::ProductInfoClient;
+use proto::product_info_server::ProductInfoServer;
+use proto::{Product, ProductId};
+use server::MyProductInfo;
 use std::net::SocketAddr;
 use std::time::Duration;
 use tokio::time::sleep;
-use tonic::Request;
 use tonic::transport::Server;
+use tonic::Request;
 
 #[tokio::test]
 async fn test_add_product() {
@@ -27,7 +26,9 @@ async fn test_add_product() {
     sleep(Duration::from_millis(100)).await;
 
     // Connect to the server
-    let mut client = ProductInfoClient::connect(format!("http://{}", server_addr)).await.unwrap();
+    let mut client = ProductInfoClient::connect(format!("http://{}", server_addr))
+        .await
+        .unwrap();
 
     // Test adding a product
     let test_product = Product {
@@ -44,15 +45,12 @@ async fn test_add_product() {
     assert_eq!(response.into_inner().id, 3);
 
     // Test getting a product
-    let get_request = Request::new(ProductId {
-        id: 3,
-    });
+    let get_request = Request::new(ProductId { id: 3 });
     let get_response = client.get_product(get_request).await.unwrap();
     let retrieved_product = get_response.into_inner();
 
     // Note: In the current implementation, the server always returns a hardcoded
-    // product So we're just checking that we got a response, not the exact
-    // values
+    // product So we're just checking that we got a response, not the exact values
     assert!(retrieved_product.id > 0);
     assert!(!retrieved_product.name.is_empty());
 

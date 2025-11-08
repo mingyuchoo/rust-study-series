@@ -1,0 +1,15 @@
+[package]
+name = "benches"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+proto = { path = "../proto" }
+server = { path = "../server" }
+tokio.workspace = true
+tonic.workspace = true
+
+[[bench]]
+name = "product_service_bench"
+harness = false

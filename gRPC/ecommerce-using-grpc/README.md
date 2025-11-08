@@ -1,6 +1,6 @@
 # ecommerce-using-grpc
 
-A Rust-based gRPC service for managing product information in an e-commerce system. This project demonstrates modern Rust practices including Railway Oriented Programming, structured logging with tracing, and efficient error handling.
+A Rust-based gRPC service for managing product information in an e-commerce system. This project demonstrates modern Rust practices including Railway Oriented Programming, structured logging with tracing, efficient error handling, and Cargo workspace (monorepo) architecture.
 
 ## Prerequisites
 
@@ -23,29 +23,47 @@ brew install protobuf
 
 ## Project Structure
 
+This project uses a Cargo workspace (monorepo) structure with multiple crates:
+
 ```
 ecommerce-using-grpc/
-├── proto/              # Protocol Buffer definitions
-│   └── ProductInfo.proto
-├── src/
-│   ├── bin/
-│   │   ├── server.rs   # gRPC server implementation
-│   │   └── client.rs   # gRPC client implementation
-│   └── lib.rs          # Service logic and error handling
-├── examples/           # Example usage
-├── tests/              # Integration tests
-├── benches/            # Performance benchmarks
-└── build.rs            # Build script for proto compilation
+├── Cargo.toml          # Workspace configuration
+├── crates/
+│   ├── proto/          # Shared Protocol Buffer definitions
+│   │   ├── proto/
+│   │   │   └── ProductInfo.proto
+│   │   ├── build.rs
+│   │   └── src/lib.rs
+│   ├── server/         # gRPC server implementation
+│   │   └── src/
+│   │       ├── lib.rs  # Service logic and error handling
+│   │       └── main.rs # Server binary
+│   ├── client/         # gRPC client implementation
+│   │   └── src/
+│   │       └── main.rs # Client binary
+│   ├── examples/       # Example usage
+│   │   └── src/bin/
+│   │       └── product_service_demo.rs
+│   ├── benches/        # Performance benchmarks
+│   │   └── benches/
+│   │       └── product_service_bench.rs
+│   └── tests/          # Integration tests
+│       └── tests/
+│           └── product_service_test.rs
+└── proto/              # Original proto files (for reference)
+    └── ProductInfo.proto
 ```
 
 ## Features
 
-- gRPC-based product management service
-- Add and retrieve product information
-- Railway Oriented Programming for error handling
-- Structured logging with tracing
-- Comprehensive error types (NotFound, InvalidData, Internal)
-- Input validation for product data
+- **Cargo Workspace (Monorepo) Architecture** - Organized into multiple focused crates
+- **gRPC-based product management service** - Efficient client-server communication
+- **Add and retrieve product information** - Core CRUD operations
+- **Railway Oriented Programming** - Clean error handling pattern
+- **Structured logging with tracing** - Production-ready observability
+- **Comprehensive error types** - NotFound, InvalidData, Internal
+- **Input validation** - Product data validation
+- **Shared proto definitions** - Reusable protobuf package
 
 ## Dependencies
 
@@ -71,7 +89,7 @@ cargo build --release
 ### Start the Server
 
 ```bash
-cargo run --bin server
+cargo run -p server
 ```
 
 The server will start on `[::1]:50051` (IPv6 localhost).
@@ -81,25 +99,29 @@ The server will start on `[::1]:50051` (IPv6 localhost).
 In a separate terminal:
 
 ```bash
-cargo run --bin client
+cargo run -p client
 ```
 
 ## Running Examples
 
 ```bash
-cargo run --example product_service_demo
+cargo run -p examples --bin product_service_demo
 ```
 
 ## Running Tests
 
 ```bash
+# Run all tests in the workspace
 cargo test
+
+# Run tests for a specific crate
+cargo test -p tests
 ```
 
 ## Running Benchmarks
 
 ```bash
-cargo bench
+cargo bench -p benches
 ```
 
 ## API
@@ -127,32 +149,54 @@ Retrieves product information by ID.
 **Response:** `Product`
 - Complete product information
 
-## Creating a New gRPC Project
+## Workspace Benefits
 
-To create a similar project from scratch:
+This monorepo structure provides several advantages:
+
+- **Code Reusability** - The `proto` crate is shared across all other crates
+- **Consistent Dependencies** - Workspace-level dependency management ensures version consistency
+- **Faster Builds** - Cargo can cache and reuse compiled artifacts across crates
+- **Better Organization** - Clear separation of concerns (server, client, tests, examples, benchmarks)
+- **Easier Testing** - Integration tests can easily depend on multiple crates
+- **Simplified CI/CD** - Single repository for all related code
+
+## Creating a Similar Workspace
+
+To create a similar workspace from scratch:
 
 ```bash
-# Create new project
-cargo new {project-name}
+# Create workspace root
+mkdir {project-name}
 cd {project-name}
 
-# Create directory structure
-mkdir proto
-touch README.md
-touch build.rs
+# Create workspace Cargo.toml
+cat > Cargo.toml << 'EOF'
+[workspace]
+resolver = "2"
+members = [
+  "crates/proto",
+  "crates/server",
+  "crates/client",
+]
 
-# Add dependencies
-cargo add tokio --features macros,rt-multi-thread
-cargo add tonic
-cargo add prost
-cargo add prost-types
-cargo add anyhow
-cargo add thiserror
-cargo add tracing
-cargo add tracing-subscriber
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
 
-# Add build dependencies
-cargo add tonic-build --build
+[workspace.dependencies]
+tokio = { version = "1.48", features = ["macros", "rt-multi-thread"] }
+tonic = "0.14"
+prost = "0.14"
+# ... other dependencies
+EOF
+
+# Create crate structure
+mkdir -p crates/{proto,server,client}
+
+# Initialize each crate
+cd crates/proto && cargo init --lib && cd ../..
+cd crates/server && cargo init && cd ../..
+cd crates/client && cargo init && cd ../..
 ```
 
 ## Error Handling

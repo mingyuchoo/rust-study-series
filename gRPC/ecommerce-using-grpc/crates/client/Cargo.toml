@@ -1,0 +1,13 @@
+[package]
+name = "client"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+proto = { path = "../proto" }
+anyhow.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

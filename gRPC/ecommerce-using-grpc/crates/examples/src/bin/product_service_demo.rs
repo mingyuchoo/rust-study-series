@@ -1,13 +1,7 @@
+use proto::product_info_client::ProductInfoClient;
+use proto::{Product, ProductId};
 use std::error::Error;
 use tonic::{Request, Response};
-
-// Import the generated proto code
-pub mod product_info_proto {
-    tonic::include_proto!("ecommerce");
-}
-
-use product_info_proto::product_info_client::ProductInfoClient;
-use product_info_proto::{Product, ProductId};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -30,9 +24,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Added product with ID: {}", add_response.into_inner().id);
 
     // Get the product details
-    let get_request = Request::new(ProductId {
-        id: 2,
-    });
+    let get_request = Request::new(ProductId { id: 2 });
     let get_response: Response<Product> = client.get_product(get_request).await?;
     let product = get_response.into_inner();
 
