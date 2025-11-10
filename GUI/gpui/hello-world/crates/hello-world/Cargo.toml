@@ -1,0 +1,12 @@
+[package]
+  edition = "2024"
+  name    = "hello-world"
+  publish = false
+  version = "0.1.0"
+
+[[bin]]
+  name = "hello-world"
+  path = "src/main.rs"
+
+[dependencies]
+  gpui.workspace = true
