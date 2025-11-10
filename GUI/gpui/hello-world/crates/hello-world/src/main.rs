@@ -1,30 +1,35 @@
 use gpui::*;
+use gpui_component::{button::*, *};
 
-struct HelloWorld {
-    text: SharedString,
-}
-
+pub struct HelloWorld;
 impl Render for HelloWorld {
     fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
         div()
-            .flex()
-            .bg(rgb(0x2e7d32))
+            .v_flex()
+            .gap_2()
             .size_full()
-            .justify_center()
             .items_center()
-            .text_xl()
-            .text_color(rgb(0xffffff))
-            .child(format!("Hello, {}!", &self.text))
+            .justify_center()
+            .child("Hello, World!")
+            .child(
+                Button::new("ok")
+                    .primary()
+                    .label("Let's Go!")
+                    .on_click(|_, _, _| println!("Clicked!")),
+            )
     }
 }
 
 fn main() {
-    Application::new().run(|cx: &mut App| {
-        cx.open_window(WindowOptions::default(), |_, cx| {
-            cx.new(|_cx| HelloWorld {
-                text: "World".into(),
-            })
+    Application::new().run(move |cx| {
+        gpui_component::init(cx);
+        cx.spawn(async move |cx| {
+            cx.open_window(WindowOptions::default(), |window, cx| {
+                let view = cx.new(|_| HelloWorld);
+                cx.new(|cx| Root::new(view.into(), window, cx))
+            })?;
+            Ok::<_, anyhow::Error>(())
         })
-        .unwrap();
+        .detach();
     });
 }
