@@ -18,9 +18,27 @@ impl Render for WindowApp {
                         .flex()
                         .flex_col()
                         .gap_4()
-                        .child(div().text_xl().text_color(rgb(0xeceff4)).child("GPUI 데스크탑 앱"))
-                        .child(div().text_xl().text_color(rgb(0xeceff4)).child(self.text.clone()))
-                        .child(div().text_sm().text_color(rgb(0xd8dee9)).child("윈도우 매니저 테두리가 표시됩니다."))
+                        .child(
+                            div()
+                                .text_xl()
+                                .text_color(rgb(0xeceff4))
+                                .font_family("NanumGothic")
+                                .child("GPUI 데스크탑 앱")
+                        )
+                        .child(
+                            div()
+                                .text_xl()
+                                .text_color(rgb(0xeceff4))
+                                .font_family("NanumGothic")
+                                .child(self.text.clone())
+                        )
+                        .child(
+                            div()
+                                .text_sm()
+                                .text_color(rgb(0xd8dee9))
+                                .font_family("NanumGothic")
+                                .child("윈도우 매니저 테두리가 표시됩니다.")
+                        )
                 )
         )
     }
@@ -28,6 +46,26 @@ impl Render for WindowApp {
 
 fn main() {
     Application::new().run(|cx: &mut App| {
+        // Load Korean fonts for proper rendering on Linux
+        // Try common Korean fonts available on Fedora
+        let font_paths = vec![
+            "/usr/share/fonts/google-noto-sans-mono-cjk-vf-fonts/NotoSansMonoCJK-VF.ttc",
+            "/usr/share/fonts/google-noto-serif-cjk-vf-fonts/NotoSerifCJK-VF.ttc",
+            "/usr/share/fonts/naver-nanum-gothic-fonts/NanumGothic.ttf",
+            "/usr/share/fonts/naver-nanum-barun-gothic-fonts/NanumBarunGothic.ttf",
+        ];
+        
+        for font_path in font_paths {
+            if std::path::Path::new(font_path).exists() {
+                if let Ok(font_data) = std::fs::read(font_path) {
+                    cx.text_system()
+                        .add_fonts(vec![font_data.into()])
+                        .ok();
+                    break;
+                }
+            }
+        }
+        
         // Initialize gpui-component before using any components
         gpui_component::init(cx);
         
