@@ -1,60 +1,61 @@
+use anyhow::anyhow;
 use gpui::*;
-use gpui_component::{Root, TitleBar};
+use gpui_component::button::{Button, ButtonVariants};
+use gpui_component::{Root, TitleBar, h_flex, v_flex};
+use rust_embed::Embed;
+use std::borrow::Cow;
 
-struct WindowApp {
-    text: SharedString,
+#[derive(Embed)]
+#[folder = "./assets"]
+#[include = "icons/**/*.svg"]
+pub struct Assets;
+
+impl AssetSource for Assets {
+    fn load(&self, path: &str) -> Result<Option<Cow<'static, [u8]>>> {
+        if path.is_empty() {
+            return Ok(None);
+        }
+        Self::get(path)
+            .map(|f| Some(f.data))
+            .ok_or_else(|| anyhow!("could not find asset at path \"{path}\""))
+    }
+
+    fn list(&self, path: &str) -> Result<Vec<SharedString>> { Ok(Self::iter().filter_map(|p| p.starts_with(path).then(|| p.into())).collect()) }
 }
 
+pub struct WindowApp;
 impl Render for WindowApp {
     fn render(&mut self, _window: &mut Window, _cx: &mut Context<Self>) -> impl IntoElement {
-        div()
-            .flex()
-            .flex_col()
+        v_flex()
             .size_full()
-            .bg(rgb(0x282828)) // Gruvbox bg0
             .child(
-                // GPUI 커스텀 타이틀바 추가
-                TitleBar::new()
-                    .on_close_window(move |_, window: &mut Window, _cx| {
-                        window.remove_window(); // 닫기 버튼 이벤트
-                    })
+                TitleBar::new().child(
+                    h_flex()
+                        .w_full()
+                        .pr_2()
+                        .justify_between()
+                        .font_family("NanumGothic")
+                        .child("사용자 정의 타이틀바를 가진 앱")
+                        .child("우측 아이템"),
+                ),
             )
             .child(
-                // 콘텐츠 영역
                 div()
-                    .flex()
-                    .flex_col()
-                    .flex_1()
-                    .gap_4()
-                    .bg(rgb(0x3c3836)) // Gruvbox bg1
-                    .p_4()
-                    .child(
-                        div()
-                            .text_xl()
-                            .text_color(rgb(0xebdbb2)) // Gruvbox fg1
-                            .font_family("NanumGothic")
-                            .child("GPUI 데스크탑 앱")
-                    )
-                    .child(
-                        div()
-                            .text_xl()
-                            .text_color(rgb(0xfbf1c7)) // Gruvbox fg0 (brighter)
-                            .font_family("NanumGothic")
-                            .child(self.text.clone())
-                    )
-                    .child(
-                        div()
-                            .text_sm()
-                            .text_color(rgb(0xd5c4a1)) // Gruvbox fg2 (dimmer)
-                            .font_family("NanumGothic")
-                            .child("윈도우 매니저 테두리가 표시됩니다.")
-                    )
+                    .id("window-body")
+                    .p_5()
+                    .size_full()
+                    .items_center()
+                    .justify_center()
+                    .font_family("NanumGothic")
+                    .child("안녕?")
+                    .child(Button::new("ok").primary().label("클릭하세요!").on_click(|_, _, _| println!("클릭되었습니다."))),
             )
     }
 }
 
 fn main() {
-    Application::new().run(|cx: &mut App| {
+    let app = Application::new().with_assets(Assets);
+    app.run(|cx: &mut App| {
         // Load Korean fonts for proper rendering on Linux
         // Try common Korean fonts available on Fedora
         let font_paths = vec![
@@ -63,55 +64,31 @@ fn main() {
             "/usr/share/fonts/naver-nanum-gothic-fonts/NanumGothic.ttf",
             "/usr/share/fonts/naver-nanum-barun-gothic-fonts/NanumBarunGothic.ttf",
         ];
-        
+
         for font_path in font_paths {
             if std::path::Path::new(font_path).exists() {
                 if let Ok(font_data) = std::fs::read(font_path) {
-                    cx.text_system()
-                        .add_fonts(vec![font_data.into()])
-                        .ok();
+                    cx.text_system().add_fonts(vec![font_data.into()]).ok();
                     break;
                 }
             }
         }
-        
+
         // Initialize gpui-component before using any components
         gpui_component::init(cx);
-        
-        let window_options = WindowOptions {
-            titlebar: None, // 네이티브 타이틀바는 사용하지 않음
-            window_decorations: Some(WindowDecorations::Client), // 커스텀 데코레이션 활성화
-            window_bounds: Some(WindowBounds::Windowed(Bounds {
-                origin: Point::new(px(100.0), px(100.0)),
-                size: Size {
-                    width: px(800.0),
-                    height: px(600.0),
-                },
-            })),
-            focus: true,
-            show: true,
-            kind: WindowKind::Normal,
-            is_movable: true,
-            is_minimizable: true,
-            is_resizable: true,
-            window_background: WindowBackgroundAppearance::Opaque,
-            window_min_size: Some(Size {
-                width: Pixels::from(400.0),
-                height: Pixels::from(300.0),
-            }),
-            display_id: None,
-            app_id: Some("com.example.gpui-app".into()),
-            tabbing_identifier: Some("com.example.gpui-app".into()),
-            ..Default::default()
-        };
-        
-        cx.open_window(window_options, |window, cx| {
-            let view = cx.new(|_cx| WindowApp {
-                text: "안녕하세요, GPUI!".into(),
-            });
-            // Wrap the view in Root component (required for gpui-component)
-            cx.new(|cx| Root::new(view.into(), window, cx))
+
+        cx.spawn(async move |cx| {
+            let window_options = WindowOptions {
+                // Setup GPUI to use custom title bar
+                titlebar: Some(TitleBar::title_bar_options()),
+                ..Default::default()
+            };
+            cx.open_window(window_options, |window, cx| {
+                let view = cx.new(|_| WindowApp);
+                cx.new(|cx| Root::new(view.into(), window, cx))
+            })?;
+            Ok::<_, anyhow::Error>(())
         })
-        .unwrap();
+        .detach();
     });
 }
