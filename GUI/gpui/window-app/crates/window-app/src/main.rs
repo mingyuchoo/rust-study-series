@@ -66,11 +66,12 @@ fn main() {
         ];
 
         for font_path in font_paths {
-            if std::path::Path::new(font_path).exists() {
-                if let Ok(font_data) = std::fs::read(font_path) {
+            match (std::path::Path::new(font_path).exists(), std::fs::read(font_path)) {
+                (true, Ok(font_data)) => {
                     cx.text_system().add_fonts(vec![font_data.into()]).ok();
                     break;
                 }
+                _ => continue,
             }
         }
 
