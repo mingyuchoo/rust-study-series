@@ -3,8 +3,6 @@
     "crates/proto",
     "crates/server",
     "crates/client",
-    "crates/examples",
-    "crates/benches",
     "crates/tests",
   ]
   resolver = "2"
