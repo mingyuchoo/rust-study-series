@@ -31,14 +31,20 @@
   command      = "cargo"
   dependencies = ["format"]
 
-[tasks.watch-run]
-  # `cargo install cargo-watch`로 설치
-  command       = "cargo"
-  args          = ["watch", "-x", "run"]
-  install_crate = "cargo-watch"
+[tasks.wasm-build]
+  # Build WASM package with wasm-pack
+  command       = "wasm-pack"
+  args          = ["build"]
+  install_crate = "wasm-pack"
+  dependencies  = ["format"]
+
+[tasks.wasm-build-release]
+  # Build WASM package for release
+  command       = "wasm-pack"
+  args          = ["build", "--release"]
+  install_crate = "wasm-pack"
   dependencies  = ["format"]
 
 [tasks.run]
-  args         = ["run"]
-  command      = "cargo"
+  alias        = "wasm-build"
   dependencies = ["format"]

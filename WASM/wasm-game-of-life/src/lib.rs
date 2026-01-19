@@ -15,5 +15,6 @@ extern "C" {
 
 #[wasm_bindgen]
 pub fn greet() {
+    utils::set_panic_hook();
     alert("안녕하세요?");
 }
