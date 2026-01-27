@@ -63,7 +63,7 @@ document.getElementById('create-form').addEventListener('submit', async (e) => {
         description: form.description.value || null,
     };
     try {
-        const res = await fetch('/api/performance-indicators/', {
+        const res = await fetch('/api/performance-indicators', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
