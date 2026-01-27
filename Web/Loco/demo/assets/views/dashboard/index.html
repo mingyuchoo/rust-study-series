@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}대시보드 - 성과지표 관리{% endblock %}
+
+{% block content %}
+<div class="card mt-20">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>성과지표 목록</h2>
+        <a href="/indicators/new" class="btn btn-primary">+ 새 성과지표</a>
+    </div>
+    <table class="mt-20">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>지표명</th>
+                <th>연도</th>
+                <th>목표값</th>
+                <th>실적값</th>
+                <th>단위</th>
+                <th>상태</th>
+                <th>관리</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in indicators %}
+            <tr>
+                <td>{{ item.id }}</td>
+                <td><a href="/indicators/{{ item.id }}">{{ item.name }}</a></td>
+                <td>{{ item.year }}</td>
+                <td>{{ item.target_value | default(value="—") }}</td>
+                <td>{{ item.actual_value | default(value="—") }}</td>
+                <td>{{ item.unit | default(value="—") }}</td>
+                <td>
+                    {% if item.status %}
+                        <span class="status-{{ item.status }}">{{ item.status }}</span>
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/indicators/{{ item.id }}" class="btn btn-primary btn-sm">상세</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not indicators or indicators | length == 0 %}
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 30px; color: #999;">
+                    등록된 성과지표가 없습니다. 새 성과지표를 추가해주세요.
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

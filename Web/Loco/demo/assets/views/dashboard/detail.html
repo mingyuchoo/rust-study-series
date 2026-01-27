@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ indicator.name }} - 성과지표 상세{% endblock %}
+
+{% block content %}
+<div class="card mt-20">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>{{ indicator.name }}</h2>
+        <span class="score-badge {% if score >= 80 %}score-high{% elif score >= 50 %}score-mid{% else %}score-low{% endif %}">
+            종합점수: {{ score | round(precision=1) }}%
+        </span>
+    </div>
+    <div class="grid-2 mt-20">
+        <div><strong>연도:</strong> {{ indicator.year }}</div>
+        <div><strong>단위:</strong> {{ indicator.unit | default(value="—") }}</div>
+        <div><strong>목표값:</strong> {{ indicator.target_value | default(value="—") }}</div>
+        <div><strong>실적값:</strong> {{ indicator.actual_value | default(value="—") }}</div>
+        <div><strong>상태:</strong> {{ indicator.status | default(value="—") }}</div>
+        <div><strong>설명:</strong> {{ indicator.description | default(value="—") }}</div>
+    </div>
+</div>
+
+<div class="tabs mt-20">
+    <div class="tab active" onclick="showTab('input')">입력지표</div>
+    <div class="tab" onclick="showTab('process')">과정지표</div>
+    <div class="tab" onclick="showTab('output')">산출지표</div>
+    <div class="tab" onclick="showTab('outcome')">결과지표</div>
+</div>
+
+<div id="tab-input" class="tab-content">
+    <h3 class="mb-10">입력지표 (Input Index)</h3>
+    {% set indices = input_indices %}
+    {% include "dashboard/_index_table.html" %}
+</div>
+<div id="tab-process" class="tab-content" style="display:none;">
+    <h3 class="mb-10">과정지표 (Process Index)</h3>
+    {% set indices = process_indices %}
+    {% include "dashboard/_index_table.html" %}
+</div>
+<div id="tab-output" class="tab-content" style="display:none;">
+    <h3 class="mb-10">산출지표 (Output Index)</h3>
+    {% set indices = output_indices %}
+    {% include "dashboard/_index_table.html" %}
+</div>
+<div id="tab-outcome" class="tab-content" style="display:none;">
+    <h3 class="mb-10">결과지표 (Outcome Index)</h3>
+    {% set indices = outcome_indices %}
+    {% include "dashboard/_index_table.html" %}
+</div>
+
+<div class="mt-20">
+    <a href="/" class="btn btn-primary">목록으로</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + name).style.display = 'block';
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}새 성과지표 - 성과지표 관리{% endblock %}
+
+{% block content %}
+<div class="card mt-20">
+    <h2>새 성과지표 등록</h2>
+    <form id="create-form" class="mt-20">
+        <div class="grid-2">
+            <div class="form-group">
+                <label for="name">지표명 *</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="year">연도 *</label>
+                <input type="number" id="year" name="year" value="2026" required>
+            </div>
+            <div class="form-group">
+                <label for="target_value">목표값</label>
+                <input type="number" id="target_value" name="target_value" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="actual_value">실적값</label>
+                <input type="number" id="actual_value" name="actual_value" step="0.01">
+            </div>
+            <div class="form-group">
+                <label for="unit">단위</label>
+                <input type="text" id="unit" name="unit" placeholder="%, 건, 원 등">
+            </div>
+            <div class="form-group">
+                <label for="status">상태</label>
+                <select id="status" name="status">
+                    <option value="draft">초안 (Draft)</option>
+                    <option value="active">활성 (Active)</option>
+                    <option value="completed">완료 (Completed)</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="description">설명</label>
+            <textarea id="description" name="description" rows="3"></textarea>
+        </div>
+        <div class="text-right mt-20">
+            <a href="/" class="btn" style="margin-right:10px;">취소</a>
+            <button type="submit" class="btn btn-success">저장</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('create-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const data = {
+        name: form.name.value,
+        year: parseInt(form.year.value),
+        target_value: form.target_value.value ? parseFloat(form.target_value.value) : null,
+        actual_value: form.actual_value.value ? parseFloat(form.actual_value.value) : null,
+        unit: form.unit.value || null,
+        status: form.status.value || null,
+        description: form.description.value || null,
+    };
+    try {
+        const res = await fetch('/api/performance-indicators/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (res.ok) {
+            const result = await res.json();
+            window.location.href = '/indicators/' + result.id;
+        } else {
+            alert('저장 실패: ' + res.statusText);
+        }
+    } catch(err) {
+        alert('오류: ' + err.message);
+    }
+});
+</script>
+{% endblock %}

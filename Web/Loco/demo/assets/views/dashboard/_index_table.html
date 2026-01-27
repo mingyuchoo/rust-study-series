@@ -1,0 +1,38 @@
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>지표명</th>
+            <th>목표값</th>
+            <th>실적값</th>
+            <th>가중치</th>
+            <th>달성률</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if indices %}
+        {% for idx in indices %}
+        <tr>
+            <td>{{ idx.id }}</td>
+            <td>{{ idx.name }}</td>
+            <td>{{ idx.target_value | default(value="—") }}</td>
+            <td>{{ idx.actual_value | default(value="—") }}</td>
+            <td>{{ idx.weight | default(value="1.0") }}</td>
+            <td>
+                {% if idx.target_value and idx.actual_value and idx.target_value > 0 %}
+                    {{ (idx.actual_value / idx.target_value * 100) | round(precision=1) }}%
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
+                등록된 하위지표가 없습니다.
+            </td>
+        </tr>
+        {% endif %}
+    </tbody>
+</table>

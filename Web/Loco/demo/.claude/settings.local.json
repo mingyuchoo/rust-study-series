@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:crates.io)",
+      "Bash(cargo install:*)",
+      "Bash(loco new:*)",
+      "Bash(cargo build:*)"
+    ]
+  }
+}
