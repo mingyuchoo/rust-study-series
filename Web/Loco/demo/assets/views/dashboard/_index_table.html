@@ -7,6 +7,7 @@
             <th>실적값</th>
             <th>가중치</th>
             <th>달성률</th>
+            <th width="150">작업</th>
         </tr>
     </thead>
     <tbody>
@@ -20,16 +21,22 @@
             <td>{{ idx.weight | default(value="1.0") }}</td>
             <td>
                 {% if idx.target_value and idx.actual_value and idx.target_value > 0 %}
-                    {{ (idx.actual_value / idx.target_value * 100) | round(precision=1) }}%
+                {{ (idx.actual_value / idx.target_value * 100) | round(precision=1) }}%
                 {% else %}
-                    —
+                —
                 {% endif %}
+            </td>
+            <td>
+                <button class="btn btn-sm btn-primary"
+                    onclick='openModal("{{ index_type }}", "edit", {{ idx | json_encode }})'>수정</button>
+                <button class="btn btn-sm btn-danger"
+                    onclick='deleteIndex("{{ index_type }}", {{ idx.id }})'>삭제</button>
             </td>
         </tr>
         {% endfor %}
         {% else %}
         <tr>
-            <td colspan="6" style="text-align: center; padding: 20px; color: #999;">
+            <td colspan="7" style="text-align: center; padding: 20px; color: #999;">
                 등록된 하위지표가 없습니다.
             </td>
         </tr>
