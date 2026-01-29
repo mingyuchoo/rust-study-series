@@ -45,6 +45,9 @@ impl Hooks for App {
         environment: &Environment,
         config: Config,
     ) -> Result<BootResult> {
+        // .env 파일에서 환경변수 로드
+        dotenvy::dotenv().ok();
+
         create_app::<Self, Migrator>(mode, environment, config).await
     }
 
