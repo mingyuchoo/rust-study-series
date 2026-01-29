@@ -3,6 +3,31 @@
 {% block title %}대시보드 - 성과지표 관리{% endblock %}
 
 {% block content %}
+<!-- 게이지 차트 섹션 -->
+<div class="card mt-20">
+    <h2>목표 달성 현황</h2>
+    <div class="gauge-grid mt-20" id="gaugeContainer">
+        {% for item in indicators %}
+        <div class="gauge-card">
+            <h4 title="{{ item.name }}">{{ item.name }}</h4>
+            <div class="gauge-wrapper">
+                <canvas id="gauge-{{ item.id }}" width="150" height="150"></canvas>
+                <div class="gauge-value" id="value-{{ item.id }}">—</div>
+            </div>
+            <div class="gauge-label">
+                {{ item.actual_value | default(value="0") }} / {{ item.target_value | default(value="0") }} {{ item.unit | default(value="") }}
+            </div>
+            <span class="gauge-status" id="status-{{ item.id }}"></span>
+        </div>
+        {% endfor %}
+        {% if not indicators or indicators | length == 0 %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 30px; color: #999;">
+            등록된 성과지표가 없습니다.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <div class="card mt-20">
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <h2>성과지표 목록</h2>
@@ -52,4 +77,103 @@
         </tbody>
     </table>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 성과지표 데이터
+const indicators = [
+    {% for item in indicators %}
+    {
+        id: {{ item.id }},
+        name: "{{ item.name }}",
+        targetValue: {{ item.target_value | default(value="null") }},
+        actualValue: {{ item.actual_value | default(value="null") }},
+        unit: "{{ item.unit | default(value="") }}"
+    },
+    {% endfor %}
+];
+
+// 달성률에 따른 게이지 색상 결정
+// TODO: 이 함수의 반환값을 수정하여 색상 로직을 커스터마이즈할 수 있습니다
+function getGaugeColor(percentage) {
+    if (percentage >= 100) return { main: '#27ae60', bg: '#e8f8f5' };  // 초과 달성 - 녹색
+    if (percentage >= 80) return { main: '#3498db', bg: '#ebf5fb' };   // 목표 근접 - 파랑
+    if (percentage >= 50) return { main: '#f39c12', bg: '#fef9e7' };   // 주의 - 노랑
+    return { main: '#e74c3c', bg: '#fdedec' };                         // 미달 - 빨강
+}
+
+// 달성률에 따른 상태 라벨 결정
+function getStatusLabel(percentage) {
+    if (percentage >= 100) return { text: '목표 달성', class: 'excellent' };
+    if (percentage >= 80) return { text: '양호', class: 'good' };
+    if (percentage >= 50) return { text: '주의', class: 'warning' };
+    return { text: '미달', class: 'danger' };
+}
+
+// 반원형 게이지 차트 생성
+function createGaugeChart(canvasId, percentage, color) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+
+    // 달성률을 0~100 범위로 제한 (표시는 100% 초과도 가능)
+    const displayPercentage = Math.min(percentage, 100);
+    const remaining = 100 - displayPercentage;
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [displayPercentage, remaining],
+                backgroundColor: [color.main, color.bg],
+                borderWidth: 0,
+                circumference: 180,
+                rotation: 270
+            }]
+        },
+        options: {
+            responsive: false,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            }
+        }
+    });
+}
+
+// 모든 게이지 차트 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    indicators.forEach(indicator => {
+        const target = indicator.targetValue;
+        const actual = indicator.actualValue;
+
+        let percentage = 0;
+        if (target && target > 0 && actual !== null) {
+            percentage = (actual / target) * 100;
+        }
+
+        const color = getGaugeColor(percentage);
+        const status = getStatusLabel(percentage);
+
+        // 게이지 차트 생성
+        createGaugeChart(`gauge-${indicator.id}`, percentage, color);
+
+        // 달성률 표시
+        const valueEl = document.getElementById(`value-${indicator.id}`);
+        if (valueEl) {
+            valueEl.textContent = `${percentage.toFixed(1)}%`;
+            valueEl.style.color = color.main;
+        }
+
+        // 상태 라벨 표시
+        const statusEl = document.getElementById(`status-${indicator.id}`);
+        if (statusEl) {
+            statusEl.textContent = status.text;
+            statusEl.classList.add(status.class);
+        }
+    });
+});
+</script>
 {% endblock %}

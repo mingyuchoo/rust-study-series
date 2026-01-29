@@ -42,7 +42,20 @@
         .mt-20 { margin-top: 20px; }
         .mb-10 { margin-bottom: 10px; }
         .text-right { text-align: right; }
+        /* 게이지 차트 스타일 */
+        .gauge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .gauge-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 15px; text-align: center; }
+        .gauge-card h4 { margin-bottom: 10px; font-size: 0.95em; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gauge-wrapper { position: relative; width: 150px; height: 85px; margin: 0 auto; overflow: hidden; }
+        .gauge-value { position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%); font-size: 1.3em; font-weight: bold; }
+        .gauge-label { font-size: 0.8em; color: #666; margin-top: 5px; }
+        .gauge-status { font-size: 0.75em; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 8px; }
+        .gauge-status.excellent { background: #d4edda; color: #155724; }
+        .gauge-status.good { background: #cce5ff; color: #004085; }
+        .gauge-status.warning { background: #fff3cd; color: #856404; }
+        .gauge-status.danger { background: #f8d7da; color: #721c24; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     {% block head %}{% endblock %}
 </head>
 <body>
