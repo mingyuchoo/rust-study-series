@@ -2,11 +2,6 @@ use loco_rs::prelude::*;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-// Azure OpenAI 설정
-const AZURE_ENDPOINT: &str = "https://mingyuchoo-0122-resource.cognitiveservices.azure.com";
-const API_VERSION: &str = "2024-12-01-preview";
-const DEPLOYMENT_NAME: &str = "gpt-4o-mini";
-
 #[derive(Debug, Deserialize)]
 pub struct ChatRequest {
     pub message: String,
@@ -24,8 +19,7 @@ struct AzureMessage {
 #[derive(Debug, Serialize)]
 struct AzureChatRequest {
     messages: Vec<AzureMessage>,
-    max_tokens: u32,
-    temperature: f32,
+    max_completion_tokens: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -99,6 +93,12 @@ async fn chat(
 ) -> Result<Response> {
     let api_key = std::env::var("AZURE_OPENAI_API_KEY")
         .map_err(|_| Error::string("AZURE_OPENAI_API_KEY 환경변수가 설정되지 않았습니다"))?;
+    let endpoint = std::env::var("AZURE_OPENAI_ENDPOINT")
+        .map_err(|_| Error::string("AZURE_OPENAI_ENDPOINT 환경변수가 설정되지 않았습니다"))?;
+    let api_version = std::env::var("AZURE_OPENAI_API_VERSION")
+        .map_err(|_| Error::string("AZURE_OPENAI_API_VERSION 환경변수가 설정되지 않았습니다"))?;
+    let deployment_name = std::env::var("AZURE_OPENAI_DEPLOYMENT_NAME")
+        .map_err(|_| Error::string("AZURE_OPENAI_DEPLOYMENT_NAME 환경변수가 설정되지 않았습니다"))?;
 
     let client = Client::new();
 
@@ -128,13 +128,12 @@ async fn chat(
                 content: user_message,
             },
         ],
-        max_tokens: 1000,
-        temperature: 0.7,
+        max_completion_tokens: 1000,
     };
 
     let url = format!(
         "{}/openai/deployments/{}/chat/completions?api-version={}",
-        AZURE_ENDPOINT, DEPLOYMENT_NAME, API_VERSION
+        endpoint, deployment_name, api_version
     );
 
     let response = client
