@@ -602,13 +602,20 @@
             }
 
             const data = await response.json();
+            console.log('AI 응답 데이터:', JSON.stringify(data, null, 2));
 
             // AI 응답 메시지 표시
             addChatMessage('ai', data.message || '추천 지표를 생성했습니다.');
 
-            // 추천 지표 카드 표시
+            // 추천 지표 카드 표시 및 첫 번째 지표 자동 적용
+            console.log('suggestions:', data.suggestions);
             if (data.suggestions && data.suggestions.length > 0) {
+                console.log('첫 번째 추천:', data.suggestions[0]);
                 displaySuggestions(data.suggestions);
+                // 첫 번째 추천 지표를 폼에 자동 적용
+                applySuggestion(data.suggestions[0]);
+            } else {
+                console.log('suggestions가 비어있거나 없음');
             }
         } catch (error) {
             hideLoadingMessage();

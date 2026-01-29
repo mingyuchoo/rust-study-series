@@ -34,7 +34,11 @@ struct AzureChoice {
 
 #[derive(Debug, Deserialize)]
 struct AzureResponseMessage {
-    content: String,
+    #[serde(default)]
+    content: Option<String>,
+    // o1 모델 등에서 사용되는 필드
+    #[serde(default)]
+    reasoning_content: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -128,7 +132,7 @@ async fn chat(
                 content: user_message,
             },
         ],
-        max_completion_tokens: 1000,
+        max_completion_tokens: 4000,
     };
 
     let url = format!(
@@ -145,24 +149,65 @@ async fn chat(
         .await
         .map_err(|e| Error::string(&format!("Azure OpenAI 요청 실패: {}", e)))?;
 
-    if !response.status().is_success() {
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(Error::string(&format!("Azure OpenAI 오류: {}", error_text)));
-    }
-
-    let azure_response: AzureChatResponse = response
-        .json()
+    // 응답 본문을 텍스트로 먼저 받아서 로깅
+    let response_text = response
+        .text()
         .await
-        .map_err(|e| Error::string(&format!("응답 파싱 실패: {}", e)))?;
+        .map_err(|e| Error::string(&format!("응답 읽기 실패: {}", e)))?;
+
+    tracing::info!("Azure OpenAI 원시 응답: {}", response_text);
+
+    let azure_response: AzureChatResponse = serde_json::from_str(&response_text)
+        .map_err(|e| Error::string(&format!("응답 파싱 실패: {}, 원본: {}", e, response_text)))?;
 
     let content = azure_response
         .choices
         .first()
-        .map(|c| c.message.content.clone())
+        .and_then(|c| {
+            // content가 있으면 사용, 없으면 reasoning_content 사용
+            c.message.content.clone().or_else(|| c.message.reasoning_content.clone())
+        })
         .unwrap_or_default();
 
+    tracing::info!("추출된 content: '{}'", content);
+    if content.is_empty() {
+        tracing::warn!("content가 비어있음! 전체 응답: {}", response_text);
+    }
+
+    // JSON 추출 함수
+    fn extract_json(text: &str) -> Option<String> {
+        let text = text.trim();
+
+        // 1. 마크다운 코드 블록 제거 시도
+        let without_markdown = text
+            .strip_prefix("```json")
+            .or_else(|| text.strip_prefix("```"))
+            .and_then(|s| s.strip_suffix("```"))
+            .map(|s| s.trim().to_string());
+
+        if let Some(json_str) = without_markdown {
+            return Some(json_str);
+        }
+
+        // 2. 첫 번째 '{' 부터 마지막 '}' 까지 추출
+        if let Some(start) = text.find('{') {
+            if let Some(end) = text.rfind('}') {
+                if end > start {
+                    return Some(text[start..=end].to_string());
+                }
+            }
+        }
+
+        None
+    }
+
+    let clean_content = extract_json(&content).unwrap_or_else(|| content.clone());
+    tracing::debug!("AI 원본 응답: {}", content);
+    tracing::debug!("정제된 JSON: {}", clean_content);
+
     // JSON 파싱 시도
-    let chat_response: ChatResponse = serde_json::from_str(&content).unwrap_or_else(|_| {
+    let chat_response: ChatResponse = serde_json::from_str(&clean_content).unwrap_or_else(|e| {
+        tracing::warn!("JSON 파싱 실패: {}, 원본: {}", e, clean_content);
         // JSON 파싱 실패 시 기본 응답
         ChatResponse {
             message: content,
