@@ -63,6 +63,7 @@ impl Hooks for App {
             .add_route(controllers::indices::process_routes())
             .add_route(controllers::indices::output_routes())
             .add_route(controllers::indices::outcome_routes())
+            .add_route(controllers::ai_assistant::routes())
             .add_route(controllers::pages::routes())
     }
     async fn connect_workers(ctx: &AppContext, queue: &Queue) -> Result<()> {

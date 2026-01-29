@@ -89,45 +89,84 @@
 
 <!-- Modal -->
 <div id="indexModal"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000;">
-    <div style="background:white; width:500px; margin:100px auto; padding:20px; border-radius:8px;">
-        <h3 id="modalTitle" class="mb-10">지표 관리</h3>
-        <form id="indexForm" onsubmit="event.preventDefault(); saveIndex();">
-            <input type="hidden" id="indexId">
-            <input type="hidden" id="indexType">
-            <input type="hidden" id="actionMode">
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; overflow-y:auto;">
+    <div style="background:white; width:800px; margin:50px auto; padding:20px; border-radius:8px; display:flex; gap:20px;">
+        <!-- 왼쪽: AI 어시스턴트 -->
+        <div id="aiAssistantPanel" style="flex:1; border-right:1px solid #eee; padding-right:20px;">
+            <h3 class="mb-10" style="display:flex; align-items:center; gap:8px;">
+                <span style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:4px 8px; border-radius:4px; font-size:12px;">AI</span>
+                AI 어시스턴트
+            </h3>
 
-            <div class="form-group">
-                <label>지표명</label>
-                <input type="text" id="indexName" required>
-            </div>
-
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>목표값</label>
-                    <input type="number" step="any" id="indexTarget">
-                </div>
-                <div class="form-group">
-                    <label>실적값</label>
-                    <input type="number" step="any" id="indexActual">
+            <div id="chatMessages" style="height:280px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:8px; padding:12px; background:#f9f9f9; margin-bottom:12px;">
+                <div class="ai-message" style="background:white; padding:10px; border-radius:8px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);">
+                    <strong style="color:#667eea;">🤖 AI 어시스턴트</strong>
+                    <p style="margin:8px 0 0; color:#555;">안녕하세요! 지표 추가를 도와드릴게요. 어떤 지표를 만들고 싶으신가요? 예를 들어:</p>
+                    <ul style="margin:8px 0; padding-left:20px; color:#666; font-size:14px;">
+                        <li>"예산 관련 지표를 추천해줘"</li>
+                        <li>"인력 투입 현황을 측정하고 싶어"</li>
+                        <li>"고객 만족도 지표가 필요해"</li>
+                    </ul>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>가중치</label>
-                <input type="number" step="any" id="indexWeight" value="1.0">
+            <div style="display:flex; gap:8px;">
+                <input type="text" id="aiInput" placeholder="AI에게 지표 추천 요청..."
+                    style="flex:1; padding:10px; border:1px solid #ddd; border-radius:6px;"
+                    onkeypress="if(event.key==='Enter') askAI()">
+                <button type="button" onclick="askAI()" class="btn btn-primary"
+                    style="background:linear-gradient(135deg, #667eea 0%, #764ba2 100%); border:none;">
+                    전송
+                </button>
             </div>
 
-            <div class="form-group">
-                <label>설명</label>
-                <textarea id="indexDesc" rows="3"></textarea>
+            <!-- AI 추천 결과 -->
+            <div id="aiSuggestions" style="margin-top:12px; display:none;">
+                <h4 style="font-size:14px; color:#555; margin-bottom:8px;">📋 추천 지표 (클릭하여 적용)</h4>
+                <div id="suggestionCards" style="display:flex; flex-direction:column; gap:8px;"></div>
             </div>
+        </div>
 
-            <div class="text-right mt-20">
-                <button type="button" class="btn btn-danger" onclick="closeModal()">취소</button>
-                <button type="submit" class="btn btn-primary">저장</button>
-            </div>
-        </form>
+        <!-- 오른쪽: 기존 폼 -->
+        <div style="flex:1;">
+            <h3 id="modalTitle" class="mb-10">지표 관리</h3>
+            <form id="indexForm" onsubmit="event.preventDefault(); saveIndex();">
+                <input type="hidden" id="indexId">
+                <input type="hidden" id="indexType">
+                <input type="hidden" id="actionMode">
+
+                <div class="form-group">
+                    <label>지표명</label>
+                    <input type="text" id="indexName" required>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>목표값</label>
+                        <input type="number" step="any" id="indexTarget">
+                    </div>
+                    <div class="form-group">
+                        <label>실적값</label>
+                        <input type="number" step="any" id="indexActual">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>가중치</label>
+                    <input type="number" step="any" id="indexWeight" value="1.0">
+                </div>
+
+                <div class="form-group">
+                    <label>설명</label>
+                    <textarea id="indexDesc" rows="3"></textarea>
+                </div>
+
+                <div class="text-right mt-20">
+                    <button type="button" class="btn btn-danger" onclick="closeModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -345,5 +384,283 @@
             alert('오류 발생: ' + e);
         }
     }
+
+    // ── AI 어시스턴트 기능 ──────────────────────────────────────
+    const indicatorInfo = {
+        name: "{{ indicator.name }}",
+        description: "{{ indicator.description | default(value='') }}"
+    };
+
+    // 안전한 텍스트 이스케이프 함수
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.textContent;
+    }
+
+    function createChatMessage(role, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = role === 'user' ? 'user-message' : 'ai-message';
+        messageDiv.style.cssText = role === 'user'
+            ? 'background:#e3f2fd; padding:10px; border-radius:8px; margin-bottom:8px; text-align:right;'
+            : 'background:white; padding:10px; border-radius:8px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+
+        const header = document.createElement('strong');
+        header.style.color = role === 'user' ? '#1976d2' : '#667eea';
+        header.textContent = role === 'user' ? '👤 나' : '🤖 AI 어시스턴트';
+
+        const text = document.createElement('p');
+        text.style.cssText = 'margin:8px 0 0; color:' + (role === 'user' ? '#333' : '#555') + ';';
+        text.textContent = content;
+
+        messageDiv.appendChild(header);
+        messageDiv.appendChild(text);
+        return messageDiv;
+    }
+
+    function addChatMessage(role, content) {
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.appendChild(createChatMessage(role, content));
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addSuccessMessage(name) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'ai-message';
+        messageDiv.style.cssText = 'background:white; padding:10px; border-radius:8px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+
+        const header = document.createElement('strong');
+        header.style.color = '#667eea';
+        header.textContent = '🤖 AI 어시스턴트';
+
+        const text = document.createElement('p');
+        text.style.cssText = 'margin:8px 0 0; color:#27ae60;';
+        text.textContent = '✅ "' + escapeHtml(name) + '" 지표가 폼에 적용되었습니다. 필요한 경우 수정 후 저장하세요.';
+
+        messageDiv.appendChild(header);
+        messageDiv.appendChild(text);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addErrorMessage(error) {
+        const chatMessages = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'ai-message';
+        messageDiv.style.cssText = 'background:white; padding:10px; border-radius:8px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+
+        const header = document.createElement('strong');
+        header.style.color = '#667eea';
+        header.textContent = '🤖 AI 어시스턴트';
+
+        const text = document.createElement('p');
+        text.style.cssText = 'margin:8px 0 0; color:#e74c3c;';
+        text.textContent = '❌ 오류가 발생했습니다: ' + escapeHtml(error);
+
+        messageDiv.appendChild(header);
+        messageDiv.appendChild(text);
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showLoadingMessage() {
+        const chatMessages = document.getElementById('chatMessages');
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'aiLoading';
+        loadingDiv.className = 'ai-message';
+        loadingDiv.style.cssText = 'background:white; padding:10px; border-radius:8px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+
+        const header = document.createElement('strong');
+        header.style.color = '#667eea';
+        header.textContent = '🤖 AI 어시스턴트';
+
+        const text = document.createElement('p');
+        text.style.cssText = 'margin:8px 0 0; color:#888;';
+        const dotsSpan = document.createElement('span');
+        dotsSpan.className = 'loading-dots';
+        dotsSpan.textContent = '생각 중';
+        text.appendChild(dotsSpan);
+
+        loadingDiv.appendChild(header);
+        loadingDiv.appendChild(text);
+        chatMessages.appendChild(loadingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // 로딩 애니메이션
+        let dots = 0;
+        window.loadingInterval = setInterval(() => {
+            dots = (dots + 1) % 4;
+            dotsSpan.textContent = '생각 중' + '.'.repeat(dots);
+        }, 500);
+    }
+
+    function hideLoadingMessage() {
+        if (window.loadingInterval) clearInterval(window.loadingInterval);
+        const loadingDiv = document.getElementById('aiLoading');
+        if (loadingDiv) loadingDiv.remove();
+    }
+
+    function createSuggestionCard(suggestion, index) {
+        const card = document.createElement('div');
+        card.style.cssText = 'background:linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding:12px; border-radius:8px; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s;';
+        card.onmouseenter = () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'; };
+        card.onmouseleave = () => { card.style.transform = 'none'; card.style.boxShadow = 'none'; };
+        card.onclick = () => applySuggestion(suggestion);
+
+        const headerRow = document.createElement('div');
+        headerRow.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
+
+        const title = document.createElement('strong');
+        title.style.color = '#333';
+        title.textContent = suggestion.name;
+
+        const badge = document.createElement('span');
+        badge.style.cssText = 'background:#667eea; color:white; padding:2px 8px; border-radius:12px; font-size:11px;';
+        badge.textContent = '클릭하여 적용';
+
+        headerRow.appendChild(title);
+        headerRow.appendChild(badge);
+        card.appendChild(headerRow);
+
+        if (suggestion.description) {
+            const desc = document.createElement('p');
+            desc.style.cssText = 'margin:6px 0 0; font-size:13px; color:#666;';
+            desc.textContent = suggestion.description;
+            card.appendChild(desc);
+        }
+
+        const meta = document.createElement('div');
+        meta.style.cssText = 'margin-top:8px; font-size:12px; color:#888;';
+        const metaParts = [];
+        if (suggestion.target_value) metaParts.push('목표값: ' + suggestion.target_value);
+        if (suggestion.weight) metaParts.push('가중치: ' + suggestion.weight);
+        meta.textContent = metaParts.join(' | ');
+        card.appendChild(meta);
+
+        return card;
+    }
+
+    function displaySuggestions(suggestions) {
+        const suggestionsPanel = document.getElementById('aiSuggestions');
+        const cardsContainer = document.getElementById('suggestionCards');
+
+        if (!suggestions || suggestions.length === 0) {
+            suggestionsPanel.style.display = 'none';
+            return;
+        }
+
+        cardsContainer.replaceChildren();
+        suggestions.forEach((suggestion, index) => {
+            cardsContainer.appendChild(createSuggestionCard(suggestion, index));
+        });
+
+        suggestionsPanel.style.display = 'block';
+    }
+
+    function applySuggestion(suggestion) {
+        document.getElementById('indexName').value = suggestion.name || '';
+        document.getElementById('indexDesc').value = suggestion.description || '';
+        document.getElementById('indexTarget').value = suggestion.target_value || '';
+        document.getElementById('indexWeight').value = suggestion.weight || 1.0;
+
+        addSuccessMessage(suggestion.name);
+    }
+
+    async function askAI() {
+        const input = document.getElementById('aiInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        const indexType = document.getElementById('indexType').value;
+
+        // 사용자 메시지 표시
+        addChatMessage('user', message);
+        input.value = '';
+
+        // 로딩 표시
+        showLoadingMessage();
+
+        try {
+            const response = await fetch('/api/ai/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    index_type: indexType,
+                    indicator_name: indicatorInfo.name,
+                    indicator_description: indicatorInfo.description
+                })
+            });
+
+            hideLoadingMessage();
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                addErrorMessage(errorText);
+                return;
+            }
+
+            const data = await response.json();
+
+            // AI 응답 메시지 표시
+            addChatMessage('ai', data.message || '추천 지표를 생성했습니다.');
+
+            // 추천 지표 카드 표시
+            if (data.suggestions && data.suggestions.length > 0) {
+                displaySuggestions(data.suggestions);
+            }
+        } catch (error) {
+            hideLoadingMessage();
+            addErrorMessage(error.message);
+        }
+    }
+
+    // AI 패널 초기화 (모달 열 때)
+    function resetAIPanel() {
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.replaceChildren();
+
+        const welcomeDiv = document.createElement('div');
+        welcomeDiv.className = 'ai-message';
+        welcomeDiv.style.cssText = 'background:white; padding:10px; border-radius:8px; margin-bottom:8px; box-shadow:0 1px 2px rgba(0,0,0,0.1);';
+
+        const header = document.createElement('strong');
+        header.style.color = '#667eea';
+        header.textContent = '🤖 AI 어시스턴트';
+
+        const intro = document.createElement('p');
+        intro.style.cssText = 'margin:8px 0 0; color:#555;';
+        intro.textContent = '안녕하세요! 지표 추가를 도와드릴게요. 어떤 지표를 만들고 싶으신가요? 예를 들어:';
+
+        const examples = document.createElement('ul');
+        examples.style.cssText = 'margin:8px 0; padding-left:20px; color:#666; font-size:14px;';
+        ['예산 관련 지표를 추천해줘', '인력 투입 현황을 측정하고 싶어', '고객 만족도 지표가 필요해'].forEach(text => {
+            const li = document.createElement('li');
+            li.textContent = '"' + text + '"';
+            examples.appendChild(li);
+        });
+
+        welcomeDiv.appendChild(header);
+        welcomeDiv.appendChild(intro);
+        welcomeDiv.appendChild(examples);
+        chatMessages.appendChild(welcomeDiv);
+
+        document.getElementById('aiSuggestions').style.display = 'none';
+        document.getElementById('aiInput').value = '';
+    }
+
+    // 원래 openModal 함수 확장
+    const originalOpenModal = openModal;
+    openModal = function(type, mode, data = null) {
+        originalOpenModal(type, mode, data);
+        if (mode === 'create') {
+            resetAIPanel();
+            document.getElementById('aiAssistantPanel').style.display = 'block';
+        } else {
+            // 수정 모드에서는 AI 패널 숨김
+            document.getElementById('aiAssistantPanel').style.display = 'none';
+        }
+    };
 </script>
 {% endblock %}
