@@ -22,8 +22,10 @@
 `Cargo.toml`의 `[dependencies]` 섹션에 추가:
 
 ```toml
-termimad = "0.29"
+termimad = "0.34"
 ```
+
+참고: 초기 계획의 0.29 대신 0.34 사용 (crossterm 0.27 호환성 문제 해결)
 
 **Step 2: 의존성 설치 확인**
 
