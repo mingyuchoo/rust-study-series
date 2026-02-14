@@ -1,7 +1,7 @@
+use crate::storage::Storage;
 use chrono::{Datelike,
              NaiveDate};
 use std::collections::HashSet;
-use crate::storage::Storage;
 
 pub struct Model {
     pub screen: Screen,
@@ -19,11 +19,39 @@ pub enum Screen {
     Editor,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Selection {
+    pub anchor_line: usize,
+    pub anchor_col: usize,
+    pub cursor_line: usize,
+    pub cursor_col: usize,
+}
+
+pub struct EditorSnapshot {
+    pub content: Vec<String>,
+    pub cursor_line: usize,
+    pub cursor_col: usize,
+    pub selection: Option<Selection>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EditorSubMode {
+    Goto,
+    SpaceCommand,
+    Search,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CalendarSubMode {
+    Space,
+}
+
 pub struct CalendarState {
     pub current_year: i32,
     pub current_month: u32,
     pub selected_date: NaiveDate,
     pub cursor_pos: usize,
+    pub submode: Option<CalendarSubMode>,
 }
 
 pub struct EditorState {
@@ -33,13 +61,20 @@ pub struct EditorState {
     pub cursor_line: usize,
     pub cursor_col: usize,
     pub is_modified: bool,
+    pub selection: Option<Selection>,
+    pub edit_history: Vec<EditorSnapshot>,
+    pub history_index: usize,
+    pub clipboard: String,
+    pub submode: Option<EditorSubMode>,
+    pub search_pattern: String,
+    pub search_matches: Vec<(usize, usize)>,
+    pub current_match_index: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EditorMode {
     Normal,
     Insert,
-    Command(String),
 }
 
 pub struct DiaryIndex {
@@ -72,6 +107,7 @@ impl CalendarState {
             current_month: month,
             selected_date,
             cursor_pos: 0,
+            submode: None,
         }
     }
 
@@ -127,14 +163,37 @@ impl CalendarState {
 
 impl EditorState {
     pub fn new(date: NaiveDate) -> Self {
-        Self {
+        let mut state = Self {
             mode: EditorMode::Normal,
             date,
             content: vec![String::new()],
             cursor_line: 0,
             cursor_col: 0,
             is_modified: false,
-        }
+            selection: None,
+            edit_history: Vec::new(),
+            history_index: 0,
+            clipboard: String::new(),
+            submode: None,
+            search_pattern: String::new(),
+            search_matches: Vec::new(),
+            current_match_index: 0,
+        };
+
+        // 초기 스냅샷 저장
+        state.save_snapshot();
+        state
+    }
+
+    fn save_snapshot(&mut self) {
+        let snapshot = EditorSnapshot {
+            content: self.content.clone(),
+            cursor_line: self.cursor_line,
+            cursor_col: self.cursor_col,
+            selection: self.selection.clone(),
+        };
+        self.edit_history.push(snapshot);
+        self.history_index = self.edit_history.len() - 1;
     }
 
     pub fn insert_char(&mut self, c: char) {

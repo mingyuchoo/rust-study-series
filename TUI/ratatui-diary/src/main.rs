@@ -118,13 +118,14 @@ fn handle_editor_key(key: KeyEvent, mode: &ratatui_diary::model::EditorMode) -> 
             | KeyCode::Enter => Some(Msg::EditorNewLine),
             | _ => None,
         },
-        | EditorMode::Command(_) => match key.code {
-            | KeyCode::Char(c) => Some(Msg::EditorCommandChar(c)),
-            | KeyCode::Enter => Some(Msg::EditorExecuteCommand),
-            | KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
-            | KeyCode::Backspace => Some(Msg::EditorCommandChar('\x08')), // TODO: proper backspace
-            | _ => None,
-        },
+        // TODO: Helix 스타일로 재작성 예정
+        // | EditorMode::Command(_) => match key.code {
+        //     | KeyCode::Char(c) => Some(Msg::EditorCommandChar(c)),
+        //     | KeyCode::Enter => Some(Msg::EditorExecuteCommand),
+        //     | KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
+        //     | KeyCode::Backspace => Some(Msg::EditorCommandChar('\x08')), // TODO: proper backspace
+        //     | _ => None,
+        // },
     }
 }
 

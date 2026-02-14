@@ -1,10 +1,10 @@
 use chrono::NaiveDate;
-use ratatui_diary::model::{CalendarState,
-                           EditorMode,
-                           EditorState,
-                           Model,
-                           Screen};
-use ratatui_diary::storage::Storage;
+use ratatui_diary::{model::{CalendarState,
+                            EditorMode,
+                            EditorState,
+                            Model,
+                            Screen},
+                    storage::Storage};
 use std::collections::HashSet;
 use tempfile::TempDir;
 
@@ -83,4 +83,29 @@ fn test_model_with_storage() {
 
     let model = Model::new(entries, storage);
     assert_eq!(model.screen, Screen::Calendar);
+}
+
+#[cfg(test)]
+mod selection_tests {
+    use super::*;
+    use ratatui_diary::model::Selection;
+
+    #[test]
+    fn test_selection_creation() {
+        let selection = Selection {
+            anchor_line: 0,
+            anchor_col: 0,
+            cursor_line: 0,
+            cursor_col: 5,
+        };
+        assert_eq!(selection.anchor_line, 0);
+        assert_eq!(selection.cursor_col, 5);
+    }
+
+    #[test]
+    fn test_editor_state_has_selection_field() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let state = EditorState::new(date);
+        assert!(state.selection.is_none());
+    }
 }

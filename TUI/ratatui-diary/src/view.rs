@@ -211,7 +211,8 @@ fn render_editor(f: &mut Frame, model: &Model) {
     let mode_text = match &model.editor_state.mode {
         EditorMode::Normal => "-- NORMAL --".to_string(),
         EditorMode::Insert => "-- INSERT --".to_string(),
-        EditorMode::Command(cmd) => format!(":{}", cmd),
+        // TODO: Helix 스타일로 재작성 예정
+        // EditorMode::Command(cmd) => format!(":{}", cmd),
     };
     let statusbar = Paragraph::new(mode_text)
         .style(Style::default().add_modifier(Modifier::BOLD));
