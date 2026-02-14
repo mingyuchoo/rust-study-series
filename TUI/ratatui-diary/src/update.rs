@@ -1,4 +1,4 @@
-use crate::model::{EditorMode, EditorSubMode, CalendarSubMode, Model, Screen, Selection};
+use crate::model::{EditorMode, EditorSubMode, CalendarSubMode, Model, Screen, Selection, EditorState};
 use crate::message::{Msg, InsertPosition};
 use chrono::NaiveDate;
 
@@ -9,11 +9,71 @@ pub enum Command {
 }
 
 /// Helper function: Selection이 활성화되어 있으면 커서 이동시 selection도 업데이트
-fn update_selection_on_move(model: &mut Model, _old_line: usize, _old_col: usize) {
-    if let Some(ref mut sel) = model.editor_state.selection {
-        sel.cursor_line = model.editor_state.cursor_line;
-        sel.cursor_col = model.editor_state.cursor_col;
+fn update_selection_on_move(state: &mut EditorState) {
+    if let Some(ref mut sel) = state.selection {
+        sel.cursor_line = state.cursor_line;
+        sel.cursor_col = state.cursor_col;
     }
+}
+
+/// Helper function: 선택 영역이 없으면 현재 줄을 선택 (Helix 스타일)
+fn ensure_selection_for_edit(state: &mut EditorState) {
+    if state.selection.is_none() {
+        // 현재 줄 선택
+        let line_len = if state.cursor_line < state.content.len() {
+            state.content[state.cursor_line].len()
+        } else {
+            0
+        };
+        state.selection = Some(Selection {
+            anchor_line: state.cursor_line,
+            anchor_col: 0,
+            cursor_line: state.cursor_line,
+            cursor_col: line_len,
+        });
+    }
+}
+
+/// Helper function: 클립보드 내용을 붙여넣기 (줄 단위/문자 단위 모두 지원)
+fn paste_clipboard(state: &mut EditorState, before: bool) {
+    if state.clipboard.is_empty() {
+        return;
+    }
+
+    // 클립보드가 줄 단위인지 확인 (\n으로 끝나는지)
+    if state.clipboard.ends_with('\n') {
+        // 줄 단위 붙여넣기
+        let lines: Vec<String> = state.clipboard.trim_end_matches('\n')
+            .split('\n')
+            .map(String::from)
+            .collect();
+
+        let insert_at = if before {
+            state.cursor_line
+        } else {
+            state.cursor_line + 1
+        };
+
+        for (i, line) in lines.iter().enumerate() {
+            state.content.insert(insert_at + i, line.clone());
+        }
+
+        state.cursor_line = insert_at;
+        state.cursor_col = 0;
+    } else {
+        // 문자 단위 붙여넣기
+        let line = &mut state.content[state.cursor_line];
+        let insert_pos = if before {
+            state.cursor_col
+        } else {
+            (state.cursor_col + 1).min(line.len())
+        };
+
+        line.insert_str(insert_pos, &state.clipboard);
+        state.cursor_col = insert_pos + state.clipboard.len();
+    }
+
+    state.is_modified = true;
 }
 
 pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
@@ -102,16 +162,14 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         // ===== 에디터 네비게이션 (Normal 모드) =====
         Msg::EditorMoveLeft => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                let old_col = model.editor_state.cursor_col;
                 if model.editor_state.cursor_col > 0 {
                     model.editor_state.cursor_col -= 1;
-                    update_selection_on_move(model, model.editor_state.cursor_line, old_col);
+                    update_selection_on_move(&mut model.editor_state);
                 }
             }
         }
         Msg::EditorMoveRight => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                let old_col = model.editor_state.cursor_col;
                 let line_len = if model.editor_state.cursor_line < model.editor_state.content.len() {
                     model.editor_state.content[model.editor_state.cursor_line].len()
                 } else {
@@ -119,58 +177,48 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
                 };
                 if model.editor_state.cursor_col < line_len {
                     model.editor_state.cursor_col += 1;
-                    update_selection_on_move(model, model.editor_state.cursor_line, old_col);
+                    update_selection_on_move(&mut model.editor_state);
                 }
             }
         }
         Msg::EditorMoveUp => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                let old_line = model.editor_state.cursor_line;
-                let old_col = model.editor_state.cursor_col;
                 if model.editor_state.cursor_line > 0 {
                     model.editor_state.cursor_line -= 1;
                     // Clamp cursor_col to new line length
                     let line_len = model.editor_state.content[model.editor_state.cursor_line].len();
                     model.editor_state.cursor_col = model.editor_state.cursor_col.min(line_len);
-                    update_selection_on_move(model, old_line, old_col);
+                    update_selection_on_move(&mut model.editor_state);
                 }
             }
         }
         Msg::EditorMoveDown => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                let old_line = model.editor_state.cursor_line;
-                let old_col = model.editor_state.cursor_col;
                 if model.editor_state.cursor_line + 1 < model.editor_state.content.len() {
                     model.editor_state.cursor_line += 1;
                     // Clamp cursor_col to new line length
                     let line_len = model.editor_state.content[model.editor_state.cursor_line].len();
                     model.editor_state.cursor_col = model.editor_state.cursor_col.min(line_len);
-                    update_selection_on_move(model, old_line, old_col);
+                    update_selection_on_move(&mut model.editor_state);
                 }
             }
         }
         Msg::EditorWordNext => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                let old_line = model.editor_state.cursor_line;
-                let old_col = model.editor_state.cursor_col;
                 model.editor_state.move_word_next();
-                update_selection_on_move(model, old_line, old_col);
+                update_selection_on_move(&mut model.editor_state);
             }
         }
         Msg::EditorWordPrev => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                let old_line = model.editor_state.cursor_line;
-                let old_col = model.editor_state.cursor_col;
                 model.editor_state.move_word_prev();
-                update_selection_on_move(model, old_line, old_col);
+                update_selection_on_move(&mut model.editor_state);
             }
         }
         Msg::EditorWordEnd => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                let old_line = model.editor_state.cursor_line;
-                let old_col = model.editor_state.cursor_col;
                 model.editor_state.move_word_end();
-                update_selection_on_move(model, old_line, old_col);
+                update_selection_on_move(&mut model.editor_state);
             }
         }
 
@@ -185,11 +233,9 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
                 && model.editor_state.mode == EditorMode::Normal
                 && model.editor_state.submode == Some(EditorSubMode::Goto)
             {
-                let old_line = model.editor_state.cursor_line;
-                let old_col = model.editor_state.cursor_col;
                 model.editor_state.cursor_line = 0;
                 model.editor_state.cursor_col = 0;
-                update_selection_on_move(model, old_line, old_col);
+                update_selection_on_move(&mut model.editor_state);
                 model.editor_state.submode = None;
             }
         }
@@ -198,13 +244,11 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
                 && model.editor_state.mode == EditorMode::Normal
                 && model.editor_state.submode == Some(EditorSubMode::Goto)
             {
-                let old_line = model.editor_state.cursor_line;
-                let old_col = model.editor_state.cursor_col;
                 if !model.editor_state.content.is_empty() {
                     model.editor_state.cursor_line = model.editor_state.content.len() - 1;
                     model.editor_state.cursor_col = model.editor_state.content[model.editor_state.cursor_line].len();
                 }
-                update_selection_on_move(model, old_line, old_col);
+                update_selection_on_move(&mut model.editor_state);
                 model.editor_state.submode = None;
             }
         }
@@ -213,9 +257,8 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
                 && model.editor_state.mode == EditorMode::Normal
                 && model.editor_state.submode == Some(EditorSubMode::Goto)
             {
-                let old_col = model.editor_state.cursor_col;
                 model.editor_state.cursor_col = 0;
-                update_selection_on_move(model, model.editor_state.cursor_line, old_col);
+                update_selection_on_move(&mut model.editor_state);
                 model.editor_state.submode = None;
             }
         }
@@ -224,14 +267,13 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
                 && model.editor_state.mode == EditorMode::Normal
                 && model.editor_state.submode == Some(EditorSubMode::Goto)
             {
-                let old_col = model.editor_state.cursor_col;
                 let line_len = if model.editor_state.cursor_line < model.editor_state.content.len() {
                     model.editor_state.content[model.editor_state.cursor_line].len()
                 } else {
                     0
                 };
                 model.editor_state.cursor_col = line_len;
-                update_selection_on_move(model, model.editor_state.cursor_line, old_col);
+                update_selection_on_move(&mut model.editor_state);
                 model.editor_state.submode = None;
             }
         }
@@ -337,31 +379,36 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         // ===== 에디터 편집 기능 =====
         Msg::EditorDelete => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                if model.editor_state.selection.is_some() {
-                    // 스냅샷 저장 전에 선택 영역 복사
-                    if let Some(text) = model.editor_state.get_selected_text() {
-                        model.editor_state.clipboard = text;
-                    }
-                    model.editor_state.delete_selection();
-                    model.editor_state.save_snapshot();
+                // 선택 영역이 없으면 현재 줄 선택 (Helix 스타일)
+                ensure_selection_for_edit(&mut model.editor_state);
+
+                // 스냅샷 저장 전에 선택 영역 복사
+                if let Some(text) = model.editor_state.get_selected_text() {
+                    model.editor_state.clipboard = text;
                 }
+                model.editor_state.delete_selection();
+                model.editor_state.save_snapshot();
             }
         }
         Msg::EditorChange => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                if model.editor_state.selection.is_some() {
-                    // Delete 후 Insert 모드 진입
-                    if let Some(text) = model.editor_state.get_selected_text() {
-                        model.editor_state.clipboard = text;
-                    }
-                    model.editor_state.delete_selection();
-                    model.editor_state.mode = EditorMode::Insert;
-                    model.editor_state.save_snapshot();
+                // 선택 영역이 없으면 현재 줄 선택 (Helix 스타일)
+                ensure_selection_for_edit(&mut model.editor_state);
+
+                // Delete 후 Insert 모드 진입
+                if let Some(text) = model.editor_state.get_selected_text() {
+                    model.editor_state.clipboard = text;
                 }
+                model.editor_state.delete_selection();
+                model.editor_state.mode = EditorMode::Insert;
+                model.editor_state.save_snapshot();
             }
         }
         Msg::EditorYank => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
+                // 선택 영역이 없으면 현재 줄 선택 (Helix 스타일)
+                ensure_selection_for_edit(&mut model.editor_state);
+
                 if let Some(text) = model.editor_state.get_selected_text() {
                     model.editor_state.clipboard = text;
                     model.editor_state.selection = None;
@@ -370,33 +417,14 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         }
         Msg::EditorPasteAfter => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                if !model.editor_state.clipboard.is_empty() {
-                    let text = model.editor_state.clipboard.clone();
-                    // 커서 다음에 삽입
-                    if model.editor_state.cursor_line < model.editor_state.content.len() {
-                        let line = &mut model.editor_state.content[model.editor_state.cursor_line];
-                        let insert_pos = (model.editor_state.cursor_col + 1).min(line.len());
-                        line.insert_str(insert_pos, &text);
-                        model.editor_state.cursor_col = insert_pos + text.len();
-                    }
-                    model.editor_state.save_snapshot();
-                    model.editor_state.is_modified = true;
-                }
+                paste_clipboard(&mut model.editor_state, false);
+                model.editor_state.save_snapshot();
             }
         }
         Msg::EditorPasteBefore => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                if !model.editor_state.clipboard.is_empty() {
-                    let text = model.editor_state.clipboard.clone();
-                    // 커서 위치에 삽입
-                    if model.editor_state.cursor_line < model.editor_state.content.len() {
-                        let line = &mut model.editor_state.content[model.editor_state.cursor_line];
-                        line.insert_str(model.editor_state.cursor_col, &text);
-                        model.editor_state.cursor_col += text.len();
-                    }
-                    model.editor_state.save_snapshot();
-                    model.editor_state.is_modified = true;
-                }
+                paste_clipboard(&mut model.editor_state, true);
+                model.editor_state.save_snapshot();
             }
         }
 
