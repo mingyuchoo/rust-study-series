@@ -1,7 +1,9 @@
-use ratatui::text::{Line, Text};
 #[allow(unused_imports)]
 use ratatui::style::Color;
-use termimad::{MadSkin, FmtText};
+use ratatui::text::{Line,
+                    Text};
+use termimad::{FmtText,
+               MadSkin};
 
 /// Markdown 문자열을 ratatui Text로 렌더링
 pub fn render_to_text(markdown: &str) -> Text<'static> {
@@ -13,18 +15,13 @@ pub fn render_to_text(markdown: &str) -> Text<'static> {
     let skin = create_skin();
 
     // 에러 처리: 파싱 실패 시 원본 텍스트를 그대로 반환
-    let fmt_text = match std::panic::catch_unwind(|| {
-        FmtText::from(&skin, markdown, None)
-    }) {
-        Ok(text) => text,
-        Err(_) => {
+    let fmt_text = match std::panic::catch_unwind(|| FmtText::from(&skin, markdown, None)) {
+        | Ok(text) => text,
+        | Err(_) => {
             // 파싱 실패 시 plain text로 fallback
-            let lines: Vec<Line> = markdown
-                .lines()
-                .map(|line| Line::from(line.to_string()))
-                .collect();
+            let lines: Vec<Line> = markdown.lines().map(|line| Line::from(line.to_string())).collect();
             return Text::from(lines);
-        }
+        },
     };
 
     // termimad의 FmtText를 ratatui Text로 변환
@@ -33,7 +30,8 @@ pub fn render_to_text(markdown: &str) -> Text<'static> {
 
 /// 커스텀 MadSkin 생성
 fn create_skin() -> MadSkin {
-    use termimad::crossterm::style::{Attribute, Color as TermColor};
+    use termimad::crossterm::style::{Attribute,
+                                     Color as TermColor};
 
     let mut skin = MadSkin::default();
 
@@ -71,8 +69,7 @@ fn convert_fmt_text_to_ratatui(fmt_text: FmtText) -> Text<'static> {
         .map(|line| {
             // ANSI 이스케이프 시퀀스 제거
             let bytes = strip_ansi_escapes::strip(line);
-            let clean_line = String::from_utf8(bytes)
-                .unwrap_or_else(|_| line.to_string());
+            let clean_line = String::from_utf8(bytes).unwrap_or_else(|_| line.to_string());
 
             Line::from(clean_line)
         })
@@ -82,29 +79,32 @@ fn convert_fmt_text_to_ratatui(fmt_text: FmtText) -> Text<'static> {
 }
 
 /// termimad Color를 ratatui Color로 변환
-#[allow(dead_code)]
-fn to_ratatui_color(term_color: termimad::crossterm::style::Color) -> Color {
+pub fn to_ratatui_color(term_color: termimad::crossterm::style::Color) -> Color {
     use termimad::crossterm::style::Color as TermColor;
 
     match term_color {
-        TermColor::Black => Color::Black,
-        TermColor::DarkGrey => Color::DarkGray,
-        TermColor::Red => Color::Red,
-        TermColor::DarkRed => Color::Red,
-        TermColor::Green => Color::Green,
-        TermColor::DarkGreen => Color::Green,
-        TermColor::Yellow => Color::Yellow,
-        TermColor::DarkYellow => Color::Yellow,
-        TermColor::Blue => Color::Blue,
-        TermColor::DarkBlue => Color::Blue,
-        TermColor::Magenta => Color::Magenta,
-        TermColor::DarkMagenta => Color::Magenta,
-        TermColor::Cyan => Color::Cyan,
-        TermColor::DarkCyan => Color::Cyan,
-        TermColor::White => Color::White,
-        TermColor::Grey => Color::Gray,
-        TermColor::Rgb { r, g, b } => Color::Rgb(r, g, b),
-        TermColor::AnsiValue(v) => Color::Indexed(v),
-        TermColor::Reset => Color::Reset,
+        | TermColor::Black => Color::Black,
+        | TermColor::DarkGrey => Color::DarkGray,
+        | TermColor::Red => Color::Red,
+        | TermColor::DarkRed => Color::Red,
+        | TermColor::Green => Color::Green,
+        | TermColor::DarkGreen => Color::Green,
+        | TermColor::Yellow => Color::Yellow,
+        | TermColor::DarkYellow => Color::Yellow,
+        | TermColor::Blue => Color::Blue,
+        | TermColor::DarkBlue => Color::Blue,
+        | TermColor::Magenta => Color::Magenta,
+        | TermColor::DarkMagenta => Color::Magenta,
+        | TermColor::Cyan => Color::Cyan,
+        | TermColor::DarkCyan => Color::Cyan,
+        | TermColor::White => Color::White,
+        | TermColor::Grey => Color::Gray,
+        | TermColor::Rgb {
+            r,
+            g,
+            b,
+        } => Color::Rgb(r, g, b),
+        | TermColor::AnsiValue(v) => Color::Indexed(v),
+        | TermColor::Reset => Color::Reset,
     }
 }
