@@ -151,6 +151,35 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
             }
         }
 
+        // 파일 I/O 결과
+        Msg::LoadDiarySuccess(date, content) => {
+            if model.screen == Screen::Editor {
+                model.editor_state.date = date;
+                model.editor_state.load_content(&content);
+            }
+        }
+        Msg::LoadDiaryFailed(error) => {
+            // 파일 없음 = 새 다이어리, 에러 표시 안함
+            if !error.contains("No such file") {
+                model.error_message = Some(format!("로드 실패: {}", error));
+                model.show_error_popup = true;
+            }
+        }
+        Msg::SaveDiarySuccess => {
+            model.editor_state.is_modified = false;
+        }
+        Msg::SaveDiaryFailed(error) => {
+            model.error_message = Some(format!("저장 실패: {}", error));
+            model.show_error_popup = true;
+        }
+        Msg::DeleteDiarySuccess(date) => {
+            model.diary_entries.entries.remove(&date);
+            model.screen = Screen::Calendar;
+        }
+        Msg::RefreshIndex(entries) => {
+            model.diary_entries.entries = entries;
+        }
+
         _ => {}
     }
 
