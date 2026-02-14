@@ -64,11 +64,17 @@ fn render_calendar(f: &mut Frame, model: &Model) {
     f.render_widget(statusbar, calendar_chunks[2]);
 
     // 오른쪽: 미리보기 영역
+    let selected_date = model.calendar_state.selected_date;
+    let preview_content = match model.storage.load(selected_date) {
+        Ok(content) => content,
+        Err(_) => "📝 작성된 다이어리가 없습니다.\n\nEnter를 눌러 새로 작성하세요.".to_string(),
+    };
+
     render_preview_pane(
         f,
         main_chunks[1],
-        "미리보기 테스트 콘텐츠\n\n여러 줄\n테스트",
-        "선택된 날짜 미리보기"
+        &preview_content,
+        &format!("다이어리: {}", selected_date)
     );
 }
 
