@@ -1,9 +1,9 @@
 use ratatui_diary::{Model,
                     Msg,
                     message::InsertPosition,
-                    model::{EditorMode,
+                    model::{CalendarSubMode,
+                            EditorMode,
                             EditorSubMode,
-                            CalendarSubMode,
                             Screen},
                     storage::Storage};
 use std::collections::HashSet;
@@ -369,4 +369,292 @@ fn test_dismiss_error() {
     ratatui_diary::update::update(&mut model, Msg::DismissError);
     assert!(!model.show_error_popup);
     assert!(model.error_message.is_none());
+}
+
+#[cfg(test)]
+mod complete_message_coverage {
+    use super::*;
+    use ratatui_diary::{Msg, Model, message::InsertPosition, model::{EditorMode, EditorSubMode, Screen}, storage::Storage};
+    use std::collections::HashSet;
+    use tempfile::TempDir;
+    use chrono::NaiveDate;
+
+    fn setup_model() -> (Model, TempDir) {
+        let temp = TempDir::new().unwrap();
+        let storage = Storage::with_dir(temp.path()).unwrap();
+        let model = Model::new(HashSet::new(), storage);
+        (model, temp)
+    }
+
+    // ===== Editor Insert Mode Tests =====
+
+    #[test]
+    fn test_editor_enter_insert_before_cursor() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.cursor_col = 5;
+
+        ratatui_diary::update::update(&mut model, Msg::EditorEnterInsert(InsertPosition::BeforeCursor));
+
+        assert_eq!(model.editor_state.mode, EditorMode::Insert);
+        assert_eq!(model.editor_state.cursor_col, 5);
+    }
+
+    #[test]
+    fn test_editor_enter_insert_after_cursor() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Hello".to_string()];
+        model.editor_state.cursor_col = 5;
+
+        ratatui_diary::update::update(&mut model, Msg::EditorEnterInsert(InsertPosition::AfterCursor));
+
+        assert_eq!(model.editor_state.mode, EditorMode::Insert);
+        assert_eq!(model.editor_state.cursor_col, 5);
+    }
+
+    #[test]
+    fn test_editor_enter_insert_line_below() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Line 1".to_string()];
+        model.editor_state.cursor_line = 0;
+
+        ratatui_diary::update::update(&mut model, Msg::EditorEnterInsert(InsertPosition::LineBelow));
+
+        assert_eq!(model.editor_state.mode, EditorMode::Insert);
+        assert_eq!(model.editor_state.cursor_line, 1);
+        assert_eq!(model.editor_state.content.len(), 2);
+    }
+
+    #[test]
+    fn test_editor_enter_insert_line_above() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Line 1".to_string()];
+        model.editor_state.cursor_line = 0;
+
+        ratatui_diary::update::update(&mut model, Msg::EditorEnterInsert(InsertPosition::LineAbove));
+
+        assert_eq!(model.editor_state.mode, EditorMode::Insert);
+        assert_eq!(model.editor_state.cursor_line, 0);
+        assert_eq!(model.editor_state.content.len(), 2);
+    }
+
+    // ===== Editor Goto Mode Tests =====
+
+    #[test]
+    fn test_editor_goto_doc_end() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Line 1".to_string(), "Line 2".to_string(), "Line 3".to_string()];
+        model.editor_state.cursor_line = 0;
+        model.editor_state.submode = Some(EditorSubMode::Goto);
+
+        ratatui_diary::update::update(&mut model, Msg::EditorGotoDocEnd);
+
+        assert_eq!(model.editor_state.cursor_line, 2);
+        assert_eq!(model.editor_state.submode, None);
+    }
+
+    #[test]
+    fn test_editor_goto_line_start() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Hello World".to_string()];
+        model.editor_state.cursor_col = 5;
+        model.editor_state.submode = Some(EditorSubMode::Goto);
+
+        ratatui_diary::update::update(&mut model, Msg::EditorGotoLineStart);
+
+        assert_eq!(model.editor_state.cursor_col, 0);
+        assert_eq!(model.editor_state.submode, None);
+    }
+
+    // ===== Editor Edit Operations =====
+
+    #[test]
+    fn test_editor_delete_without_selection() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Hello World".to_string()];
+        model.editor_state.cursor_line = 0;
+        model.editor_state.cursor_col = 0;
+
+        ratatui_diary::update::update(&mut model, Msg::EditorDelete);
+
+        // 선택 없이 Delete 시 현재 줄이 선택되어야 함
+        assert!(model.editor_state.clipboard.contains("Hello"));
+    }
+
+    #[test]
+    fn test_editor_change_operation() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Hello".to_string()];
+
+        ratatui_diary::update::update(&mut model, Msg::EditorChange);
+
+        // Change는 Delete + Insert 모드
+        assert_eq!(model.editor_state.mode, EditorMode::Insert);
+    }
+
+    #[test]
+    fn test_editor_paste_before() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Hello".to_string()];
+        model.editor_state.clipboard = "World".to_string();
+        model.editor_state.cursor_col = 5;
+
+        ratatui_diary::update::update(&mut model, Msg::EditorPasteBefore);
+
+        assert!(model.editor_state.content[0].contains("World"));
+    }
+
+    // ===== Editor Search Mode =====
+
+    #[test]
+    fn test_editor_search_char_input() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.submode = Some(EditorSubMode::Search);
+
+        ratatui_diary::update::update(&mut model, Msg::EditorSearchChar('t'));
+
+        assert_eq!(model.editor_state.search_pattern, "t");
+    }
+
+    #[test]
+    fn test_editor_search_backspace() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.submode = Some(EditorSubMode::Search);
+        model.editor_state.search_pattern = "test".to_string();
+
+        ratatui_diary::update::update(&mut model, Msg::EditorSearchBackspace);
+
+        assert_eq!(model.editor_state.search_pattern, "tes");
+    }
+
+    #[test]
+    fn test_editor_search_prev() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["test test test".to_string()];
+        model.editor_state.search_pattern = "test".to_string();
+        model.editor_state.execute_search();
+
+        ratatui_diary::update::update(&mut model, Msg::EditorSearchPrev);
+
+        // 이전 매치로 이동
+        assert!(model.editor_state.current_match_index < 3);
+    }
+
+    // ===== Calendar Space Mode =====
+
+    #[test]
+    fn test_calendar_space_next_year() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Calendar;
+        model.calendar_state.submode = Some(ratatui_diary::model::CalendarSubMode::Space);
+        let original_year = model.calendar_state.current_year;
+
+        ratatui_diary::update::update(&mut model, Msg::CalendarSpaceNextYear);
+
+        assert_eq!(model.calendar_state.current_year, original_year + 1);
+        assert_eq!(model.calendar_state.submode, None);
+    }
+
+    #[test]
+    fn test_calendar_space_prev_year() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Calendar;
+        model.calendar_state.submode = Some(ratatui_diary::model::CalendarSubMode::Space);
+        let original_year = model.calendar_state.current_year;
+
+        ratatui_diary::update::update(&mut model, Msg::CalendarSpacePrevYear);
+
+        assert_eq!(model.calendar_state.current_year, original_year - 1);
+        assert_eq!(model.calendar_state.submode, None);
+    }
+
+    // ===== File I/O Result Messages =====
+
+    #[test]
+    fn test_load_diary_failed() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+
+        ratatui_diary::update::update(&mut model, Msg::LoadDiaryFailed("File not found".to_string()));
+
+        assert!(model.show_error_popup);
+        assert!(model.error_message.unwrap().contains("File not found"));
+    }
+
+    #[test]
+    fn test_save_diary_failed() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+
+        ratatui_diary::update::update(&mut model, Msg::SaveDiaryFailed("Permission denied".to_string()));
+
+        assert!(model.show_error_popup);
+        assert!(model.error_message.unwrap().contains("Permission denied"));
+    }
+
+    #[test]
+    fn test_delete_diary_success() {
+        let (mut model, _temp) = setup_model();
+        let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+        model.diary_entries.entries.insert(date);
+
+        ratatui_diary::update::update(&mut model, Msg::DeleteDiarySuccess(date));
+
+        assert!(!model.diary_entries.entries.contains(&date));
+    }
+
+    #[test]
+    fn test_refresh_index() {
+        let (mut model, _temp) = setup_model();
+        let date1 = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+        let date2 = NaiveDate::from_ymd_opt(2026, 2, 16).unwrap();
+        let mut new_entries = HashSet::new();
+        new_entries.insert(date1);
+        new_entries.insert(date2);
+
+        ratatui_diary::update::update(&mut model, Msg::RefreshIndex(new_entries));
+
+        assert_eq!(model.diary_entries.entries.len(), 2);
+    }
+
+    // ===== Helper Function Tests (indirect) =====
+
+    #[test]
+    fn test_paste_clipboard_line_mode() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Line 1".to_string()];
+        model.editor_state.clipboard = "New Line\n".to_string();
+        model.editor_state.cursor_line = 0;
+
+        ratatui_diary::update::update(&mut model, Msg::EditorPasteAfter);
+
+        // 줄 단위 붙여넣기
+        assert!(model.editor_state.content.len() >= 2);
+    }
+
+    #[test]
+    fn test_paste_clipboard_char_mode() {
+        let (mut model, _temp) = setup_model();
+        model.screen = Screen::Editor;
+        model.editor_state.content = vec!["Hello".to_string()];
+        model.editor_state.clipboard = "World".to_string(); // \n 없음
+        model.editor_state.cursor_col = 5;
+
+        ratatui_diary::update::update(&mut model, Msg::EditorPasteAfter);
+
+        // 문자 단위 붙여넣기
+        assert!(model.editor_state.content[0].contains("World"));
+    }
 }
