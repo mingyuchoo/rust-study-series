@@ -1,12 +1,11 @@
+use chrono::NaiveDate;
 use ratatui_diary::storage::Storage;
 use tempfile::TempDir;
-use chrono::NaiveDate;
-use std::collections::HashSet;
 
 #[test]
 fn test_new_creates_entries_directory() {
     let temp = TempDir::new().unwrap();
-    let storage = Storage::with_dir(temp.path()).unwrap();
+    let _storage = Storage::with_dir(temp.path()).unwrap();
 
     let entries_dir = temp.path().join("entries");
     assert!(entries_dir.exists());
@@ -83,4 +82,24 @@ fn test_scan_entries() {
     assert_eq!(entries.len(), 2);
     assert!(entries.contains(&date1));
     assert!(entries.contains(&date2));
+}
+
+#[test]
+fn test_new_uses_system_data_dir() {
+    // Given: 시스템 데이터 디렉토리가 존재
+    // When: Storage::new() 호출
+    let result = Storage::new();
+
+    // Then: 성공적으로 생성되거나 에러 반환
+    match result {
+        Ok(storage) => {
+            // 생성된 storage는 유효해야 함
+            assert!(storage.scan_entries().is_ok());
+        }
+        Err(e) => {
+            // 에러 메시지 검증
+            assert!(e.to_string().contains("Cannot find local data directory")
+                    || e.kind() == std::io::ErrorKind::NotFound);
+        }
+    }
 }
