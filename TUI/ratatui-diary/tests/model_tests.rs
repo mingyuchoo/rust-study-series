@@ -824,4 +824,228 @@ mod editor_edge_cases {
         assert_eq!(state.content.len(), 1);
         assert!(state.content[0].is_empty() || !state.content[0].is_empty());
     }
+
+    // 추가 경계 케이스 테스트
+    #[test]
+    fn test_insert_char_on_empty_line() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+        state.insert_char('a');
+        assert_eq!(state.content[0], "a");
+        assert_eq!(state.cursor_col, 1);
+    }
+
+    #[test]
+    fn test_backspace_at_line_start() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+        state.content = vec!["Line 1".to_string(), "Line 2".to_string()];
+        state.cursor_line = 1;
+        state.cursor_col = 0;
+
+        state.backspace();
+
+        assert_eq!(state.content.len(), 1);
+        assert_eq!(state.content[0], "Line 1Line 2");
+        assert_eq!(state.cursor_line, 0);
+    }
+
+    #[test]
+    fn test_backspace_with_no_lines() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+        state.content = vec!["".to_string()];
+        state.cursor_line = 0;
+        state.cursor_col = 0;
+
+        state.backspace();
+
+        // 첫 줄의 시작에서는 backspace가 동작하지 않음
+        assert_eq!(state.content.len(), 1);
+    }
+
+    #[test]
+    fn test_new_line_in_middle_of_text() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+        state.insert_char('a');
+        state.insert_char('b');
+        state.insert_char('c');
+        state.cursor_col = 1;
+
+        state.new_line();
+
+        assert_eq!(state.content.len(), 2);
+        assert_eq!(state.content[0], "a");
+        assert_eq!(state.content[1], "bc");
+    }
+
+    #[test]
+    fn test_history_size_limit_exceeded() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+
+        // MAX_HISTORY를 초과할 때까지 반복
+        for i in 0..150 {
+            state.insert_char(char::from_u32(97 + (i % 26) as u32).unwrap());
+            state.save_snapshot();
+        }
+
+        // 히스토리가 너무 크지 않음
+        assert!(state.edit_history.len() <= 150);
+    }
+
+    #[test]
+    fn test_insert_after_undo_creates_new_branch() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+
+        state.insert_char('a');
+        state.save_snapshot();
+        state.insert_char('b');
+        state.save_snapshot();
+
+        state.undo();
+
+        state.insert_char('x');
+        state.save_snapshot();
+
+        // 'x'가 삽입되고 나머지 히스토리는 제거됨
+        assert_eq!(state.content[0], "ax");
+    }
+
+    #[test]
+    fn test_insert_char_extends_line() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+        state.insert_char('a');
+        state.insert_char('b');
+        state.insert_char('c');
+
+        assert_eq!(state.content[0], "abc");
+        assert_eq!(state.cursor_col, 3);
+    }
+
+    #[test]
+    fn test_move_cursor_left_at_boundary() {
+        let mut state = CalendarState::new(2026, 1);
+        state.selected_date = NaiveDate::from_ymd_opt(2026, 1, 1).unwrap();
+
+        state.move_cursor_left();
+
+        // 날짜가 변경되거나 같음
+        assert!(state.selected_date <= NaiveDate::from_ymd_opt(2026, 1, 1).unwrap());
+    }
+
+    #[test]
+    fn test_move_cursor_right_normal() {
+        let mut state = CalendarState::new(2026, 2);
+        state.selected_date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+        let original = state.selected_date;
+
+        state.move_cursor_right();
+
+        // 다음 날짜로 이동
+        assert_eq!(state.selected_date, original.succ_opt().unwrap());
+    }
+
+    #[test]
+    fn test_move_cursor_up_at_week_boundary() {
+        let mut state = CalendarState::new(2026, 2);
+        state.selected_date = NaiveDate::from_ymd_opt(2026, 2, 8).unwrap();
+
+        state.move_cursor_up();
+
+        // 일주일 위로 이동
+        assert!(state.selected_date < NaiveDate::from_ymd_opt(2026, 2, 8).unwrap());
+    }
+
+    #[test]
+    fn test_move_cursor_down_normal() {
+        let mut state = CalendarState::new(2026, 2);
+        state.selected_date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+
+        state.move_cursor_down();
+
+        // 일주일 아래로 이동
+        assert!(state.selected_date > NaiveDate::from_ymd_opt(2026, 2, 15).unwrap());
+    }
+
+    #[test]
+    fn test_load_content_empty_string() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+        state.content = vec!["Old content".to_string()];
+
+        state.load_content("");
+
+        assert_eq!(state.content.len(), 1);
+        assert_eq!(state.content[0], "");
+    }
+
+    #[test]
+    fn test_backspace_multibyte_character() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+        state.insert_char('한');
+        assert_eq!(state.cursor_col, 1);
+
+        state.backspace();
+
+        assert_eq!(state.content[0], "");
+        assert_eq!(state.cursor_col, 0);
+    }
+
+    #[test]
+    fn test_new_line_with_empty_line() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+        state.new_line();
+
+        assert_eq!(state.content.len(), 2);
+        assert_eq!(state.cursor_line, 1);
+    }
+
+    #[test]
+    fn test_multiple_undo_operations() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+
+        state.insert_char('a');
+        state.save_snapshot();
+        state.insert_char('b');
+        state.save_snapshot();
+
+        state.undo();
+        assert_eq!(state.content[0], "a");
+
+        state.undo();
+        assert_eq!(state.content[0], "");
+    }
+
+    #[test]
+    fn test_redo_after_undo() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+
+        state.insert_char('a');
+        state.save_snapshot();
+        state.insert_char('b');
+        state.save_snapshot();
+
+        state.undo();
+        state.undo();
+
+        state.redo();
+        assert_eq!(state.content[0], "a");
+
+        state.redo();
+        assert_eq!(state.content[0], "ab");
+    }
+
+    #[test]
+    fn test_undo_at_beginning_of_history() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+
+        state.undo();
+
+        assert_eq!(state.history_index, 0);
+    }
+
+    #[test]
+    fn test_redo_at_end_of_history() {
+        let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+
+        state.redo();
+
+        assert_eq!(state.history_index, 0);
+    }
 }
