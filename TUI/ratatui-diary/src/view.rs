@@ -1,16 +1,27 @@
-use crate::model::{Model, Screen, EditorMode};
-use ratatui::{
-    Frame,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Clear, Paragraph, Wrap},
-};
+use crate::model::{EditorMode,
+                   Model,
+                   Screen};
+use ratatui::{Frame,
+              layout::{Alignment,
+                       Constraint,
+                       Direction,
+                       Layout,
+                       Rect},
+              style::{Color,
+                      Modifier,
+                      Style},
+              text::{Line,
+                     Span},
+              widgets::{Block,
+                        Borders,
+                        Clear,
+                        Paragraph,
+                        Wrap}};
 
 pub fn view(f: &mut Frame, model: &Model) {
     match model.screen {
-        Screen::Calendar => render_calendar(f, model),
-        Screen::Editor => render_editor(f, model),
+        | Screen::Calendar => render_calendar(f, model),
+        | Screen::Editor => render_editor(f, model),
     }
 
     // 에러 팝업
@@ -20,36 +31,48 @@ pub fn view(f: &mut Frame, model: &Model) {
 }
 
 fn render_calendar(f: &mut Frame, model: &Model) {
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
+    // 메인 레이아웃: 수평 분할 (50:50)
+    let main_chunks = Layout::default()
+        .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Length(3),   // 헤더
-            Constraint::Min(0),      // 달력
-            Constraint::Length(2),   // 상태바
+            Constraint::Percentage(50),  // 왼쪽: 달력
+            Constraint::Percentage(50),  // 오른쪽: 미리보기
         ])
         .split(f.size());
 
+    // 왼쪽: 달력 영역 (기존 레이아웃)
+    let calendar_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // 헤더
+            Constraint::Min(0),    // 달력
+            Constraint::Length(2), // 상태바
+        ])
+        .split(main_chunks[0]);
+
     // 헤더
-    let header = Paragraph::new(format!(
-        "{}년 {}월",
-        model.calendar_state.current_year,
-        model.calendar_state.current_month
-    ))
-    .alignment(Alignment::Center)
-    .style(Style::default().add_modifier(Modifier::BOLD));
-    f.render_widget(header, chunks[0]);
+    let header = Paragraph::new(format!("{}년 {}월", model.calendar_state.current_year, model.calendar_state.current_month))
+        .alignment(Alignment::Center)
+        .style(Style::default().add_modifier(Modifier::BOLD));
+    f.render_widget(header, calendar_chunks[0]);
 
     // 달력 그리드
-    render_calendar_grid(f, chunks[1], model);
+    render_calendar_grid(f, calendar_chunks[1], model);
 
     // 상태바
-    let statusbar = Paragraph::new("h/l: 달 | H/L: 연도 | Enter: 작성 | q: 종료")
-        .alignment(Alignment::Center);
-    f.render_widget(statusbar, chunks[2]);
+    let statusbar = Paragraph::new("h/l: 달 | H/L: 연도 | Enter: 작성 | q: 종료").alignment(Alignment::Center);
+    f.render_widget(statusbar, calendar_chunks[2]);
+
+    // 오른쪽: 미리보기 영역 (임시로 빈 블록)
+    let preview_block = Block::default()
+        .title("미리보기")
+        .borders(Borders::ALL);
+    f.render_widget(preview_block, main_chunks[1]);
 }
 
 fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
-    use chrono::{Datelike, NaiveDate};
+    use chrono::{Datelike,
+                 NaiveDate};
 
     let year = model.calendar_state.current_year;
     let month = model.calendar_state.current_month;
@@ -57,9 +80,10 @@ fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
     // 요일 헤더
     let weekdays = vec!["일", "월", "화", "수", "목", "금", "토"];
     let mut lines = vec![Line::from(
-        weekdays.iter()
+        weekdays
+            .iter()
             .map(|&day| Span::styled(format!("{:^4}", day), Style::default()))
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>(),
     )];
 
     // 월의 첫날
@@ -78,7 +102,7 @@ fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
     let mut day = 1;
 
     // 첫 주 빈 칸 채우기
-    for i in weekday..7 {
+    for i in weekday .. 7 {
         let date = NaiveDate::from_ymd_opt(year, month, day).unwrap();
         week[i] = format_day(day, date, model);
         day += 1;
@@ -88,7 +112,7 @@ fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
     // 나머지 주
     while day <= days_in_month {
         week = vec![Span::raw("    "); 7];
-        for i in 0..7 {
+        for i in 0 .. 7 {
             if day <= days_in_month {
                 let date = NaiveDate::from_ymd_opt(year, month, day).unwrap();
                 week[i] = format_day(day, date, model);
@@ -98,8 +122,7 @@ fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
         lines.push(Line::from(week.clone()));
     }
 
-    let calendar = Paragraph::new(lines)
-        .block(Block::default().borders(Borders::NONE));
+    let calendar = Paragraph::new(lines).block(Block::default().borders(Borders::NONE));
     f.render_widget(calendar, area);
 }
 
@@ -128,21 +151,21 @@ fn render_editor(f: &mut Frame, model: &Model) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),   // 날짜 헤더
-            Constraint::Min(0),      // 에디터 영역
-            Constraint::Length(1),   // 모드 표시
+            Constraint::Length(1), // 날짜 헤더
+            Constraint::Min(0),    // 에디터 영역
+            Constraint::Length(1), // 모드 표시
         ])
         .split(f.size());
 
     // 헤더: 날짜
-    let header = Paragraph::new(model.editor_state.date.to_string())
-        .style(Style::default().add_modifier(Modifier::BOLD));
+    let header = Paragraph::new(model.editor_state.date.to_string()).style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(header, chunks[0]);
 
     // 에디터 내용
     let content = model.editor_state.get_content();
-    let text = Paragraph::new(content)
-        .wrap(Wrap { trim: false });
+    let text = Paragraph::new(content).wrap(Wrap {
+        trim: false,
+    });
     f.render_widget(text, chunks[1]);
 
     // 커서 표시 (Insert 모드)
@@ -155,12 +178,11 @@ fn render_editor(f: &mut Frame, model: &Model) {
 
     // 하단바: 모드 표시
     let mode_text = match &model.editor_state.mode {
-        EditorMode::Normal => "-- NORMAL --".to_string(),
-        EditorMode::Insert => "-- INSERT --".to_string(),
-        EditorMode::Command(cmd) => format!(":{}", cmd),
+        | EditorMode::Normal => "-- NORMAL --".to_string(),
+        | EditorMode::Insert => "-- INSERT --".to_string(),
+        | EditorMode::Command(cmd) => format!(":{}", cmd),
     };
-    let statusbar = Paragraph::new(mode_text)
-        .style(Style::default().add_modifier(Modifier::BOLD));
+    let statusbar = Paragraph::new(mode_text).style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(statusbar, chunks[2]);
 }
 
@@ -169,12 +191,16 @@ fn render_error_popup(f: &mut Frame, model: &Model) {
 
     let error_msg = model.error_message.as_deref().unwrap_or("알 수 없는 에러");
     let popup = Paragraph::new(error_msg)
-        .block(Block::default()
-            .title("Error")
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::Red)))
+        .block(
+            Block::default()
+                .title("Error")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Red)),
+        )
         .style(Style::default().bg(Color::Black))
-        .wrap(Wrap { trim: true });
+        .wrap(Wrap {
+            trim: true,
+        });
 
     f.render_widget(Clear, area);
     f.render_widget(popup, area);
