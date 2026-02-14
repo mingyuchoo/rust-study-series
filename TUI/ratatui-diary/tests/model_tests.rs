@@ -388,3 +388,58 @@ mod word_navigation_tests {
         assert_eq!(state.cursor_col, 10); // "World"의 끝
     }
 }
+
+#[cfg(test)]
+mod search_tests {
+    use super::*;
+
+    #[test]
+    fn test_search_finds_all_matches() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec![
+            "Hello world".to_string(),
+            "World of Rust".to_string(),
+            "world again".to_string(),
+        ];
+        state.search_pattern = "world".to_string();
+
+        state.execute_search();
+
+        assert_eq!(state.search_matches.len(), 2); // 대소문자 구분
+        assert_eq!(state.search_matches[0], (0, 6));
+        assert_eq!(state.search_matches[1], (2, 0));
+    }
+
+    #[test]
+    fn test_search_next_wraps() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["test test test".to_string()];
+        state.search_pattern = "test".to_string();
+        state.execute_search();
+
+        assert_eq!(state.current_match_index, 0);
+
+        state.search_next();
+        assert_eq!(state.current_match_index, 1);
+
+        state.search_next();
+        assert_eq!(state.current_match_index, 2);
+
+        state.search_next(); // wrap around
+        assert_eq!(state.current_match_index, 0);
+    }
+
+    #[test]
+    fn test_search_prev_wraps() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["test test test".to_string()];
+        state.search_pattern = "test".to_string();
+        state.execute_search();
+
+        state.search_prev(); // wrap around to end
+        assert_eq!(state.current_match_index, 2);
+    }
+}

@@ -476,6 +476,92 @@ impl EditorState {
 
         self.cursor_col = pos;
     }
+
+    pub fn execute_search(&mut self) {
+        if self.search_pattern.is_empty() {
+            return;
+        }
+
+        // 전체 문서에서 검색
+        self.search_matches.clear();
+        for (line_idx, line) in self.content.iter().enumerate() {
+            let mut start = 0;
+            while let Some(pos) = line[start..].find(&self.search_pattern) {
+                self.search_matches.push((line_idx, start + pos));
+                start += pos + 1;
+            }
+        }
+
+        // 현재 커서 이후 첫 매치로 이동
+        if !self.search_matches.is_empty() {
+            self.current_match_index = self
+                .search_matches
+                .iter()
+                .position(|(line, col)| {
+                    *line > self.cursor_line
+                        || (*line == self.cursor_line && *col >= self.cursor_col)
+                })
+                .unwrap_or(0);
+
+            let (line, col) = self.search_matches[self.current_match_index];
+            self.cursor_line = line;
+            self.cursor_col = col;
+
+            // 검색어 길이만큼 선택
+            self.selection = Some(Selection {
+                anchor_line: line,
+                anchor_col: col,
+                cursor_line: line,
+                cursor_col: col + self.search_pattern.len(),
+            });
+        }
+    }
+
+    pub fn search_next(&mut self) {
+        if self.search_matches.is_empty() {
+            return;
+        }
+
+        // 다음 매치로 순환
+        self.current_match_index = (self.current_match_index + 1) % self.search_matches.len();
+
+        let (line, col) = self.search_matches[self.current_match_index];
+        self.cursor_line = line;
+        self.cursor_col = col;
+
+        // 검색어 선택
+        self.selection = Some(Selection {
+            anchor_line: line,
+            anchor_col: col,
+            cursor_line: line,
+            cursor_col: col + self.search_pattern.len(),
+        });
+    }
+
+    pub fn search_prev(&mut self) {
+        if self.search_matches.is_empty() {
+            return;
+        }
+
+        // 이전 매치로 순환
+        if self.current_match_index == 0 {
+            self.current_match_index = self.search_matches.len() - 1;
+        } else {
+            self.current_match_index -= 1;
+        }
+
+        let (line, col) = self.search_matches[self.current_match_index];
+        self.cursor_line = line;
+        self.cursor_col = col;
+
+        // 검색어 선택
+        self.selection = Some(Selection {
+            anchor_line: line,
+            anchor_col: col,
+            cursor_line: line,
+            cursor_col: col + self.search_pattern.len(),
+        });
+    }
 }
 
 fn days_in_month(year: i32, month: u32) -> u32 {
