@@ -63,11 +63,27 @@ fn render_calendar(f: &mut Frame, model: &Model) {
     let statusbar = Paragraph::new("h/l: 달 | H/L: 연도 | Enter: 작성 | q: 종료").alignment(Alignment::Center);
     f.render_widget(statusbar, calendar_chunks[2]);
 
-    // 오른쪽: 미리보기 영역 (임시로 빈 블록)
-    let preview_block = Block::default()
-        .title("미리보기")
-        .borders(Borders::ALL);
-    f.render_widget(preview_block, main_chunks[1]);
+    // 오른쪽: 미리보기 영역
+    render_preview_pane(
+        f,
+        main_chunks[1],
+        "미리보기 테스트 콘텐츠\n\n여러 줄\n테스트",
+        "선택된 날짜 미리보기"
+    );
+}
+
+fn render_preview_pane(f: &mut Frame, area: Rect, content: &str, title: &str) {
+    let text = Paragraph::new(content)
+        .block(
+            Block::default()
+                .title(title)
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan)),
+        )
+        .wrap(Wrap { trim: false })
+        .style(Style::default());
+
+    f.render_widget(text, area);
 }
 
 fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
