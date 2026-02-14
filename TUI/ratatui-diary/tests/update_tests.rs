@@ -373,7 +373,6 @@ fn test_dismiss_error() {
 
 #[cfg(test)]
 mod complete_message_coverage {
-    use super::*;
     use ratatui_diary::{Msg, Model, message::InsertPosition, model::{EditorMode, EditorSubMode, Screen}, storage::Storage};
     use std::collections::HashSet;
     use tempfile::TempDir;
