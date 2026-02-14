@@ -1,6 +1,7 @@
 use ratatui_diary::storage::Storage;
 use tempfile::TempDir;
 use chrono::NaiveDate;
+use std::collections::HashSet;
 
 #[test]
 fn test_new_creates_entries_directory() {
@@ -51,4 +52,35 @@ fn test_load_nonexistent_diary() {
     let result = storage.load(date);
 
     assert!(result.is_err());
+}
+
+#[test]
+fn test_delete_diary() {
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+
+    let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+    storage.save(date, "test").unwrap();
+
+    storage.delete(date).unwrap();
+
+    let result = storage.load(date);
+    assert!(result.is_err());
+}
+
+#[test]
+fn test_scan_entries() {
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+
+    let date1 = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+    let date2 = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+    storage.save(date1, "test1").unwrap();
+    storage.save(date2, "test2").unwrap();
+
+    let entries = storage.scan_entries().unwrap();
+
+    assert_eq!(entries.len(), 2);
+    assert!(entries.contains(&date1));
+    assert!(entries.contains(&date2));
 }
