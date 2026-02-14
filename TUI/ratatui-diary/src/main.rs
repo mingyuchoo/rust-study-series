@@ -12,9 +12,9 @@ use ratatui::{Terminal,
               prelude::*};
 use ratatui_diary::{Model,
                     Msg,
+                    storage::Storage,
                     update,
-                    view,
-                    storage::Storage};
+                    view};
 use std::{io,
           time::Duration};
 
@@ -51,19 +51,18 @@ fn run_app<B: Backend>(terminal: &mut Terminal<B>, model: &mut Model) -> std::io
         terminal.draw(|f| view::view(f, model))?;
 
         // 이벤트 처리
-        if event::poll(Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
-                if let Some(msg) = handle_key(key, model) {
-                    // Quit 메시지 처리
-                    if matches!(msg, Msg::Quit) {
-                        break;
-                    }
+        if event::poll(Duration::from_millis(100))?
+            && let Event::Key(key) = event::read()?
+            && let Some(msg) = handle_key(key, model)
+        {
+            // Quit 메시지 처리
+            if matches!(msg, Msg::Quit) {
+                break;
+            }
 
-                    // Update 호출
-                    if let Some(cmd) = update::update(model, msg) {
-                        execute_command(cmd, model)?;
-                    }
-                }
+            // Update 호출
+            if let Some(cmd) = update::update(model, msg) {
+                execute_command(cmd, model)?;
             }
         }
     }
@@ -85,10 +84,7 @@ fn handle_key(key: KeyEvent, model: &Model) -> Option<Msg> {
     }
 }
 
-fn handle_calendar_key(
-    key: KeyEvent,
-    state: &ratatui_diary::model::CalendarState,
-) -> Option<Msg> {
+fn handle_calendar_key(key: KeyEvent, state: &ratatui_diary::model::CalendarState) -> Option<Msg> {
     use ratatui_diary::model::CalendarSubMode;
 
     // Space 서브모드 처리
@@ -126,10 +122,7 @@ fn handle_editor_key(key: KeyEvent, state: &ratatui_diary::model::EditorState) -
     }
 }
 
-fn handle_editor_normal_key(
-    key: KeyEvent,
-    state: &ratatui_diary::model::EditorState,
-) -> Option<Msg> {
+fn handle_editor_normal_key(key: KeyEvent, state: &ratatui_diary::model::EditorState) -> Option<Msg> {
     use ratatui_diary::model::EditorSubMode;
 
     // 서브모드 처리
@@ -182,18 +175,10 @@ fn handle_editor_normal_key(
         | KeyCode::Char('/') => Some(Msg::EditorEnterSearchMode),
 
         // Insert
-        | KeyCode::Char('i') => {
-            Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor))
-        },
-        | KeyCode::Char('a') => {
-            Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::AfterCursor))
-        },
-        | KeyCode::Char('o') => {
-            Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::LineBelow))
-        },
-        | KeyCode::Char('O') => {
-            Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::LineAbove))
-        },
+        | KeyCode::Char('i') => Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor)),
+        | KeyCode::Char('a') => Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::AfterCursor)),
+        | KeyCode::Char('o') => Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::LineBelow)),
+        | KeyCode::Char('O') => Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::LineAbove)),
 
         // Selection
         | KeyCode::Char('v') => Some(Msg::EditorToggleSelection),

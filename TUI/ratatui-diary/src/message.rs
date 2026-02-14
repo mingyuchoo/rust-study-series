@@ -1,7 +1,8 @@
 //! Helix 스타일 키바인딩을 위한 메시지 타입
 //!
-//! 이 모듈은 Selection-Action 모델을 구현하기 위한 52개의 메시지 variants를 정의합니다.
-//! Vim의 Action-Motion 모델과 달리, Helix는 Selection을 먼저 하고 Action을 수행합니다.
+//! 이 모듈은 Selection-Action 모델을 구현하기 위한 52개의 메시지 variants를
+//! 정의합니다. Vim의 Action-Motion 모델과 달리, Helix는 Selection을 먼저 하고
+//! Action을 수행합니다.
 
 use chrono::NaiveDate;
 use std::collections::HashSet;

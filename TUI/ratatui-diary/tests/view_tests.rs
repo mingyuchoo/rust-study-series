@@ -1,8 +1,10 @@
 use chrono::NaiveDate;
-use ratatui_diary::{
-    model::{EditorMode, EditorSubMode, Model, Screen, Selection},
-    storage::Storage,
-};
+use ratatui_diary::{model::{EditorMode,
+                            EditorSubMode,
+                            Model,
+                            Screen,
+                            Selection},
+                    storage::Storage};
 use std::collections::HashSet;
 use tempfile::TempDir;
 
@@ -98,10 +100,7 @@ fn test_editor_selection_highlight_state() {
     model.screen = Screen::Editor;
 
     // 테스트 텍스트 작성
-    model.editor_state.content = vec![
-        "Hello World".to_string(),
-        "Rust is great".to_string(),
-    ];
+    model.editor_state.content = vec!["Hello World".to_string(), "Rust is great".to_string()];
 
     // When: 선택 영역 설정 (0,0) ~ (0,5) "Hello"
     model.editor_state.selection = Some(Selection {
@@ -135,10 +134,7 @@ fn test_editor_search_matches_state() {
     let mut model = Model::new(entries, storage);
     model.screen = Screen::Editor;
 
-    model.editor_state.content = vec![
-        "test text test".to_string(),
-        "another test".to_string(),
-    ];
+    model.editor_state.content = vec!["test text test".to_string(), "another test".to_string()];
 
     // When: "test"를 검색
     model.editor_state.search_pattern = "test".to_string();
@@ -173,29 +169,20 @@ fn test_editor_submode_display_state() {
     model.editor_state.submode = Some(EditorSubMode::Goto);
 
     // Then: submode가 설정됨
-    assert_eq!(
-        model.editor_state.submode,
-        Some(EditorSubMode::Goto)
-    );
+    assert_eq!(model.editor_state.submode, Some(EditorSubMode::Goto));
 
     // When: Space 모드 활성화
     model.editor_state.submode = Some(EditorSubMode::SpaceCommand);
 
     // Then: submode가 변경됨
-    assert_eq!(
-        model.editor_state.submode,
-        Some(EditorSubMode::SpaceCommand)
-    );
+    assert_eq!(model.editor_state.submode, Some(EditorSubMode::SpaceCommand));
 
     // When: Search 모드 활성화
     model.editor_state.submode = Some(EditorSubMode::Search);
     model.editor_state.search_pattern = "test".to_string();
 
     // Then: 검색 패턴이 설정됨
-    assert_eq!(
-        model.editor_state.submode,
-        Some(EditorSubMode::Search)
-    );
+    assert_eq!(model.editor_state.submode, Some(EditorSubMode::Search));
     assert_eq!(model.editor_state.search_pattern, "test");
 }
 
@@ -209,11 +196,7 @@ fn test_editor_multi_line_selection_highlight() {
     let mut model = Model::new(entries, storage);
     model.screen = Screen::Editor;
 
-    model.editor_state.content = vec![
-        "First line".to_string(),
-        "Second line".to_string(),
-        "Third line".to_string(),
-    ];
+    model.editor_state.content = vec!["First line".to_string(), "Second line".to_string(), "Third line".to_string()];
 
     // When: 여러 줄 선택 (0,6) ~ (2,5) "line\nSecond line\nThird"
     model.editor_state.selection = Some(Selection {
@@ -247,10 +230,7 @@ fn test_editor_search_navigation_updates_selection() {
     let mut model = Model::new(entries, storage);
     model.screen = Screen::Editor;
 
-    model.editor_state.content = vec![
-        "test abc test".to_string(),
-        "test def".to_string(),
-    ];
+    model.editor_state.content = vec!["test abc test".to_string(), "test def".to_string()];
 
     model.editor_state.search_pattern = "test".to_string();
     model.editor_state.execute_search();

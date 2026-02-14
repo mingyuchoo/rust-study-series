@@ -1,9 +1,9 @@
-use crate::markdown::render_to_text;
-use crate::model::{EditorMode,
-                   EditorState,
-                   EditorSubMode,
-                   Model,
-                   Screen};
+use crate::{markdown::render_to_text,
+            model::{EditorMode,
+                    EditorState,
+                    EditorSubMode,
+                    Model,
+                    Screen}};
 use ratatui::{Frame,
               layout::{Alignment,
                        Constraint,
@@ -20,6 +20,9 @@ use ratatui::{Frame,
                         Clear,
                         Paragraph,
                         Wrap}};
+
+/// 선택 영역 타입: ((시작 라인, 시작 컬럼), (끝 라인, 끝 컬럼))
+type SelectionRange = Option<((usize, usize), (usize, usize))>;
 
 pub fn view(f: &mut Frame, model: &Model) {
     match model.screen {
@@ -38,8 +41,8 @@ fn render_calendar(f: &mut Frame, model: &Model) {
     let main_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(50),  // 왼쪽: 달력
-            Constraint::Percentage(50),  // 오른쪽: 미리보기
+            Constraint::Percentage(50), // 왼쪽: 달력
+            Constraint::Percentage(50), // 오른쪽: 미리보기
         ])
         .split(f.size());
 
@@ -69,16 +72,11 @@ fn render_calendar(f: &mut Frame, model: &Model) {
     // 오른쪽: 미리보기 영역
     let selected_date = model.calendar_state.selected_date;
     let preview_content = match model.storage.load(selected_date) {
-        Ok(content) => content,
-        Err(_) => "📝 작성된 다이어리가 없습니다.\n\nEnter를 눌러 새로 작성하세요.".to_string(),
+        | Ok(content) => content,
+        | Err(_) => "📝 작성된 다이어리가 없습니다.\n\nEnter를 눌러 새로 작성하세요.".to_string(),
     };
 
-    render_preview_pane(
-        f,
-        main_chunks[1],
-        &preview_content,
-        &format!("다이어리: {}", selected_date)
-    );
+    render_preview_pane(f, main_chunks[1], &preview_content, &format!("다이어리: {}", selected_date));
 }
 
 fn render_preview_pane(f: &mut Frame, area: Rect, content: &str, title: &str) {
@@ -89,7 +87,9 @@ fn render_preview_pane(f: &mut Frame, area: Rect, content: &str, title: &str) {
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Cyan)),
         )
-        .wrap(Wrap { trim: false })
+        .wrap(Wrap {
+            trim: false,
+        })
         .style(Style::default());
 
     f.render_widget(text, area);
@@ -103,7 +103,7 @@ fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
     let month = model.calendar_state.current_month;
 
     // 요일 헤더
-    let weekdays = vec!["일", "월", "화", "수", "목", "금", "토"];
+    let weekdays = ["일", "월", "화", "수", "목", "금", "토"];
     let mut lines = vec![Line::from(
         weekdays
             .iter()
@@ -127,9 +127,9 @@ fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
     let mut day = 1;
 
     // 첫 주 빈 칸 채우기
-    for i in weekday .. 7 {
+    for slot in week.iter_mut().take(7).skip(weekday) {
         let date = NaiveDate::from_ymd_opt(year, month, day).unwrap();
-        week[i] = format_day(day, date, model);
+        *slot = format_day(day, date, model);
         day += 1;
     }
     lines.push(Line::from(week.clone()));
@@ -137,10 +137,10 @@ fn render_calendar_grid(f: &mut Frame, area: Rect, model: &Model) {
     // 나머지 주
     while day <= days_in_month {
         week = vec![Span::raw("    "); 7];
-        for i in 0 .. 7 {
+        for slot in week.iter_mut().take(7) {
             if day <= days_in_month {
                 let date = NaiveDate::from_ymd_opt(year, month, day).unwrap();
-                week[i] = format_day(day, date, model);
+                *slot = format_day(day, date, model);
                 day += 1;
             }
         }
@@ -177,8 +177,8 @@ fn render_editor(f: &mut Frame, model: &Model) {
     let main_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(50),  // 왼쪽: 에디터
-            Constraint::Percentage(50),  // 오른쪽: Markdown 미리보기
+            Constraint::Percentage(50), // 왼쪽: 에디터
+            Constraint::Percentage(50), // 오른쪽: Markdown 미리보기
         ])
         .split(f.size());
 
@@ -193,33 +193,33 @@ fn render_editor(f: &mut Frame, model: &Model) {
         .split(main_chunks[0]);
 
     // 헤더: 날짜
-    let header = Paragraph::new(model.editor_state.date.to_string())
-        .style(Style::default().add_modifier(Modifier::BOLD));
+    let header = Paragraph::new(model.editor_state.date.to_string()).style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(header, editor_chunks[0]);
 
     // 에디터 내용 - 스타일이 적용된 라인들로 렌더링
     let styled_lines = render_editor_content(&model.editor_state);
-    let text = Paragraph::new(styled_lines).wrap(Wrap { trim: false });
+    let text = Paragraph::new(styled_lines).wrap(Wrap {
+        trim: false,
+    });
     f.render_widget(text, editor_chunks[1]);
 
     // 커서 표시 (Insert와 Normal 모드 모두)
     match model.editor_state.mode {
-        EditorMode::Insert => {
+        | EditorMode::Insert => {
             let cursor_x = editor_chunks[1].x + model.editor_state.cursor_col as u16;
             let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
             f.set_cursor(cursor_x, cursor_y);
-        }
-        EditorMode::Normal => {
+        },
+        | EditorMode::Normal => {
             let cursor_x = editor_chunks[1].x + model.editor_state.cursor_col as u16;
             let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
             f.set_cursor(cursor_x, cursor_y);
-        }
+        },
     }
 
     // 하단바: 모드와 submode 표시
     let mode_text = build_status_text(&model.editor_state);
-    let statusbar = Paragraph::new(mode_text)
-        .style(Style::default().add_modifier(Modifier::BOLD));
+    let statusbar = Paragraph::new(mode_text).style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(statusbar, editor_chunks[2]);
 
     // 오른쪽: Markdown 미리보기
@@ -237,7 +237,9 @@ fn render_markdown_preview(f: &mut Frame, area: Rect, markdown: &str) {
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Cyan)),
         )
-        .wrap(Wrap { trim: false });
+        .wrap(Wrap {
+            trim: false,
+        });
 
     f.render_widget(preview, area);
 }
@@ -286,7 +288,9 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 fn render_editor_content(editor_state: &EditorState) -> Vec<Line<'static>> {
     let selection_range = editor_state.get_selection_range();
 
-    editor_state.content.iter()
+    editor_state
+        .content
+        .iter()
         .enumerate()
         .map(|(line_idx, line_text)| {
             let mut spans = Vec::new();
@@ -324,7 +328,7 @@ fn render_editor_content(editor_state: &EditorState) -> Vec<Line<'static>> {
 fn get_char_style(
     line: usize,
     col: usize,
-    selection_range: &Option<((usize, usize), (usize, usize))>,
+    selection_range: &SelectionRange,
     search_matches: &[(usize, usize)],
     current_match_index: usize,
     search_pattern: &str,
@@ -332,42 +336,25 @@ fn get_char_style(
     let pattern_len = search_pattern.len();
 
     // 검색 매치 확인
-    let (is_match, is_current) = is_search_match(
-        line,
-        col,
-        search_matches,
-        current_match_index,
-        pattern_len,
-    );
+    let (is_match, is_current) = is_search_match(line, col, search_matches, current_match_index, pattern_len);
 
     // 선택 영역 확인
     let in_selection = is_in_selection(line, col, selection_range);
 
     // 우선순위: 현재 검색 매치 > 선택 영역 > 다른 검색 매치 > 기본
     if is_current {
-        Style::default()
-            .bg(Color::LightYellow)
-            .fg(Color::Black)
-            .add_modifier(Modifier::BOLD)
+        Style::default().bg(Color::LightYellow).fg(Color::Black).add_modifier(Modifier::BOLD)
     } else if in_selection {
-        Style::default()
-            .bg(Color::DarkGray)
-            .fg(Color::White)
+        Style::default().bg(Color::DarkGray).fg(Color::White)
     } else if is_match {
-        Style::default()
-            .bg(Color::Yellow)
-            .fg(Color::Black)
+        Style::default().bg(Color::Yellow).fg(Color::Black)
     } else {
         Style::default()
     }
 }
 
 /// 특정 위치가 선택 영역 내에 있는지 확인
-fn is_in_selection(
-    line: usize,
-    col: usize,
-    selection_range: &Option<((usize, usize), (usize, usize))>,
-) -> bool {
+fn is_in_selection(line: usize, col: usize, selection_range: &SelectionRange) -> bool {
     if let Some(((start_line, start_col), (end_line, end_col))) = selection_range {
         if line < *start_line || line > *end_line {
             return false;
@@ -392,13 +379,7 @@ fn is_in_selection(
 }
 
 /// 특정 위치가 검색 매치인지 확인 (현재 매치인지도 함께 반환)
-fn is_search_match(
-    line: usize,
-    col: usize,
-    matches: &[(usize, usize)],
-    current_match_index: usize,
-    pattern_len: usize,
-) -> (bool, bool) {
+fn is_search_match(line: usize, col: usize, matches: &[(usize, usize)], current_match_index: usize, pattern_len: usize) -> (bool, bool) {
     for (idx, (match_line, match_col)) in matches.iter().enumerate() {
         if *match_line == line && col >= *match_col && col < match_col + pattern_len {
             let is_current = idx == current_match_index;
@@ -411,27 +392,23 @@ fn is_search_match(
 /// 상태바 텍스트 생성 (모드, submode, 검색 패턴 등)
 fn build_status_text(editor_state: &EditorState) -> String {
     let mode_text = match &editor_state.mode {
-        EditorMode::Normal => "-- NORMAL --",
-        EditorMode::Insert => "-- INSERT --",
+        | EditorMode::Normal => "-- NORMAL --",
+        | EditorMode::Insert => "-- INSERT --",
     };
 
     // Submode 표시
     let submode_text = match &editor_state.submode {
-        Some(EditorSubMode::Goto) => " [GOTO]",
-        Some(EditorSubMode::SpaceCommand) => " [SPACE]",
-        Some(EditorSubMode::Search) => {
+        | Some(EditorSubMode::Goto) => " [GOTO]",
+        | Some(EditorSubMode::SpaceCommand) => " [SPACE]",
+        | Some(EditorSubMode::Search) => {
             return format!("/{}", editor_state.search_pattern);
-        }
-        None => "",
+        },
+        | None => "",
     };
 
     // 검색 매치 정보 표시
     let search_info = if !editor_state.search_matches.is_empty() {
-        format!(
-            " | 검색: {}/{} 매치",
-            editor_state.current_match_index + 1,
-            editor_state.search_matches.len()
-        )
+        format!(" | 검색: {}/{} 매치", editor_state.current_match_index + 1, editor_state.search_matches.len())
     } else {
         String::new()
     };
