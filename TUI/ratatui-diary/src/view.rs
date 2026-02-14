@@ -1,5 +1,7 @@
 use crate::markdown::render_to_text;
 use crate::model::{EditorMode,
+                   EditorState,
+                   EditorSubMode,
                    Model,
                    Screen};
 use ratatui::{Frame,
@@ -195,25 +197,27 @@ fn render_editor(f: &mut Frame, model: &Model) {
         .style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(header, editor_chunks[0]);
 
-    // 에디터 내용
-    let content = model.editor_state.get_content();
-    let text = Paragraph::new(content.clone()).wrap(Wrap { trim: false });
+    // 에디터 내용 - 스타일이 적용된 라인들로 렌더링
+    let styled_lines = render_editor_content(&model.editor_state);
+    let text = Paragraph::new(styled_lines).wrap(Wrap { trim: false });
     f.render_widget(text, editor_chunks[1]);
 
-    // 커서 표시 (Insert 모드)
-    if model.editor_state.mode == EditorMode::Insert {
-        let cursor_x = editor_chunks[1].x + model.editor_state.cursor_col as u16;
-        let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
-        f.set_cursor(cursor_x, cursor_y);
+    // 커서 표시 (Insert와 Normal 모드 모두)
+    match model.editor_state.mode {
+        EditorMode::Insert => {
+            let cursor_x = editor_chunks[1].x + model.editor_state.cursor_col as u16;
+            let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
+            f.set_cursor(cursor_x, cursor_y);
+        }
+        EditorMode::Normal => {
+            let cursor_x = editor_chunks[1].x + model.editor_state.cursor_col as u16;
+            let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
+            f.set_cursor(cursor_x, cursor_y);
+        }
     }
 
-    // 하단바: 모드 표시
-    let mode_text = match &model.editor_state.mode {
-        EditorMode::Normal => "-- NORMAL --".to_string(),
-        EditorMode::Insert => "-- INSERT --".to_string(),
-        // TODO: Helix 스타일로 재작성 예정
-        // EditorMode::Command(cmd) => format!(":{}", cmd),
-    };
+    // 하단바: 모드와 submode 표시
+    let mode_text = build_status_text(&model.editor_state);
     let statusbar = Paragraph::new(mode_text)
         .style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(statusbar, editor_chunks[2]);
@@ -276,4 +280,161 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+/// 에디터 내용을 스타일이 적용된 Line 벡터로 변환
+fn render_editor_content(editor_state: &EditorState) -> Vec<Line<'static>> {
+    let selection_range = editor_state.get_selection_range();
+
+    editor_state.content.iter()
+        .enumerate()
+        .map(|(line_idx, line_text)| {
+            let mut spans = Vec::new();
+            let chars: Vec<char> = line_text.chars().collect();
+
+            let mut col_idx = 0;
+            while col_idx < chars.len() {
+                let ch = chars[col_idx];
+
+                // 현재 위치의 스타일 결정
+                let style = get_char_style(
+                    line_idx,
+                    col_idx,
+                    &selection_range,
+                    &editor_state.search_matches,
+                    editor_state.current_match_index,
+                    &editor_state.search_pattern,
+                );
+
+                spans.push(Span::styled(ch.to_string(), style));
+                col_idx += 1;
+            }
+
+            // 빈 줄 처리
+            if spans.is_empty() {
+                spans.push(Span::raw(" "));
+            }
+
+            Line::from(spans)
+        })
+        .collect()
+}
+
+/// 문자의 스타일 결정 (선택 영역, 검색 매치 등)
+fn get_char_style(
+    line: usize,
+    col: usize,
+    selection_range: &Option<((usize, usize), (usize, usize))>,
+    search_matches: &[(usize, usize)],
+    current_match_index: usize,
+    search_pattern: &str,
+) -> Style {
+    let pattern_len = search_pattern.len();
+
+    // 검색 매치 확인
+    let (is_match, is_current) = is_search_match(
+        line,
+        col,
+        search_matches,
+        current_match_index,
+        pattern_len,
+    );
+
+    // 선택 영역 확인
+    let in_selection = is_in_selection(line, col, selection_range);
+
+    // 우선순위: 현재 검색 매치 > 선택 영역 > 다른 검색 매치 > 기본
+    if is_current {
+        Style::default()
+            .bg(Color::LightYellow)
+            .fg(Color::Black)
+            .add_modifier(Modifier::BOLD)
+    } else if in_selection {
+        Style::default()
+            .bg(Color::DarkGray)
+            .fg(Color::White)
+    } else if is_match {
+        Style::default()
+            .bg(Color::Yellow)
+            .fg(Color::Black)
+    } else {
+        Style::default()
+    }
+}
+
+/// 특정 위치가 선택 영역 내에 있는지 확인
+fn is_in_selection(
+    line: usize,
+    col: usize,
+    selection_range: &Option<((usize, usize), (usize, usize))>,
+) -> bool {
+    if let Some(((start_line, start_col), (end_line, end_col))) = selection_range {
+        if line < *start_line || line > *end_line {
+            return false;
+        }
+
+        if *start_line == *end_line {
+            // 같은 줄
+            col >= *start_col && col < *end_col
+        } else if line == *start_line {
+            // 시작 줄
+            col >= *start_col
+        } else if line == *end_line {
+            // 끝 줄
+            col < *end_col
+        } else {
+            // 중간 줄
+            true
+        }
+    } else {
+        false
+    }
+}
+
+/// 특정 위치가 검색 매치인지 확인 (현재 매치인지도 함께 반환)
+fn is_search_match(
+    line: usize,
+    col: usize,
+    matches: &[(usize, usize)],
+    current_match_index: usize,
+    pattern_len: usize,
+) -> (bool, bool) {
+    for (idx, (match_line, match_col)) in matches.iter().enumerate() {
+        if *match_line == line && col >= *match_col && col < match_col + pattern_len {
+            let is_current = idx == current_match_index;
+            return (true, is_current);
+        }
+    }
+    (false, false)
+}
+
+/// 상태바 텍스트 생성 (모드, submode, 검색 패턴 등)
+fn build_status_text(editor_state: &EditorState) -> String {
+    let mode_text = match &editor_state.mode {
+        EditorMode::Normal => "-- NORMAL --",
+        EditorMode::Insert => "-- INSERT --",
+    };
+
+    // Submode 표시
+    let submode_text = match &editor_state.submode {
+        Some(EditorSubMode::Goto) => " [GOTO]",
+        Some(EditorSubMode::SpaceCommand) => " [SPACE]",
+        Some(EditorSubMode::Search) => {
+            return format!("/{}", editor_state.search_pattern);
+        }
+        None => "",
+    };
+
+    // 검색 매치 정보 표시
+    let search_info = if !editor_state.search_matches.is_empty() {
+        format!(
+            " | 검색: {}/{} 매치",
+            editor_state.current_match_index + 1,
+            editor_state.search_matches.len()
+        )
+    } else {
+        String::new()
+    };
+
+    format!("{}{}{}", mode_text, submode_text, search_info)
 }
