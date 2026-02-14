@@ -252,3 +252,107 @@ fn test_editor_search_navigation_updates_selection() {
     // Then: 선택 영역이 이전 매치로 돌아감
     assert_eq!(model.editor_state.current_match_index, 0);
 }
+
+#[cfg(test)]
+mod view_rendering_complete {
+    use ratatui::backend::TestBackend;
+    use ratatui::Terminal;
+    use ratatui_diary::{Model, storage::Storage, view};
+    use std::collections::HashSet;
+    use tempfile::TempDir;
+
+    fn setup_terminal() -> Terminal<TestBackend> {
+        let backend = TestBackend::new(80, 24);
+        Terminal::new(backend).unwrap()
+    }
+
+    #[test]
+    fn test_render_calendar_view() {
+        // Given: Calendar 화면
+        let temp = TempDir::new().unwrap();
+        let storage = Storage::with_dir(temp.path()).unwrap();
+        let model = Model::new(HashSet::new(), storage);
+        let mut terminal = setup_terminal();
+
+        // When: 렌더링
+        terminal.draw(|f| {
+            view::view(f, &model);
+        }).unwrap();
+
+        // Then: 에러 없이 완료
+        assert!(true);
+    }
+
+    #[test]
+    fn test_render_editor_view() {
+        // Given: Editor 화면
+        let temp = TempDir::new().unwrap();
+        let storage = Storage::with_dir(temp.path()).unwrap();
+        let mut model = Model::new(HashSet::new(), storage);
+        model.screen = ratatui_diary::model::Screen::Editor;
+        let mut terminal = setup_terminal();
+
+        // When: 렌더링
+        terminal.draw(|f| {
+            view::view(f, &model);
+        }).unwrap();
+
+        // Then: 에러 없이 완료
+        assert!(true);
+    }
+
+    #[test]
+    fn test_render_with_error_popup() {
+        // Given: 에러 팝업이 표시된 상태
+        let temp = TempDir::new().unwrap();
+        let storage = Storage::with_dir(temp.path()).unwrap();
+        let mut model = Model::new(HashSet::new(), storage);
+        model.show_error_popup = true;
+        model.error_message = Some("Test error".to_string());
+        let mut terminal = setup_terminal();
+
+        // When: 렌더링
+        terminal.draw(|f| {
+            view::view(f, &model);
+        }).unwrap();
+
+        // Then: 에러 없이 완료
+        assert!(true);
+    }
+
+    #[test]
+    fn test_render_small_terminal() {
+        // Given: 작은 터미널 (10x5)
+        let backend = TestBackend::new(10, 5);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let temp = TempDir::new().unwrap();
+        let storage = Storage::with_dir(temp.path()).unwrap();
+        let model = Model::new(HashSet::new(), storage);
+
+        // When: 렌더링
+        terminal.draw(|f| {
+            view::view(f, &model);
+        }).unwrap();
+
+        // Then: 에러 없이 완료 (레이아웃 조정됨)
+        assert!(true);
+    }
+
+    #[test]
+    fn test_render_large_terminal() {
+        // Given: 큰 터미널 (200x50)
+        let backend = TestBackend::new(200, 50);
+        let mut terminal = Terminal::new(backend).unwrap();
+        let temp = TempDir::new().unwrap();
+        let storage = Storage::with_dir(temp.path()).unwrap();
+        let model = Model::new(HashSet::new(), storage);
+
+        // When: 렌더링
+        terminal.draw(|f| {
+            view::view(f, &model);
+        }).unwrap();
+
+        // Then: 에러 없이 완료
+        assert!(true);
+    }
+}
