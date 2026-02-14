@@ -243,6 +243,48 @@ impl EditorState {
     }
 
     pub fn get_content(&self) -> String { self.content.join("\n") }
+
+    pub fn get_selection_range(&self) -> Option<((usize, usize), (usize, usize))> {
+        self.selection.as_ref().map(|sel| {
+            let start = if sel.anchor_line < sel.cursor_line
+                || (sel.anchor_line == sel.cursor_line && sel.anchor_col < sel.cursor_col)
+            {
+                (sel.anchor_line, sel.anchor_col)
+            } else {
+                (sel.cursor_line, sel.cursor_col)
+            };
+
+            let end = if sel.anchor_line > sel.cursor_line
+                || (sel.anchor_line == sel.cursor_line && sel.anchor_col > sel.cursor_col)
+            {
+                (sel.anchor_line, sel.anchor_col)
+            } else {
+                (sel.cursor_line, sel.cursor_col)
+            };
+
+            (start, end)
+        })
+    }
+
+    pub fn get_selected_text(&self) -> Option<String> {
+        let ((start_line, start_col), (end_line, end_col)) = self.get_selection_range()?;
+
+        if start_line == end_line {
+            // 같은 줄
+            Some(self.content[start_line][start_col..end_col].to_string())
+        } else {
+            // 여러 줄
+            let mut result = String::new();
+            result.push_str(&self.content[start_line][start_col..]);
+            result.push('\n');
+            for line in (start_line + 1)..end_line {
+                result.push_str(&self.content[line]);
+                result.push('\n');
+            }
+            result.push_str(&self.content[end_line][..end_col]);
+            Some(result)
+        }
+    }
 }
 
 fn days_in_month(year: i32, month: u32) -> u32 {

@@ -108,4 +108,70 @@ mod selection_tests {
         let state = EditorState::new(date);
         assert!(state.selection.is_none());
     }
+
+    #[test]
+    fn test_get_selection_range_forward() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 2,
+            cursor_line: 0,
+            cursor_col: 5,
+        });
+
+        let range = state.get_selection_range();
+        assert_eq!(range, Some(((0, 2), (0, 5))));
+    }
+
+    #[test]
+    fn test_get_selection_range_backward() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 5,
+            cursor_line: 0,
+            cursor_col: 2,
+        });
+
+        let range = state.get_selection_range();
+        assert_eq!(range, Some(((0, 2), (0, 5))));
+    }
+
+    #[test]
+    fn test_get_selected_text_single_line() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["Hello World".to_string()];
+        state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 0,
+            cursor_line: 0,
+            cursor_col: 5,
+        });
+
+        let text = state.get_selected_text();
+        assert_eq!(text, Some("Hello".to_string()));
+    }
+
+    #[test]
+    fn test_get_selected_text_multi_line() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec![
+            "First line".to_string(),
+            "Second line".to_string(),
+            "Third line".to_string(),
+        ];
+        state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 6,
+            cursor_line: 2,
+            cursor_col: 5,
+        });
+
+        let text = state.get_selected_text();
+        assert_eq!(text, Some("line\nSecond line\nThird".to_string()));
+    }
 }
