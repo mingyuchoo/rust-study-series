@@ -374,6 +374,108 @@ impl EditorState {
         self.selection = None;
         self.is_modified = true;
     }
+
+    pub fn move_word_next(&mut self) {
+        if self.cursor_line >= self.content.len() {
+            return;
+        }
+
+        let line = &self.content[self.cursor_line];
+        let mut chars = line[self.cursor_col..].char_indices().peekable();
+
+        // 현재 단어의 나머지 건너뛰기
+        while let Some((_, ch)) = chars.peek() {
+            if ch.is_whitespace() {
+                break;
+            }
+            chars.next();
+        }
+
+        // 공백 건너뛰기
+        while let Some((_, ch)) = chars.peek() {
+            if !ch.is_whitespace() {
+                break;
+            }
+            chars.next();
+        }
+
+        // 다음 단어 시작 위치
+        if let Some((idx, _)) = chars.next() {
+            self.cursor_col += idx;
+        } else {
+            // 줄 끝
+            self.cursor_col = line.len();
+        }
+    }
+
+    pub fn move_word_prev(&mut self) {
+        if self.cursor_line >= self.content.len() || self.cursor_col == 0 {
+            return;
+        }
+
+        let line = &self.content[self.cursor_line];
+        let before = &line[..self.cursor_col];
+        let mut pos = before.len();
+
+        // 현재 위치 뒤로 이동
+        if pos > 0 {
+            pos -= 1;
+        }
+
+        // 공백 건너뛰기
+        while pos > 0 && before.chars().nth(pos).map_or(false, |c| c.is_whitespace()) {
+            pos -= 1;
+        }
+
+        // 단어 시작까지 이동
+        while pos > 0 && before.chars().nth(pos - 1).map_or(false, |c| !c.is_whitespace()) {
+            pos -= 1;
+        }
+
+        self.cursor_col = pos;
+    }
+
+    pub fn move_word_end(&mut self) {
+        if self.cursor_line >= self.content.len() {
+            return;
+        }
+
+        let line = &self.content[self.cursor_line];
+        if self.cursor_col >= line.len() {
+            return;
+        }
+
+        let mut pos = self.cursor_col;
+
+        // 현재 단어의 끝에 있다면 다음 단어로 이동
+        let current_is_word = line.chars().nth(pos).map_or(false, |c| !c.is_whitespace());
+        let next_is_space = line.chars().nth(pos + 1).map_or(true, |c| c.is_whitespace());
+
+        if current_is_word && next_is_space {
+            // 현재 단어 끝에 있으므로 공백 건너뛰고 다음 단어로
+            pos += 1;
+            while pos < line.len() && line.chars().nth(pos).map_or(false, |c| c.is_whitespace()) {
+                pos += 1;
+            }
+        }
+
+        // 공백이면 건너뛰기
+        while pos < line.len() && line.chars().nth(pos).map_or(false, |c| c.is_whitespace()) {
+            pos += 1;
+        }
+
+        // 단어 끝까지 이동
+        while pos < line.len() && line.chars().nth(pos).map_or(false, |c| !c.is_whitespace()) {
+            pos += 1;
+        }
+
+        // 마지막 문자 위치로 (끝이 아니라 마지막 문자)
+        if pos > 0 {
+            pos -= 1;
+        }
+
+        self.cursor_col = pos;
+    }
 }
 
 fn days_in_month(year: i32, month: u32) -> u32 {

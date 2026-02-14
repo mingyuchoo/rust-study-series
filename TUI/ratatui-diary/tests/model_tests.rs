@@ -338,3 +338,53 @@ mod undo_redo_tests {
         assert_eq!(state.content, before_redo);
     }
 }
+
+#[cfg(test)]
+mod word_navigation_tests {
+    use super::*;
+
+    #[test]
+    fn test_word_next() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["Hello World Test".to_string()];
+        state.cursor_line = 0;
+        state.cursor_col = 0;
+
+        state.move_word_next();
+        assert_eq!(state.cursor_col, 6); // "World"의 시작
+
+        state.move_word_next();
+        assert_eq!(state.cursor_col, 12); // "Test"의 시작
+    }
+
+    #[test]
+    fn test_word_prev() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["Hello World Test".to_string()];
+        state.cursor_line = 0;
+        state.cursor_col = 12;
+
+        state.move_word_prev();
+        assert_eq!(state.cursor_col, 6); // "World"의 시작
+
+        state.move_word_prev();
+        assert_eq!(state.cursor_col, 0); // "Hello"의 시작
+    }
+
+    #[test]
+    fn test_word_end() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["Hello World Test".to_string()];
+        state.cursor_line = 0;
+        state.cursor_col = 0;
+
+        state.move_word_end();
+        assert_eq!(state.cursor_col, 4); // "Hello"의 끝 (마지막 문자 인덱스)
+
+        state.move_word_end();
+        assert_eq!(state.cursor_col, 10); // "World"의 끝
+    }
+}
