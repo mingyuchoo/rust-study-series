@@ -1,10 +1,10 @@
-use crate::model::{Model, Screen};
+use crate::model::{Model, Screen, EditorMode};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, Wrap},
 };
 
 pub fn view(f: &mut Frame, model: &Model) {
@@ -119,8 +119,42 @@ fn format_day(day: u32, date: chrono::NaiveDate, model: &Model) -> Span<'static>
     Span::styled(format!("{:>2}{} ", day, marker), style)
 }
 
-fn render_editor(f: &mut Frame, _model: &Model) {
-    // TODO: 다음 태스크에서 구현
-    let placeholder = Paragraph::new("Editor (Coming soon)");
-    f.render_widget(placeholder, f.size());
+fn render_editor(f: &mut Frame, model: &Model) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(1),   // 날짜 헤더
+            Constraint::Min(0),      // 에디터 영역
+            Constraint::Length(1),   // 모드 표시
+        ])
+        .split(f.size());
+
+    // 헤더: 날짜
+    let header = Paragraph::new(model.editor_state.date.to_string())
+        .style(Style::default().add_modifier(Modifier::BOLD));
+    f.render_widget(header, chunks[0]);
+
+    // 에디터 내용
+    let content = model.editor_state.get_content();
+    let text = Paragraph::new(content)
+        .wrap(Wrap { trim: false });
+    f.render_widget(text, chunks[1]);
+
+    // 커서 표시 (Insert 모드)
+    if model.editor_state.mode == EditorMode::Insert {
+        // 커서 위치 계산
+        let cursor_x = chunks[1].x + model.editor_state.cursor_col as u16;
+        let cursor_y = chunks[1].y + model.editor_state.cursor_line as u16;
+        f.set_cursor(cursor_x, cursor_y);
+    }
+
+    // 하단바: 모드 표시
+    let mode_text = match &model.editor_state.mode {
+        EditorMode::Normal => "-- NORMAL --".to_string(),
+        EditorMode::Insert => "-- INSERT --".to_string(),
+        EditorMode::Command(cmd) => format!(":{}", cmd),
+    };
+    let statusbar = Paragraph::new(mode_text)
+        .style(Style::default().add_modifier(Modifier::BOLD));
+    f.render_widget(statusbar, chunks[2]);
 }
