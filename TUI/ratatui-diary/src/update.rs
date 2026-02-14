@@ -1,4 +1,4 @@
-use crate::model::{Model, Screen, EditorMode, EditorState};
+use crate::model::{EditorMode, Model, Screen, Selection};
 use crate::message::Msg;
 use chrono::NaiveDate;
 
@@ -17,6 +17,40 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         Msg::DismissError => {
             model.show_error_popup = false;
             model.error_message = None;
+        }
+
+        // 에디터 - Selection
+        Msg::EditorToggleSelection => {
+            if model.screen == Screen::Editor {
+                let state = &mut model.editor_state;
+                if state.selection.is_some() {
+                    state.selection = None;
+                } else {
+                    state.selection = Some(Selection {
+                        anchor_line: state.cursor_line,
+                        anchor_col: state.cursor_col,
+                        cursor_line: state.cursor_line,
+                        cursor_col: state.cursor_col,
+                    });
+                }
+            }
+        }
+
+        Msg::EditorSelectLine => {
+            if model.screen == Screen::Editor {
+                let state = &mut model.editor_state;
+                let line_len = if state.cursor_line < state.content.len() {
+                    state.content[state.cursor_line].len()
+                } else {
+                    0
+                };
+                state.selection = Some(Selection {
+                    anchor_line: state.cursor_line,
+                    anchor_col: 0,
+                    cursor_line: state.cursor_line,
+                    cursor_col: line_len,
+                });
+            }
         }
 
         // 달력 네비게이션
@@ -40,26 +74,27 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
                 model.calendar_state.move_cursor_down();
             }
         }
-        Msg::CalendarNextMonth => {
-            if model.screen == Screen::Calendar {
-                model.calendar_state.next_month();
-            }
-        }
-        Msg::CalendarPrevMonth => {
-            if model.screen == Screen::Calendar {
-                model.calendar_state.prev_month();
-            }
-        }
-        Msg::CalendarNextYear => {
-            if model.screen == Screen::Calendar {
-                model.calendar_state.next_year();
-            }
-        }
-        Msg::CalendarPrevYear => {
-            if model.screen == Screen::Calendar {
-                model.calendar_state.prev_year();
-            }
-        }
+        // TODO: Vi-style handlers - 나중에 제거됨
+        // Msg::CalendarNextMonth => {
+        //     if model.screen == Screen::Calendar {
+        //         model.calendar_state.next_month();
+        //     }
+        // }
+        // Msg::CalendarPrevMonth => {
+        //     if model.screen == Screen::Calendar {
+        //         model.calendar_state.prev_month();
+        //     }
+        // }
+        // Msg::CalendarNextYear => {
+        //     if model.screen == Screen::Calendar {
+        //         model.calendar_state.next_year();
+        //     }
+        // }
+        // Msg::CalendarPrevYear => {
+        //     if model.screen == Screen::Calendar {
+        //         model.calendar_state.prev_year();
+        //     }
+        // }
         Msg::CalendarSelectDate => {
             if model.screen == Screen::Calendar {
                 let date = model.calendar_state.selected_date;
@@ -70,28 +105,29 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         }
 
         // 에디터 - Normal 모드
-        Msg::EditorEnterInsertMode => {
-            if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                model.editor_state.mode = EditorMode::Insert;
-            }
-        }
+        // TODO: Vi-style handlers - 나중에 제거됨
+        // Msg::EditorEnterInsertMode => {
+        //     if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
+        //         model.editor_state.mode = EditorMode::Insert;
+        //     }
+        // }
         Msg::EditorEnterNormalMode => {
             if model.screen == Screen::Editor {
                 model.editor_state.mode = EditorMode::Normal;
             }
         }
-        Msg::EditorDeleteLine => {
-            if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                let date = model.editor_state.date;
-                return Some(Command::DeleteDiary(date));
-            }
-        }
-        Msg::EditorStartCommand => {
-            if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                // TODO: Helix 스타일로 재작성 예정
-                // model.editor_state.mode = EditorMode::Command(String::new());
-            }
-        }
+        // Msg::EditorDeleteLine => {
+        //     if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
+        //         let date = model.editor_state.date;
+        //         return Some(Command::DeleteDiary(date));
+        //     }
+        // }
+        // Msg::EditorStartCommand => {
+        //     if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
+        //         // TODO: Helix 스타일로 재작성 예정
+        //         // model.editor_state.mode = EditorMode::Command(String::new());
+        //     }
+        // }
 
         // 에디터 - Insert 모드
         Msg::EditorInsertChar(c) => {
@@ -111,42 +147,42 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         }
 
         // 에디터 - Command 모드
-        // TODO: Helix 스타일로 재작성 예정
-        Msg::EditorCommandChar(_c) => {
-            // if let EditorMode::Command(ref mut cmd) = model.editor_state.mode {
-            //     cmd.push(c);
-            // }
-        }
-        Msg::EditorExecuteCommand => {
-            // if let EditorMode::Command(ref cmd) = model.editor_state.mode.clone() {
-            //     let date = model.editor_state.date;
-            //     let content = model.editor_state.get_content();
+        // TODO: Vi-style handlers - 나중에 제거됨
+        // Msg::EditorCommandChar(_c) => {
+        //     // if let EditorMode::Command(ref mut cmd) = model.editor_state.mode {
+        //     //     cmd.push(c);
+        //     // }
+        // }
+        // Msg::EditorExecuteCommand => {
+        //     // if let EditorMode::Command(ref cmd) = model.editor_state.mode.clone() {
+        //     //     let date = model.editor_state.date;
+        //     //     let content = model.editor_state.get_content();
 
-            //     match cmd.as_str() {
-            //         "w" => {
-            //             model.editor_state.mode = EditorMode::Normal;
-            //             return Some(Command::SaveDiary(date, content));
-            //         }
-            //         "q" => {
-            //             model.screen = Screen::Calendar;
-            //             model.editor_state = EditorState::new(date);
-            //         }
-            //         "wq" => {
-            //             model.screen = Screen::Calendar;
-            //             let old_state = std::mem::replace(
-            //                 &mut model.editor_state,
-            //                 EditorState::new(date)
-            //             );
-            //             return Some(Command::SaveDiary(date, old_state.get_content()));
-            //         }
-            //         _ => {
-            //             model.error_message = Some(format!("Unknown command: {}", cmd));
-            //             model.show_error_popup = true;
-            //         }
-            //     }
-            //     model.editor_state.mode = EditorMode::Normal;
-            // }
-        }
+        //     //     match cmd.as_str() {
+        //     //         "w" => {
+        //     //             model.editor_state.mode = EditorMode::Normal;
+        //     //             return Some(Command::SaveDiary(date, content));
+        //     //         }
+        //     //         "q" => {
+        //     //             model.screen = Screen::Calendar;
+        //     //             model.editor_state = EditorState::new(date);
+        //     //         }
+        //     //         "wq" => {
+        //     //             model.screen = Screen::Calendar;
+        //     //             let old_state = std::mem::replace(
+        //     //                 &mut model.editor_state,
+        //     //                 EditorState::new(date)
+        //     //             );
+        //     //             return Some(Command::SaveDiary(date, old_state.get_content()));
+        //     //         }
+        //     //         _ => {
+        //     //             model.error_message = Some(format!("Unknown command: {}", cmd));
+        //     //             model.show_error_popup = true;
+        //     //         }
+        //     //     }
+        //     //     model.editor_state.mode = EditorMode::Normal;
+        //     // }
+        // }
         Msg::EditorBack => {
             if model.screen == Screen::Editor {
                 model.screen = Screen::Calendar;

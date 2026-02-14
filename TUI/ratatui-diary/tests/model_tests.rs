@@ -175,3 +175,64 @@ mod selection_tests {
         assert_eq!(text, Some("line\nSecond line\nThird".to_string()));
     }
 }
+
+#[cfg(test)]
+mod update_selection_tests {
+    use super::*;
+    use ratatui_diary::{model::Selection, update, Msg};
+
+    #[test]
+    fn test_selection_toggle_on() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut model = Model::new(HashSet::new(), Storage::new().unwrap());
+        model.screen = Screen::Editor;
+        model.editor_state = EditorState::new(date);
+        model.editor_state.cursor_line = 0;
+        model.editor_state.cursor_col = 5;
+
+        update::update(&mut model, Msg::EditorToggleSelection);
+
+        assert!(model.editor_state.selection.is_some());
+        let sel = model.editor_state.selection.unwrap();
+        assert_eq!(sel.anchor_line, 0);
+        assert_eq!(sel.anchor_col, 5);
+    }
+
+    #[test]
+    fn test_selection_toggle_off() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut model = Model::new(HashSet::new(), Storage::new().unwrap());
+        model.screen = Screen::Editor;
+        model.editor_state = EditorState::new(date);
+        model.editor_state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 0,
+            cursor_line: 0,
+            cursor_col: 5,
+        });
+
+        update::update(&mut model, Msg::EditorToggleSelection);
+
+        assert!(model.editor_state.selection.is_none());
+    }
+
+    #[test]
+    fn test_select_line() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut model = Model::new(HashSet::new(), Storage::new().unwrap());
+        model.screen = Screen::Editor;
+        model.editor_state = EditorState::new(date);
+        model.editor_state.content = vec!["Hello World".to_string()];
+        model.editor_state.cursor_line = 0;
+        model.editor_state.cursor_col = 5;
+
+        update::update(&mut model, Msg::EditorSelectLine);
+
+        assert!(model.editor_state.selection.is_some());
+        let sel = model.editor_state.selection.unwrap();
+        assert_eq!(sel.anchor_line, 0);
+        assert_eq!(sel.anchor_col, 0);
+        assert_eq!(sel.cursor_line, 0);
+        assert_eq!(sel.cursor_col, 11);
+    }
+}
