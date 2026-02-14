@@ -1,5 +1,8 @@
 use chrono::NaiveDate;
-use ratatui_diary::{model::Model, storage::Storage};
+use ratatui_diary::{
+    model::{EditorMode, Model, Screen},
+    storage::Storage,
+};
 use std::collections::HashSet;
 use tempfile::TempDir;
 
@@ -42,4 +45,44 @@ fn test_calendar_preview_shows_empty_message() {
 
     // Then: 에러 반환
     assert!(content.is_err());
+}
+
+#[test]
+fn test_editor_content_updates_preview() {
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+    let entries = HashSet::new();
+
+    let mut model = Model::new(entries, storage);
+
+    // 에디터로 전환
+    model.screen = Screen::Editor;
+    model.editor_state.mode = EditorMode::Insert;
+
+    // 텍스트 입력
+    model.editor_state.insert_char('#');
+    model.editor_state.insert_char(' ');
+    model.editor_state.insert_char('H');
+
+    // 콘텐츠 확인
+    let content = model.editor_state.get_content();
+    assert_eq!(content, "# H");
+
+    // 렌더링 시 markdown::render_to_text가 호출됨 (실제 UI 테스트는 불가)
+}
+
+#[test]
+fn test_calendar_preview_empty_diary() {
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+    let entries = HashSet::new();
+
+    let model = Model::new(entries, storage);
+
+    // 다이어리가 없는 날짜 선택
+    let date = model.calendar_state.selected_date;
+    let result = model.storage.load(date);
+
+    // 로드 실패 시 에러 반환 (view에서 처리)
+    assert!(result.is_err());
 }
