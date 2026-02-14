@@ -1,9 +1,10 @@
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::io;
-use std::collections::HashSet;
-use std::ffi::OsString;
 use chrono::NaiveDate;
+use std::{collections::HashSet,
+          ffi::OsString,
+          fs,
+          io,
+          path::{Path,
+                 PathBuf}};
 
 pub struct Storage {
     entries_dir: PathBuf,
@@ -13,17 +14,25 @@ impl Storage {
     pub fn with_dir(base_dir: &Path) -> io::Result<Self> {
         let entries_dir = base_dir.join("entries");
         fs::create_dir_all(&entries_dir)?;
-        Ok(Self { entries_dir })
+        Ok(Self {
+            entries_dir,
+        })
     }
 
     pub fn new() -> io::Result<Self> {
-        let base_dir = dirs::data_local_dir()
-            .ok_or_else(|| io::Error::new(
-                io::ErrorKind::NotFound,
-                "Cannot find local data directory"
-            ))?
+        Self::new_impl(dirs::data_local_dir())
+    }
+
+    fn new_impl(data_dir: Option<PathBuf>) -> io::Result<Self> {
+        let base_dir = data_dir
+            .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "Cannot find local data directory"))?
             .join("ratatui-diary");
         Self::with_dir(&base_dir)
+    }
+
+    #[doc(hidden)]
+    pub fn new_with_none_dir() -> io::Result<Self> {
+        Self::new_impl(None)
     }
 
     pub fn save(&self, date: NaiveDate, content: &str) -> io::Result<()> {
@@ -54,9 +63,7 @@ impl Storage {
         Ok(entries)
     }
 
-    fn get_path(&self, date: NaiveDate) -> PathBuf {
-        self.entries_dir.join(format!("{}.md", date))
-    }
+    fn get_path(&self, date: NaiveDate) -> PathBuf { self.entries_dir.join(format!("{}.md", date)) }
 }
 
 fn parse_filename(filename: OsString) -> Option<NaiveDate> {

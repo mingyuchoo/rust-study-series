@@ -103,3 +103,17 @@ fn test_new_uses_system_data_dir() {
         }
     }
 }
+
+#[test]
+fn test_new_with_none_dir() {
+    // Given: 데이터 디렉토리를 찾을 수 없는 상황 시뮬레이션
+    // When: new_with_none_dir() 호출
+    let result = Storage::new_with_none_dir();
+
+    // Then: 에러가 반환되어야 함
+    assert!(result.is_err());
+    if let Err(error) = result {
+        assert_eq!(error.kind(), std::io::ErrorKind::NotFound);
+        assert_eq!(error.to_string(), "Cannot find local data directory");
+    }
+}
