@@ -185,15 +185,52 @@ impl EditorState {
         state
     }
 
-    fn save_snapshot(&mut self) {
+    pub fn save_snapshot(&mut self) {
+        // 현재 index 이후의 히스토리 제거 (분기된 히스토리 삭제)
+        self.edit_history.truncate(self.history_index + 1);
+
+        // 현재 상태 저장
         let snapshot = EditorSnapshot {
             content: self.content.clone(),
             cursor_line: self.cursor_line,
             cursor_col: self.cursor_col,
             selection: self.selection.clone(),
         };
+
         self.edit_history.push(snapshot);
         self.history_index = self.edit_history.len() - 1;
+
+        // 히스토리 크기 제한 (메모리 관리)
+        const MAX_HISTORY: usize = 100;
+        if self.edit_history.len() > MAX_HISTORY {
+            self.edit_history.drain(0..1);
+            self.history_index -= 1;
+        }
+    }
+
+    fn restore_snapshot(&mut self, index: usize) {
+        if let Some(snapshot) = self.edit_history.get(index) {
+            self.content = snapshot.content.clone();
+            self.cursor_line = snapshot.cursor_line;
+            self.cursor_col = snapshot.cursor_col;
+            self.selection = snapshot.selection.clone();
+            self.history_index = index;
+            self.is_modified = true;
+        }
+    }
+
+    pub fn undo(&mut self) {
+        if self.history_index > 0 {
+            self.history_index -= 1;
+            self.restore_snapshot(self.history_index);
+        }
+    }
+
+    pub fn redo(&mut self) {
+        if self.history_index + 1 < self.edit_history.len() {
+            self.history_index += 1;
+            self.restore_snapshot(self.history_index);
+        }
     }
 
     pub fn insert_char(&mut self, c: char) {
@@ -240,6 +277,10 @@ impl EditorState {
         self.cursor_line = 0;
         self.cursor_col = 0;
         self.is_modified = false;
+
+        // 로드 후 히스토리 초기화
+        self.edit_history.clear();
+        self.save_snapshot();
     }
 
     pub fn get_content(&self) -> String { self.content.join("\n") }

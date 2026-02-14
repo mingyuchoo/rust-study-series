@@ -279,3 +279,62 @@ mod update_selection_tests {
         assert_eq!(sel.cursor_col, 11);
     }
 }
+
+#[cfg(test)]
+mod undo_redo_tests {
+    use super::*;
+
+    #[test]
+    fn test_undo_restores_previous_state() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["Original".to_string()];
+        state.save_snapshot();
+
+        state.content = vec!["Modified".to_string()];
+        state.save_snapshot();
+
+        state.undo();
+
+        assert_eq!(state.content[0], "Original");
+    }
+
+    #[test]
+    fn test_redo_after_undo() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["First".to_string()];
+        state.save_snapshot();
+
+        state.content = vec!["Second".to_string()];
+        state.save_snapshot();
+
+        state.undo();
+        assert_eq!(state.content[0], "First");
+
+        state.redo();
+        assert_eq!(state.content[0], "Second");
+    }
+
+    #[test]
+    fn test_new_edit_clears_redo_history() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["First".to_string()];
+        state.save_snapshot();
+
+        state.content = vec!["Second".to_string()];
+        state.save_snapshot();
+
+        state.undo();
+
+        // 새 편집
+        state.content = vec!["Third".to_string()];
+        state.save_snapshot();
+
+        // redo 불가능해야 함
+        let before_redo = state.content.clone();
+        state.redo();
+        assert_eq!(state.content, before_redo);
+    }
+}
