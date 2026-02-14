@@ -80,53 +80,153 @@ fn handle_key(key: KeyEvent, model: &Model) -> Option<Msg> {
     }
 
     match model.screen {
-        | Screen::Calendar => handle_calendar_key(key),
-        | Screen::Editor => handle_editor_key(key, &model.editor_state.mode),
+        | Screen::Calendar => handle_calendar_key(key, &model.calendar_state),
+        | Screen::Editor => handle_editor_key(key, &model.editor_state),
     }
 }
 
-fn handle_calendar_key(key: KeyEvent) -> Option<Msg> {
-    match (key.code, key.modifiers) {
-        | (KeyCode::Char('q'), _) => Some(Msg::Quit),
-        | (KeyCode::Char('h'), _) => Some(Msg::CalendarMoveLeft),
-        | (KeyCode::Char('l'), _) => Some(Msg::CalendarMoveRight),
-        | (KeyCode::Char('j'), _) => Some(Msg::CalendarMoveDown),
-        | (KeyCode::Char('k'), _) => Some(Msg::CalendarMoveUp),
-        // TODO: Vi-style - 나중에 제거됨
-        // | (KeyCode::Char('H'), KeyModifiers::SHIFT) => Some(Msg::CalendarPrevYear),
-        // | (KeyCode::Char('L'), KeyModifiers::SHIFT) => Some(Msg::CalendarNextYear),
-        | (KeyCode::Enter, _) => Some(Msg::CalendarSelectDate),
+fn handle_calendar_key(
+    key: KeyEvent,
+    state: &ratatui_diary::model::CalendarState,
+) -> Option<Msg> {
+    use ratatui_diary::model::CalendarSubMode;
+
+    // Space 서브모드 처리
+    if let Some(CalendarSubMode::Space) = state.submode {
+        return match key.code {
+            | KeyCode::Char('q') => Some(Msg::Quit),
+            | KeyCode::Char('n') => Some(Msg::CalendarSpaceNextMonth),
+            | KeyCode::Char('p') => Some(Msg::CalendarSpacePrevMonth),
+            | KeyCode::Char('y') => Some(Msg::CalendarSpaceNextYear),
+            | KeyCode::Char('Y') => Some(Msg::CalendarSpacePrevYear),
+            | KeyCode::Esc => Some(Msg::CalendarExitSubMode),
+            | _ => None,
+        };
+    }
+
+    // Normal 키
+    match key.code {
+        | KeyCode::Char('h') => Some(Msg::CalendarMoveLeft),
+        | KeyCode::Char('l') => Some(Msg::CalendarMoveRight),
+        | KeyCode::Char('k') => Some(Msg::CalendarMoveUp),
+        | KeyCode::Char('j') => Some(Msg::CalendarMoveDown),
+        | KeyCode::Enter => Some(Msg::CalendarSelectDate),
+        | KeyCode::Char(' ') => Some(Msg::CalendarEnterSpaceMode),
+        | KeyCode::Char('q') => Some(Msg::Quit),
         | _ => None,
     }
 }
 
-fn handle_editor_key(key: KeyEvent, mode: &ratatui_diary::model::EditorMode) -> Option<Msg> {
+fn handle_editor_key(key: KeyEvent, state: &ratatui_diary::model::EditorState) -> Option<Msg> {
     use ratatui_diary::model::EditorMode;
 
-    match mode {
-        | EditorMode::Normal => match key.code {
-            // TODO: Vi-style - 나중에 제거됨
-            // | KeyCode::Char('i') => Some(Msg::EditorEnterInsertMode),
-            // | KeyCode::Char(':') => Some(Msg::EditorStartCommand),
-            // | KeyCode::Char('d') => Some(Msg::EditorDeleteLine), // dd는 두 번 누르기
-            | KeyCode::Esc => Some(Msg::EditorBack),
-            | _ => None,
+    match state.mode {
+        | EditorMode::Normal => handle_editor_normal_key(key, state),
+        | EditorMode::Insert => handle_editor_insert_key(key),
+    }
+}
+
+fn handle_editor_normal_key(
+    key: KeyEvent,
+    state: &ratatui_diary::model::EditorState,
+) -> Option<Msg> {
+    use ratatui_diary::model::EditorSubMode;
+
+    // 서브모드 처리
+    match &state.submode {
+        | Some(EditorSubMode::Goto) => {
+            return match key.code {
+                | KeyCode::Char('g') => Some(Msg::EditorGotoDocStart),
+                | KeyCode::Char('e') => Some(Msg::EditorGotoDocEnd),
+                | KeyCode::Char('h') => Some(Msg::EditorGotoLineStart),
+                | KeyCode::Char('l') => Some(Msg::EditorGotoLineEnd),
+                | KeyCode::Esc => Some(Msg::EditorExitSubMode),
+                | _ => None,
+            };
         },
-        | EditorMode::Insert => match key.code {
-            | KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
-            | KeyCode::Char(c) => Some(Msg::EditorInsertChar(c)),
-            | KeyCode::Backspace => Some(Msg::EditorBackspace),
-            | KeyCode::Enter => Some(Msg::EditorNewLine),
-            | _ => None,
+        | Some(EditorSubMode::SpaceCommand) => {
+            return match key.code {
+                | KeyCode::Char('w') => Some(Msg::EditorSpaceSave),
+                | KeyCode::Char('q') => Some(Msg::EditorSpaceQuit),
+                | KeyCode::Char('x') => Some(Msg::EditorSpaceSaveQuit),
+                | KeyCode::Esc => Some(Msg::EditorExitSubMode),
+                | _ => None,
+            };
         },
-        // TODO: Helix 스타일로 재작성 예정
-        // | EditorMode::Command(_) => match key.code {
-        //     | KeyCode::Char(c) => Some(Msg::EditorCommandChar(c)),
-        //     | KeyCode::Enter => Some(Msg::EditorExecuteCommand),
-        //     | KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
-        //     | KeyCode::Backspace => Some(Msg::EditorCommandChar('\x08')), // TODO: proper backspace
-        //     | _ => None,
-        // },
+        | Some(EditorSubMode::Search) => {
+            return match key.code {
+                | KeyCode::Char(c) => Some(Msg::EditorSearchChar(c)),
+                | KeyCode::Enter => Some(Msg::EditorExecuteSearch),
+                | KeyCode::Esc => Some(Msg::EditorExitSubMode),
+                | KeyCode::Backspace => Some(Msg::EditorSearchBackspace),
+                | _ => None,
+            };
+        },
+        | None => {},
+    }
+
+    // Normal 모드 키
+    match key.code {
+        // 이동
+        | KeyCode::Char('h') => Some(Msg::EditorMoveLeft),
+        | KeyCode::Char('l') => Some(Msg::EditorMoveRight),
+        | KeyCode::Char('k') => Some(Msg::EditorMoveUp),
+        | KeyCode::Char('j') => Some(Msg::EditorMoveDown),
+        | KeyCode::Char('w') => Some(Msg::EditorWordNext),
+        | KeyCode::Char('b') => Some(Msg::EditorWordPrev),
+        | KeyCode::Char('e') => Some(Msg::EditorWordEnd),
+
+        // 서브모드 진입
+        | KeyCode::Char('g') => Some(Msg::EditorEnterGotoMode),
+        | KeyCode::Char(' ') => Some(Msg::EditorEnterSpaceMode),
+        | KeyCode::Char('/') => Some(Msg::EditorEnterSearchMode),
+
+        // Insert
+        | KeyCode::Char('i') => {
+            Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor))
+        },
+        | KeyCode::Char('a') => {
+            Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::AfterCursor))
+        },
+        | KeyCode::Char('o') => {
+            Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::LineBelow))
+        },
+        | KeyCode::Char('O') => {
+            Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::LineAbove))
+        },
+
+        // Selection
+        | KeyCode::Char('v') => Some(Msg::EditorToggleSelection),
+        | KeyCode::Char('x') => Some(Msg::EditorSelectLine),
+
+        // 편집
+        | KeyCode::Char('d') => Some(Msg::EditorDelete),
+        | KeyCode::Char('c') => Some(Msg::EditorChange),
+        | KeyCode::Char('y') => Some(Msg::EditorYank),
+        | KeyCode::Char('p') => Some(Msg::EditorPasteAfter),
+        | KeyCode::Char('P') => Some(Msg::EditorPasteBefore),
+
+        // Undo/Redo
+        | KeyCode::Char('u') => Some(Msg::EditorUndo),
+        | KeyCode::Char('U') => Some(Msg::EditorRedo),
+
+        // 검색 네비게이션
+        | KeyCode::Char('n') => Some(Msg::EditorSearchNext),
+        | KeyCode::Char('N') => Some(Msg::EditorSearchPrev),
+
+        // 기타
+        | KeyCode::Esc => Some(Msg::EditorBack),
+        | _ => None,
+    }
+}
+
+fn handle_editor_insert_key(key: KeyEvent) -> Option<Msg> {
+    match key.code {
+        | KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
+        | KeyCode::Char(c) => Some(Msg::EditorInsertChar(c)),
+        | KeyCode::Backspace => Some(Msg::EditorBackspace),
+        | KeyCode::Enter => Some(Msg::EditorNewLine),
+        | _ => None,
     }
 }
 
