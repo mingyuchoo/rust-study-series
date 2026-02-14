@@ -121,6 +121,56 @@ impl EditorState {
             is_modified: false,
         }
     }
+
+    pub fn insert_char(&mut self, c: char) {
+        if self.cursor_line >= self.content.len() {
+            self.content.push(String::new());
+        }
+
+        self.content[self.cursor_line].insert(self.cursor_col, c);
+        self.cursor_col += 1;
+        self.is_modified = true;
+    }
+
+    pub fn backspace(&mut self) {
+        if self.cursor_col > 0 {
+            self.content[self.cursor_line].remove(self.cursor_col - 1);
+            self.cursor_col -= 1;
+            self.is_modified = true;
+        } else if self.cursor_line > 0 {
+            let current_line = self.content.remove(self.cursor_line);
+            self.cursor_line -= 1;
+            self.cursor_col = self.content[self.cursor_line].len();
+            self.content[self.cursor_line].push_str(&current_line);
+            self.is_modified = true;
+        }
+    }
+
+    pub fn new_line(&mut self) {
+        let current_line = &self.content[self.cursor_line];
+        let remaining = current_line[self.cursor_col..].to_string();
+        self.content[self.cursor_line].truncate(self.cursor_col);
+
+        self.cursor_line += 1;
+        self.content.insert(self.cursor_line, remaining);
+        self.cursor_col = 0;
+        self.is_modified = true;
+    }
+
+    pub fn load_content(&mut self, content: &str) {
+        self.content = if content.is_empty() {
+            vec![String::new()]
+        } else {
+            content.lines().map(String::from).collect()
+        };
+        self.cursor_line = 0;
+        self.cursor_col = 0;
+        self.is_modified = false;
+    }
+
+    pub fn get_content(&self) -> String {
+        self.content.join("\n")
+    }
 }
 
 fn days_in_month(year: i32, month: u32) -> u32 {
