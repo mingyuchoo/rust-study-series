@@ -269,19 +269,38 @@ impl EditorState {
     pub fn get_selected_text(&self) -> Option<String> {
         let ((start_line, start_col), (end_line, end_col)) = self.get_selection_range()?;
 
+        // 범위 검증 추가
+        if end_line >= self.content.len() {
+            return None;
+        }
+
         if start_line == end_line {
-            // 같은 줄
-            Some(self.content[start_line][start_col..end_col].to_string())
+            let line = &self.content[start_line];
+            let safe_end = end_col.min(line.len());
+            let safe_start = start_col.min(safe_end);
+            Some(line[safe_start..safe_end].to_string())
         } else {
-            // 여러 줄
             let mut result = String::new();
-            result.push_str(&self.content[start_line][start_col..]);
+
+            // 시작 줄
+            let start_line_content = &self.content[start_line];
+            let safe_start_col = start_col.min(start_line_content.len());
+            result.push_str(&start_line_content[safe_start_col..]);
             result.push('\n');
+
+            // 중간 줄들
             for line in (start_line + 1)..end_line {
-                result.push_str(&self.content[line]);
-                result.push('\n');
+                if line < self.content.len() {
+                    result.push_str(&self.content[line]);
+                    result.push('\n');
+                }
             }
-            result.push_str(&self.content[end_line][..end_col]);
+
+            // 끝 줄
+            let end_line_content = &self.content[end_line];
+            let safe_end_col = end_col.min(end_line_content.len());
+            result.push_str(&end_line_content[..safe_end_col]);
+
             Some(result)
         }
     }
