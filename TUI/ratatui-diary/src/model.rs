@@ -99,6 +99,26 @@ impl CalendarState {
         self.adjust_selected_date();
     }
 
+    pub fn move_cursor_left(&mut self) {
+        self.selected_date = self.selected_date.pred_opt().unwrap_or(self.selected_date);
+    }
+
+    pub fn move_cursor_right(&mut self) {
+        self.selected_date = self.selected_date.succ_opt().unwrap_or(self.selected_date);
+    }
+
+    pub fn move_cursor_up(&mut self) {
+        self.selected_date = self.selected_date
+            .checked_sub_days(chrono::Days::new(7))
+            .unwrap_or(self.selected_date);
+    }
+
+    pub fn move_cursor_down(&mut self) {
+        self.selected_date = self.selected_date
+            .checked_add_days(chrono::Days::new(7))
+            .unwrap_or(self.selected_date);
+    }
+
     fn adjust_selected_date(&mut self) {
         // 선택된 날짜가 새 월에 유효한지 확인
         let day = self.selected_date.day();

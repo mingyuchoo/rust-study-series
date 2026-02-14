@@ -22,22 +22,22 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         // 달력 네비게이션
         Msg::CalendarMoveLeft => {
             if model.screen == Screen::Calendar {
-                // TODO: 커서 이동 구현
+                model.calendar_state.move_cursor_left();
             }
         }
         Msg::CalendarMoveRight => {
             if model.screen == Screen::Calendar {
-                // TODO: 커서 이동 구현
+                model.calendar_state.move_cursor_right();
             }
         }
         Msg::CalendarMoveUp => {
             if model.screen == Screen::Calendar {
-                // TODO: 커서 이동 구현
+                model.calendar_state.move_cursor_up();
             }
         }
         Msg::CalendarMoveDown => {
             if model.screen == Screen::Calendar {
-                // TODO: 커서 이동 구현
+                model.calendar_state.move_cursor_down();
             }
         }
         Msg::CalendarNextMonth => {
