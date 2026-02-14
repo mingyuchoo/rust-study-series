@@ -48,10 +48,15 @@ fn paste_clipboard(state: &mut EditorState, before: bool) {
             .map(String::from)
             .collect();
 
+        // content가 비어있으면 초기화
+        if state.content.is_empty() {
+            state.content.push(String::new());
+        }
+
         let insert_at = if before {
-            state.cursor_line
+            state.cursor_line.min(state.content.len())
         } else {
-            state.cursor_line + 1
+            (state.cursor_line + 1).min(state.content.len())
         };
 
         for (i, line) in lines.iter().enumerate() {
@@ -62,6 +67,10 @@ fn paste_clipboard(state: &mut EditorState, before: bool) {
         state.cursor_col = 0;
     } else {
         // 문자 단위 붙여넣기
+        // 안전한 접근: cursor_line이 범위를 벗어나면 새 줄 추가
+        if state.cursor_line >= state.content.len() {
+            state.content.push(String::new());
+        }
         let line = &mut state.content[state.cursor_line];
         let insert_pos = if before {
             state.cursor_col
@@ -161,11 +170,12 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
 
         // ===== 에디터 네비게이션 (Normal 모드) =====
         Msg::EditorMoveLeft => {
-            if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                if model.editor_state.cursor_col > 0 {
-                    model.editor_state.cursor_col -= 1;
-                    update_selection_on_move(&mut model.editor_state);
-                }
+            if model.screen == Screen::Editor
+                && model.editor_state.mode == EditorMode::Normal
+                && model.editor_state.cursor_col > 0
+            {
+                model.editor_state.cursor_col -= 1;
+                update_selection_on_move(&mut model.editor_state);
             }
         }
         Msg::EditorMoveRight => {
@@ -182,25 +192,27 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
             }
         }
         Msg::EditorMoveUp => {
-            if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                if model.editor_state.cursor_line > 0 {
-                    model.editor_state.cursor_line -= 1;
-                    // Clamp cursor_col to new line length
-                    let line_len = model.editor_state.content[model.editor_state.cursor_line].len();
-                    model.editor_state.cursor_col = model.editor_state.cursor_col.min(line_len);
-                    update_selection_on_move(&mut model.editor_state);
-                }
+            if model.screen == Screen::Editor
+                && model.editor_state.mode == EditorMode::Normal
+                && model.editor_state.cursor_line > 0
+            {
+                model.editor_state.cursor_line -= 1;
+                // Clamp cursor_col to new line length
+                let line_len = model.editor_state.content[model.editor_state.cursor_line].len();
+                model.editor_state.cursor_col = model.editor_state.cursor_col.min(line_len);
+                update_selection_on_move(&mut model.editor_state);
             }
         }
         Msg::EditorMoveDown => {
-            if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
-                if model.editor_state.cursor_line + 1 < model.editor_state.content.len() {
-                    model.editor_state.cursor_line += 1;
-                    // Clamp cursor_col to new line length
-                    let line_len = model.editor_state.content[model.editor_state.cursor_line].len();
-                    model.editor_state.cursor_col = model.editor_state.cursor_col.min(line_len);
-                    update_selection_on_move(&mut model.editor_state);
-                }
+            if model.screen == Screen::Editor
+                && model.editor_state.mode == EditorMode::Normal
+                && model.editor_state.cursor_line + 1 < model.editor_state.content.len()
+            {
+                model.editor_state.cursor_line += 1;
+                // Clamp cursor_col to new line length
+                let line_len = model.editor_state.content[model.editor_state.cursor_line].len();
+                model.editor_state.cursor_col = model.editor_state.cursor_col.min(line_len);
+                update_selection_on_move(&mut model.editor_state);
             }
         }
         Msg::EditorWordNext => {
