@@ -170,42 +170,57 @@ fn format_day(day: u32, date: chrono::NaiveDate, model: &Model) -> Span<'static>
 }
 
 fn render_editor(f: &mut Frame, model: &Model) {
-    let chunks = Layout::default()
+    // 메인 레이아웃: 수평 분할 (50:50)
+    let main_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(50),  // 왼쪽: 에디터
+            Constraint::Percentage(50),  // 오른쪽: Markdown 미리보기
+        ])
+        .split(f.size());
+
+    // 왼쪽: 에디터 영역 (기존 레이아웃)
+    let editor_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(1), // 날짜 헤더
             Constraint::Min(0),    // 에디터 영역
             Constraint::Length(1), // 모드 표시
         ])
-        .split(f.size());
+        .split(main_chunks[0]);
 
     // 헤더: 날짜
-    let header = Paragraph::new(model.editor_state.date.to_string()).style(Style::default().add_modifier(Modifier::BOLD));
-    f.render_widget(header, chunks[0]);
+    let header = Paragraph::new(model.editor_state.date.to_string())
+        .style(Style::default().add_modifier(Modifier::BOLD));
+    f.render_widget(header, editor_chunks[0]);
 
     // 에디터 내용
     let content = model.editor_state.get_content();
-    let text = Paragraph::new(content).wrap(Wrap {
-        trim: false,
-    });
-    f.render_widget(text, chunks[1]);
+    let text = Paragraph::new(content.clone()).wrap(Wrap { trim: false });
+    f.render_widget(text, editor_chunks[1]);
 
     // 커서 표시 (Insert 모드)
     if model.editor_state.mode == EditorMode::Insert {
-        // 커서 위치 계산
-        let cursor_x = chunks[1].x + model.editor_state.cursor_col as u16;
-        let cursor_y = chunks[1].y + model.editor_state.cursor_line as u16;
+        let cursor_x = editor_chunks[1].x + model.editor_state.cursor_col as u16;
+        let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
         f.set_cursor(cursor_x, cursor_y);
     }
 
     // 하단바: 모드 표시
     let mode_text = match &model.editor_state.mode {
-        | EditorMode::Normal => "-- NORMAL --".to_string(),
-        | EditorMode::Insert => "-- INSERT --".to_string(),
-        | EditorMode::Command(cmd) => format!(":{}", cmd),
+        EditorMode::Normal => "-- NORMAL --".to_string(),
+        EditorMode::Insert => "-- INSERT --".to_string(),
+        EditorMode::Command(cmd) => format!(":{}", cmd),
     };
-    let statusbar = Paragraph::new(mode_text).style(Style::default().add_modifier(Modifier::BOLD));
-    f.render_widget(statusbar, chunks[2]);
+    let statusbar = Paragraph::new(mode_text)
+        .style(Style::default().add_modifier(Modifier::BOLD));
+    f.render_widget(statusbar, editor_chunks[2]);
+
+    // 오른쪽: Markdown 미리보기 (임시)
+    let preview_block = Block::default()
+        .title("Markdown 미리보기")
+        .borders(Borders::ALL);
+    f.render_widget(preview_block, main_chunks[1]);
 }
 
 fn render_error_popup(f: &mut Frame, model: &Model) {
