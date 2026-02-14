@@ -1,8 +1,7 @@
 use crossterm::{event::{self,
                         Event,
                         KeyCode,
-                        KeyEvent,
-                        KeyModifiers},
+                        KeyEvent},
                 execute,
                 terminal::{EnterAlternateScreen,
                            LeaveAlternateScreen,
@@ -93,8 +92,9 @@ fn handle_calendar_key(key: KeyEvent) -> Option<Msg> {
         | (KeyCode::Char('l'), _) => Some(Msg::CalendarMoveRight),
         | (KeyCode::Char('j'), _) => Some(Msg::CalendarMoveDown),
         | (KeyCode::Char('k'), _) => Some(Msg::CalendarMoveUp),
-        | (KeyCode::Char('H'), KeyModifiers::SHIFT) => Some(Msg::CalendarPrevYear),
-        | (KeyCode::Char('L'), KeyModifiers::SHIFT) => Some(Msg::CalendarNextYear),
+        // TODO: Vi-style - 나중에 제거됨
+        // | (KeyCode::Char('H'), KeyModifiers::SHIFT) => Some(Msg::CalendarPrevYear),
+        // | (KeyCode::Char('L'), KeyModifiers::SHIFT) => Some(Msg::CalendarNextYear),
         | (KeyCode::Enter, _) => Some(Msg::CalendarSelectDate),
         | _ => None,
     }
@@ -105,9 +105,10 @@ fn handle_editor_key(key: KeyEvent, mode: &ratatui_diary::model::EditorMode) -> 
 
     match mode {
         | EditorMode::Normal => match key.code {
-            | KeyCode::Char('i') => Some(Msg::EditorEnterInsertMode),
-            | KeyCode::Char(':') => Some(Msg::EditorStartCommand),
-            | KeyCode::Char('d') => Some(Msg::EditorDeleteLine), // dd는 두 번 누르기
+            // TODO: Vi-style - 나중에 제거됨
+            // | KeyCode::Char('i') => Some(Msg::EditorEnterInsertMode),
+            // | KeyCode::Char(':') => Some(Msg::EditorStartCommand),
+            // | KeyCode::Char('d') => Some(Msg::EditorDeleteLine), // dd는 두 번 누르기
             | KeyCode::Esc => Some(Msg::EditorBack),
             | _ => None,
         },
