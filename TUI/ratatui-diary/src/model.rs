@@ -1,5 +1,7 @@
-use chrono::{Datelike, NaiveDate};
+use chrono::{Datelike,
+             NaiveDate};
 use std::collections::HashSet;
+use crate::storage::Storage;
 
 pub struct Model {
     pub screen: Screen,
@@ -8,6 +10,7 @@ pub struct Model {
     pub diary_entries: DiaryIndex,
     pub error_message: Option<String>,
     pub show_error_popup: bool,
+    pub storage: Storage,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -44,16 +47,19 @@ pub struct DiaryIndex {
 }
 
 impl Model {
-    pub fn new(entries: HashSet<NaiveDate>) -> Self {
+    pub fn new(entries: HashSet<NaiveDate>, storage: Storage) -> Self {
         let today = chrono::Local::now().date_naive();
 
         Self {
             screen: Screen::Calendar,
             calendar_state: CalendarState::new(today.year(), today.month()),
             editor_state: EditorState::new(today),
-            diary_entries: DiaryIndex { entries },
+            diary_entries: DiaryIndex {
+                entries,
+            },
             error_message: None,
             show_error_popup: false,
+            storage,
         }
     }
 }
@@ -99,25 +105,13 @@ impl CalendarState {
         self.adjust_selected_date();
     }
 
-    pub fn move_cursor_left(&mut self) {
-        self.selected_date = self.selected_date.pred_opt().unwrap_or(self.selected_date);
-    }
+    pub fn move_cursor_left(&mut self) { self.selected_date = self.selected_date.pred_opt().unwrap_or(self.selected_date); }
 
-    pub fn move_cursor_right(&mut self) {
-        self.selected_date = self.selected_date.succ_opt().unwrap_or(self.selected_date);
-    }
+    pub fn move_cursor_right(&mut self) { self.selected_date = self.selected_date.succ_opt().unwrap_or(self.selected_date); }
 
-    pub fn move_cursor_up(&mut self) {
-        self.selected_date = self.selected_date
-            .checked_sub_days(chrono::Days::new(7))
-            .unwrap_or(self.selected_date);
-    }
+    pub fn move_cursor_up(&mut self) { self.selected_date = self.selected_date.checked_sub_days(chrono::Days::new(7)).unwrap_or(self.selected_date); }
 
-    pub fn move_cursor_down(&mut self) {
-        self.selected_date = self.selected_date
-            .checked_add_days(chrono::Days::new(7))
-            .unwrap_or(self.selected_date);
-    }
+    pub fn move_cursor_down(&mut self) { self.selected_date = self.selected_date.checked_add_days(chrono::Days::new(7)).unwrap_or(self.selected_date); }
 
     fn adjust_selected_date(&mut self) {
         // 선택된 날짜가 새 월에 유효한지 확인
@@ -125,8 +119,9 @@ impl CalendarState {
         self.selected_date = NaiveDate::from_ymd_opt(
             self.current_year,
             self.current_month,
-            day.min(days_in_month(self.current_year, self.current_month))
-        ).unwrap();
+            day.min(days_in_month(self.current_year, self.current_month)),
+        )
+        .unwrap();
     }
 }
 
@@ -168,7 +163,7 @@ impl EditorState {
 
     pub fn new_line(&mut self) {
         let current_line = &self.content[self.cursor_line];
-        let remaining = current_line[self.cursor_col..].to_string();
+        let remaining = current_line[self.cursor_col ..].to_string();
         self.content[self.cursor_line].truncate(self.cursor_col);
 
         self.cursor_line += 1;
@@ -188,9 +183,7 @@ impl EditorState {
         self.is_modified = false;
     }
 
-    pub fn get_content(&self) -> String {
-        self.content.join("\n")
-    }
+    pub fn get_content(&self) -> String { self.content.join("\n") }
 }
 
 fn days_in_month(year: i32, month: u32) -> u32 {

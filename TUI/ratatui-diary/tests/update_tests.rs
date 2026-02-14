@@ -1,11 +1,17 @@
-use ratatui_diary::{Model, Msg};
-use ratatui_diary::model::{Screen, EditorMode};
-use ratatui_diary::update::Command;
+use ratatui_diary::{Model,
+                    Msg,
+                    model::{EditorMode,
+                            Screen},
+                    storage::Storage,
+                    update::Command};
 use std::collections::HashSet;
+use tempfile::TempDir;
 
 #[test]
 fn test_calendar_next_month() {
-    let mut model = Model::new(HashSet::new());
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+    let mut model = Model::new(HashSet::new(), storage);
     let original_month = model.calendar_state.current_month;
 
     ratatui_diary::update::update(&mut model, Msg::CalendarNextMonth);
@@ -16,7 +22,9 @@ fn test_calendar_next_month() {
 
 #[test]
 fn test_calendar_select_date_switches_to_editor() {
-    let mut model = Model::new(HashSet::new());
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+    let mut model = Model::new(HashSet::new(), storage);
 
     let cmd = ratatui_diary::update::update(&mut model, Msg::CalendarSelectDate);
 
@@ -26,7 +34,9 @@ fn test_calendar_select_date_switches_to_editor() {
 
 #[test]
 fn test_editor_insert_mode() {
-    let mut model = Model::new(HashSet::new());
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+    let mut model = Model::new(HashSet::new(), storage);
     model.screen = Screen::Editor;
     model.editor_state.mode = EditorMode::Normal;
 
@@ -37,7 +47,9 @@ fn test_editor_insert_mode() {
 
 #[test]
 fn test_editor_insert_char() {
-    let mut model = Model::new(HashSet::new());
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+    let mut model = Model::new(HashSet::new(), storage);
     model.screen = Screen::Editor;
     model.editor_state.mode = EditorMode::Insert;
 
@@ -48,7 +60,9 @@ fn test_editor_insert_char() {
 
 #[test]
 fn test_editor_command_w_saves() {
-    let mut model = Model::new(HashSet::new());
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+    let mut model = Model::new(HashSet::new(), storage);
     model.screen = Screen::Editor;
     model.editor_state.mode = EditorMode::Command("w".to_string());
     model.editor_state.content = vec!["test".to_string()];

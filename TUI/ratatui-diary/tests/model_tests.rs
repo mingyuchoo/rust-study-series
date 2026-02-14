@@ -1,5 +1,12 @@
-use ratatui_diary::model::{CalendarState, EditorState, EditorMode};
 use chrono::NaiveDate;
+use ratatui_diary::model::{CalendarState,
+                           EditorMode,
+                           EditorState,
+                           Model,
+                           Screen};
+use ratatui_diary::storage::Storage;
+use std::collections::HashSet;
+use tempfile::TempDir;
 
 #[test]
 fn test_next_month() {
@@ -66,4 +73,14 @@ fn test_load_content() {
     assert_eq!(state.content[0], "Line 1");
     assert_eq!(state.content[1], "Line 2");
     assert!(!state.is_modified);
+}
+
+#[test]
+fn test_model_with_storage() {
+    let temp = TempDir::new().unwrap();
+    let storage = Storage::with_dir(temp.path()).unwrap();
+    let entries = HashSet::new();
+
+    let model = Model::new(entries, storage);
+    assert_eq!(model.screen, Screen::Calendar);
 }

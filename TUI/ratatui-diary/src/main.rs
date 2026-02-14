@@ -1,14 +1,23 @@
-use ratatui_diary::{Model, Msg, storage::Storage, update, view};
-use ratatui::prelude::*;
-use ratatui::Terminal;
-use ratatui::backend::CrosstermBackend;
-use crossterm::{
-    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-use std::io;
-use std::time::Duration;
+use crossterm::{event::{self,
+                        Event,
+                        KeyCode,
+                        KeyEvent,
+                        KeyModifiers},
+                execute,
+                terminal::{EnterAlternateScreen,
+                           LeaveAlternateScreen,
+                           disable_raw_mode,
+                           enable_raw_mode}};
+use ratatui::{Terminal,
+              backend::CrosstermBackend,
+              prelude::*};
+use ratatui_diary::{Model,
+                    Msg,
+                    update,
+                    view,
+                    storage::Storage};
+use std::{io,
+          time::Duration};
 
 fn main() -> std::io::Result<()> {
     // Storage 초기화
@@ -16,7 +25,7 @@ fn main() -> std::io::Result<()> {
     let entries = storage.scan_entries()?;
 
     // Model 초기화
-    let mut model = Model::new(entries);
+    let mut model = Model::new(entries, storage);
 
     // Terminal 초기화
     enable_raw_mode()?;
@@ -27,7 +36,7 @@ fn main() -> std::io::Result<()> {
     terminal.clear()?;
 
     // 이벤트 루프
-    let result = run_app(&mut terminal, &mut model, &storage);
+    let result = run_app(&mut terminal, &mut model);
 
     // Terminal 복원
     disable_raw_mode()?;
@@ -37,11 +46,7 @@ fn main() -> std::io::Result<()> {
     result
 }
 
-fn run_app<B: Backend>(
-    terminal: &mut Terminal<B>,
-    model: &mut Model,
-    storage: &Storage,
-) -> std::io::Result<()> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, model: &mut Model) -> std::io::Result<()> {
     loop {
         // 렌더링
         terminal.draw(|f| view::view(f, model))?;
@@ -57,7 +62,7 @@ fn run_app<B: Backend>(
 
                     // Update 호출
                     if let Some(cmd) = update::update(model, msg) {
-                        execute_command(cmd, model, storage)?;
+                        execute_command(cmd, model)?;
                     }
                 }
             }
@@ -76,22 +81,22 @@ fn handle_key(key: KeyEvent, model: &Model) -> Option<Msg> {
     }
 
     match model.screen {
-        Screen::Calendar => handle_calendar_key(key),
-        Screen::Editor => handle_editor_key(key, &model.editor_state.mode),
+        | Screen::Calendar => handle_calendar_key(key),
+        | Screen::Editor => handle_editor_key(key, &model.editor_state.mode),
     }
 }
 
 fn handle_calendar_key(key: KeyEvent) -> Option<Msg> {
     match (key.code, key.modifiers) {
-        (KeyCode::Char('q'), _) => Some(Msg::Quit),
-        (KeyCode::Char('h'), _) => Some(Msg::CalendarMoveLeft),
-        (KeyCode::Char('l'), _) => Some(Msg::CalendarMoveRight),
-        (KeyCode::Char('j'), _) => Some(Msg::CalendarMoveDown),
-        (KeyCode::Char('k'), _) => Some(Msg::CalendarMoveUp),
-        (KeyCode::Char('H'), KeyModifiers::SHIFT) => Some(Msg::CalendarPrevYear),
-        (KeyCode::Char('L'), KeyModifiers::SHIFT) => Some(Msg::CalendarNextYear),
-        (KeyCode::Enter, _) => Some(Msg::CalendarSelectDate),
-        _ => None,
+        | (KeyCode::Char('q'), _) => Some(Msg::Quit),
+        | (KeyCode::Char('h'), _) => Some(Msg::CalendarMoveLeft),
+        | (KeyCode::Char('l'), _) => Some(Msg::CalendarMoveRight),
+        | (KeyCode::Char('j'), _) => Some(Msg::CalendarMoveDown),
+        | (KeyCode::Char('k'), _) => Some(Msg::CalendarMoveUp),
+        | (KeyCode::Char('H'), KeyModifiers::SHIFT) => Some(Msg::CalendarPrevYear),
+        | (KeyCode::Char('L'), KeyModifiers::SHIFT) => Some(Msg::CalendarNextYear),
+        | (KeyCode::Enter, _) => Some(Msg::CalendarSelectDate),
+        | _ => None,
     }
 }
 
@@ -99,69 +104,59 @@ fn handle_editor_key(key: KeyEvent, mode: &ratatui_diary::model::EditorMode) -> 
     use ratatui_diary::model::EditorMode;
 
     match mode {
-        EditorMode::Normal => match key.code {
-            KeyCode::Char('i') => Some(Msg::EditorEnterInsertMode),
-            KeyCode::Char(':') => Some(Msg::EditorStartCommand),
-            KeyCode::Char('d') => Some(Msg::EditorDeleteLine), // dd는 두 번 누르기
-            KeyCode::Esc => Some(Msg::EditorBack),
-            _ => None,
+        | EditorMode::Normal => match key.code {
+            | KeyCode::Char('i') => Some(Msg::EditorEnterInsertMode),
+            | KeyCode::Char(':') => Some(Msg::EditorStartCommand),
+            | KeyCode::Char('d') => Some(Msg::EditorDeleteLine), // dd는 두 번 누르기
+            | KeyCode::Esc => Some(Msg::EditorBack),
+            | _ => None,
         },
-        EditorMode::Insert => match key.code {
-            KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
-            KeyCode::Char(c) => Some(Msg::EditorInsertChar(c)),
-            KeyCode::Backspace => Some(Msg::EditorBackspace),
-            KeyCode::Enter => Some(Msg::EditorNewLine),
-            _ => None,
+        | EditorMode::Insert => match key.code {
+            | KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
+            | KeyCode::Char(c) => Some(Msg::EditorInsertChar(c)),
+            | KeyCode::Backspace => Some(Msg::EditorBackspace),
+            | KeyCode::Enter => Some(Msg::EditorNewLine),
+            | _ => None,
         },
-        EditorMode::Command(_) => match key.code {
-            KeyCode::Char(c) => Some(Msg::EditorCommandChar(c)),
-            KeyCode::Enter => Some(Msg::EditorExecuteCommand),
-            KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
-            KeyCode::Backspace => Some(Msg::EditorCommandChar('\x08')), // TODO: proper backspace
-            _ => None,
+        | EditorMode::Command(_) => match key.code {
+            | KeyCode::Char(c) => Some(Msg::EditorCommandChar(c)),
+            | KeyCode::Enter => Some(Msg::EditorExecuteCommand),
+            | KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
+            | KeyCode::Backspace => Some(Msg::EditorCommandChar('\x08')), // TODO: proper backspace
+            | _ => None,
         },
     }
 }
 
-fn execute_command(
-    cmd: update::Command,
-    model: &mut Model,
-    storage: &Storage,
-) -> std::io::Result<()> {
+fn execute_command(cmd: update::Command, model: &mut Model) -> std::io::Result<()> {
     use update::Command;
 
     match cmd {
-        Command::LoadDiary(date) => {
-            match storage.load(date) {
-                Ok(content) => {
-                    update::update(model, Msg::LoadDiarySuccess(date, content));
-                }
-                Err(e) => {
-                    update::update(model, Msg::LoadDiaryFailed(e.to_string()));
-                }
-            }
-        }
-        Command::SaveDiary(date, content) => {
-            match storage.save(date, &content) {
-                Ok(_) => {
-                    model.diary_entries.entries.insert(date);
-                    update::update(model, Msg::SaveDiarySuccess);
-                }
-                Err(e) => {
-                    update::update(model, Msg::SaveDiaryFailed(e.to_string()));
-                }
-            }
-        }
-        Command::DeleteDiary(date) => {
-            match storage.delete(date) {
-                Ok(_) => {
-                    update::update(model, Msg::DeleteDiarySuccess(date));
-                }
-                Err(e) => {
-                    update::update(model, Msg::SaveDiaryFailed(e.to_string()));
-                }
-            }
-        }
+        | Command::LoadDiary(date) => match model.storage.load(date) {
+            | Ok(content) => {
+                update::update(model, Msg::LoadDiarySuccess(date, content));
+            },
+            | Err(e) => {
+                update::update(model, Msg::LoadDiaryFailed(e.to_string()));
+            },
+        },
+        | Command::SaveDiary(date, content) => match model.storage.save(date, &content) {
+            | Ok(_) => {
+                model.diary_entries.entries.insert(date);
+                update::update(model, Msg::SaveDiarySuccess);
+            },
+            | Err(e) => {
+                update::update(model, Msg::SaveDiaryFailed(e.to_string()));
+            },
+        },
+        | Command::DeleteDiary(date) => match model.storage.delete(date) {
+            | Ok(_) => {
+                update::update(model, Msg::DeleteDiarySuccess(date));
+            },
+            | Err(e) => {
+                update::update(model, Msg::SaveDiaryFailed(e.to_string()));
+            },
+        },
     }
 
     Ok(())
