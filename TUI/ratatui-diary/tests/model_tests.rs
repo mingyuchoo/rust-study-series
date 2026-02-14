@@ -159,11 +159,7 @@ mod selection_tests {
     fn test_get_selected_text_multi_line() {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
-        state.content = vec![
-            "First line".to_string(),
-            "Second line".to_string(),
-            "Third line".to_string(),
-        ];
+        state.content = vec!["First line".to_string(), "Second line".to_string(), "Third line".to_string()];
         state.selection = Some(Selection {
             anchor_line: 0,
             anchor_col: 6,
@@ -198,11 +194,7 @@ mod selection_tests {
     fn test_delete_selection_multi_line() {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
-        state.content = vec![
-            "First line".to_string(),
-            "Second line".to_string(),
-            "Third line".to_string(),
-        ];
+        state.content = vec!["First line".to_string(), "Second line".to_string(), "Third line".to_string()];
         state.selection = Some(Selection {
             anchor_line: 0,
             anchor_col: 6,
@@ -222,7 +214,9 @@ mod selection_tests {
 #[cfg(test)]
 mod update_selection_tests {
     use super::*;
-    use ratatui_diary::{model::Selection, update, Msg};
+    use ratatui_diary::{Msg,
+                        model::Selection,
+                        update};
 
     #[test]
     fn test_selection_toggle_on() {
@@ -390,6 +384,113 @@ mod word_navigation_tests {
 }
 
 #[cfg(test)]
+mod multibyte_char_tests {
+    use super::*;
+    use ratatui_diary::model::Selection;
+
+    #[test]
+    fn test_insert_korean_char() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.mode = EditorMode::Insert;
+
+        // 한글 입력: '한'
+        state.insert_char('한');
+        assert_eq!(state.content[0], "한");
+        assert_eq!(state.cursor_col, 1); // 문자 인덱스는 1
+
+        // 추가 입력: '글'
+        state.insert_char('글');
+        assert_eq!(state.content[0], "한글");
+        assert_eq!(state.cursor_col, 2); // 문자 인덱스는 2
+    }
+
+    #[test]
+    fn test_insert_char_between_korean() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["한글".to_string()];
+        state.cursor_col = 1; // '한'과 '글' 사이
+
+        // 중간에 '국' 삽입
+        state.insert_char('국');
+        assert_eq!(state.content[0], "한국글");
+        assert_eq!(state.cursor_col, 2);
+    }
+
+    #[test]
+    fn test_backspace_korean_char() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["한글".to_string()];
+        state.cursor_col = 2; // "한글" 끝
+
+        state.backspace();
+        assert_eq!(state.content[0], "한");
+        assert_eq!(state.cursor_col, 1);
+    }
+
+    #[test]
+    fn test_new_line_with_korean() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["한글테스트".to_string()];
+        state.cursor_col = 2; // "한글" 뒤
+
+        state.new_line();
+        assert_eq!(state.content[0], "한글");
+        assert_eq!(state.content[1], "테스트");
+        assert_eq!(state.cursor_line, 1);
+        assert_eq!(state.cursor_col, 0);
+    }
+
+    #[test]
+    fn test_selection_with_korean() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["안녕하세요".to_string()];
+        state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 1, // '녕' 부터
+            cursor_line: 0,
+            cursor_col: 3, // '세' 까지
+        });
+
+        let text = state.get_selected_text();
+        assert_eq!(text, Some("녕하".to_string()));
+    }
+
+    #[test]
+    fn test_delete_selection_korean() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["안녕하세요".to_string()];
+        state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 1,
+            cursor_line: 0,
+            cursor_col: 3,
+        });
+
+        state.delete_selection();
+        assert_eq!(state.content[0], "안세요");
+        assert_eq!(state.cursor_col, 1);
+    }
+
+    #[test]
+    fn test_mixed_korean_english() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["Hello한글World".to_string()];
+        state.cursor_col = 5; // "Hello" 뒤
+
+        state.insert_char(' ');
+        assert_eq!(state.content[0], "Hello 한글World");
+        assert_eq!(state.cursor_col, 6);
+    }
+}
+
+#[cfg(test)]
 mod search_tests {
     use super::*;
 
@@ -397,11 +498,7 @@ mod search_tests {
     fn test_search_finds_all_matches() {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
-        state.content = vec![
-            "Hello world".to_string(),
-            "World of Rust".to_string(),
-            "world again".to_string(),
-        ];
+        state.content = vec!["Hello world".to_string(), "World of Rust".to_string(), "world again".to_string()];
         state.search_pattern = "world".to_string();
 
         state.execute_search();
@@ -441,5 +538,68 @@ mod search_tests {
 
         state.search_prev(); // wrap around to end
         assert_eq!(state.current_match_index, 2);
+    }
+}
+
+#[cfg(test)]
+mod days_in_month_tests {
+    use chrono::{Datelike, NaiveDate};
+    use ratatui_diary::model::CalendarState;
+
+    #[test]
+    fn test_adjust_date_to_february_29_leap_year() {
+        // Given: 2024년 1월 31일 선택
+        let mut state = CalendarState::new(2024, 1);
+        state.selected_date = NaiveDate::from_ymd_opt(2024, 1, 31).unwrap();
+
+        // When: 2월로 이동 (윤년, 29일까지)
+        state.next_month();
+
+        // Then: 2월 29일로 조정됨
+        assert_eq!(state.selected_date.day(), 29);
+        assert_eq!(state.selected_date.month(), 2);
+    }
+
+    #[test]
+    fn test_adjust_date_to_february_28_non_leap_year() {
+        // Given: 2023년 1월 31일 선택
+        let mut state = CalendarState::new(2023, 1);
+        state.selected_date = NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
+
+        // When: 2월로 이동 (평년, 28일까지)
+        state.next_month();
+
+        // Then: 2월 28일로 조정됨
+        assert_eq!(state.selected_date.day(), 28);
+        assert_eq!(state.selected_date.month(), 2);
+    }
+
+    #[test]
+    fn test_adjust_date_to_april_30() {
+        // Given: 3월 31일 선택
+        let mut state = CalendarState::new(2026, 3);
+        state.selected_date = NaiveDate::from_ymd_opt(2026, 3, 31).unwrap();
+
+        // When: 4월로 이동 (30일까지)
+        state.next_month();
+
+        // Then: 4월 30일로 조정됨
+        assert_eq!(state.selected_date.day(), 30);
+        assert_eq!(state.selected_date.month(), 4);
+    }
+
+    #[test]
+    fn test_adjust_date_year_boundary() {
+        // Given: 12월 31일 선택
+        let mut state = CalendarState::new(2025, 12);
+        state.selected_date = NaiveDate::from_ymd_opt(2025, 12, 31).unwrap();
+
+        // When: 다음 월로 이동 (→ 2026년 1월)
+        state.next_month();
+
+        // Then: 2026년 1월 31일
+        assert_eq!(state.selected_date.day(), 31);
+        assert_eq!(state.selected_date.month(), 1);
+        assert_eq!(state.selected_date.year(), 2026);
     }
 }
