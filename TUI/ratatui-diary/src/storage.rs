@@ -29,6 +29,11 @@ impl Storage {
         fs::write(path, content)
     }
 
+    pub fn load(&self, date: NaiveDate) -> io::Result<String> {
+        let path = self.get_path(date);
+        fs::read_to_string(path)
+    }
+
     fn get_path(&self, date: NaiveDate) -> PathBuf {
         self.entries_dir.join(format!("{}.md", date))
     }
