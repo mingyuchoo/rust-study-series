@@ -304,6 +304,35 @@ impl EditorState {
             Some(result)
         }
     }
+
+    pub fn delete_selection(&mut self) {
+        let ((start_line, start_col), (end_line, end_col)) = match self.get_selection_range() {
+            Some(range) => range,
+            None => return,
+        };
+
+        if start_line == end_line {
+            // 같은 줄에서 삭제
+            self.content[start_line].replace_range(start_col..end_col, "");
+            self.cursor_line = start_line;
+            self.cursor_col = start_col;
+        } else {
+            // 여러 줄 삭제
+            let before = self.content[start_line][..start_col].to_string();
+            let after = self.content[end_line][end_col..].to_string();
+
+            // 중간 줄들 제거
+            self.content.drain(start_line..=end_line);
+
+            // 합친 줄 삽입
+            self.content.insert(start_line, before + &after);
+            self.cursor_line = start_line;
+            self.cursor_col = start_col;
+        }
+
+        self.selection = None;
+        self.is_modified = true;
+    }
 }
 
 fn days_in_month(year: i32, month: u32) -> u32 {

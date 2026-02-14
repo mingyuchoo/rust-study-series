@@ -174,6 +174,49 @@ mod selection_tests {
         let text = state.get_selected_text();
         assert_eq!(text, Some("line\nSecond line\nThird".to_string()));
     }
+
+    #[test]
+    fn test_delete_selection_single_line() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec!["Hello World".to_string()];
+        state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 0,
+            cursor_line: 0,
+            cursor_col: 5,
+        });
+
+        state.delete_selection();
+
+        assert_eq!(state.content[0], " World");
+        assert_eq!(state.cursor_line, 0);
+        assert_eq!(state.cursor_col, 0);
+    }
+
+    #[test]
+    fn test_delete_selection_multi_line() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
+        let mut state = EditorState::new(date);
+        state.content = vec![
+            "First line".to_string(),
+            "Second line".to_string(),
+            "Third line".to_string(),
+        ];
+        state.selection = Some(Selection {
+            anchor_line: 0,
+            anchor_col: 6,
+            cursor_line: 2,
+            cursor_col: 5,
+        });
+
+        state.delete_selection();
+
+        assert_eq!(state.content.len(), 1);
+        assert_eq!(state.content[0], "First  line");
+        assert_eq!(state.cursor_line, 0);
+        assert_eq!(state.cursor_col, 6);
+    }
 }
 
 #[cfg(test)]
