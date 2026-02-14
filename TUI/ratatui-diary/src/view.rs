@@ -1,3 +1,4 @@
+use crate::markdown::render_to_text;
 use crate::model::{EditorMode,
                    Model,
                    Screen};
@@ -216,11 +217,24 @@ fn render_editor(f: &mut Frame, model: &Model) {
         .style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(statusbar, editor_chunks[2]);
 
-    // 오른쪽: Markdown 미리보기 (임시)
-    let preview_block = Block::default()
-        .title("Markdown 미리보기")
-        .borders(Borders::ALL);
-    f.render_widget(preview_block, main_chunks[1]);
+    // 오른쪽: Markdown 미리보기
+    let content = model.editor_state.get_content();
+    render_markdown_preview(f, main_chunks[1], &content);
+}
+
+fn render_markdown_preview(f: &mut Frame, area: Rect, markdown: &str) {
+    let rendered_text = render_to_text(markdown);
+
+    let preview = Paragraph::new(rendered_text)
+        .block(
+            Block::default()
+                .title("Markdown 미리보기")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan)),
+        )
+        .wrap(Wrap { trim: false });
+
+    f.render_widget(preview, area);
 }
 
 fn render_error_popup(f: &mut Frame, model: &Model) {
