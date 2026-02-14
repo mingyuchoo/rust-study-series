@@ -72,3 +72,31 @@ fn main() {
     // 복잡한 마크다운이 제대로 렌더링되는지 확인
     assert!(result.lines.len() > 5);
 }
+
+#[test]
+fn test_render_blockquote() {
+    let markdown = "> This is a quote\n> Multiple lines";
+    let result = render_to_text(markdown);
+    assert!(result.lines.len() >= 2);
+}
+
+#[test]
+fn test_render_horizontal_rule() {
+    let markdown = "Before\n\n---\n\nAfter";
+    let result = render_to_text(markdown);
+    assert!(result.lines.len() >= 3);
+}
+
+#[test]
+fn test_render_table() {
+    let markdown = "| Col1 | Col2 |\n|------|------|\n| A    | B    |";
+    let result = render_to_text(markdown);
+    assert!(result.lines.len() >= 3);
+}
+
+#[test]
+fn test_render_links() {
+    let markdown = "[Link Text](https://example.com)";
+    let result = render_to_text(markdown);
+    assert!(result.lines.len() > 0);
+}
