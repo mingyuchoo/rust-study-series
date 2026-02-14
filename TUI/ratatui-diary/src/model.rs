@@ -68,6 +68,46 @@ impl CalendarState {
             cursor_pos: 0,
         }
     }
+
+    pub fn next_month(&mut self) {
+        if self.current_month == 12 {
+            self.current_month = 1;
+            self.current_year += 1;
+        } else {
+            self.current_month += 1;
+        }
+        self.adjust_selected_date();
+    }
+
+    pub fn prev_month(&mut self) {
+        if self.current_month == 1 {
+            self.current_month = 12;
+            self.current_year -= 1;
+        } else {
+            self.current_month -= 1;
+        }
+        self.adjust_selected_date();
+    }
+
+    pub fn next_year(&mut self) {
+        self.current_year += 1;
+        self.adjust_selected_date();
+    }
+
+    pub fn prev_year(&mut self) {
+        self.current_year -= 1;
+        self.adjust_selected_date();
+    }
+
+    fn adjust_selected_date(&mut self) {
+        // 선택된 날짜가 새 월에 유효한지 확인
+        let day = self.selected_date.day();
+        self.selected_date = NaiveDate::from_ymd_opt(
+            self.current_year,
+            self.current_month,
+            day.min(days_in_month(self.current_year, self.current_month))
+        ).unwrap();
+    }
 }
 
 impl EditorState {
@@ -81,4 +121,12 @@ impl EditorState {
             is_modified: false,
         }
     }
+}
+
+fn days_in_month(year: i32, month: u32) -> u32 {
+    NaiveDate::from_ymd_opt(year, month + 1, 1)
+        .unwrap_or_else(|| NaiveDate::from_ymd_opt(year + 1, 1, 1).unwrap())
+        .pred_opt()
+        .unwrap()
+        .day()
 }
