@@ -68,7 +68,12 @@ fn run_app<B: Backend>(
 }
 
 fn handle_key(key: KeyEvent, model: &Model) -> Option<Msg> {
-    use ratatui_diary::model::{Screen, EditorMode};
+    use ratatui_diary::model::Screen;
+
+    // 에러 팝업이 표시 중이면 Esc로 닫기
+    if model.show_error_popup && key.code == KeyCode::Esc {
+        return Some(Msg::DismissError);
+    }
 
     match model.screen {
         Screen::Calendar => handle_calendar_key(key),
