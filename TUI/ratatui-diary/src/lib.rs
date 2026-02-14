@@ -1,8 +1,9 @@
-pub mod model;
+pub mod markdown;
 pub mod message;
+pub mod model;
+pub mod storage;
 pub mod update;
 pub mod view;
-pub mod storage;
 
-pub use model::Model;
 pub use message::Msg;
+pub use model::Model;
