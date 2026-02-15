@@ -1,12 +1,15 @@
-use ratatui_diary::{
-    model::{Screen, EditorMode},
-    Model, Msg, storage::Storage, update, view,
-};
-use ratatui::backend::TestBackend;
-use ratatui::Terminal;
+use chrono::NaiveDate;
+use ratatui::{Terminal,
+              backend::TestBackend};
+use ratatui_diary::{Model,
+                    Msg,
+                    model::{EditorMode,
+                            Screen},
+                    storage::Storage,
+                    update,
+                    view};
 use std::collections::HashSet;
 use tempfile::TempDir;
-use chrono::NaiveDate;
 
 // 애플리케이션 초기화 테스트
 #[test]
@@ -53,10 +56,7 @@ fn test_full_diary_workflow() {
     assert_eq!(model.editor_state.content, vec!["test".to_string()]);
 
     // When: Insert 모드 진입
-    update::update(
-        &mut model,
-        Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor),
-    );
+    update::update(&mut model, Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor));
 
     // Then: Insert 모드로 변경
     assert_eq!(model.editor_state.mode, EditorMode::Insert);
@@ -101,10 +101,7 @@ fn test_error_handling_workflow() {
 
     // Then: 에러 팝업이 표시됨 (update.rs에서 "로드 실패: " 접두사 추가)
     assert!(model.show_error_popup);
-    assert_eq!(
-        model.error_message,
-        Some("로드 실패: 파일을 찾을 수 없음".to_string())
-    );
+    assert_eq!(model.error_message, Some("로드 실패: 파일을 찾을 수 없음".to_string()));
 
     // When: 에러 메시지 무시
     update::update(&mut model, Msg::DismissError);
@@ -251,10 +248,7 @@ fn test_complex_editor_workflow() {
     model.screen = Screen::Editor;
 
     // When: Insert 모드로 진입
-    update::update(
-        &mut model,
-        Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor),
-    );
+    update::update(&mut model, Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor));
 
     // Then: Insert 모드 확인
     assert_eq!(model.editor_state.mode, EditorMode::Insert);
@@ -327,10 +321,7 @@ fn test_backspace_handling() {
     model.editor_state.cursor_col = 5;
 
     // When: Insert 모드로 진입
-    update::update(
-        &mut model,
-        Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor),
-    );
+    update::update(&mut model, Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor));
 
     // When: 백스페이스 처리
     update::update(&mut model, Msg::EditorBackspace);
@@ -372,10 +363,7 @@ fn test_undo_redo() {
     model.screen = Screen::Editor;
 
     // When: Insert 모드로 진입하여 문자 입력
-    update::update(
-        &mut model,
-        Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor),
-    );
+    update::update(&mut model, Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor));
     update::update(&mut model, Msg::EditorInsertChar('A'));
     update::update(&mut model, Msg::EditorEnterNormalMode);
 

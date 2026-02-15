@@ -256,9 +256,16 @@ fn test_editor_search_navigation_updates_selection() {
 #[cfg(test)]
 mod view_rendering_complete {
     use chrono::NaiveDate;
-    use ratatui::backend::TestBackend;
-    use ratatui::Terminal;
-    use ratatui_diary::{Model, storage::Storage, view, model::{EditorMode, EditorSubMode, Screen, Selection, CalendarSubMode}};
+    use ratatui::{Terminal,
+                  backend::TestBackend};
+    use ratatui_diary::{Model,
+                        model::{CalendarSubMode,
+                                EditorMode,
+                                EditorSubMode,
+                                Screen,
+                                Selection},
+                        storage::Storage,
+                        view};
     use std::collections::HashSet;
     use tempfile::TempDir;
 
@@ -281,9 +288,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 렌더 버퍼가 비어있지 않음
         let buffer = terminal.backend().buffer();
@@ -298,9 +307,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 렌더 버퍼가 비어있지 않음
         let buffer = terminal.backend().buffer();
@@ -316,9 +327,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 렌더 버퍼가 비어있지 않음
         let buffer = terminal.backend().buffer();
@@ -333,9 +346,11 @@ mod view_rendering_complete {
         let (_temp, model) = create_test_model();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 렌더 버퍼가 비어있지 않음 (레이아웃 조정됨)
         let buffer = terminal.backend().buffer();
@@ -350,9 +365,11 @@ mod view_rendering_complete {
         let (_temp, model) = create_test_model();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 렌더 버퍼가 비어있지 않음
         let buffer = terminal.backend().buffer();
@@ -374,9 +391,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 선택 영역이 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -394,9 +413,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 검색 매치가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -413,9 +434,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 일기 엔트리가 표시됨
         let buffer = terminal.backend().buffer();
@@ -431,9 +454,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: Insert 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -449,9 +474,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: Goto 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -467,9 +494,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: Space 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -486,9 +515,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: Search 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -504,9 +535,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: Space 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -518,17 +551,15 @@ mod view_rendering_complete {
         // Given: Markdown 콘텐츠가 있는 에디터
         let (_temp, mut model) = create_test_model();
         model.screen = Screen::Editor;
-        model.editor_state.content = vec![
-            "# 헤더 1".to_string(),
-            "**굵은 텍스트**".to_string(),
-            "- 리스트 항목".to_string(),
-        ];
+        model.editor_state.content = vec!["# 헤더 1".to_string(), "**굵은 텍스트**".to_string(), "- 리스트 항목".to_string()];
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: Markdown 미리보기가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -544,9 +575,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 긴 라인이 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -558,13 +591,15 @@ mod view_rendering_complete {
         // Given: 여러 줄이 있는 에디터
         let (_temp, mut model) = create_test_model();
         model.screen = Screen::Editor;
-        model.editor_state.content = (0..50).map(|i| format!("라인 {}", i)).collect();
+        model.editor_state.content = (0 .. 50).map(|i| format!("라인 {}", i)).collect();
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 스크롤 가능한 콘텐츠가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -576,11 +611,7 @@ mod view_rendering_complete {
         // Given: 여러 줄에 걸친 선택 영역이 있는 에디터
         let (_temp, mut model) = create_test_model();
         model.screen = Screen::Editor;
-        model.editor_state.content = vec![
-            "첫 번째 라인".to_string(),
-            "두 번째 라인".to_string(),
-            "세 번째 라인".to_string(),
-        ];
+        model.editor_state.content = vec!["첫 번째 라인".to_string(), "두 번째 라인".to_string(), "세 번째 라인".to_string()];
         model.editor_state.selection = Some(Selection {
             anchor_line: 0,
             anchor_col: 2,
@@ -590,9 +621,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 여러 줄 선택이 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -608,9 +641,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 달력이 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -626,9 +661,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 빈 에디터가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -645,9 +682,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: Normal 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -659,11 +698,7 @@ mod view_rendering_complete {
         // Given: 혼합된 콘텐츠, 선택, 검색이 있는 에디터
         let (_temp, mut model) = create_test_model();
         model.screen = Screen::Editor;
-        model.editor_state.content = vec![
-            "# Header".to_string(),
-            "search test".to_string(),
-            "another test".to_string(),
-        ];
+        model.editor_state.content = vec!["# Header".to_string(), "search test".to_string(), "another test".to_string()];
         model.editor_state.search_pattern = "test".to_string();
         model.editor_state.execute_search();
         model.editor_state.selection = Some(Selection {
@@ -675,9 +710,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 혼합된 콘텐츠가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -689,17 +726,15 @@ mod view_rendering_complete {
         // Given: 유니코드 콘텐츠가 있는 에디터
         let (_temp, mut model) = create_test_model();
         model.screen = Screen::Editor;
-        model.editor_state.content = vec![
-            "한글 테스트 🎉".to_string(),
-            "日本語テスト".to_string(),
-            "Emoji: 😀 🎯 ✨".to_string(),
-        ];
+        model.editor_state.content = vec!["한글 테스트 🎉".to_string(), "日本語テスト".to_string(), "Emoji: 😀 🎯 ✨".to_string()];
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 유니코드 콘텐츠가 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -715,9 +750,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 에러 팝업이 렌더링됨
         let buffer = terminal.backend().buffer();
@@ -735,9 +772,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 커서 위치가 설정됨
         let buffer = terminal.backend().buffer();
@@ -755,9 +794,11 @@ mod view_rendering_complete {
         let mut terminal = setup_terminal();
 
         // When: 렌더링
-        terminal.draw(|f| {
-            view::view(f, &model);
-        }).unwrap();
+        terminal
+            .draw(|f| {
+                view::view(f, &model);
+            })
+            .unwrap();
 
         // Then: 달력이 렌더링됨
         let buffer = terminal.backend().buffer();

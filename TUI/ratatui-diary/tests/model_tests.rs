@@ -543,7 +543,8 @@ mod search_tests {
 
 #[cfg(test)]
 mod days_in_month_tests {
-    use chrono::{Datelike, NaiveDate};
+    use chrono::{Datelike,
+                 NaiveDate};
     use ratatui_diary::model::CalendarState;
 
     #[test]
@@ -795,7 +796,7 @@ mod editor_edge_cases {
         let mut state = EditorState::new(date);
 
         // 많은 스냅샷 저장
-        for i in 0..200 {
+        for i in 0 .. 200 {
             state.content = vec![format!("Version {}", i)];
             state.save_snapshot();
         }
@@ -881,7 +882,7 @@ mod editor_edge_cases {
         let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
 
         // MAX_HISTORY를 초과할 때까지 반복
-        for i in 0..150 {
+        for i in 0 .. 150 {
             state.insert_char(char::from_u32(97 + (i % 26) as u32).unwrap());
             state.save_snapshot();
         }

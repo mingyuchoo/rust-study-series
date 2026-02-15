@@ -19,9 +19,7 @@ impl Storage {
         })
     }
 
-    pub fn new() -> io::Result<Self> {
-        Self::new_impl(dirs::data_local_dir())
-    }
+    pub fn new() -> io::Result<Self> { Self::new_impl(dirs::data_local_dir()) }
 
     fn new_impl(data_dir: Option<PathBuf>) -> io::Result<Self> {
         let base_dir = data_dir
@@ -31,9 +29,7 @@ impl Storage {
     }
 
     #[doc(hidden)]
-    pub fn new_with_none_dir() -> io::Result<Self> {
-        Self::new_impl(None)
-    }
+    pub fn new_with_none_dir() -> io::Result<Self> { Self::new_impl(None) }
 
     pub fn save(&self, date: NaiveDate, content: &str) -> io::Result<()> {
         let path = self.get_path(date);

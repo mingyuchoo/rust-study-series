@@ -373,10 +373,16 @@ fn test_dismiss_error() {
 
 #[cfg(test)]
 mod complete_message_coverage {
-    use ratatui_diary::{Msg, Model, message::InsertPosition, model::{EditorMode, EditorSubMode, Screen}, storage::Storage};
+    use chrono::NaiveDate;
+    use ratatui_diary::{Model,
+                        Msg,
+                        message::InsertPosition,
+                        model::{EditorMode,
+                                EditorSubMode,
+                                Screen},
+                        storage::Storage};
     use std::collections::HashSet;
     use tempfile::TempDir;
-    use chrono::NaiveDate;
 
     fn setup_model() -> (Model, TempDir) {
         let temp = TempDir::new().unwrap();
@@ -899,7 +905,7 @@ mod complete_message_coverage {
         model.screen = Screen::Editor;
         model.editor_state.mode = EditorMode::Normal;
         model.editor_state.content = vec!["Hello".to_string()];
-        model.editor_state.cursor_col = 5;  // 줄 길이와 같음
+        model.editor_state.cursor_col = 5; // 줄 길이와 같음
 
         // When: 오른쪽 이동 메시지 처리
         ratatui_diary::update::update(&mut model, Msg::EditorMoveRight);
@@ -1526,7 +1532,7 @@ mod complete_message_coverage {
         model.screen = Screen::Editor;
         model.editor_state.mode = EditorMode::Normal;
         model.editor_state.content = vec!["Line 1".to_string()];
-        model.editor_state.cursor_line = 1;  // 마지막 줄 다음
+        model.editor_state.cursor_line = 1; // 마지막 줄 다음
 
         // When: LineBelow 위치에서 Insert 모드 진입
         ratatui_diary::update::update(&mut model, Msg::EditorEnterInsert(InsertPosition::LineBelow));

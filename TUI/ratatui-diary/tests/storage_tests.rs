@@ -92,15 +92,14 @@ fn test_new_uses_system_data_dir() {
 
     // Then: 성공적으로 생성되거나 에러 반환
     match result {
-        Ok(storage) => {
+        | Ok(storage) => {
             // 생성된 storage는 유효해야 함
             assert!(storage.scan_entries().is_ok());
-        }
-        Err(e) => {
+        },
+        | Err(e) => {
             // 에러 메시지 검증
-            assert!(e.to_string().contains("Cannot find local data directory")
-                    || e.kind() == std::io::ErrorKind::NotFound);
-        }
+            assert!(e.to_string().contains("Cannot find local data directory") || e.kind() == std::io::ErrorKind::NotFound);
+        },
     }
 }
 
