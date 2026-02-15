@@ -805,3 +805,16 @@ mod view_rendering_complete {
         assert!(!buffer.content.is_empty(), "완전한 마지막 주 달력 렌더링 버퍼가 비어있음");
     }
 }
+
+#[cfg(test)]
+mod keybinding_tests {
+    use ratatui_diary::model::CalendarState;
+    use ratatui_diary::view::build_calendar_keybindings;
+
+    #[test]
+    fn test_build_calendar_keybindings_normal() {
+        let state = CalendarState::new(2026, 2);
+        let result = build_calendar_keybindings(&state);
+        assert_eq!(result, "hjkl:이동 | e:편집 | space:명령 | q:종료");
+    }
+}

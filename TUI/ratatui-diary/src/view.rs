@@ -1,5 +1,7 @@
 use crate::{markdown::render_to_text,
-            model::{EditorMode,
+            model::{CalendarState,
+                    CalendarSubMode,
+                    EditorMode,
                     EditorState,
                     EditorSubMode,
                     Model,
@@ -23,6 +25,14 @@ use ratatui::{Frame,
 
 /// 선택 영역 타입: ((시작 라인, 시작 컬럼), (끝 라인, 끝 컬럼))
 type SelectionRange = Option<((usize, usize), (usize, usize))>;
+
+/// 달력 화면의 현재 모드에 맞는 키바인딩 도움말 텍스트 생성
+pub fn build_calendar_keybindings(state: &CalendarState) -> String {
+    match state.submode {
+        None => "hjkl:이동 | e:편집 | space:명령 | q:종료".to_string(),
+        Some(CalendarSubMode::Space) => "n/p:다음/이전달 | y/Y:다음/이전년 | q:종료 | Esc:취소".to_string(),
+    }
+}
 
 pub fn view(f: &mut Frame, model: &Model) {
     match model.screen {
