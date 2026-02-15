@@ -90,8 +90,9 @@ fn render_calendar(f: &mut Frame, model: &Model) {
     // 달력 그리드
     render_calendar_grid(f, calendar_chunks[1], model);
 
-    // 상태바
-    let statusbar = Paragraph::new("h/l: 달 | H/L: 연도 | Enter: 작성 | q: 종료").alignment(Alignment::Center);
+    // 상태바 - 동적 키바인딩
+    let keybindings = build_calendar_keybindings(&model.calendar_state);
+    let statusbar = Paragraph::new(keybindings).alignment(Alignment::Center);
     f.render_widget(statusbar, calendar_chunks[2]);
 
     // 오른쪽: 미리보기 영역
