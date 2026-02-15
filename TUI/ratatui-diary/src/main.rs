@@ -106,7 +106,7 @@ fn handle_calendar_key(key: KeyEvent, state: &ratatui_diary::model::CalendarStat
         | KeyCode::Char('l') => Some(Msg::CalendarMoveRight),
         | KeyCode::Char('k') => Some(Msg::CalendarMoveUp),
         | KeyCode::Char('j') => Some(Msg::CalendarMoveDown),
-        | KeyCode::Enter => Some(Msg::CalendarSelectDate),
+        | KeyCode::Char('e') => Some(Msg::CalendarSelectDate),
         | KeyCode::Char(' ') => Some(Msg::CalendarEnterSpaceMode),
         | KeyCode::Char('q') => Some(Msg::Quit),
         | _ => None,
