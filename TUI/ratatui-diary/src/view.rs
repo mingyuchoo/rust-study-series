@@ -243,9 +243,11 @@ fn render_editor(f: &mut Frame, model: &Model) {
         },
     }
 
-    // 하단바: 모드와 submode 표시
+    // 하단바: 모드 정보와 키바인딩 표시
     let mode_text = build_status_text(&model.editor_state);
-    let statusbar = Paragraph::new(mode_text).style(Style::default().add_modifier(Modifier::BOLD));
+    let keybindings = build_editor_keybindings(&model.editor_state);
+    let status_text = format!("{} | {}", mode_text, keybindings);
+    let statusbar = Paragraph::new(status_text).style(Style::default().add_modifier(Modifier::BOLD));
     f.render_widget(statusbar, editor_chunks[2]);
 
     // 오른쪽: Markdown 미리보기
