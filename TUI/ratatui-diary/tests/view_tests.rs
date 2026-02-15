@@ -809,8 +809,11 @@ mod view_rendering_complete {
 #[cfg(test)]
 mod keybinding_tests {
     use chrono::NaiveDate;
-    use ratatui_diary::model::{CalendarState, CalendarSubMode, EditorState};
-    use ratatui_diary::view::{build_calendar_keybindings, build_editor_keybindings};
+    use ratatui_diary::{model::{CalendarState,
+                                CalendarSubMode,
+                                EditorState},
+                        view::{build_calendar_keybindings,
+                               build_editor_keybindings}};
 
     #[test]
     fn test_build_calendar_keybindings_normal() {
@@ -832,7 +835,10 @@ mod keybinding_tests {
         let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
         let state = EditorState::new(date);
         let result = build_editor_keybindings(&state);
-        assert_eq!(result, "hjkl:이동 | w/b/e:단어 | i/a/o/O:입력 | v/x:선택 | d/c/y/p:편집 | u/U:실행취소 | g/space//:모드 | Esc:뒤로");
+        assert_eq!(
+            result,
+            "hjkl:이동 | w/b/e:단어 | i/a/o/O:입력 | v/x:선택 | d/c/y/p:편집 | u/U:실행취소 | g/space//:모드 | Esc:뒤로"
+        );
     }
 
     #[test]

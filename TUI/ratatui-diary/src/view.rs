@@ -29,23 +29,21 @@ type SelectionRange = Option<((usize, usize), (usize, usize))>;
 /// 달력 화면의 현재 모드에 맞는 키바인딩 도움말 텍스트 생성
 pub fn build_calendar_keybindings(state: &CalendarState) -> String {
     match state.submode {
-        None => "hjkl:이동 | e:편집 | space:명령 | q:종료".to_string(),
-        Some(CalendarSubMode::Space) => "n/p:다음/이전달 | y/Y:다음/이전년 | q:종료 | Esc:취소".to_string(),
+        | None => "hjkl:이동 | e:편집 | space:명령 | q:종료".to_string(),
+        | Some(CalendarSubMode::Space) => "n/p:다음/이전달 | y/Y:다음/이전년 | q:종료 | Esc:취소".to_string(),
     }
 }
 
 /// 에디터 화면의 현재 모드에 맞는 키바인딩 도움말 텍스트 생성
 pub fn build_editor_keybindings(state: &EditorState) -> String {
     match state.mode {
-        EditorMode::Normal => {
-            match &state.submode {
-                None => "hjkl:이동 | w/b/e:단어 | i/a/o/O:입력 | v/x:선택 | d/c/y/p:편집 | u/U:실행취소 | g/space//:모드 | Esc:뒤로".to_string(),
-                Some(EditorSubMode::Goto) => "g:문서시작 | e:문서끝 | h:줄시작 | l:줄끝 | Esc:취소".to_string(),
-                Some(EditorSubMode::SpaceCommand) => "w:저장 | q:뒤로 | x:저장후뒤로 | Esc:취소".to_string(),
-                Some(EditorSubMode::Search) => "입력:검색어 | Enter:실행 | n/N:다음/이전 | Esc:취소".to_string(),
-            }
+        | EditorMode::Normal => match &state.submode {
+            | None => "hjkl:이동 | w/b/e:단어 | i/a/o/O:입력 | v/x:선택 | d/c/y/p:편집 | u/U:실행취소 | g/space//:모드 | Esc:뒤로".to_string(),
+            | Some(EditorSubMode::Goto) => "g:문서시작 | e:문서끝 | h:줄시작 | l:줄끝 | Esc:취소".to_string(),
+            | Some(EditorSubMode::SpaceCommand) => "w:저장 | q:뒤로 | x:저장후뒤로 | Esc:취소".to_string(),
+            | Some(EditorSubMode::Search) => "입력:검색어 | Enter:실행 | n/N:다음/이전 | Esc:취소".to_string(),
         },
-        EditorMode::Insert => "입력중... | Enter:새줄 | Backspace:삭제 | Esc:Normal모드".to_string(),
+        | EditorMode::Insert => "입력중... | Enter:새줄 | Backspace:삭제 | Esc:Normal모드".to_string(),
     }
 }
 
