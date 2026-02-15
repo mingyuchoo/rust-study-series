@@ -808,7 +808,7 @@ mod view_rendering_complete {
 
 #[cfg(test)]
 mod keybinding_tests {
-    use ratatui_diary::model::CalendarState;
+    use ratatui_diary::model::{CalendarState, CalendarSubMode};
     use ratatui_diary::view::build_calendar_keybindings;
 
     #[test]
@@ -816,5 +816,13 @@ mod keybinding_tests {
         let state = CalendarState::new(2026, 2);
         let result = build_calendar_keybindings(&state);
         assert_eq!(result, "hjkl:이동 | e:편집 | space:명령 | q:종료");
+    }
+
+    #[test]
+    fn test_build_calendar_keybindings_space_mode() {
+        let mut state = CalendarState::new(2026, 2);
+        state.submode = Some(CalendarSubMode::Space);
+        let result = build_calendar_keybindings(&state);
+        assert_eq!(result, "n/p:다음/이전달 | y/Y:다음/이전년 | q:종료 | Esc:취소");
     }
 }
