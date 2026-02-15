@@ -834,4 +834,40 @@ mod keybinding_tests {
         let result = build_editor_keybindings(&state);
         assert_eq!(result, "hjkl:이동 | w/b/e:단어 | i/a/o/O:입력 | v/x:선택 | d/c/y/p:편집 | u/U:실행취소 | g/space//:모드 | Esc:뒤로");
     }
+
+    #[test]
+    fn test_build_editor_keybindings_insert() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+        let mut state = EditorState::new(date);
+        state.mode = ratatui_diary::model::EditorMode::Insert;
+        let result = build_editor_keybindings(&state);
+        assert_eq!(result, "입력중... | Enter:새줄 | Backspace:삭제 | Esc:Normal모드");
+    }
+
+    #[test]
+    fn test_build_editor_keybindings_goto() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+        let mut state = EditorState::new(date);
+        state.submode = Some(ratatui_diary::model::EditorSubMode::Goto);
+        let result = build_editor_keybindings(&state);
+        assert_eq!(result, "g:문서시작 | e:문서끝 | h:줄시작 | l:줄끝 | Esc:취소");
+    }
+
+    #[test]
+    fn test_build_editor_keybindings_space_command() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+        let mut state = EditorState::new(date);
+        state.submode = Some(ratatui_diary::model::EditorSubMode::SpaceCommand);
+        let result = build_editor_keybindings(&state);
+        assert_eq!(result, "w:저장 | q:뒤로 | x:저장후뒤로 | Esc:취소");
+    }
+
+    #[test]
+    fn test_build_editor_keybindings_search() {
+        let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
+        let mut state = EditorState::new(date);
+        state.submode = Some(ratatui_diary::model::EditorSubMode::Search);
+        let result = build_editor_keybindings(&state);
+        assert_eq!(result, "입력:검색어 | Enter:실행 | n/N:다음/이전 | Esc:취소");
+    }
 }
