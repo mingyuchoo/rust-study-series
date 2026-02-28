@@ -119,6 +119,12 @@ ratatui-diary
 
 파일명 형식: `YYYY-MM-DD.md`
 
+## 유니코드 지원
+
+- 한글(CJK) 문자의 전각(2칸) 너비를 올바르게 처리
+- `unicode-width` 크레이트를 사용하여 커서 위치를 정확하게 계산
+- 멀티바이트 문자(UTF-8)에 대한 바이트/문자 인덱스 변환 지원
+
 ## 아키텍처
 
 ELM (Model-Update-View) 패턴 기반

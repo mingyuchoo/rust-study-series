@@ -6,6 +6,8 @@ use crate::{markdown::render_to_text,
                     EditorSubMode,
                     Model,
                     Screen}};
+use unicode_width::UnicodeWidthChar;
+
 use ratatui::{Frame,
               layout::{Alignment,
                        Constraint,
@@ -228,18 +230,20 @@ fn render_editor(f: &mut Frame, model: &Model) {
     f.render_widget(text, editor_chunks[1]);
 
     // 커서 표시 (Insert와 Normal 모드 모두)
-    match model.editor_state.mode {
-        | EditorMode::Insert => {
-            let cursor_x = editor_chunks[1].x + model.editor_state.cursor_col as u16;
-            let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
-            f.set_cursor(cursor_x, cursor_y);
-        },
-        | EditorMode::Normal => {
-            let cursor_x = editor_chunks[1].x + model.editor_state.cursor_col as u16;
-            let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
-            f.set_cursor(cursor_x, cursor_y);
-        },
-    }
+    // CJK 문자(한글 등)는 터미널에서 2칸을 차지하므로, cursor_col(문자 수)이 아닌
+    // 실제 표시 너비(display width)를 사용하여 커서 X 좌표를 계산해야 합니다.
+    let display_width: u16 = if model.editor_state.cursor_line < model.editor_state.content.len() {
+        model.editor_state.content[model.editor_state.cursor_line]
+            .chars()
+            .take(model.editor_state.cursor_col)
+            .map(|c| UnicodeWidthChar::width(c).unwrap_or(0) as u16)
+            .sum()
+    } else {
+        0
+    };
+    let cursor_x = editor_chunks[1].x + display_width;
+    let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
+    f.set_cursor(cursor_x, cursor_y);
 
     // 하단바: 모드 정보와 키바인딩 표시
     let mode_text = build_status_text(&model.editor_state);

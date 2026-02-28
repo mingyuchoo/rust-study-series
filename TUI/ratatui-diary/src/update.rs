@@ -29,7 +29,7 @@ fn ensure_selection_for_edit(state: &mut EditorState) {
     if state.selection.is_none() {
         // 현재 줄 선택
         let line_len = if state.cursor_line < state.content.len() {
-            state.content[state.cursor_line].len()
+            state.content[state.cursor_line].chars().count()
         } else {
             0
         };
@@ -76,11 +76,13 @@ fn paste_clipboard(state: &mut EditorState, before: bool) {
         if state.cursor_line >= state.content.len() {
             state.content.push(String::new());
         }
-        let line = &mut state.content[state.cursor_line];
-        let insert_pos = if before { state.cursor_col } else { (state.cursor_col + 1).min(line.len()) };
+        let line_char_len = state.content[state.cursor_line].chars().count();
+        let insert_char_pos = if before { state.cursor_col } else { (state.cursor_col + 1).min(line_char_len) };
 
-        line.insert_str(insert_pos, &state.clipboard);
-        state.cursor_col = insert_pos + state.clipboard.len();
+        // 문자 인덱스를 바이트 인덱스로 변환하여 insert_str 호출
+        let insert_byte_pos = state.char_idx_to_byte_idx(state.cursor_line, insert_char_pos);
+        state.content[state.cursor_line].insert_str(insert_byte_pos, &state.clipboard);
+        state.cursor_col = insert_char_pos + state.clipboard.chars().count();
     }
 
     state.is_modified = true;
@@ -167,7 +169,7 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         | Msg::EditorMoveRight =>
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal {
                 let line_len = if model.editor_state.cursor_line < model.editor_state.content.len() {
-                    model.editor_state.content[model.editor_state.cursor_line].len()
+                    model.editor_state.content[model.editor_state.cursor_line].chars().count()
                 } else {
                     0
                 };
@@ -180,7 +182,7 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal && model.editor_state.cursor_line > 0 {
                 model.editor_state.cursor_line -= 1;
                 // Clamp cursor_col to new line length
-                let line_len = model.editor_state.content[model.editor_state.cursor_line].len();
+                let line_len = model.editor_state.content[model.editor_state.cursor_line].chars().count();
                 model.editor_state.cursor_col = model.editor_state.cursor_col.min(line_len);
                 update_selection_on_move(&mut model.editor_state);
             }
@@ -192,7 +194,7 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
             {
                 model.editor_state.cursor_line += 1;
                 // Clamp cursor_col to new line length
-                let line_len = model.editor_state.content[model.editor_state.cursor_line].len();
+                let line_len = model.editor_state.content[model.editor_state.cursor_line].chars().count();
                 model.editor_state.cursor_col = model.editor_state.cursor_col.min(line_len);
                 update_selection_on_move(&mut model.editor_state);
             }
@@ -230,7 +232,7 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal && model.editor_state.submode == Some(EditorSubMode::Goto) {
                 if !model.editor_state.content.is_empty() {
                     model.editor_state.cursor_line = model.editor_state.content.len() - 1;
-                    model.editor_state.cursor_col = model.editor_state.content[model.editor_state.cursor_line].len();
+                    model.editor_state.cursor_col = model.editor_state.content[model.editor_state.cursor_line].chars().count();
                 }
                 update_selection_on_move(&mut model.editor_state);
                 model.editor_state.submode = None;
@@ -246,7 +248,7 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
         | Msg::EditorGotoLineEnd => {
             if model.screen == Screen::Editor && model.editor_state.mode == EditorMode::Normal && model.editor_state.submode == Some(EditorSubMode::Goto) {
                 let line_len = if model.editor_state.cursor_line < model.editor_state.content.len() {
-                    model.editor_state.content[model.editor_state.cursor_line].len()
+                    model.editor_state.content[model.editor_state.cursor_line].chars().count()
                 } else {
                     0
                 };
@@ -270,7 +272,7 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
                     },
                     | InsertPosition::AfterCursor => {
                         let line_len = if model.editor_state.cursor_line < model.editor_state.content.len() {
-                            model.editor_state.content[model.editor_state.cursor_line].len()
+                            model.editor_state.content[model.editor_state.cursor_line].chars().count()
                         } else {
                             0
                         };
@@ -335,7 +337,7 @@ pub fn update(model: &mut Model, msg: Msg) -> Option<Command> {
             if model.screen == Screen::Editor {
                 let state = &mut model.editor_state;
                 let line_len = if state.cursor_line < state.content.len() {
-                    state.content[state.cursor_line].len()
+                    state.content[state.cursor_line].chars().count()
                 } else {
                     0
                 };

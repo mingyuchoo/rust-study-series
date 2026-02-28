@@ -10,6 +10,7 @@
   ratatui             = "0.27"
   strip-ansi-escapes  = "0.2"
   termimad            = "0.34"
+  unicode-width       = "0.1"
 
 [dev-dependencies]
   tempfile = "3.8"

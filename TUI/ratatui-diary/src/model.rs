@@ -168,7 +168,7 @@ impl EditorState {
     /// 여러 바이트를 차지합니다. String의 insert(), remove(), 슬라이싱 등의
     /// 연산은 바이트 인덱스를 요구하므로, 문자 개수 기반의 cursor_col을
     /// 바이트 인덱스로 변환해야 합니다.
-    fn char_idx_to_byte_idx(&self, line: usize, char_idx: usize) -> usize {
+    pub fn char_idx_to_byte_idx(&self, line: usize, char_idx: usize) -> usize {
         if line >= self.content.len() {
             return 0;
         }
