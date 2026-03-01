@@ -1,8 +1,7 @@
-//! Helix 스타일 키바인딩을 위한 메시지 타입
+//! Emacs 스타일 키바인딩을 위한 메시지 타입
 //!
-//! 이 모듈은 Selection-Action 모델을 구현하기 위한 52개의 메시지 variants를
-//! 정의합니다. Vim의 Action-Motion 모델과 달리, Helix는 Selection을 먼저 하고
-//! Action을 수행합니다.
+//! 모드리스(modeless) 에디터로, Ctrl+/Alt+ 조합으로 명령을 실행하며
+//! 별도의 모드 전환 없이 항상 문자 입력이 가능합니다.
 
 use chrono::NaiveDate;
 use std::collections::HashSet;
@@ -19,22 +18,19 @@ pub enum Msg {
     EditorMoveDown,
     EditorWordNext,
     EditorWordPrev,
-    EditorWordEnd,
 
-    // 에디터 - Goto 모드
-    EditorEnterGotoMode,
+    // 에디터 - 점프
     EditorGotoDocStart,
     EditorGotoDocEnd,
     EditorGotoLineStart,
     EditorGotoLineEnd,
     EditorExitSubMode,
 
-    // 에디터 - Insert 모드
-    EditorEnterInsert(InsertPosition),
-    EditorEnterNormalMode,
+    // 에디터 - 문자 입력 (항상 활성)
     EditorInsertChar(char),
     EditorBackspace,
     EditorNewLine,
+    EditorOpenLine,
 
     // 에디터 - Selection
     EditorToggleSelection,
@@ -42,10 +38,10 @@ pub enum Msg {
 
     // 에디터 - 편집
     EditorDelete,
-    EditorChange,
+    EditorDeleteForward,
+    EditorKillLine,
     EditorYank,
-    EditorPasteAfter,
-    EditorPasteBefore,
+    EditorPaste,
 
     // 에디터 - Undo/Redo
     EditorUndo,
@@ -59,12 +55,10 @@ pub enum Msg {
     EditorSearchPrev,
     EditorExecuteSearch,
 
-    // 에디터 - Space 명령
-    EditorEnterSpaceMode,
-    EditorSpaceSave,
-    EditorSpaceQuit,
-    EditorSpaceSaveQuit,
-    EditorBack,
+    // 에디터 - Ctrl+X 프리픽스
+    EditorEnterCtrlXMode,
+    EditorCtrlXSave,
+    EditorCtrlXBack,
 
     // 달력
     CalendarMoveLeft,
@@ -72,13 +66,10 @@ pub enum Msg {
     CalendarMoveUp,
     CalendarMoveDown,
     CalendarSelectDate,
-    CalendarEnterSpaceMode,
-    CalendarExitSubMode,
-    CalendarSpaceQuit,
-    CalendarSpaceNextMonth,
-    CalendarSpacePrevMonth,
-    CalendarSpaceNextYear,
-    CalendarSpacePrevYear,
+    CalendarNextMonth,
+    CalendarPrevMonth,
+    CalendarNextYear,
+    CalendarPrevYear,
 
     // 파일 I/O 결과
     LoadDiarySuccess(NaiveDate, String),
@@ -87,12 +78,4 @@ pub enum Msg {
     SaveDiaryFailed(String),
     DeleteDiarySuccess(NaiveDate),
     RefreshIndex(HashSet<NaiveDate>),
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum InsertPosition {
-    BeforeCursor,
-    AfterCursor,
-    LineBelow,
-    LineAbove,
 }

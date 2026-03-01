@@ -3,8 +3,7 @@ use ratatui::{Terminal,
               backend::TestBackend};
 use ratatui_diary::{Model,
                     Msg,
-                    model::{EditorMode,
-                            Screen},
+                    model::Screen,
                     storage::Storage,
                     update,
                     view};
@@ -22,9 +21,8 @@ fn test_application_startup() {
     // When: Model 생성
     let model = Model::new(entries, storage);
 
-    // Then: Calendar 화면으로 시작되고, 에디터는 Normal 모드
+    // Then: Calendar 화면으로 시작 (Emacs — 모드리스)
     assert_eq!(model.screen, Screen::Calendar);
-    assert_eq!(model.editor_state.mode, EditorMode::Normal);
     assert!(!model.show_error_popup);
     assert!(model.error_message.is_none());
 }
@@ -47,7 +45,6 @@ fn test_full_diary_workflow() {
     assert!(cmd.is_some());
     assert_eq!(model.screen, Screen::Editor);
     assert_eq!(model.editor_state.date, date);
-    assert_eq!(model.editor_state.mode, EditorMode::Normal);
 
     // When: 일기 로드 성공
     update::update(&mut model, Msg::LoadDiarySuccess(date, "test".to_string()));
@@ -55,28 +52,16 @@ fn test_full_diary_workflow() {
     // Then: 내용이 로드됨
     assert_eq!(model.editor_state.content, vec!["test".to_string()]);
 
-    // When: Insert 모드 진입
-    update::update(&mut model, Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor));
-
-    // Then: Insert 모드로 변경
-    assert_eq!(model.editor_state.mode, EditorMode::Insert);
-
-    // When: 문자 입력
+    // When: 문자 입력 (Emacs — 항상 입력 가능)
     update::update(&mut model, Msg::EditorInsertChar('H'));
     update::update(&mut model, Msg::EditorInsertChar('i'));
 
     // Then: 내용이 수정됨
     assert!(model.editor_state.is_modified);
 
-    // When: Normal 모드로 복귀
-    update::update(&mut model, Msg::EditorEnterNormalMode);
-
-    // Then: Normal 모드로 변경
-    assert_eq!(model.editor_state.mode, EditorMode::Normal);
-
-    // When: Space 모드 진입 및 저장
-    update::update(&mut model, Msg::EditorEnterSpaceMode);
-    let save_cmd = update::update(&mut model, Msg::EditorSpaceSave);
+    // When: Ctrl+X → Ctrl+S 저장
+    update::update(&mut model, Msg::EditorEnterCtrlXMode);
+    let save_cmd = update::update(&mut model, Msg::EditorCtrlXSave);
 
     // Then: SaveDiary 명령이 반환
     assert!(save_cmd.is_some());
@@ -238,7 +223,7 @@ fn test_quit_message() {
     assert_eq!(model.screen, initial_screen);
 }
 
-// 복합 에디터 워크플로우 테스트
+// 복합 에디터 워크플로우 테스트 (Emacs 스타일)
 #[test]
 fn test_complex_editor_workflow() {
     // Given: 에디터 화면 초기화
@@ -247,13 +232,7 @@ fn test_complex_editor_workflow() {
     let mut model = Model::new(HashSet::new(), storage);
     model.screen = Screen::Editor;
 
-    // When: Insert 모드로 진입
-    update::update(&mut model, Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor));
-
-    // Then: Insert 모드 확인
-    assert_eq!(model.editor_state.mode, EditorMode::Insert);
-
-    // When: 여러 문자 입력
+    // When: 여러 문자 입력 (Emacs — 항상 입력 가능)
     for ch in "테스트".chars() {
         update::update(&mut model, Msg::EditorInsertChar(ch));
     }
@@ -268,15 +247,9 @@ fn test_complex_editor_workflow() {
     // Then: 내용이 여러 줄로 분리
     let line_count = model.editor_state.content.len();
     assert!(line_count >= 1);
-
-    // When: Normal 모드로 복귀
-    update::update(&mut model, Msg::EditorEnterNormalMode);
-
-    // Then: Normal 모드 확인
-    assert_eq!(model.editor_state.mode, EditorMode::Normal);
 }
 
-// 월 네비게이션 테스트
+// 월 네비게이션 테스트 (Emacs — 서브모드 없이 직접 호출)
 #[test]
 fn test_calendar_month_navigation() {
     // Given: Calendar 초기화
@@ -285,14 +258,8 @@ fn test_calendar_month_navigation() {
     let mut model = Model::new(HashSet::new(), storage);
     let initial_month = model.calendar_state.current_month;
 
-    // When: Space 모드 진입
-    update::update(&mut model, Msg::CalendarEnterSpaceMode);
-
-    // Then: Space 서브모드 활성화
-    assert!(model.calendar_state.submode.is_some());
-
-    // When: 다음 달로 이동
-    update::update(&mut model, Msg::CalendarSpaceNextMonth);
+    // When: 다음 달로 이동 (Alt+N — 직접 호출)
+    update::update(&mut model, Msg::CalendarNextMonth);
 
     // Then: 월이 증가
     let new_month = model.calendar_state.current_month;
@@ -301,12 +268,6 @@ fn test_calendar_month_navigation() {
     } else {
         assert_eq!(new_month, initial_month + 1);
     }
-
-    // When: 서브모드 종료
-    update::update(&mut model, Msg::CalendarExitSubMode);
-
-    // Then: 서브모드가 비활성화
-    assert!(model.calendar_state.submode.is_none());
 }
 
 // 백스페이스 처리 테스트
@@ -320,10 +281,7 @@ fn test_backspace_handling() {
     model.editor_state.content = vec!["Hello".to_string()];
     model.editor_state.cursor_col = 5;
 
-    // When: Insert 모드로 진입
-    update::update(&mut model, Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor));
-
-    // When: 백스페이스 처리
+    // When: 백스페이스 처리 (Emacs — 항상 입력 가능)
     update::update(&mut model, Msg::EditorBackspace);
 
     // Then: 내용이 수정됨
@@ -346,8 +304,9 @@ fn test_screen_transition() {
     // Then: Editor 화면으로 전환
     assert_eq!(model.screen, Screen::Editor);
 
-    // When: 에디터에서 뒤로 가기
-    update::update(&mut model, Msg::EditorBack);
+    // When: 에디터에서 Ctrl+X → Ctrl+C로 뒤로 가기
+    update::update(&mut model, Msg::EditorEnterCtrlXMode);
+    update::update(&mut model, Msg::EditorCtrlXBack);
 
     // Then: Calendar 화면으로 복귀
     assert_eq!(model.screen, Screen::Calendar);
@@ -356,35 +315,39 @@ fn test_screen_transition() {
 // Undo/Redo 기능 테스트
 #[test]
 fn test_undo_redo() {
-    // Given: 에디터 초기화
+    // Given: 에디터 초기화 및 내용 입력
     let temp = TempDir::new().unwrap();
     let storage = Storage::with_dir(temp.path()).unwrap();
     let mut model = Model::new(HashSet::new(), storage);
     model.screen = Screen::Editor;
+    model.editor_state.content = vec!["AB".to_string()];
+    model.editor_state.cursor_col = 0;
+    model.editor_state.save_snapshot(); // 변경 후 스냅샷 저장
 
-    // When: Insert 모드로 진입하여 문자 입력
-    update::update(&mut model, Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor));
-    update::update(&mut model, Msg::EditorInsertChar('A'));
-    update::update(&mut model, Msg::EditorEnterNormalMode);
+    let before_delete = model.editor_state.content.clone();
 
-    let with_char = model.editor_state.content.clone();
+    // When: Ctrl+K(kill-line)으로 줄 삭제 — 스냅샷이 저장됨
+    update::update(&mut model, Msg::EditorKillLine);
+
+    let after_kill = model.editor_state.content.clone();
+    assert_ne!(before_delete, after_kill);
 
     // When: Undo 메시지
     update::update(&mut model, Msg::EditorUndo);
 
     // Then: 이전 상태로 복귀
     let after_undo = model.editor_state.content.clone();
-    assert_ne!(with_char, after_undo);
+    assert_eq!(before_delete, after_undo);
 
     // When: Redo 메시지
     update::update(&mut model, Msg::EditorRedo);
 
-    // Then: 다시 문자가 입력된 상태로 복귀
+    // Then: 다시 삭제된 상태로 복귀
     let after_redo = model.editor_state.content.clone();
-    assert_eq!(with_char, after_redo);
+    assert_eq!(after_kill, after_redo);
 }
 
-// Year 네비게이션 테스트
+// Year 네비게이션 테스트 (Emacs — 서브모드 없이 직접 호출)
 #[test]
 fn test_calendar_year_navigation() {
     // Given: Calendar 초기화
@@ -393,28 +356,17 @@ fn test_calendar_year_navigation() {
     let mut model = Model::new(HashSet::new(), storage);
     let initial_year = model.calendar_state.current_year;
 
-    // When: Space 모드 진입
-    update::update(&mut model, Msg::CalendarEnterSpaceMode);
+    // When: 다음 연도로 이동 (Alt+] — 직접 호출)
+    update::update(&mut model, Msg::CalendarNextYear);
 
-    // Then: Space 서브모드 활성화
-    assert!(model.calendar_state.submode.is_some());
-
-    // When: 다음 연도로 이동
-    update::update(&mut model, Msg::CalendarSpaceNextYear);
-
-    // Then: 연도가 증가하고 submode는 자동으로 None이 됨
+    // Then: 연도가 증가
     assert_eq!(model.calendar_state.current_year, initial_year + 1);
-    assert!(model.calendar_state.submode.is_none());
 
-    // When: Space 모드 다시 진입
-    update::update(&mut model, Msg::CalendarEnterSpaceMode);
+    // When: 이전 연도로 이동 (Alt+[ — 직접 호출)
+    update::update(&mut model, Msg::CalendarPrevYear);
 
-    // When: 이전 연도로 이동
-    update::update(&mut model, Msg::CalendarSpacePrevYear);
-
-    // Then: 연도가 감소하고 submode는 자동으로 None이 됨
+    // Then: 연도가 감소
     assert_eq!(model.calendar_state.current_year, initial_year);
-    assert!(model.calendar_state.submode.is_none());
 }
 
 // Diary 삭제 성공 메시지 처리 테스트

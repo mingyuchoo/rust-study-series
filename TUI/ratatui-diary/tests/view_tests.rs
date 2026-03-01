@@ -1,6 +1,5 @@
 use chrono::NaiveDate;
-use ratatui_diary::{model::{EditorMode,
-                            EditorSubMode,
+use ratatui_diary::{model::{EditorSubMode,
                             Model,
                             Screen,
                             Selection},
@@ -57,9 +56,8 @@ fn test_editor_content_updates_preview() {
 
     let mut model = Model::new(entries, storage);
 
-    // 에디터로 전환
+    // 에디터로 전환 (Emacs — 항상 입력 가능)
     model.screen = Screen::Editor;
-    model.editor_state.mode = EditorMode::Insert;
 
     // 텍스트 입력
     model.editor_state.insert_char('#');
@@ -156,26 +154,19 @@ fn test_editor_search_matches_state() {
 
 #[test]
 fn test_editor_submode_display_state() {
-    // Given: 에디터가 Normal 모드
+    // Given: 에디터 초기 상태 (Emacs — 모드리스)
     let temp = TempDir::new().unwrap();
     let storage = Storage::with_dir(temp.path()).unwrap();
     let entries = HashSet::new();
 
     let mut model = Model::new(entries, storage);
     model.screen = Screen::Editor;
-    model.editor_state.mode = EditorMode::Normal;
 
-    // When: Goto 모드 활성화
-    model.editor_state.submode = Some(EditorSubMode::Goto);
+    // When: CtrlX 모드 활성화
+    model.editor_state.submode = Some(EditorSubMode::CtrlX);
 
     // Then: submode가 설정됨
-    assert_eq!(model.editor_state.submode, Some(EditorSubMode::Goto));
-
-    // When: Space 모드 활성화
-    model.editor_state.submode = Some(EditorSubMode::SpaceCommand);
-
-    // Then: submode가 변경됨
-    assert_eq!(model.editor_state.submode, Some(EditorSubMode::SpaceCommand));
+    assert_eq!(model.editor_state.submode, Some(EditorSubMode::CtrlX));
 
     // When: Search 모드 활성화
     model.editor_state.submode = Some(EditorSubMode::Search);
@@ -259,9 +250,7 @@ mod view_rendering_complete {
     use ratatui::{Terminal,
                   backend::TestBackend};
     use ratatui_diary::{Model,
-                        model::{CalendarSubMode,
-                                EditorMode,
-                                EditorSubMode,
+                        model::{EditorSubMode,
                                 Screen,
                                 Selection},
                         storage::Storage,
@@ -446,11 +435,10 @@ mod view_rendering_complete {
     }
 
     #[test]
-    fn test_render_editor_insert_mode() {
-        // Given: Insert 모드의 에디터
+    fn test_render_editor_emacs_mode() {
+        // Given: Emacs 모드의 에디터 (항상 입력 가능)
         let (_temp, mut model) = create_test_model();
         model.screen = Screen::Editor;
-        model.editor_state.mode = EditorMode::Insert;
         let mut terminal = setup_terminal();
 
         // When: 렌더링
@@ -460,17 +448,17 @@ mod view_rendering_complete {
             })
             .unwrap();
 
-        // Then: Insert 모드가 렌더링됨
+        // Then: Emacs 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
-        assert!(!buffer.content.is_empty(), "Insert 모드 렌더링 버퍼가 비어있음");
+        assert!(!buffer.content.is_empty(), "Emacs 모드 렌더링 버퍼가 비어있음");
     }
 
     #[test]
-    fn test_render_editor_goto_submode() {
-        // Given: Goto 서브모드의 에디터
+    fn test_render_editor_ctrlx_submode() {
+        // Given: CtrlX 서브모드의 에디터
         let (_temp, mut model) = create_test_model();
         model.screen = Screen::Editor;
-        model.editor_state.submode = Some(EditorSubMode::Goto);
+        model.editor_state.submode = Some(EditorSubMode::CtrlX);
         let mut terminal = setup_terminal();
 
         // When: 렌더링
@@ -480,29 +468,9 @@ mod view_rendering_complete {
             })
             .unwrap();
 
-        // Then: Goto 모드가 렌더링됨
+        // Then: CtrlX 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
-        assert!(!buffer.content.is_empty(), "Goto 서브모드 렌더링 버퍼가 비어있음");
-    }
-
-    #[test]
-    fn test_render_editor_space_submode() {
-        // Given: Space 서브모드의 에디터
-        let (_temp, mut model) = create_test_model();
-        model.screen = Screen::Editor;
-        model.editor_state.submode = Some(EditorSubMode::SpaceCommand);
-        let mut terminal = setup_terminal();
-
-        // When: 렌더링
-        terminal
-            .draw(|f| {
-                view::view(f, &model);
-            })
-            .unwrap();
-
-        // Then: Space 모드가 렌더링됨
-        let buffer = terminal.backend().buffer();
-        assert!(!buffer.content.is_empty(), "Space 서브모드 렌더링 버퍼가 비어있음");
+        assert!(!buffer.content.is_empty(), "CtrlX 서브모드 렌더링 버퍼가 비어있음");
     }
 
     #[test]
@@ -524,26 +492,6 @@ mod view_rendering_complete {
         // Then: Search 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
         assert!(!buffer.content.is_empty(), "Search 서브모드 렌더링 버퍼가 비어있음");
-    }
-
-    #[test]
-    fn test_render_calendar_space_submode() {
-        // Given: Space 서브모드의 달력
-        let (_temp, mut model) = create_test_model();
-        model.screen = Screen::Calendar;
-        model.calendar_state.submode = Some(CalendarSubMode::Space);
-        let mut terminal = setup_terminal();
-
-        // When: 렌더링
-        terminal
-            .draw(|f| {
-                view::view(f, &model);
-            })
-            .unwrap();
-
-        // Then: Space 모드가 렌더링됨
-        let buffer = terminal.backend().buffer();
-        assert!(!buffer.content.is_empty(), "Calendar Space 서브모드 렌더링 버퍼가 비어있음");
     }
 
     #[test]
@@ -673,11 +621,10 @@ mod view_rendering_complete {
     }
 
     #[test]
-    fn test_render_editor_normal_mode() {
-        // Given: Normal 모드의 에디터
+    fn test_render_editor_default_mode() {
+        // Given: 기본 모드의 에디터 (Emacs — 서브모드 없음)
         let (_temp, mut model) = create_test_model();
         model.screen = Screen::Editor;
-        model.editor_state.mode = EditorMode::Normal;
         model.editor_state.content = vec!["테스트 콘텐츠".to_string()];
         let mut terminal = setup_terminal();
 
@@ -688,9 +635,9 @@ mod view_rendering_complete {
             })
             .unwrap();
 
-        // Then: Normal 모드가 렌더링됨
+        // Then: 기본 모드가 렌더링됨
         let buffer = terminal.backend().buffer();
-        assert!(!buffer.content.is_empty(), "Normal 모드 렌더링 버퍼가 비어있음");
+        assert!(!buffer.content.is_empty(), "기본 모드 렌더링 버퍼가 비어있음");
     }
 
     #[test]
@@ -810,70 +757,44 @@ mod view_rendering_complete {
 mod keybinding_tests {
     use chrono::NaiveDate;
     use ratatui_diary::{model::{CalendarState,
-                                CalendarSubMode,
-                                EditorState},
+                                EditorState,
+                                EditorSubMode},
                         view::{build_calendar_keybindings,
                                build_editor_keybindings}};
 
     #[test]
-    fn test_build_calendar_keybindings_normal() {
+    fn test_build_calendar_keybindings() {
         let state = CalendarState::new(2026, 2);
         let result = build_calendar_keybindings(&state);
-        assert_eq!(result, "hjkl:이동 | e:편집 | space:명령 | q:종료");
+        assert_eq!(result, "C-b/f/p/n:이동 | Enter:편집 | M-n/p:월 | M-]/[:년 | C-q:종료");
     }
 
     #[test]
-    fn test_build_calendar_keybindings_space_mode() {
-        let mut state = CalendarState::new(2026, 2);
-        state.submode = Some(CalendarSubMode::Space);
-        let result = build_calendar_keybindings(&state);
-        assert_eq!(result, "n/p:다음/이전달 | y/Y:다음/이전년 | q:종료 | Esc:취소");
-    }
-
-    #[test]
-    fn test_build_editor_keybindings_normal() {
+    fn test_build_editor_keybindings_default() {
         let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
         let state = EditorState::new(date);
         let result = build_editor_keybindings(&state);
         assert_eq!(
             result,
-            "hjkl:이동 | w/b/e:단어 | i/a/o/O:입력 | v/x:선택 | d/c/y/p:편집 | u/U:실행취소 | g/space//:모드 | Esc:뒤로"
+            "C-f/b/n/p:이동 | C-a/e:줄시작/끝 | M-f/b:단어 | M-</>:문서 | C-h/d:삭제 | C-k:줄삭제 | C-o:줄열기 | C-SPC:마크 | C-w:잘라내기 | M-w:복사 | C-y:붙여넣기 | C-z:실행취소 | C-s:검색 | C-x:명령 | C-q:종료"
         );
     }
 
     #[test]
-    fn test_build_editor_keybindings_insert() {
+    fn test_build_editor_keybindings_ctrlx() {
         let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
         let mut state = EditorState::new(date);
-        state.mode = ratatui_diary::model::EditorMode::Insert;
+        state.submode = Some(EditorSubMode::CtrlX);
         let result = build_editor_keybindings(&state);
-        assert_eq!(result, "입력중... | Enter:새줄 | Backspace:삭제 | Esc:Normal모드");
-    }
-
-    #[test]
-    fn test_build_editor_keybindings_goto() {
-        let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
-        let mut state = EditorState::new(date);
-        state.submode = Some(ratatui_diary::model::EditorSubMode::Goto);
-        let result = build_editor_keybindings(&state);
-        assert_eq!(result, "g:문서시작 | e:문서끝 | h:줄시작 | l:줄끝 | Esc:취소");
-    }
-
-    #[test]
-    fn test_build_editor_keybindings_space_command() {
-        let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
-        let mut state = EditorState::new(date);
-        state.submode = Some(ratatui_diary::model::EditorSubMode::SpaceCommand);
-        let result = build_editor_keybindings(&state);
-        assert_eq!(result, "w:저장 | q:뒤로 | x:저장후뒤로 | Esc:취소");
+        assert_eq!(result, "C-s:저장 | C-c:뒤로 | Esc:취소");
     }
 
     #[test]
     fn test_build_editor_keybindings_search() {
         let date = NaiveDate::from_ymd_opt(2026, 2, 15).unwrap();
         let mut state = EditorState::new(date);
-        state.submode = Some(ratatui_diary::model::EditorSubMode::Search);
+        state.submode = Some(EditorSubMode::Search);
         let result = build_editor_keybindings(&state);
-        assert_eq!(result, "입력:검색어 | Enter:실행 | n/N:다음/이전 | Esc:취소");
+        assert_eq!(result, "입력:검색어 | Enter:실행 | C-s/r:다음/이전 | Esc:취소");
     }
 }

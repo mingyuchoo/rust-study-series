@@ -1,7 +1,8 @@
 use crossterm::{event::{self,
                         Event,
                         KeyCode,
-                        KeyEvent},
+                        KeyEvent,
+                        KeyModifiers},
                 execute,
                 terminal::{EnterAlternateScreen,
                            LeaveAlternateScreen,
@@ -79,75 +80,59 @@ fn handle_key(key: KeyEvent, model: &Model) -> Option<Msg> {
     }
 
     match model.screen {
-        | Screen::Calendar => handle_calendar_key(key, &model.calendar_state),
+        | Screen::Calendar => handle_calendar_key(key),
         | Screen::Editor => handle_editor_key(key, &model.editor_state),
     }
 }
 
-fn handle_calendar_key(key: KeyEvent, state: &ratatui_diary::model::CalendarState) -> Option<Msg> {
-    use ratatui_diary::model::CalendarSubMode;
+fn handle_calendar_key(key: KeyEvent) -> Option<Msg> {
+    let mods = key.modifiers;
 
-    // Space 서브모드 처리
-    if let Some(CalendarSubMode::Space) = state.submode {
-        return match key.code {
-            | KeyCode::Char('q') => Some(Msg::Quit),
-            | KeyCode::Char('n') => Some(Msg::CalendarSpaceNextMonth),
-            | KeyCode::Char('p') => Some(Msg::CalendarSpacePrevMonth),
-            | KeyCode::Char('y') => Some(Msg::CalendarSpaceNextYear),
-            | KeyCode::Char('Y') => Some(Msg::CalendarSpacePrevYear),
-            | KeyCode::Esc => Some(Msg::CalendarExitSubMode),
-            | _ => None,
-        };
-    }
-
-    // Normal 키
     match key.code {
-        | KeyCode::Char('h') => Some(Msg::CalendarMoveLeft),
-        | KeyCode::Char('l') => Some(Msg::CalendarMoveRight),
-        | KeyCode::Char('k') => Some(Msg::CalendarMoveUp),
-        | KeyCode::Char('j') => Some(Msg::CalendarMoveDown),
-        | KeyCode::Char('e') => Some(Msg::CalendarSelectDate),
-        | KeyCode::Char(' ') => Some(Msg::CalendarEnterSpaceMode),
-        | KeyCode::Char('q') => Some(Msg::Quit),
+        // Ctrl+Q: 종료
+        | KeyCode::Char('q') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::Quit),
+
+        // Ctrl+B/F/P/N: 이동
+        | KeyCode::Char('b') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::CalendarMoveLeft),
+        | KeyCode::Char('f') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::CalendarMoveRight),
+        | KeyCode::Char('p') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::CalendarMoveUp),
+        | KeyCode::Char('n') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::CalendarMoveDown),
+
+        // Enter: 편집
+        | KeyCode::Enter => Some(Msg::CalendarSelectDate),
+
+        // Alt+N / Alt+P: 다음/이전 달
+        | KeyCode::Char('n') if mods.contains(KeyModifiers::ALT) => Some(Msg::CalendarNextMonth),
+        | KeyCode::Char('p') if mods.contains(KeyModifiers::ALT) => Some(Msg::CalendarPrevMonth),
+
+        // Alt+] / Alt+[: 다음/이전 년
+        | KeyCode::Char(']') if mods.contains(KeyModifiers::ALT) => Some(Msg::CalendarNextYear),
+        | KeyCode::Char('[') if mods.contains(KeyModifiers::ALT) => Some(Msg::CalendarPrevYear),
+
         | _ => None,
     }
 }
 
 fn handle_editor_key(key: KeyEvent, state: &ratatui_diary::model::EditorState) -> Option<Msg> {
-    use ratatui_diary::model::EditorMode;
-
-    match state.mode {
-        | EditorMode::Normal => handle_editor_normal_key(key, state),
-        | EditorMode::Insert => handle_editor_insert_key(key),
-    }
-}
-
-fn handle_editor_normal_key(key: KeyEvent, state: &ratatui_diary::model::EditorState) -> Option<Msg> {
     use ratatui_diary::model::EditorSubMode;
 
-    // 서브모드 처리
+    // 서브모드 처리 우선
     match &state.submode {
-        | Some(EditorSubMode::Goto) => {
+        | Some(EditorSubMode::CtrlX) => {
             return match key.code {
-                | KeyCode::Char('g') => Some(Msg::EditorGotoDocStart),
-                | KeyCode::Char('e') => Some(Msg::EditorGotoDocEnd),
-                | KeyCode::Char('h') => Some(Msg::EditorGotoLineStart),
-                | KeyCode::Char('l') => Some(Msg::EditorGotoLineEnd),
+                // Ctrl+S: 저장
+                | KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => Some(Msg::EditorCtrlXSave),
+                // Ctrl+C: 뒤로 (달력)
+                | KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => Some(Msg::EditorCtrlXBack),
+                // Esc: 취소
                 | KeyCode::Esc => Some(Msg::EditorExitSubMode),
-                | _ => None,
-            };
-        },
-        | Some(EditorSubMode::SpaceCommand) => {
-            return match key.code {
-                | KeyCode::Char('w') => Some(Msg::EditorSpaceSave),
-                | KeyCode::Char('q') => Some(Msg::EditorSpaceQuit),
-                | KeyCode::Char('x') => Some(Msg::EditorSpaceSaveQuit),
-                | KeyCode::Esc => Some(Msg::EditorExitSubMode),
-                | _ => None,
+                | _ => Some(Msg::EditorExitSubMode),
             };
         },
         | Some(EditorSubMode::Search) => {
             return match key.code {
+                | KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => Some(Msg::EditorSearchNext),
+                | KeyCode::Char('r') if key.modifiers.contains(KeyModifiers::CONTROL) => Some(Msg::EditorSearchPrev),
                 | KeyCode::Char(c) => Some(Msg::EditorSearchChar(c)),
                 | KeyCode::Enter => Some(Msg::EditorExecuteSearch),
                 | KeyCode::Esc => Some(Msg::EditorExitSubMode),
@@ -158,59 +143,73 @@ fn handle_editor_normal_key(key: KeyEvent, state: &ratatui_diary::model::EditorS
         | None => {},
     }
 
-    // Normal 모드 키
+    let mods = key.modifiers;
+
     match key.code {
-        // 이동
-        | KeyCode::Char('h') => Some(Msg::EditorMoveLeft),
-        | KeyCode::Char('l') => Some(Msg::EditorMoveRight),
-        | KeyCode::Char('k') => Some(Msg::EditorMoveUp),
-        | KeyCode::Char('j') => Some(Msg::EditorMoveDown),
-        | KeyCode::Char('w') => Some(Msg::EditorWordNext),
-        | KeyCode::Char('b') => Some(Msg::EditorWordPrev),
-        | KeyCode::Char('e') => Some(Msg::EditorWordEnd),
+        // === Ctrl 조합 ===
+        // Ctrl+F/B/N/P: 커서 이동
+        | KeyCode::Char('f') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorMoveRight),
+        | KeyCode::Char('b') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorMoveLeft),
+        | KeyCode::Char('n') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorMoveDown),
+        | KeyCode::Char('p') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorMoveUp),
 
-        // 서브모드 진입
-        | KeyCode::Char('g') => Some(Msg::EditorEnterGotoMode),
-        | KeyCode::Char(' ') => Some(Msg::EditorEnterSpaceMode),
-        | KeyCode::Char('/') => Some(Msg::EditorEnterSearchMode),
+        // Ctrl+A / Ctrl+E: 줄 시작/끝
+        | KeyCode::Char('a') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorGotoLineStart),
+        | KeyCode::Char('e') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorGotoLineEnd),
 
-        // Insert
-        | KeyCode::Char('i') => Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::BeforeCursor)),
-        | KeyCode::Char('a') => Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::AfterCursor)),
-        | KeyCode::Char('o') => Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::LineBelow)),
-        | KeyCode::Char('O') => Some(Msg::EditorEnterInsert(ratatui_diary::message::InsertPosition::LineAbove)),
+        // Ctrl+H: backspace
+        | KeyCode::Char('h') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorBackspace),
 
-        // Selection
-        | KeyCode::Char('v') => Some(Msg::EditorToggleSelection),
-        | KeyCode::Char('x') => Some(Msg::EditorSelectLine),
+        // Ctrl+O: 커서 위치에 새 줄 열기 (open-line)
+        | KeyCode::Char('o') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorOpenLine),
 
-        // 편집
-        | KeyCode::Char('d') => Some(Msg::EditorDelete),
-        | KeyCode::Char('c') => Some(Msg::EditorChange),
-        | KeyCode::Char('y') => Some(Msg::EditorYank),
-        | KeyCode::Char('p') => Some(Msg::EditorPasteAfter),
-        | KeyCode::Char('P') => Some(Msg::EditorPasteBefore),
+        // Ctrl+D: 커서 앞 문자 삭제
+        | KeyCode::Char('d') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorDeleteForward),
 
-        // Undo/Redo
-        | KeyCode::Char('u') => Some(Msg::EditorUndo),
-        | KeyCode::Char('U') => Some(Msg::EditorRedo),
+        // Ctrl+K: kill-line (줄 끝까지 삭제)
+        | KeyCode::Char('k') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorKillLine),
 
-        // 검색 네비게이션
-        | KeyCode::Char('n') => Some(Msg::EditorSearchNext),
-        | KeyCode::Char('N') => Some(Msg::EditorSearchPrev),
+        // Ctrl+Space: 마크 설정 (선택 토글)
+        | KeyCode::Char(' ') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorToggleSelection),
 
-        // 기타
-        | KeyCode::Esc => Some(Msg::EditorBack),
-        | _ => None,
-    }
-}
+        // Ctrl+W: 영역 잘라내기
+        | KeyCode::Char('w') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorDelete),
 
-fn handle_editor_insert_key(key: KeyEvent) -> Option<Msg> {
-    match key.code {
-        | KeyCode::Esc => Some(Msg::EditorEnterNormalMode),
-        | KeyCode::Char(c) => Some(Msg::EditorInsertChar(c)),
+        // Ctrl+Y: 붙여넣기 (yank)
+        | KeyCode::Char('y') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorPaste),
+
+        // Ctrl+Z: 실행취소
+        | KeyCode::Char('z') if mods == KeyModifiers::CONTROL => Some(Msg::EditorUndo),
+
+        // Ctrl+Shift+Z: 다시실행
+        | KeyCode::Char('Z') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorRedo),
+
+        // Ctrl+S: 검색 (서브모드 진입)
+        | KeyCode::Char('s') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorEnterSearchMode),
+
+        // Ctrl+X: 프리픽스 모드 진입
+        | KeyCode::Char('x') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::EditorEnterCtrlXMode),
+
+        // Ctrl+Q: 종료
+        | KeyCode::Char('q') if mods.contains(KeyModifiers::CONTROL) => Some(Msg::Quit),
+
+        // === Alt 조합 ===
+        // Alt+F / Alt+B: 단어 이동
+        | KeyCode::Char('f') if mods.contains(KeyModifiers::ALT) => Some(Msg::EditorWordNext),
+        | KeyCode::Char('b') if mods.contains(KeyModifiers::ALT) => Some(Msg::EditorWordPrev),
+
+        // Alt+< / Alt+>: 문서 시작/끝
+        | KeyCode::Char('<') if mods.contains(KeyModifiers::ALT) => Some(Msg::EditorGotoDocStart),
+        | KeyCode::Char('>') if mods.contains(KeyModifiers::ALT) => Some(Msg::EditorGotoDocEnd),
+
+        // Alt+W: 영역 복사
+        | KeyCode::Char('w') if mods.contains(KeyModifiers::ALT) => Some(Msg::EditorYank),
+
+        // === 일반 키 ===
         | KeyCode::Backspace => Some(Msg::EditorBackspace),
         | KeyCode::Enter => Some(Msg::EditorNewLine),
+        | KeyCode::Char(c) => Some(Msg::EditorInsertChar(c)),
+
         | _ => None,
     }
 }

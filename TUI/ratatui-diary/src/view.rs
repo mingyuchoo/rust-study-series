@@ -1,13 +1,9 @@
 use crate::{markdown::render_to_text,
             model::{CalendarState,
-                    CalendarSubMode,
-                    EditorMode,
                     EditorState,
                     EditorSubMode,
                     Model,
                     Screen}};
-use unicode_width::UnicodeWidthChar;
-
 use ratatui::{Frame,
               layout::{Alignment,
                        Constraint,
@@ -24,28 +20,20 @@ use ratatui::{Frame,
                         Clear,
                         Paragraph,
                         Wrap}};
+use unicode_width::UnicodeWidthChar;
 
 /// 선택 영역 타입: ((시작 라인, 시작 컬럼), (끝 라인, 끝 컬럼))
 type SelectionRange = Option<((usize, usize), (usize, usize))>;
 
-/// 달력 화면의 현재 모드에 맞는 키바인딩 도움말 텍스트 생성
-pub fn build_calendar_keybindings(state: &CalendarState) -> String {
-    match state.submode {
-        | None => "hjkl:이동 | e:편집 | space:명령 | q:종료".to_string(),
-        | Some(CalendarSubMode::Space) => "n/p:다음/이전달 | y/Y:다음/이전년 | q:종료 | Esc:취소".to_string(),
-    }
-}
+/// 달력 화면의 키바인딩 도움말 텍스트 생성
+pub fn build_calendar_keybindings(_state: &CalendarState) -> String { "C-b/f/p/n:이동 | Enter:편집 | M-n/p:월 | M-]/[:년 | C-q:종료".to_string() }
 
-/// 에디터 화면의 현재 모드에 맞는 키바인딩 도움말 텍스트 생성
+/// 에디터 화면의 키바인딩 도움말 텍스트 생성
 pub fn build_editor_keybindings(state: &EditorState) -> String {
-    match state.mode {
-        | EditorMode::Normal => match &state.submode {
-            | None => "hjkl:이동 | w/b/e:단어 | i/a/o/O:입력 | v/x:선택 | d/c/y/p:편집 | u/U:실행취소 | g/space//:모드 | Esc:뒤로".to_string(),
-            | Some(EditorSubMode::Goto) => "g:문서시작 | e:문서끝 | h:줄시작 | l:줄끝 | Esc:취소".to_string(),
-            | Some(EditorSubMode::SpaceCommand) => "w:저장 | q:뒤로 | x:저장후뒤로 | Esc:취소".to_string(),
-            | Some(EditorSubMode::Search) => "입력:검색어 | Enter:실행 | n/N:다음/이전 | Esc:취소".to_string(),
-        },
-        | EditorMode::Insert => "입력중... | Enter:새줄 | Backspace:삭제 | Esc:Normal모드".to_string(),
+    match &state.submode {
+        | None => "C-f/b/n/p:이동 | C-a/e:줄시작/끝 | M-f/b:단어 | M-</>:문서 | C-h/d:삭제 | C-k:줄삭제 | C-o:줄열기 | C-SPC:마크 | C-w:잘라내기 | M-w:복사 | C-y:붙여넣기 | C-z:실행취소 | C-s:검색 | C-x:명령 | C-q:종료".to_string(),
+        | Some(EditorSubMode::CtrlX) => "C-s:저장 | C-c:뒤로 | Esc:취소".to_string(),
+        | Some(EditorSubMode::Search) => "입력:검색어 | Enter:실행 | C-s/r:다음/이전 | Esc:취소".to_string(),
     }
 }
 
@@ -214,7 +202,7 @@ fn render_editor(f: &mut Frame, model: &Model) {
         .constraints([
             Constraint::Length(1), // 날짜 헤더
             Constraint::Min(0),    // 에디터 영역
-            Constraint::Length(1), // 모드 표시
+            Constraint::Length(3), // 상태바 + 키바인딩 도움말
         ])
         .split(main_chunks[0]);
 
@@ -229,9 +217,7 @@ fn render_editor(f: &mut Frame, model: &Model) {
     });
     f.render_widget(text, editor_chunks[1]);
 
-    // 커서 표시 (Insert와 Normal 모드 모두)
-    // CJK 문자(한글 등)는 터미널에서 2칸을 차지하므로, cursor_col(문자 수)이 아닌
-    // 실제 표시 너비(display width)를 사용하여 커서 X 좌표를 계산해야 합니다.
+    // 커서 표시
     let display_width: u16 = if model.editor_state.cursor_line < model.editor_state.content.len() {
         model.editor_state.content[model.editor_state.cursor_line]
             .chars()
@@ -245,11 +231,13 @@ fn render_editor(f: &mut Frame, model: &Model) {
     let cursor_y = editor_chunks[1].y + model.editor_state.cursor_line as u16;
     f.set_cursor(cursor_x, cursor_y);
 
-    // 하단바: 모드 정보와 키바인딩 표시
+    // 하단바: 상태 정보와 키바인딩 표시
     let mode_text = build_status_text(&model.editor_state);
     let keybindings = build_editor_keybindings(&model.editor_state);
     let status_text = format!("{} | {}", mode_text, keybindings);
-    let statusbar = Paragraph::new(status_text).style(Style::default().add_modifier(Modifier::BOLD));
+    let statusbar = Paragraph::new(status_text).style(Style::default().add_modifier(Modifier::BOLD)).wrap(Wrap {
+        trim: false,
+    });
     f.render_widget(statusbar, editor_chunks[2]);
 
     // 오른쪽: Markdown 미리보기
@@ -330,7 +318,6 @@ fn render_editor_content(editor_state: &EditorState) -> Vec<Line<'static>> {
             while col_idx < chars.len() {
                 let ch = chars[col_idx];
 
-                // 현재 위치의 스타일 결정
                 let style = get_char_style(
                     line_idx,
                     col_idx,
@@ -344,7 +331,6 @@ fn render_editor_content(editor_state: &EditorState) -> Vec<Line<'static>> {
                 col_idx += 1;
             }
 
-            // 빈 줄 처리
             if spans.is_empty() {
                 spans.push(Span::raw(" "));
             }
@@ -365,13 +351,10 @@ fn get_char_style(
 ) -> Style {
     let pattern_len = search_pattern.len();
 
-    // 검색 매치 확인
     let (is_match, is_current) = is_search_match(line, col, search_matches, current_match_index, pattern_len);
 
-    // 선택 영역 확인
     let in_selection = is_in_selection(line, col, selection_range);
 
-    // 우선순위: 현재 검색 매치 > 선택 영역 > 다른 검색 매치 > 기본
     if is_current {
         Style::default().bg(Color::LightYellow).fg(Color::Black).add_modifier(Modifier::BOLD)
     } else if in_selection {
@@ -391,16 +374,12 @@ fn is_in_selection(line: usize, col: usize, selection_range: &SelectionRange) ->
         }
 
         if *start_line == *end_line {
-            // 같은 줄
             col >= *start_col && col < *end_col
         } else if line == *start_line {
-            // 시작 줄
             col >= *start_col
         } else if line == *end_line {
-            // 끝 줄
             col < *end_col
         } else {
-            // 중간 줄
             true
         }
     } else {
@@ -408,7 +387,7 @@ fn is_in_selection(line: usize, col: usize, selection_range: &SelectionRange) ->
     }
 }
 
-/// 특정 위치가 검색 매치인지 확인 (현재 매치인지도 함께 반환)
+/// 특정 위치가 검색 매치인지 확인
 fn is_search_match(line: usize, col: usize, matches: &[(usize, usize)], current_match_index: usize, pattern_len: usize) -> (bool, bool) {
     for (idx, (match_line, match_col)) in matches.iter().enumerate() {
         if *match_line == line && col >= *match_col && col < match_col + pattern_len {
@@ -419,21 +398,15 @@ fn is_search_match(line: usize, col: usize, matches: &[(usize, usize)], current_
     (false, false)
 }
 
-/// 상태바 텍스트 생성 (모드, submode, 검색 패턴 등)
+/// 상태바 텍스트 생성
 fn build_status_text(editor_state: &EditorState) -> String {
-    let mode_text = match &editor_state.mode {
-        | EditorMode::Normal => "-- NORMAL --",
-        | EditorMode::Insert => "-- INSERT --",
-    };
-
     // Submode 표시
     let submode_text = match &editor_state.submode {
-        | Some(EditorSubMode::Goto) => " [GOTO]",
-        | Some(EditorSubMode::SpaceCommand) => " [SPACE]",
+        | Some(EditorSubMode::CtrlX) => "-- C-x --",
         | Some(EditorSubMode::Search) => {
-            return format!("/{}", editor_state.search_pattern);
+            return format!("검색: {}", editor_state.search_pattern);
         },
-        | None => "",
+        | None => "-- EMACS --",
     };
 
     // 검색 매치 정보 표시
@@ -443,5 +416,5 @@ fn build_status_text(editor_state: &EditorState) -> String {
         String::new()
     };
 
-    format!("{}{}{}", mode_text, submode_text, search_info)
+    format!("{}{}", submode_text, search_info)
 }

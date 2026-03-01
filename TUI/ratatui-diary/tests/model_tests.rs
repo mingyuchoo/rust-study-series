@@ -1,6 +1,5 @@
 use chrono::NaiveDate;
 use ratatui_diary::{model::{CalendarState,
-                            EditorMode,
                             EditorState,
                             Model,
                             Screen},
@@ -43,7 +42,6 @@ fn test_prev_month_year_rollover() {
 #[test]
 fn test_insert_char() {
     let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
-    state.mode = EditorMode::Insert;
 
     state.insert_char('a');
     assert_eq!(state.content[0], "a");
@@ -83,6 +81,50 @@ fn test_model_with_storage() {
 
     let model = Model::new(entries, storage);
     assert_eq!(model.screen, Screen::Calendar);
+}
+
+#[test]
+fn test_delete_forward() {
+    let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+    state.content = vec!["hello".to_string()];
+    state.cursor_col = 0;
+
+    state.delete_forward();
+    assert_eq!(state.content[0], "ello");
+}
+
+#[test]
+fn test_delete_forward_joins_lines() {
+    let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+    state.content = vec!["hello".to_string(), "world".to_string()];
+    state.cursor_col = 5; // 줄 끝
+
+    state.delete_forward();
+    assert_eq!(state.content.len(), 1);
+    assert_eq!(state.content[0], "helloworld");
+}
+
+#[test]
+fn test_kill_line() {
+    let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+    state.content = vec!["hello world".to_string()];
+    state.cursor_col = 5;
+
+    let killed = state.kill_line();
+    assert_eq!(killed, " world");
+    assert_eq!(state.content[0], "hello");
+}
+
+#[test]
+fn test_kill_line_at_end_joins() {
+    let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
+    state.content = vec!["hello".to_string(), "world".to_string()];
+    state.cursor_col = 5;
+
+    let killed = state.kill_line();
+    assert_eq!(killed, "\n");
+    assert_eq!(state.content.len(), 1);
+    assert_eq!(state.content[0], "helloworld");
 }
 
 #[cfg(test)]
@@ -322,11 +364,9 @@ mod undo_redo_tests {
 
         state.undo();
 
-        // 새 편집
         state.content = vec!["Third".to_string()];
         state.save_snapshot();
 
-        // redo 불가능해야 함
         let before_redo = state.content.clone();
         state.redo();
         assert_eq!(state.content, before_redo);
@@ -346,10 +386,10 @@ mod word_navigation_tests {
         state.cursor_col = 0;
 
         state.move_word_next();
-        assert_eq!(state.cursor_col, 6); // "World"의 시작
+        assert_eq!(state.cursor_col, 6);
 
         state.move_word_next();
-        assert_eq!(state.cursor_col, 12); // "Test"의 시작
+        assert_eq!(state.cursor_col, 12);
     }
 
     #[test]
@@ -361,25 +401,10 @@ mod word_navigation_tests {
         state.cursor_col = 12;
 
         state.move_word_prev();
-        assert_eq!(state.cursor_col, 6); // "World"의 시작
+        assert_eq!(state.cursor_col, 6);
 
         state.move_word_prev();
-        assert_eq!(state.cursor_col, 0); // "Hello"의 시작
-    }
-
-    #[test]
-    fn test_word_end() {
-        let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
-        let mut state = EditorState::new(date);
-        state.content = vec!["Hello World Test".to_string()];
-        state.cursor_line = 0;
-        state.cursor_col = 0;
-
-        state.move_word_end();
-        assert_eq!(state.cursor_col, 4); // "Hello"의 끝 (마지막 문자 인덱스)
-
-        state.move_word_end();
-        assert_eq!(state.cursor_col, 10); // "World"의 끝
+        assert_eq!(state.cursor_col, 0);
     }
 }
 
@@ -392,17 +417,14 @@ mod multibyte_char_tests {
     fn test_insert_korean_char() {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
-        state.mode = EditorMode::Insert;
 
-        // 한글 입력: '한'
         state.insert_char('한');
         assert_eq!(state.content[0], "한");
-        assert_eq!(state.cursor_col, 1); // 문자 인덱스는 1
+        assert_eq!(state.cursor_col, 1);
 
-        // 추가 입력: '글'
         state.insert_char('글');
         assert_eq!(state.content[0], "한글");
-        assert_eq!(state.cursor_col, 2); // 문자 인덱스는 2
+        assert_eq!(state.cursor_col, 2);
     }
 
     #[test]
@@ -410,9 +432,8 @@ mod multibyte_char_tests {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
         state.content = vec!["한글".to_string()];
-        state.cursor_col = 1; // '한'과 '글' 사이
+        state.cursor_col = 1;
 
-        // 중간에 '국' 삽입
         state.insert_char('국');
         assert_eq!(state.content[0], "한국글");
         assert_eq!(state.cursor_col, 2);
@@ -423,7 +444,7 @@ mod multibyte_char_tests {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
         state.content = vec!["한글".to_string()];
-        state.cursor_col = 2; // "한글" 끝
+        state.cursor_col = 2;
 
         state.backspace();
         assert_eq!(state.content[0], "한");
@@ -435,7 +456,7 @@ mod multibyte_char_tests {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
         state.content = vec!["한글테스트".to_string()];
-        state.cursor_col = 2; // "한글" 뒤
+        state.cursor_col = 2;
 
         state.new_line();
         assert_eq!(state.content[0], "한글");
@@ -451,9 +472,9 @@ mod multibyte_char_tests {
         state.content = vec!["안녕하세요".to_string()];
         state.selection = Some(Selection {
             anchor_line: 0,
-            anchor_col: 1, // '녕' 부터
+            anchor_col: 1,
             cursor_line: 0,
-            cursor_col: 3, // '세' 까지
+            cursor_col: 3,
         });
 
         let text = state.get_selected_text();
@@ -482,7 +503,7 @@ mod multibyte_char_tests {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
         state.content = vec!["Hello한글World".to_string()];
-        state.cursor_col = 5; // "Hello" 뒤
+        state.cursor_col = 5;
 
         state.insert_char(' ');
         assert_eq!(state.content[0], "Hello 한글World");
@@ -503,7 +524,7 @@ mod search_tests {
 
         state.execute_search();
 
-        assert_eq!(state.search_matches.len(), 2); // 대소문자 구분
+        assert_eq!(state.search_matches.len(), 2);
         assert_eq!(state.search_matches[0], (0, 6));
         assert_eq!(state.search_matches[1], (2, 0));
     }
@@ -524,7 +545,7 @@ mod search_tests {
         state.search_next();
         assert_eq!(state.current_match_index, 2);
 
-        state.search_next(); // wrap around
+        state.search_next();
         assert_eq!(state.current_match_index, 0);
     }
 
@@ -536,7 +557,7 @@ mod search_tests {
         state.search_pattern = "test".to_string();
         state.execute_search();
 
-        state.search_prev(); // wrap around to end
+        state.search_prev();
         assert_eq!(state.current_match_index, 2);
     }
 }
@@ -549,56 +570,44 @@ mod days_in_month_tests {
 
     #[test]
     fn test_adjust_date_to_february_29_leap_year() {
-        // Given: 2024년 1월 31일 선택
         let mut state = CalendarState::new(2024, 1);
         state.selected_date = NaiveDate::from_ymd_opt(2024, 1, 31).unwrap();
 
-        // When: 2월로 이동 (윤년, 29일까지)
         state.next_month();
 
-        // Then: 2월 29일로 조정됨
         assert_eq!(state.selected_date.day(), 29);
         assert_eq!(state.selected_date.month(), 2);
     }
 
     #[test]
     fn test_adjust_date_to_february_28_non_leap_year() {
-        // Given: 2023년 1월 31일 선택
         let mut state = CalendarState::new(2023, 1);
         state.selected_date = NaiveDate::from_ymd_opt(2023, 1, 31).unwrap();
 
-        // When: 2월로 이동 (평년, 28일까지)
         state.next_month();
 
-        // Then: 2월 28일로 조정됨
         assert_eq!(state.selected_date.day(), 28);
         assert_eq!(state.selected_date.month(), 2);
     }
 
     #[test]
     fn test_adjust_date_to_april_30() {
-        // Given: 3월 31일 선택
         let mut state = CalendarState::new(2026, 3);
         state.selected_date = NaiveDate::from_ymd_opt(2026, 3, 31).unwrap();
 
-        // When: 4월로 이동 (30일까지)
         state.next_month();
 
-        // Then: 4월 30일로 조정됨
         assert_eq!(state.selected_date.day(), 30);
         assert_eq!(state.selected_date.month(), 4);
     }
 
     #[test]
     fn test_adjust_date_year_boundary() {
-        // Given: 12월 31일 선택
         let mut state = CalendarState::new(2025, 12);
         state.selected_date = NaiveDate::from_ymd_opt(2025, 12, 31).unwrap();
 
-        // When: 다음 월로 이동 (→ 2026년 1월)
         state.next_month();
 
-        // Then: 2026년 1월 31일
         assert_eq!(state.selected_date.day(), 31);
         assert_eq!(state.selected_date.month(), 1);
         assert_eq!(state.selected_date.year(), 2026);
@@ -615,15 +624,11 @@ mod editor_edge_cases {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
         state.content = vec!["Line 1".to_string()];
-
-        // 현재 내용 길이와 같은 라인 (경계값)
         state.cursor_line = state.content.len();
         state.cursor_col = 0;
 
-        // insert_char는 새 줄을 추가하여 처리
         state.insert_char('x');
 
-        // 새 줄이 추가되고 문자가 삽입됨
         assert_eq!(state.content.len(), 2);
         assert_eq!(state.content[1], "x");
     }
@@ -633,14 +638,10 @@ mod editor_edge_cases {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
         state.content = vec!["Short".to_string()];
-
-        // 범위를 벗어난 열로 설정
         state.cursor_col = 100;
 
-        // insert_char 호출 시 안전하게 처리됨
         state.insert_char('x');
 
-        // 크래시 없이 동작
         assert!(!state.content.is_empty());
     }
 
@@ -648,14 +649,10 @@ mod editor_edge_cases {
     fn test_empty_content_handling() {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
-
-        // EditorState::new()는 항상 최소 한 줄을 생성
         assert_eq!(state.content.len(), 1);
 
-        // 빈 줄에서 문자 삽입
         state.insert_char('a');
 
-        // 정상 동작
         assert_eq!(state.content[0], "a");
     }
 
@@ -667,10 +664,8 @@ mod editor_edge_cases {
         state.cursor_line = 0;
         state.cursor_col = 0;
 
-        // 빈 줄에서의 백스페이스
         state.backspace();
 
-        // 최소 한 줄은 유지
         assert_eq!(state.content.len(), 1);
     }
 
@@ -680,12 +675,10 @@ mod editor_edge_cases {
         let mut state = EditorState::new(date);
         state.content = vec!["Hello".to_string()];
         state.cursor_line = 0;
-        state.cursor_col = 5; // 끝
+        state.cursor_col = 5;
 
-        // 더 이상 이동할 단어가 없음
         state.move_word_next();
 
-        // 커서가 범위를 벗어나지 않음
         assert!(state.cursor_col <= state.content[0].chars().count());
     }
 
@@ -695,12 +688,10 @@ mod editor_edge_cases {
         let mut state = EditorState::new(date);
         state.content = vec!["Hello".to_string()];
         state.cursor_line = 0;
-        state.cursor_col = 0; // 시작
+        state.cursor_col = 0;
 
-        // 이전 단어로 이동 시도
         state.move_word_prev();
 
-        // 커서가 음수가 되지 않음
         assert_eq!(state.cursor_col, 0);
     }
 
@@ -713,7 +704,6 @@ mod editor_edge_cases {
 
         state.execute_search();
 
-        // 빈 패턴으로는 매치되지 않음
         assert!(state.search_matches.is_empty());
     }
 
@@ -738,10 +728,8 @@ mod editor_edge_cases {
         state.search_pattern = "NotFound".to_string();
         state.execute_search();
 
-        // 매치가 없을 때 search_next 호출
         state.search_next();
 
-        // 안전하게 처리됨
         assert_eq!(state.current_match_index, 0);
     }
 
@@ -754,13 +742,11 @@ mod editor_edge_cases {
             anchor_line: 0,
             anchor_col: 0,
             cursor_line: 0,
-            cursor_col: 100, // 범위 초과
+            cursor_col: 100,
         });
 
-        // get_selected_text가 안전하게 처리
         let text = state.get_selected_text();
 
-        // 전체 텍스트 또는 None 반환
         assert!(text.is_some() || text.is_none());
     }
 
@@ -770,10 +756,8 @@ mod editor_edge_cases {
         let mut state = EditorState::new(date);
         state.content = vec!["Original".to_string()];
 
-        // 히스토리 없이 undo 시도
         state.undo();
 
-        // 내용 변경 없음
         assert_eq!(state.content[0], "Original");
     }
 
@@ -783,10 +767,8 @@ mod editor_edge_cases {
         let mut state = EditorState::new(date);
         state.content = vec!["Original".to_string()];
 
-        // redo 히스토리 없이 redo 시도
         state.redo();
 
-        // 내용 변경 없음
         assert_eq!(state.content[0], "Original");
     }
 
@@ -795,14 +777,11 @@ mod editor_edge_cases {
         let date = NaiveDate::from_ymd_opt(2026, 2, 14).unwrap();
         let mut state = EditorState::new(date);
 
-        // 많은 스냅샷 저장
         for i in 0 .. 200 {
             state.content = vec![format!("Version {}", i)];
             state.save_snapshot();
         }
 
-        // 히스토리가 과도하게 증가하지 않음 (구현에 따라 제한 있을 수 있음)
-        // 최소한 크래시 없이 동작
         state.undo();
         assert!(!state.content.is_empty());
     }
@@ -814,19 +793,16 @@ mod editor_edge_cases {
         state.content = vec!["Line 1".to_string(), "Line 2".to_string()];
         state.selection = Some(Selection {
             anchor_line: 1,
-            anchor_col: 6, // Line 2 끝
+            anchor_col: 6,
             cursor_line: 0,
-            cursor_col: 0, // Line 1 시작 (역방향)
+            cursor_col: 0,
         });
 
         state.delete_selection();
 
-        // 올바르게 삭제됨
         assert_eq!(state.content.len(), 1);
-        assert!(state.content[0].is_empty() || !state.content[0].is_empty());
     }
 
-    // 추가 경계 케이스 테스트
     #[test]
     fn test_insert_char_on_empty_line() {
         let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
@@ -858,7 +834,6 @@ mod editor_edge_cases {
 
         state.backspace();
 
-        // 첫 줄의 시작에서는 backspace가 동작하지 않음
         assert_eq!(state.content.len(), 1);
     }
 
@@ -881,13 +856,11 @@ mod editor_edge_cases {
     fn test_history_size_limit_exceeded() {
         let mut state = EditorState::new(NaiveDate::from_ymd_opt(2026, 2, 14).unwrap());
 
-        // MAX_HISTORY를 초과할 때까지 반복
         for i in 0 .. 150 {
             state.insert_char(char::from_u32(97 + (i % 26) as u32).unwrap());
             state.save_snapshot();
         }
 
-        // 히스토리가 너무 크지 않음
         assert!(state.edit_history.len() <= 150);
     }
 
@@ -905,7 +878,6 @@ mod editor_edge_cases {
         state.insert_char('x');
         state.save_snapshot();
 
-        // 'x'가 삽입되고 나머지 히스토리는 제거됨
         assert_eq!(state.content[0], "ax");
     }
 
@@ -927,7 +899,6 @@ mod editor_edge_cases {
 
         state.move_cursor_left();
 
-        // 날짜가 변경되거나 같음
         assert!(state.selected_date <= NaiveDate::from_ymd_opt(2026, 1, 1).unwrap());
     }
 
@@ -939,7 +910,6 @@ mod editor_edge_cases {
 
         state.move_cursor_right();
 
-        // 다음 날짜로 이동
         assert_eq!(state.selected_date, original.succ_opt().unwrap());
     }
 
@@ -950,7 +920,6 @@ mod editor_edge_cases {
 
         state.move_cursor_up();
 
-        // 일주일 위로 이동
         assert!(state.selected_date < NaiveDate::from_ymd_opt(2026, 2, 8).unwrap());
     }
 
@@ -961,7 +930,6 @@ mod editor_edge_cases {
 
         state.move_cursor_down();
 
-        // 일주일 아래로 이동
         assert!(state.selected_date > NaiveDate::from_ymd_opt(2026, 2, 15).unwrap());
     }
 

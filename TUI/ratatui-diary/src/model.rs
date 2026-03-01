@@ -36,14 +36,8 @@ pub struct EditorSnapshot {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EditorSubMode {
-    Goto,
-    SpaceCommand,
+    CtrlX,
     Search,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum CalendarSubMode {
-    Space,
 }
 
 pub struct CalendarState {
@@ -51,11 +45,9 @@ pub struct CalendarState {
     pub current_month: u32,
     pub selected_date: NaiveDate,
     pub cursor_pos: usize,
-    pub submode: Option<CalendarSubMode>,
 }
 
 pub struct EditorState {
-    pub mode: EditorMode,
     pub date: NaiveDate,
     pub content: Vec<String>,
     pub cursor_line: usize,
@@ -69,12 +61,6 @@ pub struct EditorState {
     pub search_pattern: String,
     pub search_matches: Vec<(usize, usize)>,
     pub current_match_index: usize,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum EditorMode {
-    Normal,
-    Insert,
 }
 
 pub struct DiaryIndex {
@@ -107,7 +93,6 @@ impl CalendarState {
             current_month: month,
             selected_date,
             cursor_pos: 0,
-            submode: None,
         }
     }
 
@@ -150,7 +135,6 @@ impl CalendarState {
     pub fn move_cursor_down(&mut self) { self.selected_date = self.selected_date.checked_add_days(chrono::Days::new(7)).unwrap_or(self.selected_date); }
 
     fn adjust_selected_date(&mut self) {
-        // 선택된 날짜가 새 월에 유효한지 확인
         let day = self.selected_date.day();
         self.selected_date = NaiveDate::from_ymd_opt(
             self.current_year,
@@ -163,11 +147,6 @@ impl CalendarState {
 
 impl EditorState {
     /// 문자 인덱스를 바이트 인덱스로 변환
-    ///
-    /// Rust의 String은 UTF-8로 인코딩되어 있으며, 한글과 같은 멀티바이트 문자는
-    /// 여러 바이트를 차지합니다. String의 insert(), remove(), 슬라이싱 등의
-    /// 연산은 바이트 인덱스를 요구하므로, 문자 개수 기반의 cursor_col을
-    /// 바이트 인덱스로 변환해야 합니다.
     pub fn char_idx_to_byte_idx(&self, line: usize, char_idx: usize) -> usize {
         if line >= self.content.len() {
             return 0;
@@ -181,8 +160,6 @@ impl EditorState {
     }
 
     /// 바이트 인덱스를 문자 인덱스로 변환
-    ///
-    /// String 연산 후 바이트 위치를 문자 개수로 변환합니다.
     fn byte_idx_to_char_idx(&self, line: usize, byte_idx: usize) -> usize {
         if line >= self.content.len() {
             return 0;
@@ -193,7 +170,6 @@ impl EditorState {
 
     pub fn new(date: NaiveDate) -> Self {
         let mut state = Self {
-            mode: EditorMode::Normal,
             date,
             content: vec![String::new()],
             cursor_line: 0,
@@ -282,12 +258,57 @@ impl EditorState {
         } else if self.cursor_line > 0 {
             let current_line = self.content.remove(self.cursor_line);
             self.cursor_line -= 1;
-            // len()은 바이트 길이이므로 문자 개수로 변환
             let line_len = self.content[self.cursor_line].chars().count();
             self.cursor_col = line_len;
             self.content[self.cursor_line].push_str(&current_line);
             self.is_modified = true;
         }
+    }
+
+    pub fn delete_forward(&mut self) {
+        let line_char_len = if self.cursor_line < self.content.len() {
+            self.content[self.cursor_line].chars().count()
+        } else {
+            return;
+        };
+
+        if self.cursor_col < line_char_len {
+            // 커서 앞 문자 삭제
+            let byte_idx = self.char_idx_to_byte_idx(self.cursor_line, self.cursor_col);
+            self.content[self.cursor_line].remove(byte_idx);
+            self.is_modified = true;
+        } else if self.cursor_line + 1 < self.content.len() {
+            // 줄 끝이면 다음 줄을 합침
+            let next_line = self.content.remove(self.cursor_line + 1);
+            self.content[self.cursor_line].push_str(&next_line);
+            self.is_modified = true;
+        }
+    }
+
+    pub fn kill_line(&mut self) -> String {
+        if self.cursor_line >= self.content.len() {
+            return String::new();
+        }
+
+        let line_char_len = self.content[self.cursor_line].chars().count();
+
+        if self.cursor_col >= line_char_len {
+            // 커서가 줄 끝이면 다음 줄을 합침
+            if self.cursor_line + 1 < self.content.len() {
+                let next_line = self.content.remove(self.cursor_line + 1);
+                self.content[self.cursor_line].push_str(&next_line);
+                self.is_modified = true;
+                return "\n".to_string();
+            }
+            return String::new();
+        }
+
+        // 커서 위치부터 줄 끝까지 잘라내기
+        let byte_idx = self.char_idx_to_byte_idx(self.cursor_line, self.cursor_col);
+        let killed = self.content[self.cursor_line][byte_idx ..].to_string();
+        self.content[self.cursor_line].truncate(byte_idx);
+        self.is_modified = true;
+        killed
     }
 
     pub fn new_line(&mut self) {
@@ -299,6 +320,15 @@ impl EditorState {
         self.cursor_line += 1;
         self.content.insert(self.cursor_line, remaining);
         self.cursor_col = 0;
+        self.is_modified = true;
+    }
+
+    pub fn open_line(&mut self) {
+        let byte_idx = self.char_idx_to_byte_idx(self.cursor_line, self.cursor_col);
+        let current_line = &self.content[self.cursor_line];
+        let remaining = current_line[byte_idx ..].to_string();
+        self.content[self.cursor_line].truncate(byte_idx);
+        self.content.insert(self.cursor_line + 1, remaining);
         self.is_modified = true;
     }
 
@@ -340,7 +370,6 @@ impl EditorState {
     pub fn get_selected_text(&self) -> Option<String> {
         let ((start_line, start_col), (end_line, end_col)) = self.get_selection_range()?;
 
-        // 범위 검증 추가
         if end_line >= self.content.len() {
             return None;
         }
@@ -351,14 +380,12 @@ impl EditorState {
             let safe_end = end_col.min(line_char_len);
             let safe_start = start_col.min(safe_end);
 
-            // 문자 인덱스를 바이트 인덱스로 변환
             let start_byte = self.char_idx_to_byte_idx(start_line, safe_start);
             let end_byte = self.char_idx_to_byte_idx(start_line, safe_end);
             Some(line[start_byte .. end_byte].to_string())
         } else {
             let mut result = String::new();
 
-            // 시작 줄
             let start_line_content = &self.content[start_line];
             let start_line_char_len = start_line_content.chars().count();
             let safe_start_col = start_col.min(start_line_char_len);
@@ -366,7 +393,6 @@ impl EditorState {
             result.push_str(&start_line_content[start_byte ..]);
             result.push('\n');
 
-            // 중간 줄들
             for line in (start_line + 1) .. end_line {
                 if line < self.content.len() {
                     result.push_str(&self.content[line]);
@@ -374,7 +400,6 @@ impl EditorState {
                 }
             }
 
-            // 끝 줄
             let end_line_content = &self.content[end_line];
             let end_line_char_len = end_line_content.chars().count();
             let safe_end_col = end_col.min(end_line_char_len);
@@ -392,23 +417,18 @@ impl EditorState {
         };
 
         if start_line == end_line {
-            // 같은 줄에서 삭제
             let start_byte = self.char_idx_to_byte_idx(start_line, start_col);
             let end_byte = self.char_idx_to_byte_idx(start_line, end_col);
             self.content[start_line].replace_range(start_byte .. end_byte, "");
             self.cursor_line = start_line;
             self.cursor_col = start_col;
         } else {
-            // 여러 줄 삭제
             let start_byte = self.char_idx_to_byte_idx(start_line, start_col);
             let end_byte = self.char_idx_to_byte_idx(end_line, end_col);
             let before = self.content[start_line][.. start_byte].to_string();
             let after = self.content[end_line][end_byte ..].to_string();
 
-            // 중간 줄들 제거
             self.content.drain(start_line ..= end_line);
-
-            // 합친 줄 삽입
             self.content.insert(start_line, before + &after);
             self.cursor_line = start_line;
             self.cursor_col = start_col;
@@ -427,7 +447,6 @@ impl EditorState {
         let byte_idx = self.char_idx_to_byte_idx(self.cursor_line, self.cursor_col);
         let mut chars = line[byte_idx ..].char_indices().peekable();
 
-        // 현재 단어의 나머지 건너뛰기
         while let Some((_, ch)) = chars.peek() {
             if ch.is_whitespace() {
                 break;
@@ -435,7 +454,6 @@ impl EditorState {
             chars.next();
         }
 
-        // 공백 건너뛰기
         while let Some((_, ch)) = chars.peek() {
             if !ch.is_whitespace() {
                 break;
@@ -443,11 +461,9 @@ impl EditorState {
             chars.next();
         }
 
-        // 다음 단어 시작 위치
         if let Some((idx, _)) = chars.next() {
             self.cursor_col = self.byte_idx_to_char_idx(self.cursor_line, byte_idx + idx);
         } else {
-            // 줄 끝 - 문자 개수로 변환
             self.cursor_col = line.chars().count();
         }
     }
@@ -460,59 +476,15 @@ impl EditorState {
         let line = &self.content[self.cursor_line];
         let mut pos = self.cursor_col;
 
-        // 현재 위치 뒤로 이동
         pos = pos.saturating_sub(1);
 
-        // 공백 건너뛰기
         while pos > 0 && line.chars().nth(pos).is_some_and(|c| c.is_whitespace()) {
             pos -= 1;
         }
 
-        // 단어 시작까지 이동
         while pos > 0 && line.chars().nth(pos - 1).is_some_and(|c| !c.is_whitespace()) {
             pos -= 1;
         }
-
-        self.cursor_col = pos;
-    }
-
-    pub fn move_word_end(&mut self) {
-        if self.cursor_line >= self.content.len() {
-            return;
-        }
-
-        let line = &self.content[self.cursor_line];
-        let line_char_len = line.chars().count();
-        if self.cursor_col >= line_char_len {
-            return;
-        }
-
-        let mut pos = self.cursor_col;
-
-        // 현재 단어의 끝에 있다면 다음 단어로 이동
-        let current_is_word = line.chars().nth(pos).is_some_and(|c| !c.is_whitespace());
-        let next_is_space = line.chars().nth(pos + 1).is_none_or(|c| c.is_whitespace());
-
-        if current_is_word && next_is_space {
-            // 현재 단어 끝에 있으므로 공백 건너뛰고 다음 단어로
-            pos += 1;
-            while pos < line_char_len && line.chars().nth(pos).is_some_and(|c| c.is_whitespace()) {
-                pos += 1;
-            }
-        }
-
-        // 공백이면 건너뛰기
-        while pos < line_char_len && line.chars().nth(pos).is_some_and(|c| c.is_whitespace()) {
-            pos += 1;
-        }
-
-        // 단어 끝까지 이동
-        while pos < line_char_len && line.chars().nth(pos).is_some_and(|c| !c.is_whitespace()) {
-            pos += 1;
-        }
-
-        // 마지막 문자 위치로 (끝이 아니라 마지막 문자)
-        pos = pos.saturating_sub(1);
 
         self.cursor_col = pos;
     }
@@ -522,20 +494,17 @@ impl EditorState {
             return;
         }
 
-        // 전체 문서에서 검색
         self.search_matches.clear();
         for (line_idx, line) in self.content.iter().enumerate() {
             let mut start_byte = 0;
             while let Some(pos_byte) = line[start_byte ..].find(&self.search_pattern) {
                 let match_byte = start_byte + pos_byte;
-                // 바이트 인덱스를 문자 인덱스로 변환
                 let match_char = self.byte_idx_to_char_idx(line_idx, match_byte);
                 self.search_matches.push((line_idx, match_char));
                 start_byte = match_byte + 1;
             }
         }
 
-        // 현재 커서 이후 첫 매치로 이동
         if !self.search_matches.is_empty() {
             self.current_match_index = self
                 .search_matches
@@ -547,7 +516,6 @@ impl EditorState {
             self.cursor_line = line;
             self.cursor_col = col;
 
-            // 검색어 길이만큼 선택 (문자 개수)
             let pattern_char_len = self.search_pattern.chars().count();
             self.selection = Some(Selection {
                 anchor_line: line,
@@ -563,14 +531,12 @@ impl EditorState {
             return;
         }
 
-        // 다음 매치로 순환
         self.current_match_index = (self.current_match_index + 1) % self.search_matches.len();
 
         let (line, col) = self.search_matches[self.current_match_index];
         self.cursor_line = line;
         self.cursor_col = col;
 
-        // 검색어 선택 (문자 개수)
         let pattern_char_len = self.search_pattern.chars().count();
         self.selection = Some(Selection {
             anchor_line: line,
@@ -585,7 +551,6 @@ impl EditorState {
             return;
         }
 
-        // 이전 매치로 순환
         if self.current_match_index == 0 {
             self.current_match_index = self.search_matches.len() - 1;
         } else {
@@ -596,7 +561,6 @@ impl EditorState {
         self.cursor_line = line;
         self.cursor_col = col;
 
-        // 검색어 선택 (문자 개수)
         let pattern_char_len = self.search_pattern.chars().count();
         self.selection = Some(Selection {
             anchor_line: line,
