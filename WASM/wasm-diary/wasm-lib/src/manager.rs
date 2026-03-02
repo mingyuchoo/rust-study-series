@@ -14,9 +14,10 @@ pub struct DiaryManager {
 
 // 내부 헬퍼 (테스트 시 ID/타임스탬프 주입용)
 impl DiaryManager {
-    fn create_entry_with(&mut self, id: String, title: String, content: String, mood: Mood, weather: Weather, now: String) -> String {
+    fn create_entry_with(&mut self, id: String, owner_id: String, title: String, content: String, mood: Mood, weather: Weather, now: String) -> String {
         let entry = DiaryEntry {
             id,
+            owner_id,
             title: title.trim().to_string(),
             content: content.trim().to_string(),
             mood,
@@ -63,10 +64,10 @@ impl DiaryManager {
     pub fn save_to_json(&self) -> String { serde_json::to_string(&self.entries).unwrap_or_else(|_| "[]".to_string()) }
 
     /// 새 일기를 생성하고 생성된 항목의 JSON을 반환한다.
-    pub fn create_entry(&mut self, title: &str, content: &str, mood: Mood, weather: Weather) -> String {
+    pub fn create_entry(&mut self, owner_id: &str, title: &str, content: &str, mood: Mood, weather: Weather) -> String {
         let id = id_gen::generate_id();
         let now = date_util::now_iso();
-        self.create_entry_with(id, title.to_string(), content.to_string(), mood, weather, now)
+        self.create_entry_with(id, owner_id.to_string(), title.to_string(), content.to_string(), mood, weather, now)
     }
 
     /// 일기를 수정하고 수정된 항목의 JSON을 반환한다. 존재하지 않으면 빈
@@ -92,11 +93,18 @@ impl DiaryManager {
             .unwrap_or_default()
     }
 
-    /// 전체 목록 JSON (최신순 정렬).
+    /// 전체 목록 JSON (최신순 정렬, 관리자용).
     pub fn get_all_entries(&self) -> String {
         let mut sorted = self.entries.clone();
         sorted.sort_by(|a, b| b.created_at.cmp(&a.created_at));
         serde_json::to_string(&sorted).unwrap_or_else(|_| "[]".to_string())
+    }
+
+    /// 특정 사용자의 일기만 조회한다 (최신순 정렬).
+    pub fn get_entries_by_owner(&self, owner_id: &str) -> String {
+        let mut results: Vec<&DiaryEntry> = self.entries.iter().filter(|e| e.owner_id == owner_id).collect();
+        results.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+        serde_json::to_string(&results).unwrap_or_else(|_| "[]".to_string())
     }
 
     /// 제목 또는 내용에 키워드가 포함된 일기를 검색한다 (대소문자 무시).
@@ -146,6 +154,7 @@ mod tests {
         let now = "2026-03-02T10:00:00Z".to_string();
         mgr.create_entry_with(
             "id-1".to_string(),
+            "owner-1".to_string(),
             "행복한 날".to_string(),
             "오늘은 정말 좋은 날이었다".to_string(),
             Mood::Happy,
@@ -154,6 +163,7 @@ mod tests {
         );
         mgr.create_entry_with(
             "id-2".to_string(),
+            "owner-1".to_string(),
             "슬픈 하루".to_string(),
             "비가 와서 우울했다".to_string(),
             Mood::Sad,
@@ -162,6 +172,7 @@ mod tests {
         );
         mgr.create_entry_with(
             "id-3".to_string(),
+            "owner-2".to_string(),
             "평온한 오후".to_string(),
             "차를 마시며 휴식했다".to_string(),
             Mood::Calm,
@@ -183,6 +194,7 @@ mod tests {
         let mut mgr = DiaryManager::new();
         let json = mgr.create_entry_with(
             "test-1".to_string(),
+            "owner-1".to_string(),
             "제목".to_string(),
             "내용".to_string(),
             Mood::Happy,
@@ -252,6 +264,7 @@ mod tests {
         let mut mgr = DiaryManager::new();
         mgr.create_entry_with(
             "id-1".to_string(),
+            "owner-1".to_string(),
             "Hello World".to_string(),
             "content".to_string(),
             Mood::Happy,

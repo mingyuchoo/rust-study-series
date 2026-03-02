@@ -221,6 +221,7 @@
 }
 
 .form-field input[type="text"],
+.form-field input[type="password"],
 .form-field textarea {
   width: 100%;
   padding: 0.6rem 0.8rem;
@@ -493,4 +494,119 @@
 
 .weather-bar-fill {
   background: #15aabf;
+}
+
+/* === 인증 === */
+.auth-form {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 400px;
+  margin: 2rem auto;
+}
+
+.auth-form h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.auth-hint {
+  margin: 1rem 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #868e96;
+}
+
+/* === 사용자 정보 === */
+.user-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.user-badge {
+  font-size: 0.85rem;
+  color: #495057;
+  background: #e8ecfd;
+  padding: 0.3rem 0.75rem;
+  border-radius: 16px;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+/* === 사용자 관리 === */
+.user-management h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.3rem;
+}
+
+.user-table-wrapper {
+  overflow-x: auto;
+}
+
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.user-table th,
+.user-table td {
+  padding: 0.6rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.user-table th {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.user-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.role-admin {
+  background: #e8ecfd;
+  color: #4263eb;
+}
+
+.role-user {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.user-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.user-actions .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.user-count {
+  margin: 1rem 0 0;
+  text-align: right;
+  font-size: 0.85rem;
+  color: #868e96;
 }

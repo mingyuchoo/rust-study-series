@@ -29,6 +29,7 @@ pub enum Weather {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DiaryEntry {
     pub id: String,
+    pub owner_id: String,
     pub title: String,
     pub content: String,
     pub mood: Mood,
@@ -45,6 +46,7 @@ mod tests {
     fn 일기_항목을_json으로_직렬화한다() {
         let entry = DiaryEntry {
             id: "test-1".to_string(),
+            owner_id: "owner-1".to_string(),
             title: "오늘의 일기".to_string(),
             content: "좋은 하루였다".to_string(),
             mood: Mood::Happy,
@@ -83,6 +85,7 @@ mod tests {
         let entries = vec![
             DiaryEntry {
                 id: "1".to_string(),
+                owner_id: "owner-1".to_string(),
                 title: "첫째 날".to_string(),
                 content: "내용1".to_string(),
                 mood: Mood::Happy,
@@ -92,6 +95,7 @@ mod tests {
             },
             DiaryEntry {
                 id: "2".to_string(),
+                owner_id: "owner-1".to_string(),
                 title: "둘째 날".to_string(),
                 content: "내용2".to_string(),
                 mood: Mood::Calm,

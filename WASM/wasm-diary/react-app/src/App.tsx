@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import "./App.css";
+import { LoginForm, RegisterForm } from "./components/AuthForms";
 import { DateRangeFilter } from "./components/DateRangeFilter";
 import { DiaryEntryForm } from "./components/DiaryEntryForm";
 import { DiaryEntryList } from "./components/DiaryEntryList";
@@ -7,17 +8,22 @@ import { MoodFilter } from "./components/MoodFilter";
 import { WeatherFilter } from "./components/WeatherFilter";
 import { SearchBar } from "./components/SearchBar";
 import { StatsDashboard } from "./components/StatsDashboard";
+import { UserManagement } from "./components/UserManagement";
+import { useAuth } from "./hooks/useAuth";
 import { useDiary } from "./hooks/useDiary";
 import { useWasm } from "./hooks/useWasm";
 import type { DiaryEntry, Mood, Weather } from "./types/diary";
 
-type View = "list" | "create" | "edit" | "stats";
+type View = "list" | "create" | "edit" | "stats" | "users";
+type AuthView = "login" | "register";
 
 function App() {
   const { ready, error } = useWasm();
-  const diary = useDiary(ready);
+  const auth = useAuth(ready);
+  const diary = useDiary(ready, auth.user?.id, auth.isAdmin);
 
   const [view, setView] = useState<View>("list");
+  const [authView, setAuthView] = useState<AuthView>("login");
   const [editingEntry, setEditingEntry] = useState<DiaryEntry | null>(null);
   const [filteredEntries, setFilteredEntries] = useState<DiaryEntry[] | null>(
     null
@@ -125,10 +131,45 @@ function App() {
     return <div className="App loading">로딩 중...</div>;
   }
 
+  // 로그인 전: 인증 화면
+  if (!auth.user) {
+    return (
+      <div className="App">
+        <header className="app-header">
+          <h1>나의 일기장</h1>
+        </header>
+        <main className="app-main">
+          {authView === "login" ? (
+            <LoginForm
+              onLogin={auth.login}
+              onSwitchToRegister={() => setAuthView("register")}
+            />
+          ) : (
+            <RegisterForm
+              onRegister={auth.register}
+              onValidate={auth.validateRegistration}
+              onSwitchToLogin={() => setAuthView("login")}
+            />
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  // 로그인 후: 일기장 화면
   return (
     <div className="App">
       <header className="app-header">
         <h1>나의 일기장</h1>
+        <div className="user-info">
+          <span className="user-badge">
+            {auth.isAdmin ? "관리자" : "사용자"}:{" "}
+            {auth.user.nickname || auth.user.username}
+          </span>
+          <button className="btn btn-secondary btn-sm" onClick={auth.logout}>
+            로그아웃
+          </button>
+        </div>
         <nav className="app-nav">
           <button
             className={`nav-btn ${view === "list" ? "active" : ""}`}
@@ -153,6 +194,14 @@ function App() {
           >
             통계
           </button>
+          {auth.isAdmin && (
+            <button
+              className={`nav-btn ${view === "users" ? "active" : ""}`}
+              onClick={() => setView("users")}
+            >
+              사용자 관리
+            </button>
+          )}
         </nav>
       </header>
 
@@ -206,6 +255,15 @@ function App() {
           <StatsDashboard
             statistics={diary.statistics}
             onBack={() => setView("list")}
+          />
+        )}
+
+        {view === "users" && auth.isAdmin && auth.user && (
+          <UserManagement
+            currentUserId={auth.user.id}
+            getAllUsers={auth.getAllUsers}
+            deleteUser={auth.deleteUser}
+            changeRole={auth.changeRole}
           />
         )}
       </main>

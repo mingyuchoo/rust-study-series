@@ -48,6 +48,7 @@ mod tests {
     fn make_entry(content: &str, mood: Mood, weather: Weather) -> DiaryEntry {
         DiaryEntry {
             id: "test".to_string(),
+            owner_id: "owner-1".to_string(),
             title: "테스트".to_string(),
             content: content.to_string(),
             mood,

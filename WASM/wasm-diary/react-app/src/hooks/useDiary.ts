@@ -60,10 +60,27 @@ export interface UseDiaryReturn {
   refreshEntries: () => void;
 }
 
-export function useDiary(wasmReady: boolean): UseDiaryReturn {
+export function useDiary(
+  wasmReady: boolean,
+  userId?: string,
+  isAdmin?: boolean
+): UseDiaryReturn {
   const managerRef = useRef<DiaryManager | null>(null);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [statistics, setStatistics] = useState<DiaryStatistics | null>(null);
+
+  const getEntries = useCallback(
+    (mgr: DiaryManager): DiaryEntry[] => {
+      if (isAdmin) {
+        return JSON.parse(mgr.get_all_entries());
+      }
+      if (userId) {
+        return JSON.parse(mgr.get_entries_by_owner(userId));
+      }
+      return [];
+    },
+    [userId, isAdmin]
+  );
 
   // WASM 초기화 후 매니저 생성 및 localStorage에서 복원
   useEffect(() => {
@@ -76,31 +93,31 @@ export function useDiary(wasmReady: boolean): UseDiaryReturn {
     }
     managerRef.current = manager;
 
-    setEntries(JSON.parse(manager.get_all_entries()));
+    setEntries(getEntries(manager));
     setStatistics(JSON.parse(manager.get_statistics()));
 
     return () => {
       manager.free();
       managerRef.current = null;
     };
-  }, [wasmReady]);
+  }, [wasmReady, getEntries]);
 
   const persist = useCallback(() => {
     const mgr = managerRef.current;
     if (!mgr) return;
     localStorage.setItem(STORAGE_KEY, mgr.save_to_json());
-    setEntries(JSON.parse(mgr.get_all_entries()));
+    setEntries(getEntries(mgr));
     setStatistics(JSON.parse(mgr.get_statistics()));
-  }, []);
+  }, [getEntries]);
 
   const createEntry = useCallback(
     (title: string, content: string, mood: Mood, weather: Weather): DiaryEntry => {
       const mgr = managerRef.current!;
-      const json = mgr.create_entry(title, content, toWasmMood(mood), toWasmWeather(weather));
+      const json = mgr.create_entry(userId ?? "", title, content, toWasmMood(mood), toWasmWeather(weather));
       persist();
       return JSON.parse(json);
     },
-    [persist]
+    [persist, userId]
   );
 
   const updateEntry = useCallback(
@@ -169,9 +186,9 @@ export function useDiary(wasmReady: boolean): UseDiaryReturn {
   const refreshEntries = useCallback(() => {
     const mgr = managerRef.current;
     if (!mgr) return;
-    setEntries(JSON.parse(mgr.get_all_entries()));
+    setEntries(getEntries(mgr));
     setStatistics(JSON.parse(mgr.get_statistics()));
-  }, []);
+  }, [getEntries]);
 
   return {
     entries,

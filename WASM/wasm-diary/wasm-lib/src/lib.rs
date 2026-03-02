@@ -1,8 +1,11 @@
 mod date_util;
+mod hash_util;
 mod id_gen;
 pub mod manager;
 pub mod model;
 pub mod stats;
+pub mod user_manager;
+pub mod user_model;
 pub mod validation;
 
 use wasm_bindgen::prelude::*;
