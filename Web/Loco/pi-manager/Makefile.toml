@@ -1,0 +1,232 @@
+# =============================================================================
+# Makefile.toml - pi-manager (Loco 프레임워크 기반)
+# cargo-make 설치: cargo install cargo-make
+# 사용법: cargo make <태스크명>
+# =============================================================================
+
+[config]
+default_to_workspace = false
+
+# -----------------------------------------------------------------------------
+# 환경 변수
+# -----------------------------------------------------------------------------
+[env]
+RUST_LOG = { value = "info", condition = { env_not_set = ["RUST_LOG"] } }
+LOCO_ENV = { value = "development", condition = { env_not_set = ["LOCO_ENV"] } }
+
+# =============================================================================
+# 의존성 설치 (Install)
+# =============================================================================
+
+[tasks.install-deps]
+description = "시스템 의존성 및 cargo 도구 설치"
+script = [
+    "cargo install cargo-make",
+    "cargo install cargo-watch",
+    "cargo install cargo-audit",
+    "cargo install cargo-tarpaulin",
+    "cargo install loco",
+    "cargo install sea-orm-cli",
+]
+
+[tasks.install]
+description = "프로젝트 의존성 다운로드"
+command = "cargo"
+args = ["fetch"]
+
+# =============================================================================
+# 포맷팅 & 린트 (Format & Lint)
+# =============================================================================
+
+[tasks.fmt]
+description = "코드 포맷팅"
+command = "cargo"
+args = ["fmt", "--all"]
+
+[tasks.fmt-check]
+description = "코드 포맷 검사"
+command = "cargo"
+args = ["fmt", "--all", "--check"]
+
+[tasks.clippy]
+description = "Clippy 린트 검사"
+command = "cargo"
+args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
+
+[tasks.lint]
+description = "포맷 검사 + Clippy 린트"
+dependencies = ["fmt-check", "clippy"]
+
+# =============================================================================
+# 빌드 (Build)
+# =============================================================================
+
+[tasks.build]
+description = "디버그 빌드"
+command = "cargo"
+args = ["build"]
+
+[tasks.build-release]
+description = "릴리즈 빌드 (최적화)"
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.clean]
+description = "빌드 산출물 삭제"
+command = "cargo"
+args = ["clean"]
+
+# =============================================================================
+# 테스트 (Test)
+# =============================================================================
+
+[tasks.test]
+description = "전체 테스트 실행"
+env = { "LOCO_ENV" = "test" }
+command = "cargo"
+args = ["test", "--all"]
+
+[tasks.test-verbose]
+description = "전체 테스트 실행 (상세 출력)"
+env = { "LOCO_ENV" = "test" }
+command = "cargo"
+args = ["test", "--all", "--", "--nocapture"]
+
+[tasks.test-unit]
+description = "단위 테스트만 실행"
+env = { "LOCO_ENV" = "test" }
+command = "cargo"
+args = ["test", "--lib"]
+
+[tasks.test-integration]
+description = "통합 테스트만 실행"
+env = { "LOCO_ENV" = "test" }
+command = "cargo"
+args = ["test", "--test", "*"]
+
+[tasks.coverage]
+description = "테스트 커버리지 리포트 생성"
+env = { "LOCO_ENV" = "test" }
+command = "cargo"
+args = ["tarpaulin", "--out", "Html", "--output-dir", "target/coverage"]
+
+# =============================================================================
+# 보안 감사 (Audit)
+# =============================================================================
+
+[tasks.audit]
+description = "의존성 보안 취약점 감사"
+command = "cargo"
+args = ["audit"]
+
+# =============================================================================
+# 데이터베이스 (Database)
+# =============================================================================
+
+[tasks.db-migrate]
+description = "데이터베이스 마이그레이션 실행"
+command = "cargo"
+args = ["loco", "db", "migrate"]
+
+[tasks.db-reset]
+description = "데이터베이스 리셋 후 마이그레이션 재실행"
+command = "cargo"
+args = ["loco", "db", "reset"]
+
+[tasks.db-status]
+description = "데이터베이스 마이그레이션 상태 확인"
+command = "cargo"
+args = ["loco", "db", "status"]
+
+# =============================================================================
+# 개발 (Development)
+# =============================================================================
+
+[tasks.dev]
+description = "개발 서버 시작 (파일 변경 감지 자동 재시작)"
+command = "cargo"
+args = ["loco", "start"]
+
+[tasks.watch]
+description = "파일 변경 감지 자동 빌드"
+command = "cargo"
+args = ["watch", "-x", "build"]
+
+[tasks.routes]
+description = "등록된 라우트 목록 출력"
+command = "cargo"
+args = ["loco", "routes"]
+
+# =============================================================================
+# 배포 (Deploy)
+# =============================================================================
+
+[tasks.deploy-build]
+description = "배포용 릴리즈 빌드 (린트 + 테스트 + 빌드)"
+dependencies = ["lint", "test", "build-release"]
+
+[tasks.docker-build]
+description = "Docker 이미지 빌드"
+script = [
+    "docker build -t pi-manager:latest .",
+]
+
+[tasks.docker-run]
+description = "Docker 컨테이너 실행"
+script = [
+    "docker run -d --name pi-manager -p 5150:5150 pi-manager:latest",
+]
+
+[tasks.docker-stop]
+description = "Docker 컨테이너 중지 및 제거"
+script = [
+    "docker stop pi-manager || true",
+    "docker rm pi-manager || true",
+]
+
+# =============================================================================
+# 릴리즈 (Release)
+# =============================================================================
+
+[tasks.release-check]
+description = "릴리즈 전 전체 검증 (포맷 + 린트 + 감사 + 테스트)"
+dependencies = ["fmt-check", "clippy", "audit", "test"]
+
+[tasks.release-patch]
+description = "패치 버전 릴리즈 (0.0.x)"
+dependencies = ["release-check"]
+script = [
+    "echo '패치 버전 범프 중...'",
+    "cargo set-version --bump patch",
+    "cargo build --release",
+]
+
+[tasks.release-minor]
+description = "마이너 버전 릴리즈 (0.x.0)"
+dependencies = ["release-check"]
+script = [
+    "echo '마이너 버전 범프 중...'",
+    "cargo set-version --bump minor",
+    "cargo build --release",
+]
+
+[tasks.release-major]
+description = "메이저 버전 릴리즈 (x.0.0)"
+dependencies = ["release-check"]
+script = [
+    "echo '메이저 버전 범프 중...'",
+    "cargo set-version --bump major",
+    "cargo build --release",
+]
+
+# =============================================================================
+# 복합 워크플로우 (Composite Workflows)
+# =============================================================================
+
+[tasks.ci]
+description = "CI 파이프라인 (포맷 검사 → 린트 → 테스트 → 빌드)"
+dependencies = ["fmt-check", "clippy", "test", "build"]
+
+[tasks.all]
+description = "전체 검증 파이프라인 (포맷 → 린트 → 감사 → 테스트 → 릴리즈 빌드)"
+dependencies = ["fmt", "clippy", "audit", "test", "build-release"]

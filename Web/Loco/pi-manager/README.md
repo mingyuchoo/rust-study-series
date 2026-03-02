@@ -23,11 +23,16 @@ PI Manager는 조직의 성과지표(Performance Indicators)를 체계적으로 
 
 - Rust 1.70 이상
 - SQLite (기본) 또는 PostgreSQL
+- [cargo-make](https://github.com/sagiegurari/cargo-make) (`cargo install cargo-make`)
 
 ### 설치 및 실행
 
 ```bash
-# 개발 서버 시작
+# cargo-make를 이용한 실행 (권장)
+cargo make install          # 프로젝트 의존성 다운로드
+cargo make dev              # 개발 서버 시작
+
+# 또는 직접 실행
 cargo loco start
 
 # 브라우저에서 접속
@@ -62,12 +67,63 @@ compilation: debug
 listening on http://localhost:5150
 ```
 
+### cargo-make 태스크 목록
+
+```bash
+# ── 의존성 ──────────────────────────────
+cargo make install-deps     # 시스템 도구 설치 (cargo-watch, loco 등)
+cargo make install          # 프로젝트 의존성 다운로드
+
+# ── 포맷팅 & 린트 ──────────────────────
+cargo make fmt              # 코드 포맷팅
+cargo make clippy           # Clippy 린트 검사
+cargo make lint             # 포맷 검사 + Clippy
+
+# ── 빌드 ────────────────────────────────
+cargo make build            # 디버그 빌드
+cargo make build-release    # 릴리즈 빌드 (최적화)
+cargo make clean            # 빌드 산출물 삭제
+
+# ── 테스트 ──────────────────────────────
+cargo make test             # 전체 테스트
+cargo make test-verbose     # 상세 출력 테스트
+cargo make test-unit        # 단위 테스트만
+cargo make test-integration # 통합 테스트만
+cargo make coverage         # 테스트 커버리지 리포트
+
+# ── 보안 ────────────────────────────────
+cargo make audit            # 의존성 보안 취약점 감사
+
+# ── 데이터베이스 ────────────────────────
+cargo make db-migrate       # 마이그레이션 실행
+cargo make db-reset         # DB 리셋 + 마이그레이션 재실행
+cargo make db-status        # 마이그레이션 상태 확인
+
+# ── 개발 ────────────────────────────────
+cargo make dev              # 개발 서버 시작
+cargo make watch            # 파일 변경 감지 자동 빌드
+cargo make routes           # 등록된 라우트 목록
+
+# ── 배포 ────────────────────────────────
+cargo make deploy-build     # 배포용 빌드 (린트 + 테스트 + 릴리즈 빌드)
+cargo make docker-build     # Docker 이미지 빌드
+cargo make docker-run       # Docker 컨테이너 실행
+cargo make docker-stop      # Docker 컨테이너 중지
+
+# ── 릴리즈 ──────────────────────────────
+cargo make release-check    # 릴리즈 전 전체 검증
+cargo make release-patch    # 패치 버전 릴리즈 (0.0.x)
+cargo make release-minor    # 마이너 버전 릴리즈 (0.x.0)
+cargo make release-major    # 메이저 버전 릴리즈 (x.0.0)
+
+# ── CI/CD ───────────────────────────────
+cargo make ci               # CI 파이프라인 (포맷 → 린트 → 테스트 → 빌드)
+cargo make all              # 전체 검증 파이프라인
+```
+
 ### 기타 명령어
 
 ```bash
-# 테스트 실행
-cargo test
-
 # 특정 테스트 실행
 cargo test test_can_create_indicator
 
@@ -79,9 +135,6 @@ cargo loco generate model <name> <field:type>...
 
 # 컨트롤러 생성
 cargo loco generate controller <name>
-
-# 프로덕션 빌드
-cargo build --release
 ```
 
 ## 아키텍처 개요
