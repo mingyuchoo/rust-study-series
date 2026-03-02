@@ -22,7 +22,7 @@ function App() {
   const auth = useAuth(ready);
   const diary = useDiary(ready, auth.user?.id, auth.isAdmin);
 
-  const [view, setView] = useState<View>("list");
+  const [view, setView] = useState<View>("create");
   const [authView, setAuthView] = useState<AuthView>("login");
   const [editingEntry, setEditingEntry] = useState<DiaryEntry | null>(null);
   const [filteredEntries, setFilteredEntries] = useState<DiaryEntry[] | null>(
@@ -172,6 +172,12 @@ function App() {
         </div>
         <nav className="app-nav">
           <button
+            className={`nav-btn ${view === "create" ? "active" : ""}`}
+            onClick={() => setView("create")}
+          >
+            새 일기
+          </button>
+          <button
             className={`nav-btn ${view === "list" ? "active" : ""}`}
             onClick={() => {
               setView("list");
@@ -181,12 +187,6 @@ function App() {
             }}
           >
             목록
-          </button>
-          <button
-            className={`nav-btn ${view === "create" ? "active" : ""}`}
-            onClick={() => setView("create")}
-          >
-            새 일기
           </button>
           <button
             className={`nav-btn ${view === "stats" ? "active" : ""}`}
