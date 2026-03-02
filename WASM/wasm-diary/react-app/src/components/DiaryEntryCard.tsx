@@ -1,4 +1,5 @@
 import { MOOD_MAP } from "../constants/mood";
+import { WEATHER_MAP } from "../constants/weather";
 import type { DiaryEntry } from "../types/diary";
 
 interface Props {
@@ -9,6 +10,7 @@ interface Props {
 
 export function DiaryEntryCard({ entry, onEdit, onDelete }: Props) {
   const moodInfo = MOOD_MAP[entry.mood];
+  const weatherInfo = WEATHER_MAP[entry.weather];
   const preview =
     entry.content.length > 100
       ? entry.content.slice(0, 100) + "..."
@@ -20,6 +22,9 @@ export function DiaryEntryCard({ entry, onEdit, onDelete }: Props) {
       <div className="diary-card-header">
         <span className="diary-card-mood" title={moodInfo.label}>
           {moodInfo.emoji}
+        </span>
+        <span className="diary-card-weather" title={weatherInfo.label}>
+          {weatherInfo.emoji}
         </span>
         <h3 className="diary-card-title">{entry.title}</h3>
         <span className="diary-card-date">{date}</span>

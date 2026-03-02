@@ -4,11 +4,12 @@ import { DateRangeFilter } from "./components/DateRangeFilter";
 import { DiaryEntryForm } from "./components/DiaryEntryForm";
 import { DiaryEntryList } from "./components/DiaryEntryList";
 import { MoodFilter } from "./components/MoodFilter";
+import { WeatherFilter } from "./components/WeatherFilter";
 import { SearchBar } from "./components/SearchBar";
 import { StatsDashboard } from "./components/StatsDashboard";
 import { useDiary } from "./hooks/useDiary";
 import { useWasm } from "./hooks/useWasm";
-import type { DiaryEntry, Mood } from "./types/diary";
+import type { DiaryEntry, Mood, Weather } from "./types/diary";
 
 type View = "list" | "create" | "edit" | "stats";
 
@@ -22,6 +23,7 @@ function App() {
     null
   );
   const [moodFilter, setMoodFilter] = useState<Mood | null>(null);
+  const [weatherFilter, setWeatherFilter] = useState<Weather | null>(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
@@ -50,6 +52,18 @@ function App() {
     [diary]
   );
 
+  const handleWeatherFilter = useCallback(
+    (weather: Weather | null) => {
+      setWeatherFilter(weather);
+      if (weather === null) {
+        setFilteredEntries(null);
+      } else {
+        setFilteredEntries(diary.filterByWeather(weather));
+      }
+    },
+    [diary]
+  );
+
   const handleDateFilter = useCallback(
     (from: string, to: string) => {
       if (from && to) {
@@ -62,8 +76,8 @@ function App() {
   );
 
   const handleCreate = useCallback(
-    (title: string, content: string, mood: Mood) => {
-      diary.createEntry(title, content, mood);
+    (title: string, content: string, mood: Mood, weather: Weather) => {
+      diary.createEntry(title, content, mood, weather);
       setView("list");
       setFilteredEntries(null);
     },
@@ -82,9 +96,9 @@ function App() {
   );
 
   const handleUpdate = useCallback(
-    (title: string, content: string, mood: Mood) => {
+    (title: string, content: string, mood: Mood, weather: Weather) => {
       if (editingEntry) {
-        diary.updateEntry(editingEntry.id, title, content, mood);
+        diary.updateEntry(editingEntry.id, title, content, mood, weather);
         setEditingEntry(null);
         setView("list");
         setFilteredEntries(null);
@@ -122,6 +136,7 @@ function App() {
               setView("list");
               setFilteredEntries(null);
               setMoodFilter(null);
+              setWeatherFilter(null);
             }}
           >
             목록
@@ -146,6 +161,7 @@ function App() {
           <>
             <SearchBar onSearch={handleSearch} />
             <MoodFilter selected={moodFilter} onSelect={handleMoodFilter} />
+            <WeatherFilter selected={weatherFilter} onSelect={handleWeatherFilter} />
             <DateRangeFilter
               from={dateFrom}
               to={dateTo}

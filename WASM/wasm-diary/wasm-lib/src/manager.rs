@@ -1,7 +1,8 @@
 use crate::{date_util,
             id_gen,
             model::{DiaryEntry,
-                    Mood},
+                    Mood,
+                    Weather},
             stats,
             validation};
 use wasm_bindgen::prelude::*;
@@ -13,12 +14,13 @@ pub struct DiaryManager {
 
 // 내부 헬퍼 (테스트 시 ID/타임스탬프 주입용)
 impl DiaryManager {
-    fn create_entry_with(&mut self, id: String, title: String, content: String, mood: Mood, now: String) -> String {
+    fn create_entry_with(&mut self, id: String, title: String, content: String, mood: Mood, weather: Weather, now: String) -> String {
         let entry = DiaryEntry {
             id,
             title: title.trim().to_string(),
             content: content.trim().to_string(),
             mood,
+            weather,
             created_at: now.clone(),
             updated_at: now,
         };
@@ -27,11 +29,12 @@ impl DiaryManager {
         json
     }
 
-    fn update_entry_with(&mut self, id: &str, title: &str, content: &str, mood: Mood, now: String) -> String {
+    fn update_entry_with(&mut self, id: &str, title: &str, content: &str, mood: Mood, weather: Weather, now: String) -> String {
         if let Some(entry) = self.entries.iter_mut().find(|e| e.id == id) {
             entry.title = title.trim().to_string();
             entry.content = content.trim().to_string();
             entry.mood = mood;
+            entry.weather = weather;
             entry.updated_at = now;
             serde_json::to_string(entry).unwrap_or_default()
         } else {
@@ -60,17 +63,17 @@ impl DiaryManager {
     pub fn save_to_json(&self) -> String { serde_json::to_string(&self.entries).unwrap_or_else(|_| "[]".to_string()) }
 
     /// 새 일기를 생성하고 생성된 항목의 JSON을 반환한다.
-    pub fn create_entry(&mut self, title: &str, content: &str, mood: Mood) -> String {
+    pub fn create_entry(&mut self, title: &str, content: &str, mood: Mood, weather: Weather) -> String {
         let id = id_gen::generate_id();
         let now = date_util::now_iso();
-        self.create_entry_with(id, title.to_string(), content.to_string(), mood, now)
+        self.create_entry_with(id, title.to_string(), content.to_string(), mood, weather, now)
     }
 
     /// 일기를 수정하고 수정된 항목의 JSON을 반환한다. 존재하지 않으면 빈
     /// 문자열.
-    pub fn update_entry(&mut self, id: &str, title: &str, content: &str, mood: Mood) -> String {
+    pub fn update_entry(&mut self, id: &str, title: &str, content: &str, mood: Mood, weather: Weather) -> String {
         let now = date_util::now_iso();
-        self.update_entry_with(id, title, content, mood, now)
+        self.update_entry_with(id, title, content, mood, weather, now)
     }
 
     /// 일기를 삭제한다. 성공 시 true.
@@ -113,6 +116,12 @@ impl DiaryManager {
         serde_json::to_string(&results).unwrap_or_else(|_| "[]".to_string())
     }
 
+    /// 특정 날씨의 일기만 필터링한다.
+    pub fn filter_by_weather(&self, weather: Weather) -> String {
+        let results: Vec<&DiaryEntry> = self.entries.iter().filter(|e| e.weather == weather).collect();
+        serde_json::to_string(&results).unwrap_or_else(|_| "[]".to_string())
+    }
+
     /// 날짜 범위(from ~ to)로 일기를 필터링한다.
     pub fn filter_by_date_range(&self, from: &str, to: &str) -> String {
         let results: Vec<&DiaryEntry> = self.entries.iter().filter(|e| date_util::is_in_range(&e.created_at, from, to)).collect();
@@ -140,6 +149,7 @@ mod tests {
             "행복한 날".to_string(),
             "오늘은 정말 좋은 날이었다".to_string(),
             Mood::Happy,
+            Weather::Sunny,
             now.clone(),
         );
         mgr.create_entry_with(
@@ -147,6 +157,7 @@ mod tests {
             "슬픈 하루".to_string(),
             "비가 와서 우울했다".to_string(),
             Mood::Sad,
+            Weather::Rainy,
             "2026-03-01T10:00:00Z".to_string(),
         );
         mgr.create_entry_with(
@@ -154,6 +165,7 @@ mod tests {
             "평온한 오후".to_string(),
             "차를 마시며 휴식했다".to_string(),
             Mood::Calm,
+            Weather::Cloudy,
             now,
         );
         mgr
@@ -174,12 +186,14 @@ mod tests {
             "제목".to_string(),
             "내용".to_string(),
             Mood::Happy,
+            Weather::Sunny,
             "2026-03-02T00:00:00Z".to_string(),
         );
 
         let entry: DiaryEntry = serde_json::from_str(&json).unwrap();
         assert_eq!(entry.id, "test-1");
         assert_eq!(entry.title, "제목");
+        assert_eq!(entry.weather, Weather::Sunny);
 
         let fetched = mgr.get_entry("test-1");
         assert!(!fetched.is_empty());
@@ -194,11 +208,12 @@ mod tests {
     #[test]
     fn 일기를_수정한다() {
         let mut mgr = make_manager_with_entries();
-        let updated = mgr.update_entry_with("id-1", "수정된 제목", "수정된 내용", Mood::Excited, "2026-03-02T12:00:00Z".to_string());
+        let updated = mgr.update_entry_with("id-1", "수정된 제목", "수정된 내용", Mood::Excited, Weather::Windy, "2026-03-02T12:00:00Z".to_string());
 
         let entry: DiaryEntry = serde_json::from_str(&updated).unwrap();
         assert_eq!(entry.title, "수정된 제목");
         assert_eq!(entry.mood, Mood::Excited);
+        assert_eq!(entry.weather, Weather::Windy);
         assert_eq!(entry.updated_at, "2026-03-02T12:00:00Z");
     }
 
@@ -206,7 +221,7 @@ mod tests {
     fn 존재하지_않는_일기를_수정하면_빈_문자열이다() {
         let mut mgr = DiaryManager::new();
         assert!(
-            mgr.update_entry_with("nonexistent", "t", "c", Mood::Happy, "2026-03-02T00:00:00Z".to_string())
+            mgr.update_entry_with("nonexistent", "t", "c", Mood::Happy, Weather::Sunny, "2026-03-02T00:00:00Z".to_string())
                 .is_empty()
         );
     }
@@ -240,10 +255,19 @@ mod tests {
             "Hello World".to_string(),
             "content".to_string(),
             Mood::Happy,
+            Weather::Sunny,
             "2026-03-02T00:00:00Z".to_string(),
         );
         let results: Vec<DiaryEntry> = serde_json::from_str(&mgr.search_by_keyword("hello")).unwrap();
         assert_eq!(results.len(), 1);
+    }
+
+    #[test]
+    fn 날씨로_필터링한다() {
+        let mgr = make_manager_with_entries();
+        let results: Vec<DiaryEntry> = serde_json::from_str(&mgr.filter_by_weather(Weather::Rainy)).unwrap();
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].id, "id-2");
     }
 
     #[test]

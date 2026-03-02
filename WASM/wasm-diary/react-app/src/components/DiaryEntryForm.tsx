@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { ALL_MOODS, MOOD_MAP } from "../constants/mood";
-import type { DiaryEntry, Mood, ValidationResult } from "../types/diary";
+import { ALL_WEATHERS, WEATHER_MAP } from "../constants/weather";
+import type { DiaryEntry, Mood, Weather, ValidationResult } from "../types/diary";
 
 interface Props {
   editingEntry?: DiaryEntry | null;
-  onSubmit: (title: string, content: string, mood: Mood) => void;
+  onSubmit: (title: string, content: string, mood: Mood, weather: Weather) => void;
   onCancel: () => void;
   validate: (title: string, content: string) => ValidationResult;
 }
@@ -18,6 +19,7 @@ export function DiaryEntryForm({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [mood, setMood] = useState<Mood>("Calm");
+  const [weather, setWeather] = useState<Weather>("Sunny");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export function DiaryEntryForm({
       setTitle(editingEntry.title);
       setContent(editingEntry.content);
       setMood(editingEntry.mood);
+      setWeather(editingEntry.weather);
     }
   }, [editingEntry]);
 
@@ -40,7 +43,7 @@ export function DiaryEntryForm({
       return;
     }
     setErrors({});
-    onSubmit(title, content, mood);
+    onSubmit(title, content, mood, weather);
   };
 
   return (
@@ -71,6 +74,23 @@ export function DiaryEntryForm({
               title={MOOD_MAP[m].label}
             >
               {MOOD_MAP[m].emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="weather">날씨</label>
+        <div className="weather-selector">
+          {ALL_WEATHERS.map((w) => (
+            <button
+              key={w}
+              type="button"
+              className={`weather-btn ${weather === w ? "active" : ""}`}
+              onClick={() => setWeather(w)}
+              title={WEATHER_MAP[w].label}
+            >
+              {WEATHER_MAP[w].emoji}
             </button>
           ))}
         </div>

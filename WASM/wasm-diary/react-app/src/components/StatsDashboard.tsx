@@ -1,5 +1,6 @@
 import { MOOD_MAP } from "../constants/mood";
-import type { DiaryStatistics, Mood } from "../types/diary";
+import { WEATHER_MAP } from "../constants/weather";
+import type { DiaryStatistics, Mood, Weather } from "../types/diary";
 
 interface Props {
   statistics: DiaryStatistics;
@@ -8,6 +9,9 @@ interface Props {
 
 export function StatsDashboard({ statistics, onBack }: Props) {
   const moodEntries = Object.entries(statistics.mood_distribution).sort(
+    ([, a], [, b]) => b - a
+  );
+  const weatherEntries = Object.entries(statistics.weather_distribution).sort(
     ([, a], [, b]) => b - a
   );
 
@@ -48,6 +52,37 @@ export function StatsDashboard({ statistics, onBack }: Props) {
                   <div className="mood-bar-track">
                     <div
                       className="mood-bar-fill"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                  <span className="mood-bar-count">
+                    {count}건 ({percent}%)
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {weatherEntries.length > 0 && (
+        <div className="weather-stats">
+          <h3>날씨 분포</h3>
+          <div className="mood-bars">
+            {weatherEntries.map(([weather, count]) => {
+              const info = WEATHER_MAP[weather as Weather];
+              const percent =
+                statistics.total_entries > 0
+                  ? Math.round((count / statistics.total_entries) * 100)
+                  : 0;
+              return (
+                <div key={weather} className="mood-bar-row">
+                  <span className="mood-bar-label">
+                    {info?.emoji ?? weather} {info?.label ?? weather}
+                  </span>
+                  <div className="mood-bar-track">
+                    <div
+                      className="mood-bar-fill weather-bar-fill"
                       style={{ width: `${percent}%` }}
                     />
                   </div>

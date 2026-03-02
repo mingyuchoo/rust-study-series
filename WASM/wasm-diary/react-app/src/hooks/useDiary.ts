@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DiaryManager, Mood as WasmMood } from "wasm-lib";
+import { DiaryManager, Mood as WasmMood, Weather as WasmWeather } from "wasm-lib";
 import type {
   DiaryEntry,
   DiaryStatistics,
   Mood,
+  Weather,
   ValidationResult,
 } from "../types/diary";
 
@@ -25,20 +26,35 @@ function toWasmMood(mood: Mood): number {
   return MOOD_TO_WASM[mood];
 }
 
+const WEATHER_TO_WASM: Record<Weather, number> = {
+  Sunny: WasmWeather.Sunny,
+  Cloudy: WasmWeather.Cloudy,
+  Rainy: WasmWeather.Rainy,
+  Snowy: WasmWeather.Snowy,
+  Windy: WasmWeather.Windy,
+  Foggy: WasmWeather.Foggy,
+};
+
+function toWasmWeather(weather: Weather): number {
+  return WEATHER_TO_WASM[weather];
+}
+
 export interface UseDiaryReturn {
   entries: DiaryEntry[];
   statistics: DiaryStatistics | null;
-  createEntry: (title: string, content: string, mood: Mood) => DiaryEntry;
+  createEntry: (title: string, content: string, mood: Mood, weather: Weather) => DiaryEntry;
   updateEntry: (
     id: string,
     title: string,
     content: string,
-    mood: Mood
+    mood: Mood,
+    weather: Weather
   ) => DiaryEntry | null;
   deleteEntry: (id: string) => boolean;
   getEntry: (id: string) => DiaryEntry | null;
   searchByKeyword: (keyword: string) => DiaryEntry[];
   filterByMood: (mood: Mood) => DiaryEntry[];
+  filterByWeather: (weather: Weather) => DiaryEntry[];
   filterByDateRange: (from: string, to: string) => DiaryEntry[];
   validate: (title: string, content: string) => ValidationResult;
   refreshEntries: () => void;
@@ -78,9 +94,9 @@ export function useDiary(wasmReady: boolean): UseDiaryReturn {
   }, []);
 
   const createEntry = useCallback(
-    (title: string, content: string, mood: Mood): DiaryEntry => {
+    (title: string, content: string, mood: Mood, weather: Weather): DiaryEntry => {
       const mgr = managerRef.current!;
-      const json = mgr.create_entry(title, content, toWasmMood(mood));
+      const json = mgr.create_entry(title, content, toWasmMood(mood), toWasmWeather(weather));
       persist();
       return JSON.parse(json);
     },
@@ -92,10 +108,11 @@ export function useDiary(wasmReady: boolean): UseDiaryReturn {
       id: string,
       title: string,
       content: string,
-      mood: Mood
+      mood: Mood,
+      weather: Weather
     ): DiaryEntry | null => {
       const mgr = managerRef.current!;
-      const json = mgr.update_entry(id, title, content, toWasmMood(mood));
+      const json = mgr.update_entry(id, title, content, toWasmMood(mood), toWasmWeather(weather));
       if (!json) return null;
       persist();
       return JSON.parse(json);
@@ -129,6 +146,11 @@ export function useDiary(wasmReady: boolean): UseDiaryReturn {
     return JSON.parse(mgr.filter_by_mood(toWasmMood(mood)));
   }, []);
 
+  const filterByWeather = useCallback((weather: Weather): DiaryEntry[] => {
+    const mgr = managerRef.current!;
+    return JSON.parse(mgr.filter_by_weather(toWasmWeather(weather)));
+  }, []);
+
   const filterByDateRange = useCallback(
     (from: string, to: string): DiaryEntry[] => {
       const mgr = managerRef.current!;
@@ -160,6 +182,7 @@ export function useDiary(wasmReady: boolean): UseDiaryReturn {
     getEntry,
     searchByKeyword,
     filterByMood,
+    filterByWeather,
     filterByDateRange,
     validate,
     refreshEntries,

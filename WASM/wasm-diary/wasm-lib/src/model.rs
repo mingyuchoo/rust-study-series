@@ -15,12 +15,24 @@ pub enum Mood {
     Grateful,
 }
 
+#[wasm_bindgen]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Weather {
+    Sunny,
+    Cloudy,
+    Rainy,
+    Snowy,
+    Windy,
+    Foggy,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DiaryEntry {
     pub id: String,
     pub title: String,
     pub content: String,
     pub mood: Mood,
+    pub weather: Weather,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -36,6 +48,7 @@ mod tests {
             title: "오늘의 일기".to_string(),
             content: "좋은 하루였다".to_string(),
             mood: Mood::Happy,
+            weather: Weather::Sunny,
             created_at: "2026-03-02T10:00:00Z".to_string(),
             updated_at: "2026-03-02T10:00:00Z".to_string(),
         };
@@ -56,6 +69,16 @@ mod tests {
     }
 
     #[test]
+    fn 날씨_enum을_json으로_직렬화한다() {
+        let weather = Weather::Rainy;
+        let json = serde_json::to_string(&weather).unwrap();
+        assert_eq!(json, "\"Rainy\"");
+
+        let deserialized: Weather = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized, Weather::Rainy);
+    }
+
+    #[test]
     fn 일기_목록을_json으로_직렬화한다() {
         let entries = vec![
             DiaryEntry {
@@ -63,6 +86,7 @@ mod tests {
                 title: "첫째 날".to_string(),
                 content: "내용1".to_string(),
                 mood: Mood::Happy,
+                weather: Weather::Sunny,
                 created_at: "2026-03-01T00:00:00Z".to_string(),
                 updated_at: "2026-03-01T00:00:00Z".to_string(),
             },
@@ -71,6 +95,7 @@ mod tests {
                 title: "둘째 날".to_string(),
                 content: "내용2".to_string(),
                 mood: Mood::Calm,
+                weather: Weather::Cloudy,
                 created_at: "2026-03-02T00:00:00Z".to_string(),
                 updated_at: "2026-03-02T00:00:00Z".to_string(),
             },

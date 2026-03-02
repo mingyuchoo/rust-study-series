@@ -56,9 +56,24 @@ function Invoke-ReactInstall {
 
     Push-Location $ReactDir
     try {
-        bun install
+        # bun install의 비정상 종료를 허용 (wasm-lib EPERM 무시)
+        $prevPref = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        bun install 2>&1 | Out-Host
+        $ErrorActionPreference = $prevPref
     } finally {
         Pop-Location
+    }
+
+    # bun의 Windows file: 프로토콜 EPERM 버그 workaround
+    $wasmDest = Join-Path $ReactDir "node_modules" "wasm-lib"
+    $wasmSrc  = Join-Path $WasmDir "pkg"
+    $testFile = Join-Path $wasmDest "package.json"
+    if (-not (Test-Path $testFile)) {
+        Write-Info "wasm-lib 수동 복사 중 (bun EPERM workaround)..."
+        if (Test-Path $wasmDest) { Remove-Item $wasmDest -Recurse -Force }
+        Copy-Item $wasmSrc -Destination $wasmDest -Recurse
+        Write-Ok "wasm-lib 복사 완료"
     }
 
     Write-Ok "의존성 설치 완료"
