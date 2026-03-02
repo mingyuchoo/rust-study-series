@@ -6,6 +6,14 @@ import topLevelAwait from "vite-plugin-top-level-await";
 
 export default defineConfig({
   plugins: [react(), wasm(), topLevelAwait()],
+  server: {
+    fs: {
+      allow: [".."],
+    },
+  },
+  optimizeDeps: {
+    exclude: ["wasm-lib"],
+  },
   test: {
     globals: true,
     environment: "jsdom",
