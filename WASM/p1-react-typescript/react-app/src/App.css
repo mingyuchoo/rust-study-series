@@ -1,38 +1,419 @@
+/* === 기본 레이아웃 === */
 .App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family:
+    "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #1a1a2e;
   min-height: 100vh;
+  background: #f8f9fa;
+}
+
+.App.loading,
+.App.error {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: 1.2rem;
+}
+
+.App.error {
+  color: #dc3545;
+}
+
+/* === 헤더 === */
+.app-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.app-header h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.75rem;
+  color: #2d3436;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.nav-btn {
+  padding: 0.5rem 1.25rem;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover {
+  background: #f1f3f5;
+}
+
+.nav-btn.active {
+  background: #4263eb;
+  color: white;
+  border-color: #4263eb;
+}
+
+/* === 검색 === */
+.search-bar {
+  margin-bottom: 0.75rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4263eb;
+  box-shadow: 0 0 0 3px rgba(66, 99, 235, 0.15);
+}
+
+/* === 감정 필터 === */
+.mood-filter {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.mood-filter-btn {
+  padding: 0.35rem 0.7rem;
+  border: 1px solid #dee2e6;
+  border-radius: 16px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.mood-filter-btn:hover {
+  background: #f1f3f5;
+}
+
+.mood-filter-btn.active {
+  background: #e8ecfd;
+  border-color: #4263eb;
+  color: #4263eb;
+}
+
+/* === 날짜 필터 === */
+.date-range-filter {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.date-range-filter label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #495057;
+}
+
+.date-range-filter input[type="date"] {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+/* === 일기 카드 === */
+.diary-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.diary-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  transition: box-shadow 0.2s;
+}
+
+.diary-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.diary-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.diary-card-mood {
+  font-size: 1.4rem;
+}
+
+.diary-card-title {
+  flex: 1;
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.diary-card-date {
+  font-size: 0.8rem;
+  color: #868e96;
+}
+
+.diary-card-content {
+  margin: 0 0 0.75rem;
+  color: #495057;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.diary-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.empty-message {
+  text-align: center;
+  color: #868e96;
+  padding: 3rem 0;
+  font-size: 1rem;
+}
+
+/* === 폼 === */
+.diary-form {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.diary-form h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.3rem;
+}
+
+.form-field {
+  margin-bottom: 1rem;
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #343a40;
+}
+
+.form-field input[type="text"],
+.form-field textarea {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: #4263eb;
+  box-shadow: 0 0 0 3px rgba(66, 99, 235, 0.15);
+}
+
+.form-field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.25rem;
+  color: #dc3545;
+  font-size: 0.8rem;
+}
+
+.mood-selector {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.mood-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid #e9ecef;
+  border-radius: 50%;
+  background: white;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.mood-btn:hover {
+  border-color: #adb5bd;
+}
+
+.mood-btn.active {
+  border-color: #4263eb;
+  background: #e8ecfd;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+/* === 버튼 === */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #4263eb;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.btn-primary:hover {
+  background: #3b5bdb;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.btn-secondary {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.btn-secondary:hover {
+  background: #dee2e6;
+}
+
+.btn-edit {
+  background: #e8ecfd;
+  color: #4263eb;
+}
+
+.btn-edit:hover {
+  background: #d0d7f7;
+}
+
+.btn-delete {
+  background: #ffe0e0;
+  color: #dc3545;
+}
+
+.btn-delete:hover {
+  background: #ffc9c9;
+}
+
+/* === 통계 === */
+.stats-dashboard {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.stats-dashboard h2 {
+  margin: 0 0 1.25rem;
+  font-size: 1.3rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #4263eb;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #868e96;
+  margin-top: 0.25rem;
+}
+
+.mood-stats {
+  margin-bottom: 1.5rem;
+}
+
+.mood-stats h3 {
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+}
+
+.mood-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mood-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mood-bar-label {
+  min-width: 5rem;
+  font-size: 0.85rem;
+}
+
+.mood-bar-track {
+  flex: 1;
+  height: 0.75rem;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mood-bar-fill {
+  height: 100%;
+  background: #4263eb;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.mood-bar-count {
+  min-width: 5rem;
+  font-size: 0.8rem;
+  color: #868e96;
+  text-align: right;
 }
