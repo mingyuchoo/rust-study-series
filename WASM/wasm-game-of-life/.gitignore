@@ -16,3 +16,7 @@ pkg/
 
 # Logs
 wasm-pack.log
+
+# Nodejs
+**/node_modules/
+
