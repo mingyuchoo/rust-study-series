@@ -102,34 +102,30 @@ impl UserManager {
             });
         }
     }
+
+    #[cfg(test)]
+    fn create_initial_admin_with(&mut self, password: &str, salt: String, now: String) -> String {
+        if self.has_admin() {
+            return serde_json::to_string(&LoginResult {
+                success: false,
+                user_id: None,
+                username: None,
+                nickname: None,
+                role: None,
+                error: Some("관리자 계정이 이미 존재합니다".to_string()),
+            })
+            .unwrap_or_default();
+        }
+        let id = uuid::Uuid::new_v4().to_string();
+        self.register_with(id, "admin".to_string(), None, password.to_string(), Role::Admin, salt, now)
+    }
 }
 
 #[wasm_bindgen]
 impl UserManager {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        let mut mgr = Self { users: Vec::new() };
-        mgr.ensure_admin();
-        mgr
-    }
-
-    /// 관리자 계정이 없으면 기본 admin/admin123 계정을 생성한다.
-    fn ensure_admin(&mut self) {
-        if !self.users.iter().any(|u| u.role == Role::Admin) {
-            let id = id_gen::generate_id();
-            let salt = hash_util::generate_salt();
-            let now = date_util::now_iso();
-            let password_hash = hash_util::hash_password("admin123", &salt);
-            self.users.push(UserAccount {
-                id,
-                username: "admin".to_string(),
-                nickname: None,
-                password_hash,
-                salt,
-                role: Role::Admin,
-                created_at: now,
-            });
-        }
+        Self { users: Vec::new() }
     }
 
     /// localStorage에서 읽어온 JSON으로 상태를 복원한다.
@@ -137,12 +133,54 @@ impl UserManager {
         if let Ok(users) = serde_json::from_str::<Vec<UserAccount>>(json) {
             self.users = users;
         }
-        self.ensure_admin();
     }
 
     /// 현재 상태를 JSON으로 직렬화한다.
     pub fn save_to_json(&self) -> String {
         serde_json::to_string(&self.users).unwrap_or_else(|_| "[]".to_string())
+    }
+
+    /// 관리자 계정이 존재하는지 확인한다. 최초 설정 화면 표시 여부 결정에 사용한다.
+    pub fn has_admin(&self) -> bool {
+        self.users.iter().any(|u| u.role == Role::Admin)
+    }
+
+    /// 최초 실행 시 관리자 계정을 생성한다.
+    /// 이미 관리자가 존재하면 실패 JSON을 반환한다.
+    pub fn create_initial_admin(&mut self, password: &str) -> String {
+        if self.has_admin() {
+            return serde_json::to_string(&LoginResult {
+                success: false,
+                user_id: None,
+                username: None,
+                nickname: None,
+                role: None,
+                error: Some("관리자 계정이 이미 존재합니다".to_string()),
+            })
+            .unwrap_or_default();
+        }
+        let validation = self.validate_registration("admin", password);
+        let parsed: RegistrationValidation =
+            serde_json::from_str(&validation).unwrap_or(RegistrationValidation {
+                valid: false,
+                username_error: None,
+                password_error: Some("검증 오류".to_string()),
+            });
+        if !parsed.valid {
+            return serde_json::to_string(&LoginResult {
+                success: false,
+                user_id: None,
+                username: None,
+                nickname: None,
+                role: None,
+                error: parsed.password_error.or(parsed.username_error),
+            })
+            .unwrap_or_default();
+        }
+        let id = id_gen::generate_id();
+        let salt = hash_util::generate_salt();
+        let now = date_util::now_iso();
+        self.register_with(id, "admin".to_string(), None, password.to_string(), Role::Admin, salt, now)
     }
 
     /// 회원가입. 유효성 검사 후 성공/실패 JSON을 반환한다.
@@ -288,6 +326,9 @@ impl UserManager {
         } else if password.len() > 100 {
             valid = false;
             password_error = Some("비밀번호는 100자 이하여야 합니다".to_string());
+        } else if !password.chars().any(|c| !c.is_alphabetic()) {
+            valid = false;
+            password_error = Some("비밀번호에 숫자 또는 특수문자를 포함해주세요".to_string());
         }
 
         serde_json::to_string(&RegistrationValidation {
@@ -316,7 +357,7 @@ mod tests {
         let mut mgr = UserManager { users: Vec::new() };
         mgr.ensure_admin_with(
             "admin-id".to_string(),
-            "admin-salt".to_string(),
+            "AAAAAAAAAAAAAAAAAAAAAA".to_string(),
             "2026-03-02T00:00:00Z".to_string(),
         );
         mgr
@@ -331,6 +372,38 @@ mod tests {
     }
 
     #[test]
+    fn 빈_매니저는_관리자가_없다() {
+        let mgr = UserManager { users: Vec::new() };
+        assert!(!mgr.has_admin());
+    }
+
+    #[test]
+    fn 최초_관리자_계정을_생성한다() {
+        let mut mgr = UserManager { users: Vec::new() };
+        let result = mgr.create_initial_admin_with(
+            "admin123!",
+            "AAAAAAAAAAAAAAAAAAAAAA".to_string(),
+            "2026-03-02T00:00:00Z".to_string(),
+        );
+        let parsed: LoginResult = serde_json::from_str(&result).unwrap();
+        assert!(parsed.success);
+        assert!(mgr.has_admin());
+    }
+
+    #[test]
+    fn 관리자가_이미_존재하면_재생성에_실패한다() {
+        let mut mgr = make_manager();
+        let result = mgr.create_initial_admin_with(
+            "newpass1!",
+            "CCCCCCCCCCCCCCCCCCCCCA".to_string(),
+            "2026-03-02T00:00:00Z".to_string(),
+        );
+        let parsed: LoginResult = serde_json::from_str(&result).unwrap();
+        assert!(!parsed.success);
+        assert_eq!(mgr.users.len(), 1);
+    }
+
+    #[test]
     fn 회원가입이_성공한다() {
         let mut mgr = make_manager();
         let result = mgr.register_with(
@@ -339,7 +412,7 @@ mod tests {
             None,
             "password123".to_string(),
             Role::User,
-            "test-salt".to_string(),
+            "BBBBBBBBBBBBBBBBBBBBBA".to_string(),
             "2026-03-02T10:00:00Z".to_string(),
         );
 
@@ -358,7 +431,7 @@ mod tests {
             None,
             "mypassword".to_string(),
             Role::User,
-            "salt-1".to_string(),
+            "BBBBBBBBBBBBBBBBBBBBBA".to_string(),
             "2026-03-02T10:00:00Z".to_string(),
         );
 
@@ -377,7 +450,7 @@ mod tests {
             None,
             "mypassword".to_string(),
             Role::User,
-            "salt-1".to_string(),
+            "BBBBBBBBBBBBBBBBBBBBBA".to_string(),
             "2026-03-02T10:00:00Z".to_string(),
         );
 
@@ -413,7 +486,7 @@ mod tests {
             None,
             "pass".to_string(),
             Role::User,
-            "s".to_string(),
+            "BBBBBBBBBBBBBBBBBBBBBA".to_string(),
             "2026-03-02T00:00:00Z".to_string(),
         );
 
@@ -435,7 +508,7 @@ mod tests {
             None,
             "pass".to_string(),
             Role::User,
-            "s".to_string(),
+            "BBBBBBBBBBBBBBBBBBBBBA".to_string(),
             "2026-03-02T00:00:00Z".to_string(),
         );
 
@@ -452,7 +525,7 @@ mod tests {
             None,
             "pass".to_string(),
             Role::User,
-            "s".to_string(),
+            "BBBBBBBBBBBBBBBBBBBBBA".to_string(),
             "2026-03-02T00:00:00Z".to_string(),
         );
 
@@ -504,6 +577,15 @@ mod tests {
     }
 
     #[test]
+    fn 숫자나_특수문자가_없는_비밀번호를_거부한다() {
+        let mgr = make_manager();
+        let result = mgr.validate_registration("newuser", "password");
+        let parsed: RegistrationValidation = serde_json::from_str(&result).unwrap();
+        assert!(!parsed.valid);
+        assert!(parsed.password_error.unwrap().contains("숫자 또는 특수문자"));
+    }
+
+    #[test]
     fn json으로_저장하고_복원한다() {
         let mut mgr = make_manager();
         mgr.register_with(
@@ -512,7 +594,7 @@ mod tests {
             None,
             "pass".to_string(),
             Role::User,
-            "s".to_string(),
+            "BBBBBBBBBBBBBBBBBBBBBA".to_string(),
             "2026-03-02T00:00:00Z".to_string(),
         );
 

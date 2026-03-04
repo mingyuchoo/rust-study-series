@@ -1,4 +1,4 @@
-#[unsafe(no_mangle)]
+#[no_mangle]
 pub fn add(left: usize, right: usize) -> usize {
     left + right
 }

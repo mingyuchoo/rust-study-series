@@ -45,6 +45,9 @@ impl Universe {
     /// 지정된 좌표의 셀을 Alive로 설정한다 (테스트용)
     pub fn set_cells(&mut self, cells: &[(u32, u32)]) {
         for &(row, col) in cells.iter() {
+            if row >= self.height || col >= self.width {
+                continue;
+            }
             let idx = self.get_index(row, col);
             self.cells[idx] = Cell::Alive;
         }
@@ -117,18 +120,27 @@ impl Universe {
 
     /// 지정된 좌표의 셀 상태를 토글한다
     pub fn toggle_cell(&mut self, row: u32, col: u32) {
+        if row >= self.height || col >= self.width {
+            return;
+        }
         let idx = self.get_index(row, col);
         self.cells[idx].toggle();
     }
 
     /// 우주의 너비를 변경한다 (모든 셀을 Dead로 초기화)
     pub fn set_width(&mut self, width: u32) {
+        if width == 0 {
+            return;
+        }
         self.width = width;
         self.cells = (0 .. width * self.height).map(|_| Cell::Dead).collect();
     }
 
     /// 우주의 높이를 변경한다 (모든 셀을 Dead로 초기화)
     pub fn set_height(&mut self, height: u32) {
+        if height == 0 {
+            return;
+        }
         self.height = height;
         self.cells = (0 .. self.width * height).map(|_| Cell::Dead).collect();
     }

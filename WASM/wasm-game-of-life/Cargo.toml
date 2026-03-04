@@ -12,7 +12,7 @@
 
 [package]
   authors = ["mingyuchoo <mingyuchoo@gmail.com>"]
-  edition = "2024"
+  edition = "2021"
   name    = "wasm-game-of-life"
   version = "0.1.0"
 

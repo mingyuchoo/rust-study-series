@@ -1,23 +1,35 @@
-/// WASM 환경에서 `js_sys::Math::random()`과 `js_sys::Date::now()`를 조합하여
-/// 고유 ID를 생성한다. `uuid` 크레이트의 `getrandom` WASM 호환 문제를 회피한다.
+use uuid::Uuid;
+
+/// 암호학적으로 안전한 UUID v4를 생성한다.
+/// WASM 환경에서는 `getrandom`이 Web Crypto API를 사용한다.
 pub fn generate_id() -> String {
-    let timestamp = js_sys::Date::now() as u64;
-    let random = (js_sys::Math::random() * 1_000_000.0) as u64;
-    format!("{timestamp}-{random}")
+    Uuid::new_v4().to_string()
 }
 
 #[cfg(test)]
 mod tests {
-    // js_sys 함수는 WASM 환경에서만 동작하므로 단위 테스트에서는
-    // manager.rs에서 ID를 주입받는 방식으로 테스트한다.
-    // 여기서는 포맷 검증만 수행한다.
+    use super::*;
 
     #[test]
-    fn id_포맷은_타임스탬프_하이픈_랜덤_형태이다() {
-        let id = "1709366400000-123456";
+    fn id_는_uuid_v4_형식이다() {
+        let id = generate_id();
+        // UUID v4: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx (36자)
+        assert_eq!(id.len(), 36);
         let parts: Vec<&str> = id.split('-').collect();
-        assert_eq!(parts.len(), 2);
-        assert!(parts[0].parse::<u64>().is_ok());
-        assert!(parts[1].parse::<u64>().is_ok());
+        assert_eq!(parts.len(), 5);
+        assert_eq!(parts[0].len(), 8);
+        assert_eq!(parts[1].len(), 4);
+        assert_eq!(parts[2].len(), 4);
+        assert_eq!(parts[3].len(), 4);
+        assert_eq!(parts[4].len(), 12);
+        // 버전 비트: 세 번째 그룹이 '4'로 시작
+        assert!(parts[2].starts_with('4'));
+    }
+
+    #[test]
+    fn 연속_생성_id는_서로_다르다() {
+        let id1 = generate_id();
+        let id2 = generate_id();
+        assert_ne!(id1, id2);
     }
 }
