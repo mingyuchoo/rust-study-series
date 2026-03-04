@@ -3,15 +3,21 @@ use serde::Serialize;
 const MAX_TITLE_LENGTH: usize = 100;
 const MAX_CONTENT_LENGTH: usize = 5000;
 
+/// 유효성 검사 결과. `valid`가 false이면 `errors`에 세부 내용이 담긴다.
 #[derive(Debug, Serialize, PartialEq)]
 pub struct ValidationResult {
+    /// 모든 검사를 통과하면 true
     pub valid: bool,
+    /// 실패한 검사 목록
     pub errors: Vec<ValidationError>,
 }
 
+/// 개별 유효성 검사 오류.
 #[derive(Debug, Serialize, PartialEq)]
 pub struct ValidationError {
+    /// 오류가 발생한 필드명 (예: "title", "content")
     pub field: String,
+    /// 사용자에게 표시할 오류 메시지
     pub message: String,
 }
 

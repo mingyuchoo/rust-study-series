@@ -2,21 +2,32 @@ use serde::{Deserialize,
             Serialize};
 use wasm_bindgen::prelude::*;
 
+/// 사용자 역할. 권한 수준을 결정한다.
 #[wasm_bindgen]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Role {
+    /// 전체 사용자 관리 및 모든 일기 열람 권한
     Admin,
+    /// 본인 일기 작성/수정/삭제 권한
     User,
 }
 
+/// 사용자 계정 정보. `password_hash`와 `salt`는 JS 레이어에 노출하지 않는다.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct UserAccount {
+    /// 고유 식별자 (UUID v4)
     pub id: String,
+    /// 로그인 ID (영문·숫자·언더스코어, 3~20자)
     pub username: String,
+    /// 표시 이름 (선택)
     pub nickname: Option<String>,
+    /// argon2id PHC 형식 비밀번호 해시
     pub password_hash: String,
+    /// base64url 인코딩 salt (password_hash 내에도 내장됨)
     pub salt: String,
+    /// 계정 역할
     pub role: Role,
+    /// 계정 생성 일시 (ISO 8601)
     pub created_at: String,
 }
 

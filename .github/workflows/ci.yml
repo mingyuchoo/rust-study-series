@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ──────────────────────────────────────────────
+  # wasm-diary: 단위/통합 테스트 + Clippy + fmt
+  # ──────────────────────────────────────────────
+  test-wasm-diary:
+    name: Test wasm-diary
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: WASM/wasm-diary/wasm-lib
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install nightly toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy, rustfmt
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: WASM/wasm-diary/wasm-lib
+
+      - name: cargo check (native)
+        run: cargo check
+
+      - name: cargo check (wasm32)
+        run: cargo check --target wasm32-unknown-unknown
+
+      - name: cargo test
+        run: cargo test
+
+      - name: cargo clippy
+        run: cargo clippy -- -D warnings
+
+      - name: cargo fmt
+        run: cargo fmt --check
+
+  # ──────────────────────────────────────────────
+  # p0-init: 빌드 확인
+  # ──────────────────────────────────────────────
+  check-p0-init:
+    name: Check p0-init
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: WASM/p0-init/Rust
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install nightly toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: WASM/p0-init/Rust
+
+      - name: cargo check (native)
+        run: cargo check
+
+      - name: cargo check (wasm32)
+        run: cargo check --target wasm32-unknown-unknown
+
+  # ──────────────────────────────────────────────
+  # wasm-game-of-life: 빌드 확인 + Clippy
+  # ──────────────────────────────────────────────
+  check-wasm-game-of-life:
+    name: Check wasm-game-of-life
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: WASM/wasm-game-of-life
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install nightly toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: WASM/wasm-game-of-life
+
+      - name: cargo check (native)
+        run: cargo check
+
+      - name: cargo check (wasm32)
+        run: cargo check --target wasm32-unknown-unknown
+
+      - name: cargo clippy
+        run: cargo clippy -- -D warnings

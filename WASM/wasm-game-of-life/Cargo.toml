@@ -9,6 +9,8 @@
   debug         = false
   lto           = "thin"
   opt-level     = 3
+  panic         = "abort"
+  strip         = "symbols"
 
 [package]
   authors = ["mingyuchoo <mingyuchoo@gmail.com>"]

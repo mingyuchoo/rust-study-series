@@ -14,7 +14,7 @@ pub struct DiaryManager {
 
 // 내부 헬퍼 (테스트 시 ID/타임스탬프 주입용)
 impl DiaryManager {
-    fn create_entry_with(&mut self, id: String, owner_id: String, title: String, content: String, mood: Mood, weather: Weather, now: String) -> String {
+    pub(crate) fn create_entry_with(&mut self, id: String, owner_id: String, title: String, content: String, mood: Mood, weather: Weather, now: String) -> String {
         let entry = DiaryEntry {
             id,
             owner_id,
@@ -30,7 +30,7 @@ impl DiaryManager {
         json
     }
 
-    fn update_entry_with(&mut self, id: &str, title: &str, content: &str, mood: Mood, weather: Weather, now: String) -> String {
+    pub(crate) fn update_entry_with(&mut self, id: &str, title: &str, content: &str, mood: Mood, weather: Weather, now: String) -> String {
         if let Some(entry) = self.entries.iter_mut().find(|e| e.id == id) {
             entry.title = title.trim().to_string();
             entry.content = content.trim().to_string();

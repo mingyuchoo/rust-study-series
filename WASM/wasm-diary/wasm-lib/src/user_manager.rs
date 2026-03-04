@@ -54,7 +54,7 @@ pub struct UserManager {
 
 // 내부 헬퍼 (테스트 시 ID/타임스탬프/salt 주입용)
 impl UserManager {
-    fn register_with(
+    pub(crate) fn register_with(
         &mut self,
         id: String,
         username: String,
@@ -88,7 +88,7 @@ impl UserManager {
     }
 
     #[cfg(test)]
-    fn ensure_admin_with(&mut self, id: String, salt: String, now: String) {
+    pub(crate) fn ensure_admin_with(&mut self, id: String, salt: String, now: String) {
         if !self.users.iter().any(|u| u.role == Role::Admin) {
             let password_hash = hash_util::hash_password("admin123", &salt);
             self.users.push(UserAccount {
