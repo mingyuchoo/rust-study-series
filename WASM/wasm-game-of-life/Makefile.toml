@@ -1,50 +1,114 @@
-[tasks.clean]
-  args    = ["clean"]
-  command = "cargo"
-
-[tasks.clippy]
-  args    = ["clippy"]
-  command = "cargo"
+# =============================================================================
+# 코드 품질
+# =============================================================================
 
 [tasks.check]
-  args    = ["check"]
+  # cargo check 실행
   command = "cargo"
+  args    = ["check"]
+
+[tasks.clippy]
+  # Lint 검사
+  command = "cargo"
+  args    = ["clippy"]
 
 [tasks.format]
-  args          = ["fmt"]
+  # 코드 포맷팅 (check + clippy 선행)
   command       = "cargo"
+  args          = ["fmt"]
   dependencies  = ["check", "clippy"]
   install_crate = "rustfmt"
 
+# =============================================================================
+# Rust 빌드
+# =============================================================================
+
 [tasks.build]
-  args         = ["build", "--profile", "dev"]
+  # 개발용 빌드
   command      = "cargo"
+  args         = ["build", "--profile", "dev"]
   dependencies = ["format"]
 
 [tasks.release]
-  args         = ["build", "--profile", "release"]
+  # 릴리스 빌드
   command      = "cargo"
+  args         = ["build", "--profile", "release"]
   dependencies = ["format"]
+
+# =============================================================================
+# 테스트
+# =============================================================================
 
 [tasks.test]
-  args         = ["test"]
+  # Rust 단위 테스트
   command      = "cargo"
+  args         = ["test"]
   dependencies = ["format"]
 
+[tasks.wasm-test]
+  # WASM 환경 테스트 (headless 브라우저)
+  command       = "wasm-pack"
+  args          = ["test", "--headless", "--firefox"]
+  install_crate = "wasm-pack"
+  dependencies  = ["format"]
+
+# =============================================================================
+# WASM 빌드
+# =============================================================================
+
 [tasks.wasm-build]
-  # Build WASM package with wasm-pack
+  # WASM 패키지 빌드 (pkg/ 생성)
   command       = "wasm-pack"
   args          = ["build"]
   install_crate = "wasm-pack"
   dependencies  = ["format"]
 
 [tasks.wasm-build-release]
-  # Build WASM package for release
+  # WASM 릴리스 빌드
   command       = "wasm-pack"
   args          = ["build", "--release"]
   install_crate = "wasm-pack"
   dependencies  = ["format"]
 
+# =============================================================================
+# 웹 프론트엔드 (www/)
+# =============================================================================
+
+[tasks.www-install]
+  # bun 의존성 설치 (wasm-build 선행)
+  command      = "bun"
+  args         = ["install"]
+  cwd          = "./www"
+  dependencies = ["wasm-build"]
+
+[tasks.www-serve]
+  # 개발 서버 실행 (http://localhost:8080)
+  command      = "bun"
+  args         = ["run", "serve"]
+  cwd          = "./www"
+  dependencies = ["www-install"]
+
+[tasks.www-build]
+  # 웹 프론트엔드 프로덕션 빌드 (www/dist/)
+  command      = "bun"
+  args         = ["run", "build"]
+  cwd          = "./www"
+  dependencies = ["www-install"]
+
+# =============================================================================
+# 정리 및 단축
+# =============================================================================
+
+[tasks.clean]
+  # 빌드 산출물 전체 정리
+  script = [
+    "cargo clean",
+    "rm -rf pkg",
+    "rm -rf www/dist",
+    "rm -rf www/node_modules",
+    "rm -f www/bun.lockb",
+  ]
+
 [tasks.run]
-  alias        = "wasm-build"
-  dependencies = ["format"]
+  # www-serve 단축 별칭
+  alias = "www-serve"
