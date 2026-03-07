@@ -8,7 +8,7 @@ Rust로 작성한 Game of Life 시뮬레이션을 WebAssembly로 컴파일하고
 
 - **패키지명**: `wasm-game-of-life`
 - **버전**: `0.1.0`
-- **Rust 에디션**: 2024
+- **Rust 에디션**: 2021
 
 ## 주요 기능
 
@@ -76,7 +76,7 @@ cargo install cargo-make
 cargo install wasm-pack
 ```
 
-Bun이 설치되어 있어야 합니다. (`curl -fsSL https://bun.sh/install | bash`)
+Node.js와 npm이 설치되어 있어야 합니다.
 
 ### cargo-make 태스크
 
@@ -111,10 +111,10 @@ wasm-pack build
 
 # 2. 웹 프론트엔드 설정
 cd www
-bun install
+npm install
 
 # 3. 개발 서버 실행
-bun run serve
+npm run serve
 ```
 
 브라우저에서 `http://localhost:8080`으로 접속하면 Game of Life 시뮬레이션을 확인할 수 있습니다.
@@ -126,6 +126,10 @@ bun run serve
 - **셀 클릭**: 개별 셀 상태 토글 (Dead ↔ Alive)
 
 ## 의존성
+
+### 빌드 참고 사항
+
+- nightly Rust 컴파일러가 생성하는 bulk memory 연산(`memory.copy`, `memory.fill`)과 번들된 `wasm-opt`의 호환성 문제로 `wasm-opt`를 비활성화하였습니다 (`Cargo.toml`의 `[package.metadata.wasm-pack.profile.*]` 설정).
 
 ### Rust (Cargo.toml)
 
