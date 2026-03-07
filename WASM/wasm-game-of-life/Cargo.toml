@@ -43,3 +43,9 @@
 
 [dev-dependencies]
   wasm-bindgen-test = "0.3.45"
+
+[package.metadata.wasm-pack.profile.release]
+  wasm-opt = false
+
+[package.metadata.wasm-pack.profile.dev]
+  wasm-opt = false

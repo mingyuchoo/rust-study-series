@@ -75,22 +75,22 @@
 # =============================================================================
 
 [tasks.www-install]
-  # bun 의존성 설치 (wasm-build 선행)
-  command      = "bun"
+  # npm 의존성 설치 (wasm-build 선행)
+  command      = "npm"
   args         = ["install"]
   cwd          = "./www"
   dependencies = ["wasm-build"]
 
 [tasks.www-serve]
   # 개발 서버 실행 (http://localhost:8080)
-  command      = "bun"
+  command      = "npm"
   args         = ["run", "serve"]
   cwd          = "./www"
   dependencies = ["www-install"]
 
 [tasks.www-build]
   # 웹 프론트엔드 프로덕션 빌드 (www/dist/)
-  command      = "bun"
+  command      = "npm"
   args         = ["run", "build"]
   cwd          = "./www"
   dependencies = ["www-install"]
@@ -106,7 +106,7 @@
     "rm -rf pkg",
     "rm -rf www/dist",
     "rm -rf www/node_modules",
-    "rm -f www/bun.lockb",
+    "rm -f www/package-lock.json",
   ]
 
 [tasks.run]
