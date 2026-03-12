@@ -1,0 +1,94 @@
+[config]
+default_to_workspace = false
+
+[env]
+WASM_TARGET = "wasm32-wasip2"
+WASM_OUTPUT = "target/${WASM_TARGET}/release/greeting_component.wasm"
+
+# ─── default ──────────────────────────────────────────────────────────────────
+
+[tasks.default]
+alias = "build"
+
+# ─── setup ────────────────────────────────────────────────────────────────────
+
+[tasks.setup]
+description = "Install required targets and tools"
+command = "rustup"
+args = ["target", "add", "${WASM_TARGET}"]
+
+# ─── build ────────────────────────────────────────────────────────────────────
+
+[tasks.build-component]
+description = "Build the WASI 0.2 component (wasm32-wasip2)"
+command = "cargo"
+args = ["build", "--target", "${WASM_TARGET}", "--release", "-p", "greeting-component"]
+
+[tasks.build-server]
+description = "Build the gRPC server"
+command = "cargo"
+args = ["build", "--release", "-p", "greeting-server"]
+
+[tasks.build-client]
+description = "Build the gRPC client"
+command = "cargo"
+args = ["build", "--release", "-p", "greeting-client"]
+
+[tasks.build]
+description = "Build all targets"
+dependencies = ["build-component", "build-server", "build-client"]
+
+# ─── run ──────────────────────────────────────────────────────────────────────
+
+[tasks.run-server]
+description = "Run the gRPC server (builds WASM component first)"
+dependencies = ["build-component"]
+command = "cargo"
+args = ["run", "--release", "-p", "greeting-server"]
+[tasks.run-server.env]
+GREETING_WASM_PATH = "${WASM_OUTPUT}"
+
+[tasks.run-client]
+description = "Run the gRPC client"
+command = "cargo"
+args = ["run", "--release", "-p", "greeting-client"]
+
+[tasks.run-client-dev]
+description = "Run the gRPC client (debug mode)"
+command = "cargo"
+args = ["run", "-p", "greeting-client"]
+
+# ─── check / lint / fmt ───────────────────────────────────────────────────────
+
+[tasks.check-server]
+command = "cargo"
+args = ["check", "-p", "greeting-server"]
+
+[tasks.check-client]
+command = "cargo"
+args = ["check", "-p", "greeting-client"]
+
+[tasks.check-component]
+command = "cargo"
+args = ["check", "--target", "${WASM_TARGET}", "-p", "greeting-component"]
+
+[tasks.check]
+description = "Check all crates for errors"
+dependencies = ["check-server", "check-client", "check-component"]
+
+[tasks.fmt]
+description = "Format all code"
+command = "cargo"
+args = ["fmt", "--all"]
+
+[tasks.clippy]
+description = "Run clippy on native crates"
+command = "cargo"
+args = ["clippy", "-p", "greeting-server", "-p", "greeting-client", "--", "-D", "warnings"]
+
+# ─── clean ────────────────────────────────────────────────────────────────────
+
+[tasks.clean]
+description = "Clean build artifacts"
+command = "cargo"
+args = ["clean"]

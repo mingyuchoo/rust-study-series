@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package greeting;
+
+service GreetingService {
+  rpc Greet (GreetRequest) returns (GreetResponse);
+  rpc GetVersion (VersionRequest) returns (VersionResponse);
+}
+
+message GreetRequest {
+  string name = 1;
+}
+
+message GreetResponse {
+  string message = 1;
+}
+
+message VersionRequest {}
+
+message VersionResponse {
+  string version = 1;
+}
