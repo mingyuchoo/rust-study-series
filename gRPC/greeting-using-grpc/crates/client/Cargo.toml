@@ -15,8 +15,10 @@
   tonic.workspace = true
 
 [dev-dependencies]
-  criterion.workspace = true
-  greeting-server     = {path = "../server"}
+  criterion.workspace    = true
+  greeting-proto         = {path = "../proto"}
+  greeting-server        = {path = "../server"}
+  tokio-stream.workspace = true
 
 [[bench]]
   harness = false

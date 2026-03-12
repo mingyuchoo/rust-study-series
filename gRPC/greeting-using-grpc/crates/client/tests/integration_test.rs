@@ -1,45 +1,35 @@
-use greeting_client::{create_and_send_request, process_response};
-use greeting_common::{AppError, AppResult};
-use greeting_proto::greeter_proto::greeter_client::GreeterClient;
+use greeting_client::{connect_client_at,
+                      create_and_send_request,
+                      process_response};
+use greeting_common::AppResult;
 use greeting_proto::greeter_proto::greeter_server::GreeterServer;
 use greeting_server::MyGreeter;
-use std::net::SocketAddr;
-use std::time::Duration;
-use tokio::time::sleep;
 use tonic::transport::Server;
 
 #[tokio::test]
 async fn test_client_server_integration() -> AppResult<()> {
-    // Start a test server in the background
-    let addr: SocketAddr = "[::1]:50052".parse().unwrap();
+    // Bind to a random available port to avoid conflicts between test runs
+    let listener = tokio::net::TcpListener::bind("[::1]:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    let server_url = format!("http://[::1]:{}", addr.port());
+
     let greeter = MyGreeter::default();
-    
     let server_task = tokio::spawn(async move {
         Server::builder()
             .add_service(GreeterServer::new(greeter))
-            .serve(addr)
+            .serve_with_incoming(tokio_stream::wrappers::TcpListenerStream::new(listener))
             .await
             .unwrap();
     });
-    
-    // Give the server a moment to start
-    sleep(Duration::from_millis(100)).await;
-    
-    // Connect to the test server
-    let client = GreeterClient::connect("http://[::1]:50052")
-        .await
-        .map_err(|e| AppError::ConnectionError(format!("Failed to connect to server: {}", e)))?;
-    
-    // Send a request
+
+    // Connect to the test server using the dynamically assigned port
+    let client = connect_client_at(&server_url).await?;
+
     let test_name = "Integration Test";
     let response = create_and_send_request(client, test_name).await?;
-    
-    // Process and verify the response
-    let message = process_response(response).await?;
+    let message = process_response(response)?;
     assert_eq!(message, format!("Hello {}!", test_name));
-    
-    // Clean up
+
     server_task.abort();
-    
     Ok(())
 }

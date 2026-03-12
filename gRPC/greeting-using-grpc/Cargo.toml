@@ -14,19 +14,22 @@
 
   [workspace.dependencies]
     # Proto dependencies
-    prost             = "0.14.1"
-    prost-types       = "0.14.1"
-    tonic             = "0.14.2"
-    tonic-build       = "0.14.2"
-    tonic-prost       = "0.14.2"
-    tonic-prost-build = "0.14.2"
+    prost             = "0.14.3"
+    prost-types       = "0.14.3"
+    tonic             = "0.14.5"
+    tonic-build       = "0.14.5"
+    tonic-prost       = "0.14.5"
+    tonic-prost-build = "0.14.5"
 
     # Common dependencies
-    thiserror = "2.0.17"
-    tokio     = {features = ["macros", "rt-multi-thread"], version = "1.48.0"}
+    thiserror          = "2.0.18"
+    tokio              = {features = ["macros", "rt-multi-thread"], version = "1.50.0"}
+    tokio-stream       = "0.1.18"
+    tracing            = "0.1.44"
+    tracing-subscriber = {features = ["env-filter"], version = "0.3.19"}
 
     # Dev dependencies
-    criterion = {features = ["html_reports"], version = "0.7.0"}
+    criterion = {features = ["html_reports"], version = "0.8.2"}
 
 [profile.dev]
   codegen-units = 256

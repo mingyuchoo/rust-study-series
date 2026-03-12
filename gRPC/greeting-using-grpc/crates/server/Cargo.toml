@@ -9,10 +9,12 @@
   path = "src/main.rs"
 
 [dependencies]
-  greeting-common = {path = "../common"}
-  greeting-proto  = {path = "../proto"}
-  tokio.workspace = true
-  tonic.workspace = true
+  greeting-common    = {path = "../common"}
+  greeting-proto     = {path = "../proto"}
+  tokio.workspace    = true
+  tonic.workspace    = true
+  tracing.workspace  = true
+  tracing-subscriber = {workspace = true}
 
 [dev-dependencies]
   criterion.workspace = true

@@ -1,44 +1,133 @@
+# ============================================================
+# Workspace-level tasks (workspace = false → 루트에서 1회 실행)
+# ============================================================
+
 [tasks.clean]
-  args    = ["clean"]
-  command = "cargo"
+  args      = ["clean"]
+  command   = "cargo"
+  workspace = false
 
-[tasks.clippy]
-  args    = ["clippy"]
-  command = "cargo"
-
-[tasks.check]
-  args    = ["check"]
-  command = "cargo"
-
+# 1단계: 코드 포맷 (--all 로 전체 workspace 대상)
 [tasks.format]
-  args          = ["fmt"]
+  args          = ["fmt", "--all"]
   command       = "cargo"
-  dependencies  = ["check", "clippy"]
   install_crate = "rustfmt"
+  workspace     = false
 
+# 2단계: 컴파일 가능 여부 확인
+[tasks.check]
+  args         = ["check", "--workspace"]
+  command      = "cargo"
+  dependencies = ["format"]
+  workspace    = false
+
+# 3단계: 린트 검사
+[tasks.clippy]
+  args         = ["clippy", "--workspace"]
+  command      = "cargo"
+  dependencies = ["check"]
+  workspace    = false
+
+# 4단계: 개발용 빌드
 [tasks.build]
-  args         = ["build", "--profile", "dev"]
+  args         = ["build", "--workspace"]
   command      = "cargo"
-  dependencies = ["format"]
+  dependencies = ["clippy"]
+  workspace    = false
 
+# 릴리스 빌드
 [tasks.release]
-  args         = ["build", "--profile", "release"]
+  args         = ["build", "--workspace", "--release"]
   command      = "cargo"
-  dependencies = ["format"]
+  dependencies = ["clippy"]
+  workspace    = false
 
+# 전체 테스트
 [tasks.test]
-  args         = ["test"]
+  args         = ["test", "--workspace"]
   command      = "cargo"
-  dependencies = ["format"]
+  dependencies = ["build"]
+  workspace    = false
 
-[tasks.watch-run]
-  # `cargo install cargo-watch`로 설치
-  args          = ["watch", "-x", "run"]
-  command       = "cargo"
-  dependencies  = ["format"]
-  install_crate = "cargo-watch"
+# ============================================================
+# 서버 실행
+# ============================================================
 
-[tasks.run]
-  args         = ["run"]
+[tasks.run-server]
+  args         = ["run", "-p", "greeting-server", "--bin", "server"]
   command      = "cargo"
-  dependencies = ["format"]
+  dependencies = ["build"]
+  workspace    = false
+
+# ============================================================
+# 클라이언트 실행
+# ============================================================
+
+[tasks.run-client]
+  args         = ["run", "-p", "greeting-client", "--bin", "client"]
+  command      = "cargo"
+  dependencies = ["build"]
+  workspace    = false
+
+# ============================================================
+# 서버 예제
+# ============================================================
+
+[tasks.example-simple-server]
+  args      = ["run", "-p", "greeting-server", "--example", "simple_server"]
+  command   = "cargo"
+  workspace = false
+
+[tasks.example-custom-port-server]
+  args      = ["run", "-p", "greeting-server", "--example", "custom_port_server"]
+  command   = "cargo"
+  workspace = false
+
+# 서버 없이 비즈니스 로직만 단독 실행
+[tasks.example-greeting-logic]
+  args      = ["run", "-p", "greeting-server", "--example", "greeting_logic"]
+  command   = "cargo"
+  workspace = false
+
+# ============================================================
+# 클라이언트 예제
+# ============================================================
+
+[tasks.example-simple-client]
+  args      = ["run", "-p", "greeting-client", "--example", "simple_client"]
+  command   = "cargo"
+  workspace = false
+
+[tasks.example-basic-client]
+  args      = ["run", "-p", "greeting-client", "--example", "basic_client"]
+  command   = "cargo"
+  workspace = false
+
+[tasks.example-advanced-client]
+  args      = ["run", "-p", "greeting-client", "--example", "advanced_client"]
+  command   = "cargo"
+  workspace = false
+
+[tasks.example-multiple-requests]
+  args      = ["run", "-p", "greeting-client", "--example", "multiple_requests"]
+  command   = "cargo"
+  workspace = false
+
+[tasks.example-concurrent-requests]
+  args      = ["run", "-p", "greeting-client", "--example", "concurrent_requests"]
+  command   = "cargo"
+  workspace = false
+
+# ============================================================
+# 벤치마크 (실행 전 서버가 구동 중이어야 합니다)
+# ============================================================
+
+[tasks.bench-server]
+  args      = ["bench", "-p", "greeting-server"]
+  command   = "cargo"
+  workspace = false
+
+[tasks.bench-client]
+  args      = ["bench", "-p", "greeting-client"]
+  command   = "cargo"
+  workspace = false
