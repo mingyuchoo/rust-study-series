@@ -1,6 +1,7 @@
 use proto::product_info_client::ProductInfoClient;
 use proto::product_info_server::ProductInfoServer;
-use proto::{Product, ProductId};
+use proto::{Product,
+            ProductId};
 use server::MyProductInfo;
 use std::net::SocketAddr;
 use std::time::Duration;
@@ -22,15 +23,25 @@ async fn test_add_product() {
             .unwrap();
     });
 
-    // Give the server a moment to start
-    sleep(Duration::from_millis(100)).await;
-
-    // Connect to the server
-    let mut client = ProductInfoClient::connect(format!("http://{}", server_addr)).await.unwrap();
+    // Wait for the server to become ready with a retry loop
+    let server_url = format!("http://{}", server_addr);
+    let mut client = {
+        let mut attempts = 0u32;
+        loop {
+            match ProductInfoClient::connect(server_url.clone()).await {
+                | Ok(c) => break c,
+                | Err(_) if attempts < 20 => {
+                    attempts += 1;
+                    sleep(Duration::from_millis(50)).await;
+                },
+                | Err(e) => panic!("Failed to connect to server after retries: {}", e),
+            }
+        }
+    };
 
     // Test adding a product
     let test_product = Product {
-        id: 3,
+        id: 0, // Server assigns the ID
         name: String::from("Test Product"),
         description: String::from("This is a test product"),
         price: 99.99,
@@ -38,21 +49,32 @@ async fn test_add_product() {
 
     let request = Request::new(test_product.clone());
     let response = client.add_product(request).await.unwrap();
+    let assigned_id = response.into_inner().id;
 
-    // Verify the response
-    assert_eq!(response.into_inner().id, 3);
+    // Verify the server assigned a valid ID
+    assert!(assigned_id > 0, "Expected a positive ID, got {}", assigned_id);
 
-    // Test getting a product
+    // Test getting the product by the assigned ID
     let get_request = Request::new(ProductId {
-        id: 3,
+        id: assigned_id,
     });
     let get_response = client.get_product(get_request).await.unwrap();
     let retrieved_product = get_response.into_inner();
 
-    // Note: In the current implementation, the server always returns a hardcoded
-    // product So we're just checking that we got a response, not the exact values
-    assert!(retrieved_product.id > 0);
-    assert!(!retrieved_product.name.is_empty());
+    // Verify the retrieved product matches what was stored
+    assert_eq!(retrieved_product.id, assigned_id);
+    assert_eq!(retrieved_product.name, test_product.name);
+    assert_eq!(retrieved_product.description, test_product.description);
+    assert!((retrieved_product.price - test_product.price).abs() < f32::EPSILON);
+
+    // Test getting a non-existent product returns an error
+    let missing_request = Request::new(ProductId {
+        id: 9999,
+    });
+    assert!(
+        client.get_product(missing_request).await.is_err(),
+        "Expected NotFound error for missing product"
+    );
 
     // Clean up
     server_task.abort();

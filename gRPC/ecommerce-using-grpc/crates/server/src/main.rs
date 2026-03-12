@@ -1,9 +1,11 @@
-use anyhow::{Context, Result};
+use anyhow::{Context,
+             Result};
 use proto::product_info_server::ProductInfoServer;
 use server::MyProductInfo;
 use std::net::SocketAddr;
 use tonic::transport::Server;
-use tracing::{Level, info};
+use tracing::{Level,
+              info};
 use tracing_subscriber::FmtSubscriber;
 
 /// Server configuration

@@ -31,14 +31,40 @@
   command      = "cargo"
   dependencies = ["format"]
 
-[tasks.watch-run]
+[tasks.watch]
   # `cargo install cargo-watch`로 설치
   args          = ["watch", "-x", "run"]
   command       = "cargo"
   dependencies  = ["format"]
   install_crate = "cargo-watch"
+  workspace     = false
 
-[tasks.run]
-  args         = ["run"]
+[tasks.server]
+  args         = ["run", "--bin", "server"]
   command      = "cargo"
   dependencies = ["format"]
+  workspace    = false
+
+[tasks.run-server]
+  args         = ["run", "--bin", "server"]
+  command      = "cargo"
+  dependencies = ["format"]
+  workspace    = false
+
+[tasks.client]
+  args         = ["run", "--bin", "client"]
+  command      = "cargo"
+  dependencies = ["format"]
+  workspace    = false
+
+[tasks.run-client]
+  args         = ["run", "--bin", "client"]
+  command      = "cargo"
+  dependencies = ["format"]
+  workspace    = false
+
+[tasks.run]
+  args         = ["run", "--bin", "server"]
+  command      = "cargo"
+  dependencies = ["format"]
+  workspace    = false

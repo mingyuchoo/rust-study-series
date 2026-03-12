@@ -1,9 +1,12 @@
-use anyhow::{Context, Result};
+use anyhow::{Context,
+             Result};
 use proto::product_info_client::ProductInfoClient;
-use proto::{Product, ProductId};
+use proto::{Product,
+            ProductId};
 use tonic::Request;
 use tonic::transport::Channel;
-use tracing::{Level, info};
+use tracing::{Level,
+              info};
 use tracing_subscriber::FmtSubscriber;
 
 /// Client configuration

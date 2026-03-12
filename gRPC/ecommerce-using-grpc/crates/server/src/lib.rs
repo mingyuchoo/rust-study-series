@@ -1,7 +1,15 @@
 use proto::product_info_server::ProductInfo;
-use proto::{Product, ProductId};
+use proto::{Product,
+            ProductId};
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicI32,
+                        Ordering};
+use std::sync::{Arc,
+                Mutex};
 use thiserror::Error;
-use tonic::{Request, Response, Status};
+use tonic::{Request,
+            Response,
+            Status};
 
 // Define custom error types for Railway Oriented Programming
 #[derive(Debug, Error)]
@@ -30,9 +38,25 @@ impl From<ServiceError> for Status {
 // Type alias for service results to simplify Railway Oriented Programming
 pub type ServiceResult<T> = Result<T, ServiceError>;
 
-// Product service implementation
-#[derive(Debug, Default)]
-pub struct MyProductInfo {}
+// Product service implementation with in-memory storage
+#[derive(Debug)]
+pub struct MyProductInfo {
+    store: Arc<Mutex<HashMap<i32, Product>>>,
+    next_id: Arc<AtomicI32>,
+}
+
+impl MyProductInfo {
+    pub fn new() -> Self {
+        Self {
+            store: Arc::new(Mutex::new(HashMap::new())),
+            next_id: Arc::new(AtomicI32::new(1)),
+        }
+    }
+}
+
+impl Default for MyProductInfo {
+    fn default() -> Self { Self::new() }
+}
 
 impl MyProductInfo {
     // Internal method to add a product with Railway Oriented Programming
@@ -46,45 +70,44 @@ impl MyProductInfo {
             return Err(ServiceError::InvalidData("Product price must be positive".to_string()));
         }
 
-        // In a real application, this would interact with a database
-        // For now, we just echo back the ID
+        // Assign a new auto-incremented ID
+        let id = self.next_id.fetch_add(1, Ordering::SeqCst);
+        let stored = Product {
+            id,
+            ..product
+        };
+
+        self.store.lock().map_err(|e| ServiceError::Internal(e.to_string()))?.insert(id, stored);
+
         Ok(ProductId {
-            id: product.id,
+            id,
         })
     }
 
     // Internal method to get a product with Railway Oriented Programming
     async fn get_product_internal(&self, product_id: ProductId) -> ServiceResult<Product> {
-        // In a real application, this would query a database
-        // For demonstration, we return a hardcoded product if ID > 0
         if product_id.id <= 0 {
             return Err(ServiceError::NotFound(product_id.id));
         }
 
-        Ok(Product {
-            id: product_id.id,
-            name: String::from("MacBook Air 15"),
-            description: String::from("Impressively big. Impossibly thin."),
-            price: 1299.9,
-        })
+        self.store
+            .lock()
+            .map_err(|e| ServiceError::Internal(e.to_string()))?
+            .get(&product_id.id)
+            .cloned()
+            .ok_or(ServiceError::NotFound(product_id.id))
     }
 }
 
 #[tonic::async_trait]
 impl ProductInfo for MyProductInfo {
     async fn add_product(&self, request: Request<Product>) -> Result<Response<ProductId>, Status> {
-        // Extract the product from the request
         let product = request.into_inner();
-
-        // Use Railway Oriented Programming pattern
-        self.add_product_internal(product).await.map(Response::new).map_err(Into::into) // Convert ServiceError to Status
+        self.add_product_internal(product).await.map(Response::new).map_err(Into::into)
     }
 
     async fn get_product(&self, request: Request<ProductId>) -> Result<Response<Product>, Status> {
-        // Extract the product ID from the request
         let product_id = request.into_inner();
-
-        // Use Railway Oriented Programming pattern
-        self.get_product_internal(product_id).await.map(Response::new).map_err(Into::into) // Convert ServiceError to Status
+        self.get_product_internal(product_id).await.map(Response::new).map_err(Into::into)
     }
 }

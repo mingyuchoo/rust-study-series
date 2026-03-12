@@ -1,6 +1,6 @@
 # ecommerce-using-grpc
 
-A Rust-based gRPC service for managing product information in an e-commerce system. This project demonstrates modern Rust practices including Railway Oriented Programming, structured logging with tracing, efficient error handling, and Cargo workspace (monorepo) architecture.
+A Rust-based gRPC service for managing product information in an e-commerce system. This project demonstrates modern Rust practices including Railway Oriented Programming, structured logging with tracing, in-memory storage, and Cargo workspace (monorepo) architecture.
 
 ## Prerequisites
 
@@ -36,17 +36,11 @@ ecommerce-using-grpc/
 │   │   └── src/lib.rs
 │   ├── server/         # gRPC server implementation
 │   │   └── src/
-│   │       ├── lib.rs  # Service logic and error handling
+│   │       ├── lib.rs  # Service logic, in-memory store, error handling
 │   │       └── main.rs # Server binary
 │   ├── client/         # gRPC client implementation
 │   │   └── src/
 │   │       └── main.rs # Client binary
-│   ├── examples/       # Example usage
-│   │   └── src/bin/
-│   │       └── product_service_demo.rs
-│   ├── benches/        # Performance benchmarks
-│   │   └── benches/
-│   │       └── product_service_bench.rs
 │   └── tests/          # Integration tests
 │       └── tests/
 │           └── product_service_test.rs
@@ -59,20 +53,25 @@ ecommerce-using-grpc/
 - **Cargo Workspace (Monorepo) Architecture** - Organized into multiple focused crates
 - **gRPC-based product management service** - Efficient client-server communication
 - **Add and retrieve product information** - Core CRUD operations
+- **In-memory storage** - Thread-safe `HashMap` with `Arc<Mutex<>>` for product persistence
+- **Auto-incremented IDs** - Server assigns product IDs via atomic counter
 - **Railway Oriented Programming** - Clean error handling pattern
 - **Structured logging with tracing** - Production-ready observability
 - **Comprehensive error types** - NotFound, InvalidData, Internal
-- **Input validation** - Product data validation
+- **Input validation** - Product name (non-empty) and price (positive) validation
 - **Shared proto definitions** - Reusable protobuf package
 
 ## Dependencies
 
-- `tonic` - gRPC framework
-- `prost` - Protocol Buffers implementation
-- `tokio` - Async runtime
-- `anyhow` - Error handling
-- `thiserror` - Custom error types
-- `tracing` - Structured logging
+| Crate | Version | Purpose |
+|---|---|---|
+| `tonic` | 0.14.5 | gRPC framework |
+| `prost` | 0.14.3 | Protocol Buffers implementation |
+| `tokio` | 1.50.0 | Async runtime |
+| `anyhow` | 1.0.102 | Error handling |
+| `thiserror` | 2.0.18 | Custom error types |
+| `tracing` | 0.1.44 | Structured logging |
+| `tracing-subscriber` | 0.3.22 | Log formatting and output |
 
 ## Building the Project
 
@@ -102,12 +101,6 @@ In a separate terminal:
 cargo run -p client
 ```
 
-## Running Examples
-
-```bash
-cargo run -p examples --bin product_service_demo
-```
-
 ## Running Tests
 
 ```bash
@@ -118,36 +111,40 @@ cargo test
 cargo test -p tests
 ```
 
-## Running Benchmarks
-
-```bash
-cargo bench -p benches
-```
-
 ## API
 
 ### AddProduct
 
-Adds a new product to the system.
+Adds a new product to the system. The server automatically assigns a unique ID.
 
 **Request:** `Product`
-- `id` (int32): Product ID
+- `id` (int32): Ignored — the server assigns a new auto-incremented ID
 - `name` (string): Product name (required, non-empty)
 - `description` (string): Product description
 - `price` (float): Product price (required, must be positive)
 
 **Response:** `ProductId`
-- `id` (int32): The ID of the added product
+- `id` (int32): The server-assigned ID of the added product
 
 ### GetProduct
 
 Retrieves product information by ID.
 
 **Request:** `ProductId`
-- `id` (int32): Product ID (must be positive)
+- `id` (int32): Product ID (must be positive; returns `NOT_FOUND` if no product exists with that ID)
 
 **Response:** `Product`
-- Complete product information
+- Complete product information as stored
+
+## Error Handling
+
+The service uses Railway Oriented Programming with custom error types:
+
+| Error | gRPC Status | Condition |
+|---|---|---|
+| `ServiceError::NotFound` | `NOT_FOUND` | No product exists for the given ID |
+| `ServiceError::InvalidData` | `INVALID_ARGUMENT` | Empty name or non-positive price |
+| `ServiceError::Internal` | `INTERNAL` | Unexpected server-side failure |
 
 ## Workspace Benefits
 
@@ -156,7 +153,7 @@ This monorepo structure provides several advantages:
 - **Code Reusability** - The `proto` crate is shared across all other crates
 - **Consistent Dependencies** - Workspace-level dependency management ensures version consistency
 - **Faster Builds** - Cargo can cache and reuse compiled artifacts across crates
-- **Better Organization** - Clear separation of concerns (server, client, tests, examples, benchmarks)
+- **Better Organization** - Clear separation of concerns (server, client, tests)
 - **Easier Testing** - Integration tests can easily depend on multiple crates
 - **Simplified CI/CD** - Single repository for all related code
 
@@ -180,11 +177,11 @@ members = [
 ]
 
 [workspace.package]
-edition = "2021"
+edition = "2024"
 version = "0.1.0"
 
 [workspace.dependencies]
-tokio = { version = "1.48", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.50", features = ["macros", "rt-multi-thread"] }
 tonic = "0.14"
 prost = "0.14"
 # ... other dependencies
@@ -198,16 +195,6 @@ cd crates/proto && cargo init --lib && cd ../..
 cd crates/server && cargo init && cd ../..
 cd crates/client && cargo init && cd ../..
 ```
-
-## Error Handling
-
-The service uses Railway Oriented Programming with custom error types:
-
-- `ServiceError::NotFound` - Product not found
-- `ServiceError::InvalidData` - Invalid input data
-- `ServiceError::Internal` - Internal server error
-
-All errors are properly mapped to gRPC status codes.
 
 ## License
 
