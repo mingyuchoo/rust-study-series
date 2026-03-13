@@ -36,7 +36,7 @@ args = ["build", "--release", "-p", "greeting-client"]
 
 [tasks.build]
 description = "Build all targets"
-dependencies = ["build-component", "build-server", "build-client"]
+dependencies = ["build-component", "build-server", "build-client", "build-web-client"]
 
 # ─── run ──────────────────────────────────────────────────────────────────────
 
@@ -57,6 +57,18 @@ args = ["run", "--release", "-p", "greeting-client"]
 description = "Run the gRPC client (debug mode)"
 command = "cargo"
 args = ["run", "-p", "greeting-client"]
+
+[tasks.run-web-client]
+description = "Run the web client dev server (Vite)"
+command = "npm"
+args = ["run", "dev"]
+cwd = "greeting-web-client"
+
+[tasks.run-web-client-prod]
+description = "Run the web client production server (requires build-web-client)"
+command = "node"
+args = ["build/index.js"]
+cwd = "greeting-web-client"
 
 # ─── check / lint / fmt ───────────────────────────────────────────────────────
 
@@ -85,6 +97,21 @@ args = ["fmt", "--all"]
 description = "Run clippy on native crates"
 command = "cargo"
 args = ["clippy", "-p", "greeting-server", "-p", "greeting-client", "--", "-D", "warnings"]
+
+# ─── web client ───────────────────────────────────────────────────────────────
+
+[tasks.install-web-client]
+description = "Install web client npm dependencies"
+command = "npm"
+args = ["install"]
+cwd = "greeting-web-client"
+
+[tasks.build-web-client]
+description = "Build the web client (SvelteKit production build)"
+dependencies = ["install-web-client"]
+command = "npm"
+args = ["run", "build"]
+cwd = "greeting-web-client"
 
 # ─── clean ────────────────────────────────────────────────────────────────────
 
