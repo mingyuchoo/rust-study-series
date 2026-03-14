@@ -35,6 +35,7 @@ command = "cargo"
 args = ["build", "--release", "-p", "greeting-client"]
 
 [tasks.build]
+clear = true
 description = "Build all targets"
 dependencies = ["build-component", "build-server", "build-client", "build-web-client"]
 
