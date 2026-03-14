@@ -1,0 +1,12 @@
+package component:blog@0.1.0;
+
+interface blogger {
+  validate-title: func(title: string) -> string;
+  validate-content: func(content: string) -> string;
+  validate-comment: func(content: string) -> string;
+  get-version: func() -> string;
+}
+
+world blog-world {
+  export blogger;
+}

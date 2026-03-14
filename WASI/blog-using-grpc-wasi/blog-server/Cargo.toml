@@ -1,0 +1,27 @@
+[package]
+name = "blog-server"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "blog-server"
+path = "src/main.rs"
+
+[dependencies]
+tonic = "0.12"
+prost = "0.13"
+tokio = { version = "1", features = ["full"] }
+wasmtime = { version = "29", features = ["component-model"] }
+wasmtime-wasi = "29"
+surrealdb = { version = "1", features = ["protocol-ws"] }
+jsonwebtoken = "9"
+argon2 = "0.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", features = ["serde"] }
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[build-dependencies]
+tonic-build = "0.12"

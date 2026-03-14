@@ -1,0 +1,142 @@
+syntax = "proto3";
+
+package blog;
+
+service BlogService {
+  // Authentication
+  rpc Register (RegisterRequest) returns (AuthResponse);
+  rpc Login (LoginRequest) returns (AuthResponse);
+
+  // Posts
+  rpc CreatePost (CreatePostRequest) returns (PostResponse);
+  rpc GetPost (GetPostRequest) returns (PostResponse);
+  rpc ListPosts (ListPostsRequest) returns (ListPostsResponse);
+  rpc UpdatePost (UpdatePostRequest) returns (PostResponse);
+  rpc DeletePost (DeletePostRequest) returns (DeleteResponse);
+
+  // Comments
+  rpc CreateComment (CreateCommentRequest) returns (CommentResponse);
+  rpc ListComments (ListCommentsRequest) returns (ListCommentsResponse);
+  rpc DeleteComment (DeleteCommentRequest) returns (DeleteResponse);
+
+  // System
+  rpc GetVersion (VersionRequest) returns (VersionResponse);
+}
+
+// --- Authentication ---
+
+message RegisterRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message AuthResponse {
+  string token = 1;
+  UserInfo user = 2;
+}
+
+message UserInfo {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string created_at = 4;
+}
+
+// --- Posts ---
+
+message CreatePostRequest {
+  string token = 1;
+  string title = 2;
+  string content = 3;
+}
+
+message GetPostRequest {
+  string id = 1;
+}
+
+message ListPostsRequest {
+  uint32 page = 1;
+  uint32 per_page = 2;
+}
+
+message UpdatePostRequest {
+  string token = 1;
+  string id = 2;
+  string title = 3;
+  string content = 4;
+}
+
+message DeletePostRequest {
+  string token = 1;
+  string id = 2;
+}
+
+message Post {
+  string id = 1;
+  string title = 2;
+  string content = 3;
+  UserInfo author = 4;
+  string created_at = 5;
+  string updated_at = 6;
+  uint32 comment_count = 7;
+}
+
+message PostResponse {
+  Post post = 1;
+}
+
+message ListPostsResponse {
+  repeated Post posts = 1;
+  uint32 total = 2;
+}
+
+// --- Comments ---
+
+message CreateCommentRequest {
+  string token = 1;
+  string post_id = 2;
+  string content = 3;
+}
+
+message ListCommentsRequest {
+  string post_id = 1;
+}
+
+message DeleteCommentRequest {
+  string token = 1;
+  string id = 2;
+}
+
+message Comment {
+  string id = 1;
+  string content = 2;
+  UserInfo author = 3;
+  string post_id = 4;
+  string created_at = 5;
+}
+
+message CommentResponse {
+  Comment comment = 1;
+}
+
+message ListCommentsResponse {
+  repeated Comment comments = 1;
+}
+
+// --- Common ---
+
+message DeleteResponse {
+  bool success = 1;
+}
+
+message VersionRequest {}
+
+message VersionResponse {
+  string version = 1;
+}
