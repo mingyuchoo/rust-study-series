@@ -33,6 +33,12 @@
 				<label for="content">내용</label>
 				<textarea id="content" name="content" rows="12" required disabled={isLoading}></textarea>
 			</div>
+			<div class="form-group">
+				<label class="checkbox-label">
+					<input type="checkbox" name="visibility" disabled={isLoading} />
+					<span>공개</span>
+				</label>
+			</div>
 			<div style="display: flex; gap: 0.75rem; justify-content: flex-end">
 				<a href="/" class="btn btn-outline">취소</a>
 				<button type="submit" class="btn" disabled={isLoading}>

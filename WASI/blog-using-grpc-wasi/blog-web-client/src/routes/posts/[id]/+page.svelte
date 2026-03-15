@@ -90,9 +90,15 @@
 								style="min-height: 80px"
 							></textarea>
 						</div>
-						<button type="submit" class="btn btn-sm" disabled={isLoading}>
-							{isLoading ? '등록 중...' : '댓글 등록'}
-						</button>
+						<div style="display: flex; gap: 0.75rem; align-items: center">
+							<label class="checkbox-label" style="margin: 0">
+								<input type="checkbox" name="visibility" disabled={isLoading} />
+								<span>공개</span>
+							</label>
+							<button type="submit" class="btn btn-sm" disabled={isLoading}>
+								{isLoading ? '등록 중...' : '댓글 등록'}
+							</button>
+						</div>
 					</form>
 				</div>
 			{:else}

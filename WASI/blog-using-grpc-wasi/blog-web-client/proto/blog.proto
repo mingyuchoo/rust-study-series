@@ -82,6 +82,7 @@ message UpdatePostRequest {
   string id = 2;
   string title = 3;
   string content = 4;
+  string visibility = 5;
 }
 
 message DeletePostRequest {
@@ -115,6 +116,7 @@ message CreateCommentRequest {
   string token = 1;
   string post_id = 2;
   string content = 3;
+  string visibility = 4;
 }
 
 message ListCommentsRequest {
@@ -126,6 +128,7 @@ message UpdateCommentRequest {
   string token = 1;
   string id = 2;
   string content = 3;
+  string visibility = 4;
 }
 
 message DeleteCommentRequest {
@@ -139,6 +142,7 @@ message Comment {
   UserInfo author = 3;
   string post_id = 4;
   string created_at = 5;
+  string visibility = 6;
 }
 
 message CommentResponse {

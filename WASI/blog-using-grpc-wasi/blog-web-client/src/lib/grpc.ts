@@ -51,6 +51,7 @@ export interface Comment {
 	author: UserInfo;
 	post_id: string;
 	created_at: string;
+	visibility: string;
 }
 
 // --- gRPC Client ---
@@ -77,7 +78,7 @@ interface BlogServiceClient extends grpc.Client {
 		cb: (err: ServiceError | null, res: { posts: Post[]; total: number }) => void
 	): ClientUnaryCall;
 	UpdatePost(
-		req: { token: string; id: string; title: string; content: string },
+		req: { token: string; id: string; title: string; content: string; visibility: string },
 		cb: (err: ServiceError | null, res: { post: Post }) => void
 	): ClientUnaryCall;
 	DeletePost(
@@ -85,7 +86,7 @@ interface BlogServiceClient extends grpc.Client {
 		cb: (err: ServiceError | null, res: { success: boolean }) => void
 	): ClientUnaryCall;
 	CreateComment(
-		req: { token: string; post_id: string; content: string },
+		req: { token: string; post_id: string; content: string; visibility: string },
 		cb: (err: ServiceError | null, res: { comment: Comment }) => void
 	): ClientUnaryCall;
 	ListComments(
@@ -93,7 +94,7 @@ interface BlogServiceClient extends grpc.Client {
 		cb: (err: ServiceError | null, res: { comments: Comment[] }) => void
 	): ClientUnaryCall;
 	UpdateComment(
-		req: { token: string; id: string; content: string },
+		req: { token: string; id: string; content: string; visibility: string },
 		cb: (err: ServiceError | null, res: { comment: Comment }) => void
 	): ClientUnaryCall;
 	DeleteComment(
@@ -191,9 +192,9 @@ export function listPosts(page: number, perPage: number, token = ''): Promise<{ 
 	});
 }
 
-export function updatePost(token: string, id: string, title: string, content: string): Promise<Post> {
+export function updatePost(token: string, id: string, title: string, content: string, visibility = ''): Promise<Post> {
 	return new Promise((resolve, reject) => {
-		getClient().UpdatePost({ token, id, title, content }, (err, res) => {
+		getClient().UpdatePost({ token, id, title, content, visibility }, (err, res) => {
 			if (err) reject(err);
 			else resolve(res.post);
 		});
@@ -211,9 +212,9 @@ export function deletePost(token: string, id: string): Promise<boolean> {
 
 // --- Comments ---
 
-export function createComment(token: string, postId: string, content: string): Promise<Comment> {
+export function createComment(token: string, postId: string, content: string, visibility = 'private'): Promise<Comment> {
 	return new Promise((resolve, reject) => {
-		getClient().CreateComment({ token, post_id: postId, content }, (err, res) => {
+		getClient().CreateComment({ token, post_id: postId, content, visibility }, (err, res) => {
 			if (err) reject(err);
 			else resolve(res.comment);
 		});
@@ -229,9 +230,9 @@ export function listComments(postId: string, token = ''): Promise<Comment[]> {
 	});
 }
 
-export function updateComment(token: string, id: string, content: string): Promise<Comment> {
+export function updateComment(token: string, id: string, content: string, visibility = ''): Promise<Comment> {
 	return new Promise((resolve, reject) => {
-		getClient().UpdateComment({ token, id, content }, (err, res) => {
+		getClient().UpdateComment({ token, id, content, visibility }, (err, res) => {
 			if (err) reject(err);
 			else resolve(res.comment);
 		});

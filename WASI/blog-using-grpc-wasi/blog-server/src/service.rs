@@ -186,7 +186,7 @@ impl BlogService for BlogServiceImpl {
         let (user_id, _role) = self.authenticate(&req.token)?;
 
         let visibility = if req.visibility.is_empty() {
-            "public".to_string()
+            "private".to_string()
         } else {
             req.visibility.clone()
         };
@@ -384,9 +384,38 @@ impl BlogService for BlogServiceImpl {
             return Err(Status::invalid_argument(content_err));
         }
 
+        // visibility가 비어있으면 기존 값 유지
+        let visibility = if req.visibility.is_empty() {
+            let existing = self
+                .db
+                .get_post(&req.id)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .ok_or_else(|| Status::not_found("포스트를 찾을 수 없습니다."))?;
+            existing.visibility
+        } else {
+            let wasm = self.wasm.clone();
+            let vis = req.visibility.clone();
+            let vis_err = tokio::task::spawn_blocking(move || wasm.call_validate_visibility(&vis))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+            if !vis_err.is_empty() {
+                return Err(Status::invalid_argument(vis_err));
+            }
+            req.visibility.clone()
+        };
+
         let post = self
             .db
-            .update_post(&req.id, &user_id, &req.title, &req.content, is_admin)
+            .update_post(
+                &req.id,
+                &user_id,
+                &req.title,
+                &req.content,
+                &visibility,
+                is_admin,
+            )
             .await
             .map_err(|e| Status::permission_denied(e.to_string()))?
             .ok_or_else(|| Status::not_found("포스트를 찾을 수 없습니다."))?;
@@ -462,10 +491,22 @@ impl BlogService for BlogServiceImpl {
             ));
         }
 
+        let visibility = if req.visibility.is_empty() {
+            "private".to_string()
+        } else {
+            req.visibility.clone()
+        };
+
         let user = self.get_user_info(&user_id).await?;
         let comment = self
             .db
-            .create_comment(&req.post_id, &user_id, &user.username, &req.content)
+            .create_comment(
+                &req.post_id,
+                &user_id,
+                &user.username,
+                &req.content,
+                &visibility,
+            )
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -477,6 +518,7 @@ impl BlogService for BlogServiceImpl {
                 author: Some(user),
                 post_id: comment.post_id,
                 created_at: comment.created_at,
+                visibility: comment.visibility,
             }),
         }))
     }
@@ -523,6 +565,7 @@ impl BlogService for BlogServiceImpl {
                 }),
                 post_id: c.post_id,
                 created_at: c.created_at,
+                visibility: c.visibility,
             })
             .collect();
 
@@ -567,9 +610,22 @@ impl BlogService for BlogServiceImpl {
             return Err(Status::invalid_argument(content_err));
         }
 
+        // visibility가 비어있으면 기존 값 유지
+        let visibility = if req.visibility.is_empty() {
+            let existing = self
+                .db
+                .get_comment(&req.id)
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .ok_or_else(|| Status::not_found("댓글을 찾을 수 없습니다."))?;
+            existing.visibility
+        } else {
+            req.visibility.clone()
+        };
+
         let comment = self
             .db
-            .update_comment(&req.id, &user_id, &req.content, is_admin)
+            .update_comment(&req.id, &user_id, &req.content, &visibility, is_admin)
             .await
             .map_err(|e| Status::permission_denied(e.to_string()))?
             .ok_or_else(|| Status::not_found("댓글을 찾을 수 없습니다."))?;
@@ -583,6 +639,7 @@ impl BlogService for BlogServiceImpl {
                 author: Some(user),
                 post_id: comment.post_id,
                 created_at: comment.created_at,
+                visibility: comment.visibility,
             }),
         }))
     }

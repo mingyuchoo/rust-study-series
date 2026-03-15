@@ -75,13 +75,14 @@ export const actions: Actions = {
 		const { token } = JSON.parse(authCookie);
 		const data = await request.formData();
 		const content = (data.get('content') as string)?.trim();
+		const visibility = data.get('visibility') ? 'public' : 'private';
 
 		if (!content) {
 			return fail(400, { error: '댓글 내용을 입력해주세요.' });
 		}
 
 		try {
-			await createComment(token, params.id, content);
+			await createComment(token, params.id, content, visibility);
 			return { error: null };
 		} catch (e) {
 			return fail(500, { error: `댓글 작성 실패: ${e}` });

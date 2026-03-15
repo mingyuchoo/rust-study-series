@@ -13,13 +13,14 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const title = (data.get('title') as string)?.trim();
 		const content = (data.get('content') as string)?.trim();
+		const visibility = data.get('visibility') ? 'public' : 'private';
 
 		if (!title || !content) {
 			return fail(400, { error: '제목과 내용을 입력해주세요.' });
 		}
 
 		try {
-			const post = await createPost(token, title, content);
+			const post = await createPost(token, title, content, visibility);
 			throw redirect(303, `/posts/${post.id}`);
 		} catch (e) {
 			if (e instanceof Response || (e as { status?: number })?.status === 303) throw e;

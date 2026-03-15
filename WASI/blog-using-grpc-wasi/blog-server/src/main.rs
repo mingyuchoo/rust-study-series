@@ -177,6 +177,14 @@ async fn main() -> Result<()> {
         );
     }
 
+    // 샘플 데이터 시딩
+    let seeded = database
+        .seed_sample_data(&seed_data.users, &seed_data.posts)
+        .await?;
+    if seeded > 0 {
+        info!("Sample data seeded: {} posts with comments", seeded);
+    }
+
     // gRPC 서버 시작
     let addr = "0.0.0.0:50051".parse()?;
     let service = BlogServiceImpl::new(database, wasm_runtime);

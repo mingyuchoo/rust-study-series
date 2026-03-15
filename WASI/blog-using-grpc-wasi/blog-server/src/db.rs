@@ -34,6 +34,7 @@ pub struct CommentRecord {
     pub post_id: String,
     pub author_id: String,
     pub author_username: String,
+    pub visibility: String,
     pub created_at: String,
 }
 
@@ -85,6 +86,7 @@ impl Database {
                 DEFINE FIELD post_id ON TABLE comment TYPE string;
                 DEFINE FIELD author_id ON TABLE comment TYPE string;
                 DEFINE FIELD author_username ON TABLE comment TYPE string;
+                DEFINE FIELD visibility ON TABLE comment TYPE string;
                 DEFINE FIELD created_at ON TABLE comment TYPE string;
                 ",
             )
@@ -120,6 +122,76 @@ impl Database {
             .await?;
 
         Ok(true)
+    }
+
+    /// 포스트가 없을 때 샘플 사용자/포스트/댓글을 시딩합니다.
+    pub async fn seed_sample_data(
+        &self,
+        users: &[crate::seed::UserSeed],
+        posts: &[crate::seed::PostSeed],
+    ) -> Result<u32> {
+        // 이미 포스트가 존재하면 시딩하지 않음
+        let mut count_result = self
+            .client
+            .query("SELECT count() AS count FROM post GROUP ALL")
+            .await?;
+        let counts: Vec<CountResult> = count_result.take(0)?;
+        let existing = counts.first().map(|c| c.count).unwrap_or(0);
+        if existing > 0 {
+            return Ok(0);
+        }
+
+        // 샘플 사용자 생성
+        for user in users {
+            let hash = crate::auth::hash_password(&user.password)?;
+            let _ = self.create_user(&user.username, &user.email, &hash).await;
+        }
+
+        // username -> user_id 매핑
+        let mut user_map = std::collections::HashMap::new();
+        let mut all_users = self.client.query("SELECT * FROM user").await?;
+        let user_records: Vec<UserRecord> = all_users.take(0)?;
+        for u in &user_records {
+            user_map.insert(u.username.clone(), thing_to_id(&u.id));
+        }
+
+        let mut seeded = 0u32;
+        for post_seed in posts {
+            let author_id = match user_map.get(&post_seed.author) {
+                Some(id) => id.clone(),
+                None => continue,
+            };
+
+            let post = self
+                .create_post(
+                    &author_id,
+                    &post_seed.author,
+                    &post_seed.title,
+                    &post_seed.content,
+                    &post_seed.visibility,
+                )
+                .await?;
+            let post_id = thing_to_id(&post.id);
+            seeded += 1;
+
+            for comment_seed in &post_seed.comments {
+                let comment_author_id = match user_map.get(&comment_seed.author) {
+                    Some(id) => id.clone(),
+                    None => continue,
+                };
+                let _ = self
+                    .create_comment(
+                        &post_id,
+                        &comment_author_id,
+                        &comment_seed.author,
+                        &comment_seed.content,
+                        &comment_seed.visibility,
+                    )
+                    .await;
+            }
+        }
+
+        Ok(seeded)
     }
 
     // ── User ──────────────────────────────────────────────
@@ -334,6 +406,7 @@ impl Database {
         author_id: &str,
         title: &str,
         content: &str,
+        visibility: &str,
         is_admin: bool,
     ) -> Result<Option<PostRecord>> {
         let post = self.get_post(id).await?;
@@ -346,10 +419,11 @@ impl Database {
         let now = chrono::Utc::now().to_rfc3339();
         let mut result = self
             .client
-            .query("UPDATE type::thing('post', $id) SET title = $title, content = $content, updated_at = $now RETURN AFTER")
+            .query("UPDATE type::thing('post', $id) SET title = $title, content = $content, visibility = $visibility, updated_at = $now RETURN AFTER")
             .bind(("id", id))
             .bind(("title", title))
             .bind(("content", content))
+            .bind(("visibility", visibility))
             .bind(("now", &now))
             .await?;
         let posts: Vec<PostRecord> = result.take(0)?;
@@ -402,15 +476,17 @@ impl Database {
         author_id: &str,
         author_username: &str,
         content: &str,
+        visibility: &str,
     ) -> Result<CommentRecord> {
         let now = chrono::Utc::now().to_rfc3339();
         let mut result = self
             .client
-            .query("CREATE comment SET content = $content, post_id = $post_id, author_id = $author_id, author_username = $author_username, created_at = $now")
+            .query("CREATE comment SET content = $content, post_id = $post_id, author_id = $author_id, author_username = $author_username, visibility = $visibility, created_at = $now")
             .bind(("content", content))
             .bind(("post_id", post_id))
             .bind(("author_id", author_id))
             .bind(("author_username", author_username))
+            .bind(("visibility", visibility))
             .bind(("now", &now))
             .await?;
         let comment: Option<CommentRecord> = result.take(0)?;
@@ -427,7 +503,6 @@ impl Database {
         Ok(comments)
     }
 
-    #[allow(dead_code)]
     pub async fn get_comment(&self, id: &str) -> Result<Option<CommentRecord>> {
         let record: Option<CommentRecord> = self.client.select(("comment", id)).await?;
         Ok(record)
@@ -439,6 +514,7 @@ impl Database {
         id: &str,
         author_id: &str,
         content: &str,
+        visibility: &str,
         is_admin: bool,
     ) -> Result<Option<CommentRecord>> {
         let record: Option<CommentRecord> = self.client.select(("comment", id)).await?;
@@ -450,9 +526,10 @@ impl Database {
 
         let mut result = self
             .client
-            .query("UPDATE type::thing('comment', $id) SET content = $content RETURN AFTER")
+            .query("UPDATE type::thing('comment', $id) SET content = $content, visibility = $visibility RETURN AFTER")
             .bind(("id", id))
             .bind(("content", content))
+            .bind(("visibility", visibility))
             .await?;
         let comments: Vec<CommentRecord> = result.take(0)?;
         Ok(comments.into_iter().next())

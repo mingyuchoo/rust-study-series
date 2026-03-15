@@ -44,8 +44,10 @@ export const actions: Actions = {
 			return fail(400, { error: '제목과 내용을 모두 입력해주세요.', title, content });
 		}
 
+		const visibility = data.get('visibility') ? 'public' : 'private';
+
 		try {
-			await updatePost(token, params.id, title, content);
+			await updatePost(token, params.id, title, content, visibility);
 			throw redirect(303, `/posts/${params.id}`);
 		} catch (e) {
 			if (e instanceof Response || (e as { status?: number })?.status === 303) throw e;

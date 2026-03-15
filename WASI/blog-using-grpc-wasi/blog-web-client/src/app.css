@@ -116,6 +116,7 @@ nav .nav-links a:hover {
 	letter-spacing: 0.05em;
 }
 
+.form-group select,
 .form-group input,
 .form-group textarea {
 	width: 100%;
@@ -130,6 +131,7 @@ nav .nav-links a:hover {
 	font-family: inherit;
 }
 
+.form-group select:focus,
 .form-group input:focus,
 .form-group textarea:focus {
 	border-color: #38bdf8;
@@ -138,6 +140,22 @@ nav .nav-links a:hover {
 .form-group textarea {
 	min-height: 120px;
 	resize: vertical;
+}
+
+.checkbox-label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	cursor: pointer;
+	font-size: 0.9rem;
+	color: #94a3b8;
+}
+
+.checkbox-label input[type="checkbox"] {
+	width: 1.125rem;
+	height: 1.125rem;
+	accent-color: #38bdf8;
+	cursor: pointer;
 }
 
 .form-error {

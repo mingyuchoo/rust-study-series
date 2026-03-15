@@ -39,7 +39,7 @@ struct PostCreateInput {
 }
 
 fn default_visibility() -> String {
-    "public".to_string()
+    "private".to_string()
 }
 
 #[derive(Deserialize)]
@@ -67,12 +67,16 @@ struct PostUpdateInput {
     id: String,
     title: String,
     content: String,
+    #[serde(default)]
+    visibility: String,
 }
 
 #[derive(Deserialize)]
 struct CommentCreateInput {
     post_id: String,
     content: String,
+    #[serde(default = "default_visibility")]
+    visibility: String,
 }
 
 #[derive(Deserialize)]
@@ -84,6 +88,8 @@ struct CommentListInput {
 struct CommentUpdateInput {
     id: String,
     content: String,
+    #[serde(default)]
+    visibility: String,
 }
 
 #[derive(Deserialize)]
@@ -397,6 +403,7 @@ async fn handle_post_update(client: &mut BlogServiceClient<Channel>, json: &str)
             id: input.id,
             title: input.title,
             content: input.content,
+            visibility: input.visibility,
         })
         .await?
         .into_inner();
@@ -435,6 +442,7 @@ async fn handle_comment_create(client: &mut BlogServiceClient<Channel>, json: &s
             token,
             post_id: input.post_id,
             content: input.content,
+            visibility: input.visibility,
         })
         .await?
         .into_inner();
@@ -469,6 +477,7 @@ async fn handle_comment_update(client: &mut BlogServiceClient<Channel>, json: &s
             token,
             id: input.id,
             content: input.content,
+            visibility: input.visibility,
         })
         .await?
         .into_inner();

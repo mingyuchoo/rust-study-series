@@ -53,6 +53,12 @@
 						disabled={isLoading}
 					>{form?.content ?? data.post.content}</textarea>
 				</div>
+				<div class="form-group">
+					<label class="checkbox-label">
+						<input type="checkbox" name="visibility" disabled={isLoading} checked={data.post.visibility === 'public'} />
+						<span>공개</span>
+					</label>
+				</div>
 				<div style="display: flex; gap: 0.75rem; justify-content: flex-end">
 					<a href="/posts/{data.post.id}" class="btn btn-outline">취소</a>
 					<button type="submit" class="btn" disabled={isLoading}>
