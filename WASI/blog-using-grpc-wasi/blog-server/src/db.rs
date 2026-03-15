@@ -13,6 +13,10 @@ pub struct UserRecord {
     pub password_hash: String,
     pub role: String,
     pub created_at: String,
+    #[serde(default)]
+    pub bio: String,
+    #[serde(default)]
+    pub website: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -69,6 +73,8 @@ impl Database {
                 DEFINE FIELD password_hash ON TABLE user TYPE string;
                 DEFINE FIELD role ON TABLE user TYPE string;
                 DEFINE FIELD created_at ON TABLE user TYPE string;
+                DEFINE FIELD bio ON TABLE user TYPE string DEFAULT '';
+                DEFINE FIELD website ON TABLE user TYPE string DEFAULT '';
                 DEFINE INDEX idx_user_username ON TABLE user COLUMNS username UNIQUE;
                 DEFINE INDEX idx_user_email ON TABLE user COLUMNS email UNIQUE;
 
@@ -606,5 +612,119 @@ impl Database {
             .await?;
         let counts: Vec<CountResult> = result.take(0)?;
         Ok(counts.first().map(|c| c.count as u32).unwrap_or(0))
+    }
+
+    // ── Profile ───────────────────────────────────────────
+
+    pub async fn update_password(
+        &self,
+        user_id: &str,
+        new_password_hash: &str,
+    ) -> Result<bool> {
+        let user = self.get_user_by_id(user_id).await?;
+        if user.is_none() {
+            return Ok(false);
+        }
+        self.client
+            .query("UPDATE type::thing('user', $id) SET password_hash = $hash")
+            .bind(("id", user_id))
+            .bind(("hash", new_password_hash))
+            .await?;
+        Ok(true)
+    }
+
+    pub async fn update_profile(
+        &self,
+        user_id: &str,
+        bio: &str,
+        website: &str,
+    ) -> Result<Option<UserRecord>> {
+        let mut result = self
+            .client
+            .query("UPDATE type::thing('user', $id) SET bio = $bio, website = $website RETURN AFTER")
+            .bind(("id", user_id))
+            .bind(("bio", bio))
+            .bind(("website", website))
+            .await?;
+        let users: Vec<UserRecord> = result.take(0)?;
+        Ok(users.into_iter().next())
+    }
+
+    // ── Search ────────────────────────────────────────────
+
+    pub async fn search_posts(
+        &self,
+        query: &str,
+        page: u32,
+        per_page: u32,
+        caller_id: Option<&str>,
+        is_admin: bool,
+    ) -> Result<(Vec<PostRecord>, u32)> {
+        let offset = page.saturating_sub(1) * per_page;
+        let pattern = format!("%{}%", query);
+
+        if is_admin {
+            let mut result = self
+                .client
+                .query("SELECT * FROM post WHERE title CONTAINS $query OR content CONTAINS $query ORDER BY created_at DESC LIMIT $limit START $offset")
+                .bind(("query", query))
+                .bind(("limit", per_page))
+                .bind(("offset", offset))
+                .await?;
+            let posts: Vec<PostRecord> = result.take(0)?;
+
+            let mut count_result = self
+                .client
+                .query("SELECT count() AS count FROM post WHERE title CONTAINS $query OR content CONTAINS $query GROUP ALL")
+                .bind(("query", query))
+                .await?;
+            let counts: Vec<CountResult> = count_result.take(0)?;
+            let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
+            let _ = pattern;
+            return Ok((posts, total));
+        }
+
+        if let Some(uid) = caller_id {
+            let mut result = self
+                .client
+                .query("SELECT * FROM post WHERE (title CONTAINS $query OR content CONTAINS $query) AND (visibility = 'public' OR author_id = $uid) ORDER BY created_at DESC LIMIT $limit START $offset")
+                .bind(("query", query))
+                .bind(("uid", uid))
+                .bind(("limit", per_page))
+                .bind(("offset", offset))
+                .await?;
+            let posts: Vec<PostRecord> = result.take(0)?;
+
+            let mut count_result = self
+                .client
+                .query("SELECT count() AS count FROM post WHERE (title CONTAINS $query OR content CONTAINS $query) AND (visibility = 'public' OR author_id = $uid) GROUP ALL")
+                .bind(("query", query))
+                .bind(("uid", uid))
+                .await?;
+            let counts: Vec<CountResult> = count_result.take(0)?;
+            let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
+            let _ = pattern;
+            return Ok((posts, total));
+        }
+
+        // 비인증 사용자: 공개 포스트만 검색
+        let mut result = self
+            .client
+            .query("SELECT * FROM post WHERE (title CONTAINS $query OR content CONTAINS $query) AND visibility = 'public' ORDER BY created_at DESC LIMIT $limit START $offset")
+            .bind(("query", query))
+            .bind(("limit", per_page))
+            .bind(("offset", offset))
+            .await?;
+        let posts: Vec<PostRecord> = result.take(0)?;
+
+        let mut count_result = self
+            .client
+            .query("SELECT count() AS count FROM post WHERE (title CONTAINS $query OR content CONTAINS $query) AND visibility = 'public' GROUP ALL")
+            .bind(("query", query))
+            .await?;
+        let counts: Vec<CountResult> = count_result.take(0)?;
+        let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
+        let _ = pattern;
+        Ok((posts, total))
     }
 }

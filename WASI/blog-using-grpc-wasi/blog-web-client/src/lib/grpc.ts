@@ -27,6 +27,8 @@ export interface UserInfo {
 	email: string;
 	created_at: string;
 	role: string;
+	bio: string;
+	website: string;
 }
 
 export interface AuthResult {
@@ -121,6 +123,22 @@ interface BlogServiceClient extends grpc.Client {
 		req: { token: string; post_id: string; visibility: string },
 		cb: (err: ServiceError | null, res: { post: Post }) => void
 	): ClientUnaryCall;
+	GetMyProfile(
+		req: { token: string },
+		cb: (err: ServiceError | null, res: { user: UserInfo }) => void
+	): ClientUnaryCall;
+	UpdateProfile(
+		req: { token: string; bio: string; website: string },
+		cb: (err: ServiceError | null, res: { user: UserInfo }) => void
+	): ClientUnaryCall;
+	ChangePassword(
+		req: { token: string; current_password: string; new_password: string },
+		cb: (err: ServiceError | null, res: { success: boolean; message: string }) => void
+	): ClientUnaryCall;
+	SearchPosts(
+		req: { query: string; page: number; per_page: number; token: string },
+		cb: (err: ServiceError | null, res: { posts: Post[]; total: number }) => void
+	): ClientUnaryCall;
 	GetVersion(
 		req: Record<string, never>,
 		cb: (err: ServiceError | null, res: { version: string }) => void
@@ -157,6 +175,35 @@ export function register(username: string, email: string, password: string): Pro
 export function login(email: string, password: string): Promise<AuthResult> {
 	return new Promise((resolve, reject) => {
 		getClient().Login({ email, password }, (err, res) => {
+			if (err) reject(err);
+			else resolve(res);
+		});
+	});
+}
+
+// --- Profile ---
+
+export function getMyProfile(token: string): Promise<UserInfo> {
+	return new Promise((resolve, reject) => {
+		getClient().GetMyProfile({ token }, (err, res) => {
+			if (err) reject(err);
+			else resolve(res.user);
+		});
+	});
+}
+
+export function updateProfile(token: string, bio: string, website: string): Promise<UserInfo> {
+	return new Promise((resolve, reject) => {
+		getClient().UpdateProfile({ token, bio, website }, (err, res) => {
+			if (err) reject(err);
+			else resolve(res.user);
+		});
+	});
+}
+
+export function changePassword(token: string, currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+	return new Promise((resolve, reject) => {
+		getClient().ChangePassword({ token, current_password: currentPassword, new_password: newPassword }, (err, res) => {
 			if (err) reject(err);
 			else resolve(res);
 		});

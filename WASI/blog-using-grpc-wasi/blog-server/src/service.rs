@@ -9,12 +9,14 @@ use crate::auth;
 use crate::db::{thing_to_id, Database};
 use crate::proto::blog_service_server::BlogService;
 use crate::proto::{
-    AuthResponse, Comment, CommentResponse, CreateCommentRequest, CreatePostRequest,
-    DeleteCommentRequest, DeletePostRequest, DeleteResponse, DeleteUserRequest, GetPostRequest,
+    AuthResponse, ChangePasswordRequest, ChangePasswordResponse, Comment, CommentResponse,
+    CreateCommentRequest, CreatePostRequest, DeleteCommentRequest, DeleteMyAccountRequest,
+    DeletePostRequest, DeleteResponse, DeleteUserRequest, GetMyProfileRequest, GetPostRequest,
     GetUserRequest, ListCommentsRequest, ListCommentsResponse, ListPostsRequest, ListPostsResponse,
     ListUsersRequest, ListUsersResponse, LoginRequest, Post, PostResponse, RegisterRequest,
-    UpdateCommentRequest, UpdatePostRequest, UpdatePostVisibilityRequest, UpdateUserRoleRequest,
-    UserInfo, UserResponse, VersionRequest, VersionResponse,
+    SearchPostsRequest, UpdateCommentRequest, UpdatePostRequest, UpdatePostVisibilityRequest,
+    UpdateProfileRequest, UpdateUserRoleRequest, UserInfo, UserResponse, VersionRequest,
+    VersionResponse,
 };
 use crate::WasmRuntime;
 
@@ -63,6 +65,8 @@ impl BlogServiceImpl {
             email: user.email,
             created_at: user.created_at,
             role: user.role,
+            bio: user.bio,
+            website: user.website,
         })
     }
 
@@ -94,17 +98,39 @@ impl BlogService for BlogServiceImpl {
         let req = request.into_inner();
         info!("회원가입 요청: {}", req.username);
 
-        if req.username.trim().is_empty() || req.email.trim().is_empty() || req.password.is_empty()
-        {
-            return Err(Status::invalid_argument(
-                "사용자명, 이메일, 비밀번호는 필수 입력입니다.",
-            ));
+        // WASI 컴포넌트를 통한 사용자명 유효성 검사
+        let wasm = self.wasm.clone();
+        let username = req.username.clone();
+        let username_err =
+            tokio::task::spawn_blocking(move || wasm.call_validate_username(&username))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+        if !username_err.is_empty() {
+            return Err(Status::invalid_argument(username_err));
         }
 
-        if req.password.len() < 8 {
-            return Err(Status::invalid_argument(
-                "비밀번호는 8자 이상이어야 합니다.",
-            ));
+        // WASI 컴포넌트를 통한 이메일 유효성 검사
+        let wasm = self.wasm.clone();
+        let email = req.email.clone();
+        let email_err = tokio::task::spawn_blocking(move || wasm.call_validate_email(&email))
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+            .map_err(|e| Status::internal(e.to_string()))?;
+        if !email_err.is_empty() {
+            return Err(Status::invalid_argument(email_err));
+        }
+
+        // WASI 컴포넌트를 통한 비밀번호 강도 검사
+        let wasm = self.wasm.clone();
+        let password = req.password.clone();
+        let password_err =
+            tokio::task::spawn_blocking(move || wasm.call_validate_password_strength(&password))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+        if !password_err.is_empty() {
+            return Err(Status::invalid_argument(password_err));
         }
 
         let password_hash =
@@ -131,6 +157,8 @@ impl BlogService for BlogServiceImpl {
                 email: user.email,
                 created_at: user.created_at,
                 role: user.role,
+                bio: user.bio,
+                website: user.website,
             }),
         }))
     }
@@ -171,8 +199,149 @@ impl BlogService for BlogServiceImpl {
                 email: user.email,
                 created_at: user.created_at,
                 role: user.role,
+                bio: user.bio,
+                website: user.website,
             }),
         }))
+    }
+
+    // ── Profile ────────────────────────────────────────────
+
+    #[instrument(skip(self, request))]
+    async fn get_my_profile(
+        &self,
+        request: Request<GetMyProfileRequest>,
+    ) -> Result<Response<UserResponse>, Status> {
+        let req = request.into_inner();
+        let (user_id, _role) = self.authenticate(&req.token)?;
+        let user = self.get_user_info(&user_id).await?;
+        Ok(Response::new(UserResponse { user: Some(user) }))
+    }
+
+    #[instrument(skip(self, request))]
+    async fn update_profile(
+        &self,
+        request: Request<UpdateProfileRequest>,
+    ) -> Result<Response<UserResponse>, Status> {
+        let req = request.into_inner();
+        let (user_id, _role) = self.authenticate(&req.token)?;
+
+        // bio 길이 제한
+        if req.bio.len() > 500 {
+            return Err(Status::invalid_argument(
+                "자기소개는 500자를 초과할 수 없습니다.",
+            ));
+        }
+        // website 길이 제한
+        if req.website.len() > 200 {
+            return Err(Status::invalid_argument(
+                "웹사이트 주소는 200자를 초과할 수 없습니다.",
+            ));
+        }
+
+        let user = self
+            .db
+            .update_profile(&user_id, &req.bio, &req.website)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+            .ok_or_else(|| Status::not_found("사용자를 찾을 수 없습니다."))?;
+
+        info!("프로필 업데이트: {}", user_id);
+        Ok(Response::new(UserResponse {
+            user: Some(UserInfo {
+                id: thing_to_id(&user.id),
+                username: user.username,
+                email: user.email,
+                created_at: user.created_at,
+                role: user.role,
+                bio: user.bio,
+                website: user.website,
+            }),
+        }))
+    }
+
+    #[instrument(skip(self, request))]
+    async fn change_password(
+        &self,
+        request: Request<ChangePasswordRequest>,
+    ) -> Result<Response<ChangePasswordResponse>, Status> {
+        let req = request.into_inner();
+        let (user_id, _role) = self.authenticate(&req.token)?;
+
+        // 현재 비밀번호 확인
+        let user = self
+            .db
+            .get_user_by_id(&user_id)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+            .ok_or_else(|| Status::not_found("사용자를 찾을 수 없습니다."))?;
+
+        let valid = auth::verify_password(&req.current_password, &user.password_hash)
+            .map_err(|e| Status::internal(e.to_string()))?;
+        if !valid {
+            return Err(Status::unauthenticated("현재 비밀번호가 올바르지 않습니다."));
+        }
+
+        // WASI 컴포넌트를 통한 새 비밀번호 강도 검사
+        let wasm = self.wasm.clone();
+        let new_pw = req.new_password.clone();
+        let pw_err =
+            tokio::task::spawn_blocking(move || wasm.call_validate_password_strength(&new_pw))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+        if !pw_err.is_empty() {
+            return Err(Status::invalid_argument(pw_err));
+        }
+
+        let new_hash =
+            auth::hash_password(&req.new_password).map_err(|e| Status::internal(e.to_string()))?;
+
+        self.db
+            .update_password(&user_id, &new_hash)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        info!("비밀번호 변경 완료: {}", user_id);
+        Ok(Response::new(ChangePasswordResponse {
+            success: true,
+            message: "비밀번호가 변경되었습니다.".to_string(),
+        }))
+    }
+
+    #[instrument(skip(self, request))]
+    async fn delete_my_account(
+        &self,
+        request: Request<DeleteMyAccountRequest>,
+    ) -> Result<Response<DeleteResponse>, Status> {
+        let req = request.into_inner();
+        let (user_id, _role) = self.authenticate(&req.token)?;
+
+        // 비밀번호 확인
+        let user = self
+            .db
+            .get_user_by_id(&user_id)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+            .ok_or_else(|| Status::not_found("사용자를 찾을 수 없습니다."))?;
+
+        let valid = auth::verify_password(&req.password, &user.password_hash)
+            .map_err(|e| Status::internal(e.to_string()))?;
+        if !valid {
+            return Err(Status::unauthenticated("비밀번호가 올바르지 않습니다."));
+        }
+
+        let success = self
+            .db
+            .delete_user(&user_id)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        if success {
+            info!("회원 탈퇴: {}", user_id);
+        }
+
+        Ok(Response::new(DeleteResponse { success }))
     }
 
     // ── Posts ─────────────────────────────────────────────
@@ -222,6 +391,15 @@ impl BlogService for BlogServiceImpl {
             return Err(Status::invalid_argument(vis_err));
         }
 
+        // WASI 컴포넌트를 통한 콘텐츠 정제 (XSS 방지)
+        let wasm = self.wasm.clone();
+        let raw_content = req.content.clone();
+        let sanitized_content =
+            tokio::task::spawn_blocking(move || wasm.call_sanitize_content(&raw_content))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+
         let user = self.get_user_info(&user_id).await?;
         let post = self
             .db
@@ -229,7 +407,7 @@ impl BlogService for BlogServiceImpl {
                 &user_id,
                 &user.username,
                 &req.title,
-                &req.content,
+                &sanitized_content,
                 &visibility,
             )
             .await
@@ -285,6 +463,8 @@ impl BlogService for BlogServiceImpl {
                 email: String::new(),
                 created_at: String::new(),
                 role: String::new(),
+                bio: String::new(),
+                website: String::new(),
             });
 
         Ok(Response::new(PostResponse {
@@ -340,6 +520,72 @@ impl BlogService for BlogServiceImpl {
                     email: String::new(),
                     created_at: String::new(),
                     role: String::new(),
+                    bio: String::new(),
+                    website: String::new(),
+                }),
+                created_at: post.created_at,
+                updated_at: post.updated_at,
+                comment_count,
+                visibility: post.visibility,
+            });
+        }
+
+        Ok(Response::new(ListPostsResponse {
+            posts: result,
+            total,
+        }))
+    }
+
+    #[instrument(skip(self, request))]
+    async fn search_posts(
+        &self,
+        request: Request<SearchPostsRequest>,
+    ) -> Result<Response<ListPostsResponse>, Status> {
+        let req = request.into_inner();
+        let caller = self.try_authenticate(&req.token)?;
+
+        if req.query.trim().is_empty() {
+            return Err(Status::invalid_argument("검색어를 입력해주세요."));
+        }
+        if req.query.len() > 100 {
+            return Err(Status::invalid_argument(
+                "검색어는 100자를 초과할 수 없습니다.",
+            ));
+        }
+
+        let page = if req.page == 0 { 1 } else { req.page };
+        let per_page = if req.per_page == 0 {
+            10
+        } else {
+            req.per_page.min(50)
+        };
+
+        let is_admin = caller.as_ref().is_some_and(|(_, r)| r == "admin");
+        let caller_id = caller.as_ref().map(|(uid, _)| uid.as_str());
+
+        let (posts, total) = self
+            .db
+            .search_posts(&req.query, page, per_page, caller_id, is_admin)
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        let mut result = Vec::with_capacity(posts.len());
+        for post in posts {
+            let post_id = thing_to_id(&post.id);
+            let comment_count = self.db.count_comments(&post_id).await.unwrap_or(0);
+
+            result.push(Post {
+                id: post_id,
+                title: post.title,
+                content: post.content,
+                author: Some(UserInfo {
+                    id: post.author_id,
+                    username: post.author_username,
+                    email: String::new(),
+                    created_at: String::new(),
+                    role: String::new(),
+                    bio: String::new(),
+                    website: String::new(),
                 }),
                 created_at: post.created_at,
                 updated_at: post.updated_at,
@@ -406,13 +652,22 @@ impl BlogService for BlogServiceImpl {
             req.visibility.clone()
         };
 
+        // WASI 컴포넌트를 통한 콘텐츠 정제 (XSS 방지)
+        let wasm = self.wasm.clone();
+        let raw_content = req.content.clone();
+        let sanitized_content =
+            tokio::task::spawn_blocking(move || wasm.call_sanitize_content(&raw_content))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+
         let post = self
             .db
             .update_post(
                 &req.id,
                 &user_id,
                 &req.title,
-                &req.content,
+                &sanitized_content,
                 &visibility,
                 is_admin,
             )
@@ -497,6 +752,15 @@ impl BlogService for BlogServiceImpl {
             req.visibility.clone()
         };
 
+        // WASI 컴포넌트를 통한 콘텐츠 정제 (XSS 방지)
+        let wasm = self.wasm.clone();
+        let raw_content = req.content.clone();
+        let sanitized_content =
+            tokio::task::spawn_blocking(move || wasm.call_sanitize_content(&raw_content))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+
         let user = self.get_user_info(&user_id).await?;
         let comment = self
             .db
@@ -504,7 +768,7 @@ impl BlogService for BlogServiceImpl {
                 &req.post_id,
                 &user_id,
                 &user.username,
-                &req.content,
+                &sanitized_content,
                 &visibility,
             )
             .await
@@ -562,6 +826,8 @@ impl BlogService for BlogServiceImpl {
                     email: String::new(),
                     created_at: String::new(),
                     role: String::new(),
+                    bio: String::new(),
+                    website: String::new(),
                 }),
                 post_id: c.post_id,
                 created_at: c.created_at,
@@ -623,9 +889,18 @@ impl BlogService for BlogServiceImpl {
             req.visibility.clone()
         };
 
+        // WASI 컴포넌트를 통한 콘텐츠 정제 (XSS 방지)
+        let wasm = self.wasm.clone();
+        let raw_content = req.content.clone();
+        let sanitized_content =
+            tokio::task::spawn_blocking(move || wasm.call_sanitize_content(&raw_content))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+
         let comment = self
             .db
-            .update_comment(&req.id, &user_id, &req.content, &visibility, is_admin)
+            .update_comment(&req.id, &user_id, &sanitized_content, &visibility, is_admin)
             .await
             .map_err(|e| Status::permission_denied(e.to_string()))?
             .ok_or_else(|| Status::not_found("댓글을 찾을 수 없습니다."))?;
@@ -676,6 +951,8 @@ impl BlogService for BlogServiceImpl {
                 email: u.email,
                 created_at: u.created_at,
                 role: u.role,
+                bio: u.bio,
+                website: u.website,
             })
             .collect();
 
@@ -756,6 +1033,8 @@ impl BlogService for BlogServiceImpl {
                 email: user.email,
                 created_at: user.created_at,
                 role: user.role,
+                bio: user.bio,
+                website: user.website,
             }),
         }))
     }
@@ -799,6 +1078,8 @@ impl BlogService for BlogServiceImpl {
                 email: String::new(),
                 created_at: String::new(),
                 role: String::new(),
+                bio: String::new(),
+                website: String::new(),
             });
 
         info!(

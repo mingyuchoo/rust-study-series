@@ -31,7 +31,7 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 
 | 구성 요소 | 설명 | 언어/런타임 | 빌드 타겟 |
 |----------|------|------------|----------|
-| `blog-component` | WASI 0.2 유효성 검사 컴포넌트 (콘텐츠, 역할, 공개범위) | Rust | `wasm32-wasip2` |
+| `blog-component` | WASI 0.2 유효성 검사 및 콘텐츠 정제 컴포넌트 (이메일, 사용자명, 비밀번호, 콘텐츠, 역할, 공개범위, XSS 방지) | Rust | `wasm32-wasip2` |
 | `blog-server` | gRPC 서버 (SurrealDB + wasmtime + RBAC) | Rust (tonic) | native |
 | `blog-cli-client` | gRPC CLI 클라이언트 (JSON 파라미터 기반) | Rust (clap + serde_json) | native |
 | `blog-web-client` | gRPC 웹 클라이언트 (브라우저 UI) | SvelteKit + Bun | Bun |
@@ -78,6 +78,8 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 │ email    │       │ content   │       │ author_id│
 │ password │       │ author    │       │ post_id  │
 │ role     │       │ visibility│       │          │
+│ bio      │       │           │       │          │
+│ website  │       │           │       │          │
 └──────────┘       └───────────┘       └──────────┘
 ```
 
@@ -87,9 +89,14 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 |--------|------|------|
 | `Register` | 회원가입 | 없음 |
 | `Login` | 로그인 (JWT 토큰 발급) | 없음 |
+| `GetMyProfile` | 내 프로필 조회 (bio, website 포함) | 인증 필요 |
+| `UpdateProfile` | 프로필 설정 저장 (자기소개, 웹사이트) | 인증 필요 |
+| `ChangePassword` | 비밀번호 변경 (현재 비밀번호 확인) | 인증 필요 |
+| `DeleteMyAccount` | 회원 탈퇴 (비밀번호 확인) | 인증 필요 |
 | `CreatePost` | 포스트 작성 | 인증 필요 |
 | `GetPost` | 포스트 상세 조회 | 공개범위에 따라 |
 | `ListPosts` | 포스트 목록 조회 (페이지네이션) | 공개범위에 따라 필터링 |
+| `SearchPosts` | 포스트 제목/내용 검색 (페이지네이션) | 공개범위에 따라 필터링 |
 | `UpdatePost` | 포스트 수정 | 작성자 또는 admin |
 | `DeletePost` | 포스트 삭제 | 작성자 또는 admin |
 | `CreateComment` | 댓글 작성 | 인증 + 포스트 읽기 권한 |
@@ -111,6 +118,10 @@ interface blogger {
   validate-comment: func(content: string) -> string;
   validate-role: func(role: string) -> string;
   validate-visibility: func(visibility: string) -> string;
+  validate-email: func(email: string) -> string;
+  validate-username: func(username: string) -> string;
+  validate-password-strength: func(password: string) -> string;
+  sanitize-content: func(content: string) -> string;
   get-version: func() -> string;
 }
 
@@ -118,6 +129,15 @@ world blog-world {
   export blogger;
 }
 ```
+
+### 입력 검증 규칙
+
+| 함수 | 검증 규칙 |
+|------|----------|
+| `validate-email` | RFC 기본 형식 검증 (로컬@도메인.TLD, 254자 제한, TLD 2자 이상) |
+| `validate-username` | 2~30자, 영문/숫자/밑줄/하이픈만, 영문자로 시작, 예약어 차단 |
+| `validate-password-strength` | 8~128자, 대문자/소문자/숫자/특수문자 중 2가지 이상 조합 |
+| `sanitize-content` | XSS 방지 (script 태그, javascript:, 이벤트 핸들러 제거, 대소문자 무시) |
 
 ## SurrealDB 스키마
 
@@ -128,6 +148,8 @@ DEFINE FIELD email ON TABLE user TYPE string;
 DEFINE FIELD password_hash ON TABLE user TYPE string;
 DEFINE FIELD role ON TABLE user TYPE string;
 DEFINE FIELD created_at ON TABLE user TYPE string;
+DEFINE FIELD bio ON TABLE user TYPE string DEFAULT '';
+DEFINE FIELD website ON TABLE user TYPE string DEFAULT '';
 DEFINE INDEX idx_user_username ON TABLE user COLUMNS username UNIQUE;
 DEFINE INDEX idx_user_email ON TABLE user COLUMNS email UNIQUE;
 
@@ -222,6 +244,19 @@ blog-cli-client login '{"email":"alice@example.com","password":"secret123"}'
 blog-cli-client login '{"email":"admin@email.com","password":"Pa55w0rd!"}'
 ```
 
+#### 프로필
+
+```bash
+# 내 프로필 조회
+blog-cli-client profile me
+
+# 비밀번호 변경
+blog-cli-client profile change-password '{"current_password":"secret123","new_password":"newPw456!"}'
+
+# 회원 탈퇴 (비밀번호 확인 필요, 관련 포스트/댓글 모두 삭제)
+blog-cli-client profile delete-account '{"password":"secret123"}'
+```
+
 #### 포스트
 
 ```bash
@@ -241,6 +276,10 @@ blog-cli-client post update '{"id":"post:xxx","title":"수정된 제목","conten
 
 # 포스트 삭제 (본인 포스트 또는 관리자)
 blog-cli-client post delete '{"id":"post:xxx"}'
+
+# 포스트 검색 (제목/내용 키워드 검색)
+blog-cli-client post search '{"query":"WASI"}'
+blog-cli-client post search '{"query":"gRPC","page":1,"per_page":5}'
 ```
 
 #### 댓글
@@ -288,6 +327,7 @@ SERVER_ADDR=http://192.168.1.100:50051 blog-cli-client post list
 
 | 변수 | 기본값 | 설명 |
 |------|--------|------|
+| `JWT_SECRET` | `blog-secret-key-change-in-production` | JWT 토큰 서명 시크릿 (프로덕션에서 반드시 변경) |
 | `BLOG_WASM_PATH` | `../target/wasm32-wasip2/release/blog_component.wasm` | WASM 컴포넌트 경로 |
 | `SURREALDB_ADDR` | `127.0.0.1:8000` | SurrealDB 서버 주소 |
 | `SURREALDB_USER` | `root` | SurrealDB 사용자 |
@@ -338,10 +378,10 @@ SERVER_ADDR=http://192.168.1.100:50051 blog-cli-client post list
 
 ## 동작 원리
 
-1. `blog-component`가 WIT 인터페이스에 따라 콘텐츠/역할/공개범위 유효성 검사 로직 구현
+1. `blog-component`가 WIT 인터페이스에 따라 이메일/사용자명/비밀번호/콘텐츠/역할/공개범위 유효성 검사 및 XSS 방지 정제 로직 구현
 2. `wasm32-wasip2` 타겟으로 컴파일되어 `.wasm` 파일 생성
 3. `blog-server`가 시작 시 wasmtime으로 `.wasm` 파일 로드 + SurrealDB 연결 + 기본 admin 시드
-4. 회원가입/로그인 시 argon2 해싱 + JWT 토큰 발급 (역할 정보 포함)
-5. 포스트/댓글 작성 시 WASI 컴포넌트로 유효성 검사 → RBAC 권한 확인 → SurrealDB에 저장
+4. 회원가입 시 WASI 컴포넌트로 이메일/사용자명/비밀번호 강도 검증 → argon2 해싱 + JWT 토큰 발급 (역할 정보 포함)
+5. 포스트/댓글 작성/수정 시 WASI 컴포넌트로 유효성 검사 + XSS 콘텐츠 정제 → RBAC 권한 확인 → SurrealDB에 저장
 6. 포스트 조회 시 visibility + 사용자 역할에 따라 접근 제어
 7. `blog-web-client`는 SvelteKit SSR로 gRPC 서버와 통신, 쿠키 기반 인증

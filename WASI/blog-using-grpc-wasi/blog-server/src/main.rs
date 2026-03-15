@@ -118,6 +118,42 @@ impl WasmRuntime {
         Ok(result)
     }
 
+    pub fn call_validate_email(&self, email: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_validate_email(&mut store, email)?;
+        Ok(result)
+    }
+
+    pub fn call_validate_username(&self, username: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_validate_username(&mut store, username)?;
+        Ok(result)
+    }
+
+    pub fn call_validate_password_strength(&self, password: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_validate_password_strength(&mut store, password)?;
+        Ok(result)
+    }
+
+    pub fn call_sanitize_content(&self, content: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_sanitize_content(&mut store, content)?;
+        Ok(result)
+    }
+
     pub fn call_get_version(&self) -> Result<String> {
         let mut store = self.new_store();
         let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;

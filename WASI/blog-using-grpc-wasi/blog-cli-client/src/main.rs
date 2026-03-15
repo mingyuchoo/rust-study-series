@@ -9,9 +9,10 @@ pub mod proto {
 
 use proto::blog_service_client::BlogServiceClient;
 use proto::{
-    CreateCommentRequest, CreatePostRequest, DeleteCommentRequest, DeletePostRequest,
-    DeleteUserRequest, GetPostRequest, GetUserRequest, ListCommentsRequest, ListPostsRequest,
-    ListUsersRequest, LoginRequest, RegisterRequest, UpdateCommentRequest, UpdatePostRequest,
+    ChangePasswordRequest, CreateCommentRequest, CreatePostRequest, DeleteCommentRequest,
+    DeleteMyAccountRequest, DeletePostRequest, DeleteUserRequest, GetMyProfileRequest,
+    GetPostRequest, GetUserRequest, ListCommentsRequest, ListPostsRequest, ListUsersRequest,
+    LoginRequest, RegisterRequest, SearchPostsRequest, UpdateCommentRequest, UpdatePostRequest,
     UpdatePostVisibilityRequest, UpdateUserRoleRequest, VersionRequest,
 };
 
@@ -111,6 +112,26 @@ struct AdminUpdateVisibilityInput {
     visibility: String,
 }
 
+#[derive(Deserialize)]
+struct ChangePasswordInput {
+    current_password: String,
+    new_password: String,
+}
+
+#[derive(Deserialize)]
+struct DeleteAccountInput {
+    password: String,
+}
+
+#[derive(Deserialize)]
+struct SearchInput {
+    query: String,
+    #[serde(default = "default_page")]
+    page: u32,
+    #[serde(default = "default_per_page")]
+    per_page: u32,
+}
+
 // ─── JSON 파싱 ────────────────────────────────────────────────────────────────
 
 fn parse_json<T: serde::de::DeserializeOwned>(json: &str, example: &str) -> Result<T> {
@@ -140,6 +161,11 @@ enum Commands {
     /// 로그인 (토큰을 로컬에 저장)
     /// 예: login '{"email":"a@b.com","password":"pw123"}'
     Login { json: String },
+    /// 프로필 관리
+    Profile {
+        #[command(subcommand)]
+        command: ProfileCommands,
+    },
     /// 포스트 관리
     Post {
         #[command(subcommand)]
@@ -174,6 +200,21 @@ enum PostCommands {
     /// 포스트 삭제
     /// 예: post delete '{"id":"post:xxx"}'
     Delete { json: String },
+    /// 포스트 검색
+    /// 예: post search '{"query":"WASI","page":1,"per_page":10}'
+    Search { json: String },
+}
+
+#[derive(Subcommand)]
+enum ProfileCommands {
+    /// 내 프로필 조회
+    Me,
+    /// 비밀번호 변경
+    /// 예: profile change-password '{"current_password":"old","new_password":"new123"}'
+    ChangePassword { json: String },
+    /// 회원 탈퇴
+    /// 예: profile delete-account '{"password":"mypassword"}'
+    DeleteAccount { json: String },
 }
 
 #[derive(Subcommand)]
@@ -325,6 +366,88 @@ async fn handle_login(client: &mut BlogServiceClient<Channel>, json: &str) -> Re
     let user = res.user.context("사용자 정보 없음")?;
     println!("로그인 성공: {} [역할: {}]", user.username, user.role);
     println!("토큰이 저장되었습니다.");
+    Ok(())
+}
+
+async fn handle_profile_me(client: &mut BlogServiceClient<Channel>) -> Result<()> {
+    let token = load_token()?;
+    let res = client
+        .get_my_profile(GetMyProfileRequest { token })
+        .await?
+        .into_inner();
+    let user = res.user.context("사용자 정보 없음")?;
+    println!("내 프로필:");
+    println!("  ID:       {}", user.id);
+    println!("  사용자명: {}", user.username);
+    println!("  이메일:   {}", user.email);
+    println!("  역할:     {}", user.role);
+    println!("  가입일:   {}", user.created_at);
+    Ok(())
+}
+
+async fn handle_change_password(
+    client: &mut BlogServiceClient<Channel>,
+    json: &str,
+) -> Result<()> {
+    let input: ChangePasswordInput = parse_json(
+        json,
+        r#"'{"current_password":"old","new_password":"newPw123"}'"#,
+    )?;
+    let token = load_token()?;
+    let res = client
+        .change_password(ChangePasswordRequest {
+            token,
+            current_password: input.current_password,
+            new_password: input.new_password,
+        })
+        .await?
+        .into_inner();
+    println!("{}", res.message);
+    Ok(())
+}
+
+async fn handle_delete_account(
+    client: &mut BlogServiceClient<Channel>,
+    json: &str,
+) -> Result<()> {
+    let input: DeleteAccountInput = parse_json(json, r#"'{"password":"mypassword"}'"#)?;
+    let token = load_token()?;
+    let res = client
+        .delete_my_account(DeleteMyAccountRequest {
+            token,
+            password: input.password,
+        })
+        .await?
+        .into_inner();
+    if res.success {
+        println!("회원 탈퇴가 완료되었습니다.");
+        let _ = std::fs::remove_file(token_path());
+    } else {
+        println!("회원 탈퇴에 실패했습니다.");
+    }
+    Ok(())
+}
+
+async fn handle_post_search(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: SearchInput =
+        parse_json(json, r#"'{"query":"WASI","page":1,"per_page":10}'"#)?;
+    let token = load_token().unwrap_or_default();
+    let res = client
+        .search_posts(SearchPostsRequest {
+            query: input.query.clone(),
+            page: input.page,
+            per_page: input.per_page,
+            token,
+        })
+        .await?
+        .into_inner();
+    println!(
+        "검색 결과 '{}' (총 {}건, 페이지 {}):",
+        input.query, res.total, input.page
+    );
+    for post in &res.posts {
+        print_post_summary(post);
+    }
     Ok(())
 }
 
@@ -643,12 +766,22 @@ async fn main() -> Result<()> {
         Commands::Version => handle_version(&mut client).await,
         Commands::Register { json } => handle_register(&mut client, &json).await,
         Commands::Login { json } => handle_login(&mut client, &json).await,
+        Commands::Profile { command } => match command {
+            ProfileCommands::Me => handle_profile_me(&mut client).await,
+            ProfileCommands::ChangePassword { json } => {
+                handle_change_password(&mut client, &json).await
+            }
+            ProfileCommands::DeleteAccount { json } => {
+                handle_delete_account(&mut client, &json).await
+            }
+        },
         Commands::Post { command } => match command {
             PostCommands::Create { json } => handle_post_create(&mut client, &json).await,
             PostCommands::List { json } => handle_post_list(&mut client, json.as_deref()).await,
             PostCommands::Get { json } => handle_post_get(&mut client, &json).await,
             PostCommands::Update { json } => handle_post_update(&mut client, &json).await,
             PostCommands::Delete { json } => handle_post_delete(&mut client, &json).await,
+            PostCommands::Search { json } => handle_post_search(&mut client, &json).await,
         },
         Commands::Comment { command } => match command {
             CommentCommands::Create { json } => handle_comment_create(&mut client, &json).await,

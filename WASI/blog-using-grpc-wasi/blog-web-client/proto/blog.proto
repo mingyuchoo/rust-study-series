@@ -7,10 +7,17 @@ service BlogService {
   rpc Register (RegisterRequest) returns (AuthResponse);
   rpc Login (LoginRequest) returns (AuthResponse);
 
+  // Profile
+  rpc GetMyProfile (GetMyProfileRequest) returns (UserResponse);
+  rpc UpdateProfile (UpdateProfileRequest) returns (UserResponse);
+  rpc ChangePassword (ChangePasswordRequest) returns (ChangePasswordResponse);
+  rpc DeleteMyAccount (DeleteMyAccountRequest) returns (DeleteResponse);
+
   // Posts
   rpc CreatePost (CreatePostRequest) returns (PostResponse);
   rpc GetPost (GetPostRequest) returns (PostResponse);
   rpc ListPosts (ListPostsRequest) returns (ListPostsResponse);
+  rpc SearchPosts (SearchPostsRequest) returns (ListPostsResponse);
   rpc UpdatePost (UpdatePostRequest) returns (PostResponse);
   rpc DeletePost (DeletePostRequest) returns (DeleteResponse);
 
@@ -55,6 +62,8 @@ message UserInfo {
   string email = 3;
   string created_at = 4;
   string role = 5;
+  string bio = 6;
+  string website = 7;
 }
 
 // --- Posts ---
@@ -191,6 +200,43 @@ message UpdatePostVisibilityRequest {
   string token = 1;
   string post_id = 2;
   string visibility = 3;
+}
+
+// --- Profile ---
+
+message GetMyProfileRequest {
+  string token = 1;
+}
+
+message UpdateProfileRequest {
+  string token = 1;
+  string bio = 2;
+  string website = 3;
+}
+
+message ChangePasswordRequest {
+  string token = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message DeleteMyAccountRequest {
+  string token = 1;
+  string password = 2;
+}
+
+// --- Search ---
+
+message SearchPostsRequest {
+  string query = 1;
+  uint32 page = 2;
+  uint32 per_page = 3;
+  string token = 4;
 }
 
 // --- Common ---

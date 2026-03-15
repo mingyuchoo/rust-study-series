@@ -1,3 +1,5 @@
+use std::sync::LazyLock;
+
 use anyhow::Result;
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
@@ -6,7 +8,10 @@ use argon2::{
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
-const JWT_SECRET: &str = "blog-secret-key-change-in-production";
+static JWT_SECRET: LazyLock<String> = LazyLock::new(|| {
+    std::env::var("JWT_SECRET").unwrap_or_else(|_| "blog-secret-key-change-in-production".into())
+});
+
 const JWT_EXPIRATION_HOURS: i64 = 24;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -42,7 +47,7 @@ pub fn create_token(user_id: &str, role: &str) -> Result<String> {
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(JWT_SECRET.as_ref()),
+        &EncodingKey::from_secret(JWT_SECRET.as_bytes()),
     )
     .map_err(|e| anyhow::anyhow!("토큰 생성 실패: {}", e))
 }
@@ -51,7 +56,7 @@ pub fn create_token(user_id: &str, role: &str) -> Result<String> {
 pub fn verify_token(token: &str) -> Result<(String, String)> {
     let data = decode::<Claims>(
         token,
-        &DecodingKey::from_secret(JWT_SECRET.as_ref()),
+        &DecodingKey::from_secret(JWT_SECRET.as_bytes()),
         &Validation::default(),
     )
     .map_err(|e| anyhow::anyhow!("유효하지 않은 토큰: {}", e))?;
