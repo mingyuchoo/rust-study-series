@@ -48,6 +48,8 @@ struct PostListInput {
     page: u32,
     #[serde(default = "default_per_page")]
     per_page: u32,
+    #[serde(default)]
+    filter: String,
 }
 
 fn default_page() -> u32 {
@@ -358,6 +360,7 @@ async fn handle_post_list(
         None => PostListInput {
             page: default_page(),
             per_page: default_per_page(),
+            filter: String::new(),
         },
     };
     let token = load_token().unwrap_or_default();
@@ -366,6 +369,7 @@ async fn handle_post_list(
             page: input.page,
             per_page: input.per_page,
             token,
+            filter: input.filter,
         })
         .await?
         .into_inner();
@@ -518,6 +522,7 @@ async fn handle_admin_list_users(
         None => PostListInput {
             page: default_page(),
             per_page: default_per_page(),
+            filter: String::new(),
         },
     };
     let token = load_token()?;

@@ -75,6 +75,7 @@ message ListPostsRequest {
   uint32 page = 1;
   uint32 per_page = 2;
   string token = 3;
+  string filter = 4; // "": all visible, "public": public only, "mine": own only
 }
 
 message UpdatePostRequest {

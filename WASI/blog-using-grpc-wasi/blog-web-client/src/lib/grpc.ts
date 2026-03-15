@@ -74,7 +74,7 @@ interface BlogServiceClient extends grpc.Client {
 		cb: (err: ServiceError | null, res: { post: Post }) => void
 	): ClientUnaryCall;
 	ListPosts(
-		req: { page: number; per_page: number; token: string },
+		req: { page: number; per_page: number; token: string; filter: string },
 		cb: (err: ServiceError | null, res: { posts: Post[]; total: number }) => void
 	): ClientUnaryCall;
 	UpdatePost(
@@ -183,9 +183,9 @@ export function getPost(id: string, token = ''): Promise<Post> {
 	});
 }
 
-export function listPosts(page: number, perPage: number, token = ''): Promise<{ posts: Post[]; total: number }> {
+export function listPosts(page: number, perPage: number, token = '', filter = ''): Promise<{ posts: Post[]; total: number }> {
 	return new Promise((resolve, reject) => {
-		getClient().ListPosts({ page, per_page: perPage, token }, (err, res) => {
+		getClient().ListPosts({ page, per_page: perPage, token, filter }, (err, res) => {
 			if (err) reject(err);
 			else resolve(res);
 		});

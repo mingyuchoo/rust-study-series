@@ -321,7 +321,7 @@ impl BlogService for BlogServiceImpl {
 
         let (posts, total) = self
             .db
-            .list_posts_filtered(page, per_page, caller_id, is_admin)
+            .list_posts_filtered(page, per_page, caller_id, is_admin, &req.filter)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 

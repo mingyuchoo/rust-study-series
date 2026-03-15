@@ -340,59 +340,106 @@ impl Database {
         Ok(record)
     }
 
-    /// 포스트 목록 조회 (가시성 필터링 적용)
-    /// - admin: 전체 조회
-    /// - user: public + 자신의 private 포스트
-    /// - 비인증: public만
+    /// 포스트 목록 조회 (가시성 + 필터 적용)
+    /// filter: "" = 기본(가시성 기반), "public" = 공개만, "mine" = 본인만
     pub async fn list_posts_filtered(
         &self,
         page: u32,
         per_page: u32,
         caller_id: Option<&str>,
         is_admin: bool,
+        filter: &str,
     ) -> Result<(Vec<PostRecord>, u32)> {
         let offset = page.saturating_sub(1) * per_page;
 
-        let (query, count_query) = if is_admin {
-            (
-                "SELECT * FROM post ORDER BY created_at DESC LIMIT $limit START $offset",
-                "SELECT count() AS count FROM post GROUP ALL",
-            )
-        } else if let Some(uid) = caller_id {
-            let mut result = self
-                .client
-                .query("SELECT * FROM post WHERE visibility = 'public' OR author_id = $uid ORDER BY created_at DESC LIMIT $limit START $offset")
-                .bind(("uid", uid))
-                .bind(("limit", per_page))
-                .bind(("offset", offset))
-                .await?;
-            let posts: Vec<PostRecord> = result.take(0)?;
+        // "public" 필터: 공개 포스트만
+        if filter == "public" {
+            return self
+                .query_posts_with_count(
+                    "SELECT * FROM post WHERE visibility = 'public' ORDER BY created_at DESC LIMIT $limit START $offset",
+                    "SELECT count() AS count FROM post WHERE visibility = 'public' GROUP ALL",
+                    None,
+                    per_page,
+                    offset,
+                )
+                .await;
+        }
 
-            let mut count_result = self
-                .client
-                .query("SELECT count() AS count FROM post WHERE visibility = 'public' OR author_id = $uid GROUP ALL")
-                .bind(("uid", uid))
-                .await?;
-            let counts: Vec<CountResult> = count_result.take(0)?;
-            let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
+        // "mine" 필터: 본인 포스트만 (인증 필요)
+        if filter == "mine" {
+            if let Some(uid) = caller_id {
+                return self
+                    .query_posts_with_count(
+                        "SELECT * FROM post WHERE author_id = $uid ORDER BY created_at DESC LIMIT $limit START $offset",
+                        "SELECT count() AS count FROM post WHERE author_id = $uid GROUP ALL",
+                        Some(uid),
+                        per_page,
+                        offset,
+                    )
+                    .await;
+            }
+            return Ok((vec![], 0));
+        }
 
-            return Ok((posts, total));
-        } else {
-            (
-                "SELECT * FROM post WHERE visibility = 'public' ORDER BY created_at DESC LIMIT $limit START $offset",
-                "SELECT count() AS count FROM post WHERE visibility = 'public' GROUP ALL",
-            )
-        };
+        // 기본 필터: 가시성 기반
+        if is_admin {
+            return self
+                .query_posts_with_count(
+                    "SELECT * FROM post ORDER BY created_at DESC LIMIT $limit START $offset",
+                    "SELECT count() AS count FROM post GROUP ALL",
+                    None,
+                    per_page,
+                    offset,
+                )
+                .await;
+        }
 
-        let mut result = self
+        if let Some(uid) = caller_id {
+            return self
+                .query_posts_with_count(
+                    "SELECT * FROM post WHERE visibility = 'public' OR author_id = $uid ORDER BY created_at DESC LIMIT $limit START $offset",
+                    "SELECT count() AS count FROM post WHERE visibility = 'public' OR author_id = $uid GROUP ALL",
+                    Some(uid),
+                    per_page,
+                    offset,
+                )
+                .await;
+        }
+
+        self.query_posts_with_count(
+            "SELECT * FROM post WHERE visibility = 'public' ORDER BY created_at DESC LIMIT $limit START $offset",
+            "SELECT count() AS count FROM post WHERE visibility = 'public' GROUP ALL",
+            None,
+            per_page,
+            offset,
+        )
+        .await
+    }
+
+    async fn query_posts_with_count(
+        &self,
+        query: &str,
+        count_query: &str,
+        uid: Option<&str>,
+        per_page: u32,
+        offset: u32,
+    ) -> Result<(Vec<PostRecord>, u32)> {
+        let mut q = self
             .client
             .query(query)
             .bind(("limit", per_page))
-            .bind(("offset", offset))
-            .await?;
+            .bind(("offset", offset));
+        if let Some(uid) = uid {
+            q = q.bind(("uid", uid));
+        }
+        let mut result = q.await?;
         let posts: Vec<PostRecord> = result.take(0)?;
 
-        let mut count_result = self.client.query(count_query).await?;
+        let mut cq = self.client.query(count_query);
+        if let Some(uid) = uid {
+            cq = cq.bind(("uid", uid));
+        }
+        let mut count_result = cq.await?;
         let counts: Vec<CountResult> = count_result.take(0)?;
         let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
 

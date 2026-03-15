@@ -2,6 +2,8 @@
 	import type { PageData } from './$types';
 
 	export let data: PageData;
+
+	$: filter = data.filter ?? '';
 </script>
 
 <svelte:head>
@@ -15,16 +17,54 @@
 		<div class="alert alert-error">{data.error}</div>
 	{/if}
 
+	<!-- Filter Tabs -->
+	<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid #334155; padding-bottom: 0.75rem">
+		<a
+			href="/"
+			class="btn btn-sm"
+			style={filter === '' ? '' : 'background: transparent; border: 1px solid #334155; color: #94a3b8'}
+		>
+			전체
+		</a>
+		<a
+			href="/?filter=public"
+			class="btn btn-sm"
+			style={filter === 'public' ? '' : 'background: transparent; border: 1px solid #334155; color: #94a3b8'}
+		>
+			공개 포스트
+		</a>
+		{#if data.user}
+			<a
+				href="/?filter=mine"
+				class="btn btn-sm"
+				style={filter === 'mine' ? '' : 'background: transparent; border: 1px solid #334155; color: #94a3b8'}
+			>
+				내 포스트
+			</a>
+		{/if}
+	</div>
+
 	{#if data.posts.length === 0}
 		<div class="card" style="text-align: center; color: #64748b;">
-			<p>아직 작성된 포스트가 없습니다.</p>
+			{#if filter === 'mine'}
+				<p>작성한 포스트가 없습니다.</p>
+			{:else if filter === 'public'}
+				<p>공개된 포스트가 없습니다.</p>
+			{:else}
+				<p>아직 작성된 포스트가 없습니다.</p>
+			{/if}
 			<a href="/posts/new" class="btn" style="display: inline-block; margin-top: 0.5rem">첫 글 작성하기</a>
 		</div>
 	{:else}
 		{#each data.posts as post}
 			<a href="/posts/{post.id}" style="text-decoration: none; color: inherit">
 				<div class="card" style="cursor: pointer; transition: border-color 0.15s">
-					<h2 style="color: #e2e8f0; margin-bottom: 0.5rem">{post.title}</h2>
+					<div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem">
+						<h2 style="color: #e2e8f0; margin: 0; flex: 1">{post.title}</h2>
+						{#if post.visibility === 'private'}
+							<span style="color: #f59e0b; font-size: 0.75rem; border: 1px solid #f59e0b; border-radius: 0.25rem; padding: 0.125rem 0.375rem; white-space: nowrap">비공개</span>
+						{/if}
+					</div>
 					<p style="color: #94a3b8; font-size: 0.9rem; margin: 0 0 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden">
 						{post.content}
 					</p>
