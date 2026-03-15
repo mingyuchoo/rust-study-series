@@ -3,7 +3,7 @@ import { login } from '$lib/grpc';
 import { fail, redirect } from '@sveltejs/kit';
 
 export const actions: Actions = {
-	default: async ({ request, cookies }) => {
+	login: async ({ request, cookies }) => {
 		const data = await request.formData();
 		const email = (data.get('email') as string)?.trim();
 		const password = data.get('password') as string;

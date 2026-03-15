@@ -14,6 +14,7 @@ Cargo.lock
 logs
 *.log
 npm-debug.log*
+bun-debug.log*
 yarn-debug.log*
 yarn-error.log*
 wasm-pack.log
@@ -60,8 +61,9 @@ web_modules/
 # TypeScript v1 declaration files
 typings/
 
-# Optional npm cache directory
+# Optional npm/bun cache directory
 .npm
+.bun
 
 # Optional eslint cache
 .eslintcache

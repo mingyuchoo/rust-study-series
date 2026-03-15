@@ -87,14 +87,14 @@ args = ["run", "-p", "blog-client"]
 
 [tasks.run-web-client]
 description = "Run the web client dev server (Vite)"
-command = "npm"
+command = "bun"
 args = ["run", "dev"]
 cwd = "blog-web-client"
 
 [tasks.run-web-client-prod]
 description = "Run the web client production server (requires build-web-client)"
-command = "node"
-args = ["build/index.js"]
+command = "bun"
+args = ["run", "start"]
 cwd = "blog-web-client"
 
 # ─── check / lint / fmt ───────────────────────────────────────────────────────
@@ -128,15 +128,15 @@ args = ["clippy", "-p", "blog-server", "-p", "blog-client", "--", "-D", "warning
 # ─── web client ───────────────────────────────────────────────────────────────
 
 [tasks.install-web-client]
-description = "Install web client npm dependencies"
-command = "npm"
+description = "Install web client dependencies"
+command = "bun"
 args = ["install"]
 cwd = "blog-web-client"
 
 [tasks.build-web-client]
 description = "Build the web client (SvelteKit production build)"
 dependencies = ["install-web-client"]
-command = "npm"
+command = "bun"
 args = ["run", "build"]
 cwd = "blog-web-client"
 

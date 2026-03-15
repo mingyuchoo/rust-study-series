@@ -20,6 +20,7 @@
 	<div class="card">
 		<form
 			method="POST"
+			action="?/login"
 			use:enhance={() => {
 				isLoading = true;
 				return async ({ update }) => { await update(); isLoading = false; };

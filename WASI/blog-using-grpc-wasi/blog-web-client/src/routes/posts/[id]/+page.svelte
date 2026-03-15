@@ -5,6 +5,9 @@
 	export let data: PageData;
 	export let form: ActionData;
 	let isLoading = false;
+	let isDeleting = false;
+
+	$: isOwner = data.user && data.post && data.user.id === data.post.author?.id;
 </script>
 
 <svelte:head>
@@ -16,6 +19,9 @@
 		<div class="alert alert-error">{data.error}</div>
 		<a href="/">&larr; 목록으로</a>
 	{:else if data.post}
+		{#if form?.error}
+			<div class="alert alert-error">{form.error}</div>
+		{/if}
 		<article>
 			<a href="/" class="meta" style="display: inline-block; margin-bottom: 1rem">&larr; 목록으로</a>
 			<h1 style="margin-bottom: 0.5rem">{data.post.title}</h1>
@@ -24,6 +30,29 @@
 				<span> &middot; </span>
 				<span>{new Date(data.post.created_at).toLocaleDateString('ko-KR')}</span>
 			</div>
+			{#if isOwner}
+				<div style="display: flex; gap: 0.75rem; margin-bottom: 1rem">
+					<a href="/posts/{data.post.id}/edit" class="btn btn-sm btn-outline">수정</a>
+					<form
+						method="POST"
+						action="?/deletePost"
+						style="margin: 0"
+						use:enhance={({ cancel }) => {
+							if (!confirm('정말로 이 포스트를 삭제하시겠습니까?')) {
+								cancel();
+								return;
+							}
+							isDeleting = true;
+							return async ({ update }) => { await update(); isDeleting = false; };
+						}}
+					>
+						<button type="submit" class="btn btn-sm btn-danger" disabled={isDeleting}>
+							{isDeleting ? '삭제 중...' : '삭제'}
+						</button>
+					</form>
+				</div>
+			{/if}
+
 			<div class="card">
 				<p style="white-space: pre-wrap; line-height: 1.7; margin: 0; color: #cbd5e1">
 					{data.post.content}
@@ -34,10 +63,6 @@
 		<!-- Comments Section -->
 		<section style="margin-top: 2rem">
 			<h2>댓글 ({data.comments.length})</h2>
-
-			{#if form?.error}
-				<div class="alert alert-error">{form.error}</div>
-			{/if}
 
 			{#if data.user}
 				<div class="card">
@@ -72,10 +97,29 @@
 
 			{#each data.comments as comment}
 				<div class="card" style="padding: 1rem">
-					<div class="meta" style="margin-bottom: 0.5rem">
-						<strong style="color: #e2e8f0">{comment.author?.username ?? '?'}</strong>
-						<span> &middot; </span>
-						<span>{new Date(comment.created_at).toLocaleDateString('ko-KR')}</span>
+					<div class="meta" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center">
+						<span>
+							<strong style="color: #e2e8f0">{comment.author?.username ?? '?'}</strong>
+							<span> &middot; </span>
+							<span>{new Date(comment.created_at).toLocaleDateString('ko-KR')}</span>
+						</span>
+						{#if data.user && data.user.id === comment.author?.id}
+							<form
+								method="POST"
+								action="?/deleteComment"
+								style="margin: 0"
+								use:enhance={({ cancel }) => {
+									if (!confirm('이 댓글을 삭제하시겠습니까?')) {
+										cancel();
+										return;
+									}
+									return async ({ update }) => { await update(); };
+								}}
+							>
+								<input type="hidden" name="commentId" value={comment.id} />
+								<button type="submit" class="btn btn-sm btn-danger">삭제</button>
+							</form>
+						{/if}
 					</div>
 					<p style="margin: 0; color: #cbd5e1; font-size: 0.9rem; white-space: pre-wrap">
 						{comment.content}

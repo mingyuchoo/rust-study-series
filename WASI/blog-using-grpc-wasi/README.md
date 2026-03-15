@@ -15,7 +15,7 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 │                                       ▼                             │
 │  ┌──────────────────────┐   ┌──────────────────────┐                │
 │  │   blog-web-client    │──▶│     blog-server      │                │
-│  │ (SvelteKit + Node.js)│◀──│ (Native Rust + tonic)│                │
+│  │  (SvelteKit + Bun)   │◀──│ (Native Rust + tonic)│                │
 │  └──────────────────────┘   └────────┬─────┬───────┘                │
 │           gRPC                       │     │                        │
 │                            wasmtime  │     │ WebSocket              │
@@ -34,7 +34,7 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 | `blog-component` | WASI 0.2 콘텐츠 유효성 검사 컴포넌트 | Rust | `wasm32-wasip2` |
 | `blog-server` | gRPC 서버 (SurrealDB + wasmtime) | Rust (tonic) | native |
 | `blog-client` | gRPC CLI 클라이언트 (데모) | Rust | native |
-| `blog-web-client` | gRPC 웹 클라이언트 (브라우저 UI) | SvelteKit + Node.js | Node.js |
+| `blog-web-client` | gRPC 웹 클라이언트 (브라우저 UI) | SvelteKit + Bun | Bun |
 
 ## 도메인 모델
 
@@ -119,7 +119,7 @@ cargo install cargo-make
 # Docker 설치 (https://docs.docker.com/get-docker/)
 # SurrealDB는 Docker 컨테이너로 실행됩니다.
 
-# Node.js / npm 설치 (https://nodejs.org)
+# Bun 설치 (https://bun.sh)
 
 # WASI 타겟 추가
 cargo make setup
@@ -189,6 +189,8 @@ cargo make build-web-client     # 웹 클라이언트
 | `cargo make run-server` | gRPC 서버 실행 |
 | `cargo make run-client` | CLI 클라이언트 실행 |
 | `cargo make run-web-client` | 웹 클라이언트 개발 서버 실행 |
+| `cargo make run-web-client-prod` | 웹 클라이언트 프로덕션 서버 실행 |
+| `cargo make install-web-client` | 웹 클라이언트 의존성 설치 (bun) |
 | `cargo make check` | 전체 코드 오류 검사 |
 | `cargo make fmt` | 코드 포맷팅 |
 | `cargo make clippy` | Clippy 린트 |
@@ -206,8 +208,9 @@ cargo make build-web-client     # 웹 클라이언트
 - **jsonwebtoken** - JWT 인증
 - **argon2** - 비밀번호 해싱
 - **tokio** - 비동기 런타임
+- **Bun** - JavaScript/TypeScript 런타임 및 패키지 매니저
 - **SvelteKit** - 웹 프론트엔드 프레임워크
-- **@grpc/grpc-js** - Node.js gRPC 클라이언트
+- **@grpc/grpc-js** - gRPC 클라이언트
 
 ## 동작 원리
 

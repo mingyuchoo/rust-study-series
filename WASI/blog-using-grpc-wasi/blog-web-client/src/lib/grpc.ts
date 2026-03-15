@@ -6,7 +6,7 @@ import type {
 	ClientUnaryCall
 } from '@grpc/grpc-js';
 import * as protoLoader from '@grpc/proto-loader';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 
 const PROTO_PATH = process.env.PROTO_PATH ?? resolve(process.cwd(), 'proto/blog.proto');
 const SERVER_ADDR = process.env.SERVER_ADDR ?? 'localhost:50051';
@@ -172,6 +172,20 @@ export function listPosts(
 		getClient().ListPosts({ page, per_page: perPage }, (err, res) => {
 			if (err) reject(err);
 			else resolve(res);
+		});
+	});
+}
+
+export function updatePost(
+	token: string,
+	id: string,
+	title: string,
+	content: string
+): Promise<Post> {
+	return new Promise((resolve, reject) => {
+		getClient().UpdatePost({ token, id, title, content }, (err, res) => {
+			if (err) reject(err);
+			else resolve(res.post);
 		});
 	});
 }
