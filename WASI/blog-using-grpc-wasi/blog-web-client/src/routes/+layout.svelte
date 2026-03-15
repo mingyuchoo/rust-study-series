@@ -1,14 +1,32 @@
 <script lang="ts">
 	import '../app.css';
 	import { enhance } from '$app/forms';
+	import { browser } from '$app/environment';
+	import { invalidateAll } from '$app/navigation';
 	import type { LayoutData } from './$types';
 
 	export let data: LayoutData;
+
+	$: theme = data.theme ?? 'dark';
+
+	function toggleTheme() {
+		const newTheme = theme === 'dark' ? 'light' : 'dark';
+		document.documentElement.setAttribute('data-theme', newTheme);
+		document.cookie = `theme=${newTheme};path=/;max-age=${60 * 60 * 24 * 365};samesite=strict`;
+		invalidateAll();
+	}
+
+	$: if (browser) {
+		document.documentElement.setAttribute('data-theme', theme);
+	}
 </script>
 
 <nav>
 	<a href="/" class="logo">Blog gRPC WASI</a>
 	<div class="nav-links">
+		<button class="theme-toggle" on:click={toggleTheme} title={theme === 'dark' ? '라이트 모드' : '다크 모드'}>
+			{theme === 'dark' ? '☀️' : '🌙'}
+		</button>
 		{#if data.user}
 			<a href="/profile" class="profile-link">
 				{data.user.username}
@@ -34,7 +52,7 @@
 
 <style>
 	.profile-link {
-		color: #e2e8f0;
+		color: var(--text);
 		font-size: 0.875rem;
 		text-decoration: none;
 		padding: 0.25rem 0.5rem;
@@ -43,6 +61,6 @@
 	}
 	.profile-link:hover {
 		background: rgba(56, 189, 248, 0.1);
-		color: #38bdf8;
+		color: var(--accent);
 	}
 </style>

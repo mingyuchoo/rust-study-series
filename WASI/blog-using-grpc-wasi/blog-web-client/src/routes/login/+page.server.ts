@@ -1,5 +1,5 @@
 import type { Actions } from './$types';
-import { login } from '$lib/grpc';
+import { login, getMyProfile } from '$lib/grpc';
 import { fail, redirect } from '@sveltejs/kit';
 
 export const actions: Actions = {
@@ -24,6 +24,25 @@ export const actions: Actions = {
 				}),
 				{ path: '/', httpOnly: true, sameSite: 'strict', maxAge: 60 * 60 * 24 }
 			);
+
+			// 서버에 저장된 테마를 쿠키에 반영
+			try {
+				const profile = await getMyProfile(result.token);
+				const savedTheme = profile.theme || 'dark';
+				cookies.set('theme', savedTheme, {
+					path: '/',
+					maxAge: 60 * 60 * 24 * 365,
+					sameSite: 'strict'
+				});
+			} catch {
+				// 프로필 조회 실패 시 기본 dark 적용
+				cookies.set('theme', 'dark', {
+					path: '/',
+					maxAge: 60 * 60 * 24 * 365,
+					sameSite: 'strict'
+				});
+			}
+
 			throw redirect(303, '/');
 		} catch (e) {
 			if (e instanceof Response || (e as { status?: number })?.status === 303) throw e;

@@ -17,6 +17,8 @@ pub struct UserRecord {
     pub bio: String,
     #[serde(default)]
     pub website: String,
+    #[serde(default)]
+    pub theme: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -75,6 +77,7 @@ impl Database {
                 DEFINE FIELD created_at ON TABLE user TYPE string;
                 DEFINE FIELD bio ON TABLE user TYPE string DEFAULT '';
                 DEFINE FIELD website ON TABLE user TYPE string DEFAULT '';
+                DEFINE FIELD theme ON TABLE user TYPE string DEFAULT 'dark';
                 DEFINE INDEX idx_user_username ON TABLE user COLUMNS username UNIQUE;
                 DEFINE INDEX idx_user_email ON TABLE user COLUMNS email UNIQUE;
 
@@ -638,13 +641,15 @@ impl Database {
         user_id: &str,
         bio: &str,
         website: &str,
+        theme: &str,
     ) -> Result<Option<UserRecord>> {
         let mut result = self
             .client
-            .query("UPDATE type::thing('user', $id) SET bio = $bio, website = $website RETURN AFTER")
+            .query("UPDATE type::thing('user', $id) SET bio = $bio, website = $website, theme = $theme RETURN AFTER")
             .bind(("id", user_id))
             .bind(("bio", bio))
             .bind(("website", website))
+            .bind(("theme", theme))
             .await?;
         let users: Vec<UserRecord> = result.take(0)?;
         Ok(users.into_iter().next())

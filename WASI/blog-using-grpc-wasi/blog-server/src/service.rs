@@ -67,6 +67,7 @@ impl BlogServiceImpl {
             role: user.role,
             bio: user.bio,
             website: user.website,
+            theme: user.theme,
         })
     }
 
@@ -159,6 +160,7 @@ impl BlogService for BlogServiceImpl {
                 role: user.role,
                 bio: user.bio,
                 website: user.website,
+                theme: user.theme,
             }),
         }))
     }
@@ -201,6 +203,7 @@ impl BlogService for BlogServiceImpl {
                 role: user.role,
                 bio: user.bio,
                 website: user.website,
+                theme: user.theme,
             }),
         }))
     }
@@ -226,22 +229,47 @@ impl BlogService for BlogServiceImpl {
         let req = request.into_inner();
         let (user_id, _role) = self.authenticate(&req.token)?;
 
-        // bio 길이 제한
-        if req.bio.len() > 500 {
-            return Err(Status::invalid_argument(
-                "자기소개는 500자를 초과할 수 없습니다.",
-            ));
+        // WASI 컴포넌트를 통한 유효성 검사
+        let wasm = self.wasm.clone();
+        let bio = req.bio.clone();
+        let bio_err = tokio::task::spawn_blocking(move || wasm.call_validate_bio(&bio))
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?
+            .map_err(|e| Status::internal(e.to_string()))?;
+        if !bio_err.is_empty() {
+            return Err(Status::invalid_argument(bio_err));
         }
-        // website 길이 제한
-        if req.website.len() > 200 {
-            return Err(Status::invalid_argument(
-                "웹사이트 주소는 200자를 초과할 수 없습니다.",
-            ));
+
+        let wasm = self.wasm.clone();
+        let website = req.website.clone();
+        let website_err =
+            tokio::task::spawn_blocking(move || wasm.call_validate_website(&website))
+                .await
+                .map_err(|e| Status::internal(e.to_string()))?
+                .map_err(|e| Status::internal(e.to_string()))?;
+        if !website_err.is_empty() {
+            return Err(Status::invalid_argument(website_err));
         }
+
+        let wasm = self.wasm.clone();
+        let theme = req.theme.clone();
+        let theme_val = if theme.is_empty() {
+            "dark".to_string()
+        } else {
+            let theme_err =
+                tokio::task::spawn_blocking(move || wasm.call_validate_theme(&theme))
+                    .await
+                    .map_err(|e| Status::internal(e.to_string()))?
+                    .map_err(|e| Status::internal(e.to_string()))?;
+            if !theme_err.is_empty() {
+                return Err(Status::invalid_argument(theme_err));
+            }
+            req.theme.clone()
+        };
 
         let user = self
             .db
-            .update_profile(&user_id, &req.bio, &req.website)
+            .update_profile(&user_id, &req.bio, &req.website, &theme_val)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("사용자를 찾을 수 없습니다."))?;
@@ -256,6 +284,7 @@ impl BlogService for BlogServiceImpl {
                 role: user.role,
                 bio: user.bio,
                 website: user.website,
+                theme: user.theme,
             }),
         }))
     }
@@ -465,6 +494,7 @@ impl BlogService for BlogServiceImpl {
                 role: String::new(),
                 bio: String::new(),
                 website: String::new(),
+                theme: String::new(),
             });
 
         Ok(Response::new(PostResponse {
@@ -522,6 +552,7 @@ impl BlogService for BlogServiceImpl {
                     role: String::new(),
                     bio: String::new(),
                     website: String::new(),
+                    theme: String::new(),
                 }),
                 created_at: post.created_at,
                 updated_at: post.updated_at,
@@ -586,6 +617,7 @@ impl BlogService for BlogServiceImpl {
                     role: String::new(),
                     bio: String::new(),
                     website: String::new(),
+                    theme: String::new(),
                 }),
                 created_at: post.created_at,
                 updated_at: post.updated_at,
@@ -828,6 +860,7 @@ impl BlogService for BlogServiceImpl {
                     role: String::new(),
                     bio: String::new(),
                     website: String::new(),
+                    theme: String::new(),
                 }),
                 post_id: c.post_id,
                 created_at: c.created_at,
@@ -953,6 +986,7 @@ impl BlogService for BlogServiceImpl {
                 role: u.role,
                 bio: u.bio,
                 website: u.website,
+                theme: u.theme,
             })
             .collect();
 
@@ -1035,6 +1069,7 @@ impl BlogService for BlogServiceImpl {
                 role: user.role,
                 bio: user.bio,
                 website: user.website,
+                theme: user.theme,
             }),
         }))
     }
@@ -1080,6 +1115,7 @@ impl BlogService for BlogServiceImpl {
                 role: String::new(),
                 bio: String::new(),
                 website: String::new(),
+                theme: String::new(),
             });
 
         info!(

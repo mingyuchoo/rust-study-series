@@ -64,6 +64,7 @@ message UserInfo {
   string role = 5;
   string bio = 6;
   string website = 7;
+  string theme = 8;
 }
 
 // --- Posts ---
@@ -212,6 +213,7 @@ message UpdateProfileRequest {
   string token = 1;
   string bio = 2;
   string website = 3;
+  string theme = 4;
 }
 
 message ChangePasswordRequest {

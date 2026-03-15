@@ -198,8 +198,39 @@ impl exports::component::blog::blogger::Guest for BlogComponent {
         )
     }
 
+    fn validate_bio(bio: String) -> String {
+        if bio.len() > 500 {
+            return "자기소개는 500자를 초과할 수 없습니다.".to_string();
+        }
+        String::new()
+    }
+
+    fn validate_website(website: String) -> String {
+        let website = website.trim();
+        if website.is_empty() {
+            return String::new();
+        }
+        if website.len() > 200 {
+            return "웹사이트 주소는 200자를 초과할 수 없습니다.".to_string();
+        }
+        if !website.starts_with("https://") && !website.starts_with("http://") {
+            return "웹사이트 주소는 http:// 또는 https://로 시작해야 합니다.".to_string();
+        }
+        if !website[8..].contains('.') {
+            return "웹사이트 주소 형식이 올바르지 않습니다.".to_string();
+        }
+        String::new()
+    }
+
+    fn validate_theme(theme: String) -> String {
+        match theme.as_str() {
+            "dark" | "light" => String::new(),
+            _ => "테마는 'dark' 또는 'light'만 가능합니다.".to_string(),
+        }
+    }
+
     fn get_version() -> String {
-        String::from("blog-component v0.4.0 (WASI 0.2 + RBAC + Input Validation)")
+        String::from("blog-component v0.5.0 (WASI 0.2 + RBAC + Full Validation)")
     }
 }
 

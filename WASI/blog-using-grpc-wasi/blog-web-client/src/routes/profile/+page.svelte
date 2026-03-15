@@ -21,7 +21,7 @@
 			<div class="profile-avatar">
 				{data.profile.username.charAt(0).toUpperCase()}
 			</div>
-			<div class="profile-meta">
+			<div class="profile-info">
 				<h2>{data.profile.username}</h2>
 				<span class="meta">{data.profile.email}</span>
 				<span class="badge" class:badge-admin={data.profile.role === 'admin'}>
@@ -76,6 +76,38 @@
 					value={form?.website ?? data.profile.website ?? ''}
 					disabled={isProfileLoading}
 				/>
+			</div>
+			<div class="form-group">
+				<label for="theme">테마</label>
+				<div class="theme-selector">
+					<label class="theme-option">
+						<input
+							type="radio"
+							name="theme"
+							value="dark"
+							checked={data.profile.theme !== 'light'}
+							disabled={isProfileLoading}
+						/>
+						<span class="theme-preview theme-preview-dark">
+							<span class="theme-icon">🌙</span>
+							<span>다크</span>
+						</span>
+					</label>
+					<label class="theme-option">
+						<input
+							type="radio"
+							name="theme"
+							value="light"
+							checked={data.profile.theme === 'light'}
+							disabled={isProfileLoading}
+						/>
+						<span class="theme-preview theme-preview-light">
+							<span class="theme-icon">☀️</span>
+							<span>라이트</span>
+						</span>
+					</label>
+				</div>
+				<span class="meta">저장하면 모든 기기에서 동일한 테마가 적용됩니다.</span>
 			</div>
 			<div style="display: flex; justify-content: flex-end">
 				<button type="submit" class="btn" disabled={isProfileLoading}>
@@ -165,12 +197,12 @@
 		color: white;
 		flex-shrink: 0;
 	}
-	.profile-meta {
+	.profile-info {
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
 	}
-	.profile-meta h2 {
+	.profile-info h2 {
 		margin: 0;
 	}
 	.badge {
@@ -179,12 +211,50 @@
 		border-radius: 9999px;
 		font-size: 0.75rem;
 		font-weight: 600;
-		background: #334155;
-		color: #94a3b8;
+		background: var(--border);
+		color: var(--text-muted);
 		width: fit-content;
 	}
 	.badge-admin {
 		background: rgba(245, 158, 11, 0.15);
 		color: #f59e0b;
+	}
+
+	/* Theme selector */
+	.theme-selector {
+		display: flex;
+		gap: 0.75rem;
+		margin-top: 0.25rem;
+	}
+	.theme-option {
+		cursor: pointer;
+	}
+	.theme-option input[type="radio"] {
+		display: none;
+	}
+	.theme-preview {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem 1.25rem;
+		border-radius: 0.5rem;
+		border: 2px solid var(--border);
+		font-size: 0.9rem;
+		font-weight: 500;
+		transition: border-color 0.15s;
+	}
+	.theme-option input[type="radio"]:checked + .theme-preview {
+		border-color: var(--accent);
+	}
+	.theme-preview-dark {
+		background: #1e293b;
+		color: var(--text);
+	}
+	.theme-preview-light {
+		background: #f1f5f9;
+		color: #0f172a;
+	}
+	.theme-icon {
+		font-size: 1.125rem;
 	}
 </style>

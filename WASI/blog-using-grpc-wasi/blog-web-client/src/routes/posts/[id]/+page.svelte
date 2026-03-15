@@ -60,7 +60,7 @@
 			{/if}
 
 			<div class="card">
-				<p style="white-space: pre-wrap; line-height: 1.7; margin: 0; color: #cbd5e1">
+				<p style="white-space: pre-wrap; line-height: 1.7; margin: 0; color: var(--text-body)">
 					{data.post.content}
 				</p>
 			</div>
@@ -111,7 +111,7 @@
 				<div class="card" style="padding: 1rem">
 					<div class="meta" style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center">
 						<span>
-							<strong style="color: #e2e8f0">{comment.author?.username ?? '?'}</strong>
+							<strong style="color: var(--text)">{comment.author?.username ?? '?'}</strong>
 							<span> &middot; </span>
 							<span>{new Date(comment.created_at).toLocaleDateString('ko-KR')}</span>
 						</span>
@@ -133,7 +133,7 @@
 							</form>
 						{/if}
 					</div>
-					<p style="margin: 0; color: #cbd5e1; font-size: 0.9rem; white-space: pre-wrap">
+					<p style="margin: 0; color: var(--text-body); font-size: 0.9rem; white-space: pre-wrap">
 						{comment.content}
 					</p>
 				</div>

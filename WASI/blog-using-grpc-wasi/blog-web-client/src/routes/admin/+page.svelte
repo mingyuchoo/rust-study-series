@@ -64,7 +64,7 @@
 				<tbody>
 					{#each data.users as user}
 						<tr style="border-bottom: 1px solid #1e293b">
-							<td style="padding: 0.75rem; color: #e2e8f0">{user.username}</td>
+							<td style="padding: 0.75rem; color: var(--text)">{user.username}</td>
 							<td style="padding: 0.75rem; color: #94a3b8; font-size: 0.9rem">{user.email}</td>
 							<td style="padding: 0.75rem">
 								<span style="color: {user.role === 'admin' ? '#f59e0b' : '#38bdf8'}; font-size: 0.85rem; font-weight: 600">
@@ -121,7 +121,7 @@
 					{#each data.posts as post}
 						<tr style="border-bottom: 1px solid #1e293b">
 							<td style="padding: 0.75rem">
-								<a href="/posts/{post.id}" style="color: #e2e8f0">{post.title}</a>
+								<a href="/posts/{post.id}" style="color: var(--text)">{post.title}</a>
 							</td>
 							<td style="padding: 0.75rem; color: #94a3b8; font-size: 0.9rem">
 								{post.author?.username ?? '?'}

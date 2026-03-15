@@ -154,6 +154,33 @@ impl WasmRuntime {
         Ok(result)
     }
 
+    pub fn call_validate_bio(&self, bio: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_validate_bio(&mut store, bio)?;
+        Ok(result)
+    }
+
+    pub fn call_validate_website(&self, website: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_validate_website(&mut store, website)?;
+        Ok(result)
+    }
+
+    pub fn call_validate_theme(&self, theme: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_validate_theme(&mut store, theme)?;
+        Ok(result)
+    }
+
     pub fn call_get_version(&self) -> Result<String> {
         let mut store = self.new_store();
         let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;

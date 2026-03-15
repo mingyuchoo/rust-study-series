@@ -80,6 +80,7 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 │ role     │       │ visibility│       │          │
 │ bio      │       │           │       │          │
 │ website  │       │           │       │          │
+│ theme    │       │           │       │          │
 └──────────┘       └───────────┘       └──────────┘
 ```
 
@@ -122,6 +123,9 @@ interface blogger {
   validate-username: func(username: string) -> string;
   validate-password-strength: func(password: string) -> string;
   sanitize-content: func(content: string) -> string;
+  validate-bio: func(bio: string) -> string;
+  validate-website: func(website: string) -> string;
+  validate-theme: func(theme: string) -> string;
   get-version: func() -> string;
 }
 
@@ -138,6 +142,9 @@ world blog-world {
 | `validate-username` | 2~30자, 영문/숫자/밑줄/하이픈만, 영문자로 시작, 예약어 차단 |
 | `validate-password-strength` | 8~128자, 대문자/소문자/숫자/특수문자 중 2가지 이상 조합 |
 | `sanitize-content` | XSS 방지 (script 태그, javascript:, 이벤트 핸들러 제거, 대소문자 무시) |
+| `validate-bio` | 500자 제한 (빈값 허용) |
+| `validate-website` | 200자 제한, http:// 또는 https:// 필수, 도메인에 `.` 포함 (빈값 허용) |
+| `validate-theme` | `dark` 또는 `light`만 허용 |
 
 ## SurrealDB 스키마
 
@@ -150,6 +157,7 @@ DEFINE FIELD role ON TABLE user TYPE string;
 DEFINE FIELD created_at ON TABLE user TYPE string;
 DEFINE FIELD bio ON TABLE user TYPE string DEFAULT '';
 DEFINE FIELD website ON TABLE user TYPE string DEFAULT '';
+DEFINE FIELD theme ON TABLE user TYPE string DEFAULT 'dark';
 DEFINE INDEX idx_user_username ON TABLE user COLUMNS username UNIQUE;
 DEFINE INDEX idx_user_email ON TABLE user COLUMNS email UNIQUE;
 

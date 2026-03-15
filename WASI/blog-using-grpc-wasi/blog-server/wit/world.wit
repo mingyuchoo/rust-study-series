@@ -10,6 +10,9 @@ interface blogger {
   validate-username: func(username: string) -> string;
   validate-password-strength: func(password: string) -> string;
   sanitize-content: func(content: string) -> string;
+  validate-bio: func(bio: string) -> string;
+  validate-website: func(website: string) -> string;
+  validate-theme: func(theme: string) -> string;
   get-version: func() -> string;
 }
 

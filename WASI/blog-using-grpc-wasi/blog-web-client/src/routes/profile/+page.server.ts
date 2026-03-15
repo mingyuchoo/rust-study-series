@@ -26,9 +26,16 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const bio = (data.get('bio') as string) ?? '';
 		const website = (data.get('website') as string)?.trim() ?? '';
+		const theme = (data.get('theme') as string) ?? 'dark';
 
 		try {
-			await updateProfile(auth.token, bio, website);
+			await updateProfile(auth.token, bio, website, theme);
+			// 테마 쿠키도 함께 업데이트
+			cookies.set('theme', theme, {
+				path: '/',
+				maxAge: 60 * 60 * 24 * 365,
+				sameSite: 'strict'
+			});
 			return { success: '프로필이 저장되었습니다.' };
 		} catch (e) {
 			const msg = e instanceof Error ? e.message : '프로필 저장에 실패했습니다.';
