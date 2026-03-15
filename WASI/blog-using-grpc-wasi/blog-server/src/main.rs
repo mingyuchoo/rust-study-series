@@ -1,5 +1,6 @@
 mod auth;
 mod db;
+mod seed;
 mod service;
 
 use anyhow::Result;
@@ -99,6 +100,24 @@ impl WasmRuntime {
         Ok(result)
     }
 
+    pub fn call_validate_role(&self, role: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_validate_role(&mut store, role)?;
+        Ok(result)
+    }
+
+    pub fn call_validate_visibility(&self, visibility: &str) -> Result<String> {
+        let mut store = self.new_store();
+        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+        let result = world
+            .component_blog_blogger()
+            .call_validate_visibility(&mut store, visibility)?;
+        Ok(result)
+    }
+
     pub fn call_get_version(&self) -> Result<String> {
         let mut store = self.new_store();
         let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
@@ -136,6 +155,27 @@ async fn main() -> Result<()> {
     let database = Arc::new(Database::new(&db_addr, &db_user, &db_pass).await?);
     database.init_schema().await?;
     info!("SurrealDB connected and schema initialized");
+
+    // seed.json에서 기본 관리자 로드
+    let seed_path = PathBuf::from(
+        std::env::var("SEED_PATH").unwrap_or_else(|_| "blog-server/data/seed.json".into()),
+    );
+    let seed_data = seed::SeedData::load(&seed_path)?;
+    let admin_hash = auth::hash_password(&seed_data.admin.password)?;
+
+    if database
+        .seed_admin(
+            &seed_data.admin.username,
+            &seed_data.admin.email,
+            &admin_hash,
+        )
+        .await?
+    {
+        info!(
+            "Default admin created: {} ({})",
+            seed_data.admin.username, seed_data.admin.email
+        );
+    }
 
     // gRPC 서버 시작
     let addr = "0.0.0.0:50051".parse()?;

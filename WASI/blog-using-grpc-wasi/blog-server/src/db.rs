@@ -11,6 +11,7 @@ pub struct UserRecord {
     pub username: String,
     pub email: String,
     pub password_hash: String,
+    pub role: String,
     pub created_at: String,
 }
 
@@ -21,6 +22,7 @@ pub struct PostRecord {
     pub content: String,
     pub author_id: String,
     pub author_username: String,
+    pub visibility: String,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -41,10 +43,7 @@ struct CountResult {
 }
 
 pub fn thing_to_id(thing: &Option<Thing>) -> String {
-    thing
-        .as_ref()
-        .map(|t| t.id.to_raw())
-        .unwrap_or_default()
+    thing.as_ref().map(|t| t.id.to_raw()).unwrap_or_default()
 }
 
 pub struct Database {
@@ -54,12 +53,7 @@ pub struct Database {
 impl Database {
     pub async fn new(addr: &str, username: &str, password: &str) -> Result<Self> {
         let client = Surreal::new::<Ws>(addr).await?;
-        client
-            .signin(Root {
-                username,
-                password,
-            })
-            .await?;
+        client.signin(Root { username, password }).await?;
         client.use_ns("blog").use_db("blog").await?;
         Ok(Self { client })
     }
@@ -72,6 +66,7 @@ impl Database {
                 DEFINE FIELD username ON TABLE user TYPE string;
                 DEFINE FIELD email ON TABLE user TYPE string;
                 DEFINE FIELD password_hash ON TABLE user TYPE string;
+                DEFINE FIELD role ON TABLE user TYPE string;
                 DEFINE FIELD created_at ON TABLE user TYPE string;
                 DEFINE INDEX idx_user_username ON TABLE user COLUMNS username UNIQUE;
                 DEFINE INDEX idx_user_email ON TABLE user COLUMNS email UNIQUE;
@@ -81,6 +76,7 @@ impl Database {
                 DEFINE FIELD content ON TABLE post TYPE string;
                 DEFINE FIELD author_id ON TABLE post TYPE string;
                 DEFINE FIELD author_username ON TABLE post TYPE string;
+                DEFINE FIELD visibility ON TABLE post TYPE string;
                 DEFINE FIELD created_at ON TABLE post TYPE string;
                 DEFINE FIELD updated_at ON TABLE post TYPE string;
 
@@ -96,6 +92,36 @@ impl Database {
         Ok(())
     }
 
+    /// admin 사용자가 없으면 기본 관리자를 생성합니다.
+    pub async fn seed_admin(
+        &self,
+        username: &str,
+        email: &str,
+        password_hash: &str,
+    ) -> Result<bool> {
+        let mut result = self
+            .client
+            .query("SELECT count() AS count FROM user WHERE role = 'admin' GROUP ALL")
+            .await?;
+        let counts: Vec<CountResult> = result.take(0)?;
+        let admin_count = counts.first().map(|c| c.count).unwrap_or(0);
+
+        if admin_count > 0 {
+            return Ok(false);
+        }
+
+        let now = chrono::Utc::now().to_rfc3339();
+        self.client
+            .query("CREATE user SET username = $username, email = $email, password_hash = $password_hash, role = 'admin', created_at = $now")
+            .bind(("username", username))
+            .bind(("email", email))
+            .bind(("password_hash", password_hash))
+            .bind(("now", &now))
+            .await?;
+
+        Ok(true)
+    }
+
     // ── User ──────────────────────────────────────────────
 
     pub async fn create_user(
@@ -107,7 +133,7 @@ impl Database {
         let now = chrono::Utc::now().to_rfc3339();
         let mut result = self
             .client
-            .query("CREATE user SET username = $username, email = $email, password_hash = $password_hash, created_at = $now")
+            .query("CREATE user SET username = $username, email = $email, password_hash = $password_hash, role = 'user', created_at = $now")
             .bind(("username", username))
             .bind(("email", email))
             .bind(("password_hash", password_hash))
@@ -132,6 +158,86 @@ impl Database {
         Ok(record)
     }
 
+    pub async fn list_users(&self, page: u32, per_page: u32) -> Result<(Vec<UserRecord>, u32)> {
+        let offset = page.saturating_sub(1) * per_page;
+        let mut result = self
+            .client
+            .query("SELECT * FROM user ORDER BY created_at ASC LIMIT $limit START $offset")
+            .bind(("limit", per_page))
+            .bind(("offset", offset))
+            .await?;
+        let users: Vec<UserRecord> = result.take(0)?;
+
+        let mut count_result = self
+            .client
+            .query("SELECT count() AS count FROM user GROUP ALL")
+            .await?;
+        let counts: Vec<CountResult> = count_result.take(0)?;
+        let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
+
+        Ok((users, total))
+    }
+
+    pub async fn update_user_role(&self, user_id: &str, role: &str) -> Result<Option<UserRecord>> {
+        let mut result = self
+            .client
+            .query("UPDATE type::thing('user', $id) SET role = $role RETURN AFTER")
+            .bind(("id", user_id))
+            .bind(("role", role))
+            .await?;
+        let users: Vec<UserRecord> = result.take(0)?;
+        Ok(users.into_iter().next())
+    }
+
+    /// 사용자 삭제 (관련 포스트의 댓글, 포스트, 사용자 모두 삭제)
+    pub async fn delete_user(&self, user_id: &str) -> Result<bool> {
+        let user = self.get_user_by_id(user_id).await?;
+        if user.is_none() {
+            return Ok(false);
+        }
+
+        // 사용자의 포스트에 달린 댓글 삭제
+        self.client
+            .query("DELETE comment WHERE post_id IN (SELECT VALUE id FROM post WHERE author_id = $uid).map(|v| v.id.to_raw())")
+            .bind(("uid", user_id))
+            .await
+            .ok();
+        // 직접 쿼리로 사용자의 포스트에 달린 댓글 삭제
+        let mut post_result = self
+            .client
+            .query("SELECT * FROM post WHERE author_id = $uid")
+            .bind(("uid", user_id))
+            .await?;
+        let posts: Vec<PostRecord> = post_result.take(0)?;
+        for post in &posts {
+            let post_id = thing_to_id(&post.id);
+            self.client
+                .query("DELETE comment WHERE post_id = $pid")
+                .bind(("pid", &post_id))
+                .await?;
+        }
+
+        // 사용자가 작성한 댓글 삭제
+        self.client
+            .query("DELETE comment WHERE author_id = $uid")
+            .bind(("uid", user_id))
+            .await?;
+
+        // 사용자의 포스트 삭제
+        self.client
+            .query("DELETE post WHERE author_id = $uid")
+            .bind(("uid", user_id))
+            .await?;
+
+        // 사용자 삭제
+        self.client
+            .query("DELETE type::thing('user', $uid)")
+            .bind(("uid", user_id))
+            .await?;
+
+        Ok(true)
+    }
+
     // ── Post ──────────────────────────────────────────────
 
     pub async fn create_post(
@@ -140,15 +246,17 @@ impl Database {
         author_username: &str,
         title: &str,
         content: &str,
+        visibility: &str,
     ) -> Result<PostRecord> {
         let now = chrono::Utc::now().to_rfc3339();
         let mut result = self
             .client
-            .query("CREATE post SET title = $title, content = $content, author_id = $author_id, author_username = $author_username, created_at = $now, updated_at = $now")
+            .query("CREATE post SET title = $title, content = $content, author_id = $author_id, author_username = $author_username, visibility = $visibility, created_at = $now, updated_at = $now")
             .bind(("title", title))
             .bind(("content", content))
             .bind(("author_id", author_id))
             .bind(("author_username", author_username))
+            .bind(("visibility", visibility))
             .bind(("now", &now))
             .await?;
         let post: Option<PostRecord> = result.take(0)?;
@@ -160,36 +268,77 @@ impl Database {
         Ok(record)
     }
 
-    pub async fn list_posts(&self, page: u32, per_page: u32) -> Result<(Vec<PostRecord>, u32)> {
+    /// 포스트 목록 조회 (가시성 필터링 적용)
+    /// - admin: 전체 조회
+    /// - user: public + 자신의 private 포스트
+    /// - 비인증: public만
+    pub async fn list_posts_filtered(
+        &self,
+        page: u32,
+        per_page: u32,
+        caller_id: Option<&str>,
+        is_admin: bool,
+    ) -> Result<(Vec<PostRecord>, u32)> {
         let offset = page.saturating_sub(1) * per_page;
+
+        let (query, count_query) = if is_admin {
+            (
+                "SELECT * FROM post ORDER BY created_at DESC LIMIT $limit START $offset",
+                "SELECT count() AS count FROM post GROUP ALL",
+            )
+        } else if let Some(uid) = caller_id {
+            let mut result = self
+                .client
+                .query("SELECT * FROM post WHERE visibility = 'public' OR author_id = $uid ORDER BY created_at DESC LIMIT $limit START $offset")
+                .bind(("uid", uid))
+                .bind(("limit", per_page))
+                .bind(("offset", offset))
+                .await?;
+            let posts: Vec<PostRecord> = result.take(0)?;
+
+            let mut count_result = self
+                .client
+                .query("SELECT count() AS count FROM post WHERE visibility = 'public' OR author_id = $uid GROUP ALL")
+                .bind(("uid", uid))
+                .await?;
+            let counts: Vec<CountResult> = count_result.take(0)?;
+            let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
+
+            return Ok((posts, total));
+        } else {
+            (
+                "SELECT * FROM post WHERE visibility = 'public' ORDER BY created_at DESC LIMIT $limit START $offset",
+                "SELECT count() AS count FROM post WHERE visibility = 'public' GROUP ALL",
+            )
+        };
+
         let mut result = self
             .client
-            .query("SELECT * FROM post ORDER BY created_at DESC LIMIT $limit START $offset")
+            .query(query)
             .bind(("limit", per_page))
             .bind(("offset", offset))
             .await?;
         let posts: Vec<PostRecord> = result.take(0)?;
 
-        let mut count_result = self
-            .client
-            .query("SELECT count() AS count FROM post GROUP ALL")
-            .await?;
+        let mut count_result = self.client.query(count_query).await?;
         let counts: Vec<CountResult> = count_result.take(0)?;
         let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
 
         Ok((posts, total))
     }
 
+    /// 포스트 수정 (admin이면 소유자 확인 생략)
     pub async fn update_post(
         &self,
         id: &str,
         author_id: &str,
         title: &str,
         content: &str,
+        is_admin: bool,
     ) -> Result<Option<PostRecord>> {
         let post = self.get_post(id).await?;
         match post {
-            Some(p) if p.author_id == author_id => {}
+            Some(p) if is_admin || p.author_id == author_id => {}
             Some(_) => return Err(anyhow::anyhow!("권한이 없습니다.")),
             None => return Ok(None),
         }
@@ -207,10 +356,11 @@ impl Database {
         Ok(posts.into_iter().next())
     }
 
-    pub async fn delete_post(&self, id: &str, author_id: &str) -> Result<bool> {
+    /// 포스트 삭제 (admin이면 소유자 확인 생략)
+    pub async fn delete_post(&self, id: &str, author_id: &str, is_admin: bool) -> Result<bool> {
         let post = self.get_post(id).await?;
         match post {
-            Some(p) if p.author_id == author_id => {}
+            Some(p) if is_admin || p.author_id == author_id => {}
             _ => return Ok(false),
         }
 
@@ -225,6 +375,23 @@ impl Database {
             .await?;
 
         Ok(true)
+    }
+
+    pub async fn update_post_visibility(
+        &self,
+        id: &str,
+        visibility: &str,
+    ) -> Result<Option<PostRecord>> {
+        let now = chrono::Utc::now().to_rfc3339();
+        let mut result = self
+            .client
+            .query("UPDATE type::thing('post', $id) SET visibility = $visibility, updated_at = $now RETURN AFTER")
+            .bind(("id", id))
+            .bind(("visibility", visibility))
+            .bind(("now", &now))
+            .await?;
+        let posts: Vec<PostRecord> = result.take(0)?;
+        Ok(posts.into_iter().next())
     }
 
     // ── Comment ───────────────────────────────────────────
@@ -253,19 +420,49 @@ impl Database {
     pub async fn list_comments(&self, post_id: &str) -> Result<Vec<CommentRecord>> {
         let mut result = self
             .client
-            .query(
-                "SELECT * FROM comment WHERE post_id = $post_id ORDER BY created_at ASC",
-            )
+            .query("SELECT * FROM comment WHERE post_id = $post_id ORDER BY created_at ASC")
             .bind(("post_id", post_id))
             .await?;
         let comments: Vec<CommentRecord> = result.take(0)?;
         Ok(comments)
     }
 
-    pub async fn delete_comment(&self, id: &str, author_id: &str) -> Result<bool> {
+    #[allow(dead_code)]
+    pub async fn get_comment(&self, id: &str) -> Result<Option<CommentRecord>> {
+        let record: Option<CommentRecord> = self.client.select(("comment", id)).await?;
+        Ok(record)
+    }
+
+    /// 댓글 수정 (admin이면 소유자 확인 생략)
+    pub async fn update_comment(
+        &self,
+        id: &str,
+        author_id: &str,
+        content: &str,
+        is_admin: bool,
+    ) -> Result<Option<CommentRecord>> {
         let record: Option<CommentRecord> = self.client.select(("comment", id)).await?;
         match record {
-            Some(c) if c.author_id == author_id => {}
+            Some(c) if is_admin || c.author_id == author_id => {}
+            Some(_) => return Err(anyhow::anyhow!("권한이 없습니다.")),
+            None => return Ok(None),
+        }
+
+        let mut result = self
+            .client
+            .query("UPDATE type::thing('comment', $id) SET content = $content RETURN AFTER")
+            .bind(("id", id))
+            .bind(("content", content))
+            .await?;
+        let comments: Vec<CommentRecord> = result.take(0)?;
+        Ok(comments.into_iter().next())
+    }
+
+    /// 댓글 삭제 (admin이면 소유자 확인 생략)
+    pub async fn delete_comment(&self, id: &str, author_id: &str, is_admin: bool) -> Result<bool> {
+        let record: Option<CommentRecord> = self.client.select(("comment", id)).await?;
+        match record {
+            Some(c) if is_admin || c.author_id == author_id => {}
             _ => return Ok(false),
         }
 

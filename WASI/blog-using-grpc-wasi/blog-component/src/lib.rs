@@ -36,8 +36,22 @@ impl exports::component::blog::blogger::Guest for BlogComponent {
         String::new()
     }
 
+    fn validate_role(role: String) -> String {
+        match role.as_str() {
+            "admin" | "user" => String::new(),
+            _ => "역할은 'admin' 또는 'user'만 가능합니다.".to_string(),
+        }
+    }
+
+    fn validate_visibility(visibility: String) -> String {
+        match visibility.as_str() {
+            "public" | "private" => String::new(),
+            _ => "공개범위는 'public' 또는 'private'만 가능합니다.".to_string(),
+        }
+    }
+
     fn get_version() -> String {
-        String::from("blog-component v0.2.0 (WASI 0.2)")
+        String::from("blog-component v0.3.0 (WASI 0.2 + RBAC)")
     }
 }
 

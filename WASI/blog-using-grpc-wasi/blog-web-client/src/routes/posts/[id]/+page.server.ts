@@ -2,12 +2,15 @@ import type { Actions, PageServerLoad } from './$types';
 import { getPost, listComments, createComment, deletePost, deleteComment } from '$lib/grpc';
 import { fail, redirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ params, parent }) => {
+export const load: PageServerLoad = async ({ params, parent, cookies }) => {
 	const { user } = await parent();
+	const authCookie = cookies.get('auth');
+	const token = authCookie ? JSON.parse(authCookie).token ?? '' : '';
+
 	try {
 		const [post, comments] = await Promise.all([
-			getPost(params.id),
-			listComments(params.id)
+			getPost(params.id, token),
+			listComments(params.id, token)
 		]);
 		return {
 			post,

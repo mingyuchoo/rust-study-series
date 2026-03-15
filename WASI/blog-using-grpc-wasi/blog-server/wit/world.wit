@@ -4,6 +4,8 @@ interface blogger {
   validate-title: func(title: string) -> string;
   validate-content: func(content: string) -> string;
   validate-comment: func(content: string) -> string;
+  validate-role: func(role: string) -> string;
+  validate-visibility: func(visibility: string) -> string;
   get-version: func() -> string;
 }
 

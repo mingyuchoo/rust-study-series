@@ -5,7 +5,13 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
 	if (authCookie) {
 		try {
 			const auth = JSON.parse(authCookie);
-			return { user: { username: auth.username, id: auth.userId } };
+			return {
+				user: {
+					username: auth.username,
+					id: auth.userId,
+					role: auth.role ?? 'user'
+				}
+			};
 		} catch {
 			return { user: null };
 		}

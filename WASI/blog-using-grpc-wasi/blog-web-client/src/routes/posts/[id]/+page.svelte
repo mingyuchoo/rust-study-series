@@ -8,6 +8,8 @@
 	let isDeleting = false;
 
 	$: isOwner = data.user && data.post && data.user.id === data.post.author?.id;
+	$: isAdmin = data.user?.role === 'admin';
+	$: canEdit = isOwner || isAdmin;
 </script>
 
 <svelte:head>
@@ -29,8 +31,12 @@
 				<span>{data.post.author?.username ?? '?'}</span>
 				<span> &middot; </span>
 				<span>{new Date(data.post.created_at).toLocaleDateString('ko-KR')}</span>
+				{#if data.post.visibility === 'private'}
+					<span> &middot; </span>
+					<span style="color: #f59e0b">비공개</span>
+				{/if}
 			</div>
-			{#if isOwner}
+			{#if canEdit}
 				<div style="display: flex; gap: 0.75rem; margin-bottom: 1rem">
 					<a href="/posts/{data.post.id}/edit" class="btn btn-sm btn-outline">수정</a>
 					<form
@@ -103,7 +109,7 @@
 							<span> &middot; </span>
 							<span>{new Date(comment.created_at).toLocaleDateString('ko-KR')}</span>
 						</span>
-						{#if data.user && data.user.id === comment.author?.id}
+						{#if data.user && (data.user.id === comment.author?.id || isAdmin)}
 							<form
 								method="POST"
 								action="?/deleteComment"

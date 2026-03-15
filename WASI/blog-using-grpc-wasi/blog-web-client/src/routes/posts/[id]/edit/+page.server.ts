@@ -2,17 +2,21 @@ import type { Actions, PageServerLoad } from './$types';
 import { getPost, updatePost } from '$lib/grpc';
 import { fail, redirect } from '@sveltejs/kit';
 
-export const load: PageServerLoad = async ({ params, parent }) => {
+export const load: PageServerLoad = async ({ params, parent, cookies }) => {
 	const { user } = await parent();
 
 	if (!user) {
 		throw redirect(303, '/login');
 	}
 
-	try {
-		const post = await getPost(params.id);
+	const authCookie = cookies.get('auth');
+	const token = authCookie ? JSON.parse(authCookie).token ?? '' : '';
 
-		if (post.author.id !== user.id) {
+	try {
+		const post = await getPost(params.id, token);
+
+		// 작성자이거나 admin인 경우만 수정 가능
+		if (post.author.id !== user.id && user.role !== 'admin') {
 			throw redirect(303, `/posts/${params.id}`);
 		}
 

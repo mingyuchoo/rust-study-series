@@ -17,7 +17,15 @@ service BlogService {
   // Comments
   rpc CreateComment (CreateCommentRequest) returns (CommentResponse);
   rpc ListComments (ListCommentsRequest) returns (ListCommentsResponse);
+  rpc UpdateComment (UpdateCommentRequest) returns (CommentResponse);
   rpc DeleteComment (DeleteCommentRequest) returns (DeleteResponse);
+
+  // Admin
+  rpc ListUsers (ListUsersRequest) returns (ListUsersResponse);
+  rpc GetUser (GetUserRequest) returns (UserResponse);
+  rpc UpdateUserRole (UpdateUserRoleRequest) returns (UserResponse);
+  rpc DeleteUser (DeleteUserRequest) returns (DeleteResponse);
+  rpc UpdatePostVisibility (UpdatePostVisibilityRequest) returns (PostResponse);
 
   // System
   rpc GetVersion (VersionRequest) returns (VersionResponse);
@@ -46,6 +54,7 @@ message UserInfo {
   string username = 2;
   string email = 3;
   string created_at = 4;
+  string role = 5;
 }
 
 // --- Posts ---
@@ -54,15 +63,18 @@ message CreatePostRequest {
   string token = 1;
   string title = 2;
   string content = 3;
+  string visibility = 4;
 }
 
 message GetPostRequest {
   string id = 1;
+  string token = 2;
 }
 
 message ListPostsRequest {
   uint32 page = 1;
   uint32 per_page = 2;
+  string token = 3;
 }
 
 message UpdatePostRequest {
@@ -85,6 +97,7 @@ message Post {
   string created_at = 5;
   string updated_at = 6;
   uint32 comment_count = 7;
+  string visibility = 8;
 }
 
 message PostResponse {
@@ -106,6 +119,13 @@ message CreateCommentRequest {
 
 message ListCommentsRequest {
   string post_id = 1;
+  string token = 2;
+}
+
+message UpdateCommentRequest {
+  string token = 1;
+  string id = 2;
+  string content = 3;
 }
 
 message DeleteCommentRequest {
@@ -127,6 +147,45 @@ message CommentResponse {
 
 message ListCommentsResponse {
   repeated Comment comments = 1;
+}
+
+// --- Admin ---
+
+message ListUsersRequest {
+  string token = 1;
+  uint32 page = 2;
+  uint32 per_page = 3;
+}
+
+message ListUsersResponse {
+  repeated UserInfo users = 1;
+  uint32 total = 2;
+}
+
+message GetUserRequest {
+  string token = 1;
+  string user_id = 2;
+}
+
+message UserResponse {
+  UserInfo user = 1;
+}
+
+message UpdateUserRoleRequest {
+  string token = 1;
+  string user_id = 2;
+  string role = 3;
+}
+
+message DeleteUserRequest {
+  string token = 1;
+  string user_id = 2;
+}
+
+message UpdatePostVisibilityRequest {
+  string token = 1;
+  string post_id = 2;
+  string visibility = 3;
 }
 
 // --- Common ---

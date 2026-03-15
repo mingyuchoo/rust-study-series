@@ -16,7 +16,12 @@ export const actions: Actions = {
 			const result = await login(email, password);
 			cookies.set(
 				'auth',
-				JSON.stringify({ token: result.token, username: result.user.username, userId: result.user.id }),
+				JSON.stringify({
+					token: result.token,
+					username: result.user.username,
+					userId: result.user.id,
+					role: result.user.role
+				}),
 				{ path: '/', httpOnly: true, sameSite: 'strict', maxAge: 60 * 60 * 24 }
 			);
 			throw redirect(303, '/');
