@@ -585,6 +585,8 @@ async fn handle_comment_list(client: &mut BlogServiceClient<Channel>, json: &str
         .list_comments(ListCommentsRequest {
             post_id: input.post_id,
             token,
+            page: 1,
+            per_page: 100,
         })
         .await?
         .into_inner();

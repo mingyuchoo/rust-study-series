@@ -277,13 +277,7 @@ impl Database {
             return Ok(false);
         }
 
-        // 사용자의 포스트에 달린 댓글 삭제
-        self.client
-            .query("DELETE comment WHERE post_id IN (SELECT VALUE id FROM post WHERE author_id = $uid).map(|v| v.id.to_raw())")
-            .bind(("uid", user_id))
-            .await
-            .ok();
-        // 직접 쿼리로 사용자의 포스트에 달린 댓글 삭제
+        // 사용자의 포스트에 달린 타인의 댓글 삭제
         let mut post_result = self
             .client
             .query("SELECT * FROM post WHERE author_id = $uid")
@@ -549,14 +543,24 @@ impl Database {
         comment.ok_or_else(|| anyhow::anyhow!("댓글 생성 실패"))
     }
 
-    pub async fn list_comments(&self, post_id: &str) -> Result<Vec<CommentRecord>> {
+    pub async fn list_comments(
+        &self,
+        post_id: &str,
+        page: u32,
+        per_page: u32,
+    ) -> Result<(Vec<CommentRecord>, u32)> {
+        let offset = page.saturating_sub(1) * per_page;
         let mut result = self
             .client
-            .query("SELECT * FROM comment WHERE post_id = $post_id ORDER BY created_at ASC")
+            .query("SELECT * FROM comment WHERE post_id = $post_id ORDER BY created_at ASC LIMIT $limit START $offset")
             .bind(("post_id", post_id))
+            .bind(("limit", per_page))
+            .bind(("offset", offset))
             .await?;
         let comments: Vec<CommentRecord> = result.take(0)?;
-        Ok(comments)
+
+        let total = self.count_comments(post_id).await?;
+        Ok((comments, total))
     }
 
     pub async fn get_comment(&self, id: &str) -> Result<Option<CommentRecord>> {
@@ -607,12 +611,63 @@ impl Database {
         Ok(true)
     }
 
+    /// 여러 포스트의 댓글 수를 일괄 조회합니다.
+    pub async fn count_comments_batch(
+        &self,
+        post_ids: &[String],
+    ) -> Result<std::collections::HashMap<String, u32>> {
+        let mut map = std::collections::HashMap::new();
+        if post_ids.is_empty() {
+            return Ok(map);
+        }
+
+        let mut result = self
+            .client
+            .query("SELECT post_id, count() AS count FROM comment WHERE post_id IN $ids GROUP BY post_id")
+            .bind(("ids", post_ids))
+            .await?;
+
+        #[derive(Debug, serde::Deserialize)]
+        struct GroupCount {
+            post_id: String,
+            count: u64,
+        }
+        let counts: Vec<GroupCount> = result.take(0)?;
+        for gc in counts {
+            map.insert(gc.post_id, gc.count as u32);
+        }
+        Ok(map)
+    }
+
     pub async fn count_comments(&self, post_id: &str) -> Result<u32> {
         let mut result = self
             .client
             .query("SELECT count() AS count FROM comment WHERE post_id = $post_id GROUP ALL")
             .bind(("post_id", post_id))
             .await?;
+        let counts: Vec<CountResult> = result.take(0)?;
+        Ok(counts.first().map(|c| c.count as u32).unwrap_or(0))
+    }
+
+    // ── Stats ─────────────────────────────────────────────
+
+    pub async fn get_stats(&self) -> Result<(u32, u32, u32, u32, u32)> {
+        let total_users = self.count_table("user", None).await?;
+        let total_posts = self.count_table("post", None).await?;
+        let total_comments = self.count_table("comment", None).await?;
+        let public_posts = self.count_table("post", Some("visibility = 'public'")).await?;
+        let private_posts = total_posts - public_posts;
+        Ok((total_users, total_posts, total_comments, public_posts, private_posts))
+    }
+
+    async fn count_table(&self, table: &str, condition: Option<&str>) -> Result<u32> {
+        let query = match condition {
+            Some(cond) => format!(
+                "SELECT count() AS count FROM {table} WHERE {cond} GROUP ALL"
+            ),
+            None => format!("SELECT count() AS count FROM {table} GROUP ALL"),
+        };
+        let mut result = self.client.query(&query).await?;
         let counts: Vec<CountResult> = result.take(0)?;
         Ok(counts.first().map(|c| c.count as u32).unwrap_or(0))
     }
@@ -666,7 +721,6 @@ impl Database {
         is_admin: bool,
     ) -> Result<(Vec<PostRecord>, u32)> {
         let offset = page.saturating_sub(1) * per_page;
-        let pattern = format!("%{}%", query);
 
         if is_admin {
             let mut result = self
@@ -685,7 +739,7 @@ impl Database {
                 .await?;
             let counts: Vec<CountResult> = count_result.take(0)?;
             let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
-            let _ = pattern;
+
             return Ok((posts, total));
         }
 
@@ -708,7 +762,7 @@ impl Database {
                 .await?;
             let counts: Vec<CountResult> = count_result.take(0)?;
             let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
-            let _ = pattern;
+
             return Ok((posts, total));
         }
 
@@ -729,7 +783,6 @@ impl Database {
             .await?;
         let counts: Vec<CountResult> = count_result.take(0)?;
         let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
-        let _ = pattern;
         Ok((posts, total))
     }
 }

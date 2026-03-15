@@ -14,11 +14,53 @@ use crate::proto::{
     DeletePostRequest, DeleteResponse, DeleteUserRequest, GetMyProfileRequest, GetPostRequest,
     GetUserRequest, ListCommentsRequest, ListCommentsResponse, ListPostsRequest, ListPostsResponse,
     ListUsersRequest, ListUsersResponse, LoginRequest, Post, PostResponse, RegisterRequest,
-    SearchPostsRequest, UpdateCommentRequest, UpdatePostRequest, UpdatePostVisibilityRequest,
-    UpdateProfileRequest, UpdateUserRoleRequest, UserInfo, UserResponse, VersionRequest,
-    VersionResponse,
+    GetStatsRequest, SearchPostsRequest, StatsResponse, UpdateCommentRequest, UpdatePostRequest,
+    UpdatePostVisibilityRequest, UpdateProfileRequest, UpdateUserRoleRequest, UserInfo,
+    UserResponse, VersionRequest, VersionResponse,
 };
 use crate::WasmRuntime;
+
+/// 목록 표시용 최소 UserInfo를 생성합니다.
+fn make_minimal_user_info(id: String, username: String) -> UserInfo {
+    UserInfo {
+        id,
+        username,
+        email: String::new(),
+        created_at: String::new(),
+        role: String::new(),
+        bio: String::new(),
+        website: String::new(),
+        theme: String::new(),
+    }
+}
+
+/// WASI 검증 함수를 호출하고 에러가 있으면 Status::invalid_argument를 반환합니다.
+async fn wasi_validate(
+    wasm: &Arc<WasmRuntime>,
+    validate_fn: impl FnOnce(&WasmRuntime) -> anyhow::Result<String> + Send + 'static,
+) -> Result<(), Status> {
+    let wasm = wasm.clone();
+    let err_msg = tokio::task::spawn_blocking(move || validate_fn(&wasm))
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?
+        .map_err(|e| Status::internal(e.to_string()))?;
+    if !err_msg.is_empty() {
+        return Err(Status::invalid_argument(err_msg));
+    }
+    Ok(())
+}
+
+/// WASI 변환 함수를 호출하고 결과를 반환합니다.
+async fn wasi_transform(
+    wasm: &Arc<WasmRuntime>,
+    transform_fn: impl FnOnce(&WasmRuntime) -> anyhow::Result<String> + Send + 'static,
+) -> Result<String, Status> {
+    let wasm = wasm.clone();
+    tokio::task::spawn_blocking(move || transform_fn(&wasm))
+        .await
+        .map_err(|e| Status::internal(e.to_string()))?
+        .map_err(|e| Status::internal(e.to_string()))
+}
 
 pub struct BlogServiceImpl {
     db: Arc<Database>,
@@ -99,40 +141,12 @@ impl BlogService for BlogServiceImpl {
         let req = request.into_inner();
         info!("회원가입 요청: {}", req.username);
 
-        // WASI 컴포넌트를 통한 사용자명 유효성 검사
-        let wasm = self.wasm.clone();
-        let username = req.username.clone();
-        let username_err =
-            tokio::task::spawn_blocking(move || wasm.call_validate_username(&username))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
-        if !username_err.is_empty() {
-            return Err(Status::invalid_argument(username_err));
-        }
-
-        // WASI 컴포넌트를 통한 이메일 유효성 검사
-        let wasm = self.wasm.clone();
-        let email = req.email.clone();
-        let email_err = tokio::task::spawn_blocking(move || wasm.call_validate_email(&email))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !email_err.is_empty() {
-            return Err(Status::invalid_argument(email_err));
-        }
-
-        // WASI 컴포넌트를 통한 비밀번호 강도 검사
-        let wasm = self.wasm.clone();
-        let password = req.password.clone();
-        let password_err =
-            tokio::task::spawn_blocking(move || wasm.call_validate_password_strength(&password))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
-        if !password_err.is_empty() {
-            return Err(Status::invalid_argument(password_err));
-        }
+        let u = req.username.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_username(&u)).await?;
+        let e = req.email.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_email(&e)).await?;
+        let p = req.password.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_password_strength(&p)).await?;
 
         let password_hash =
             auth::hash_password(&req.password).map_err(|e| Status::internal(e.to_string()))?;
@@ -229,41 +243,15 @@ impl BlogService for BlogServiceImpl {
         let req = request.into_inner();
         let (user_id, _role) = self.authenticate(&req.token)?;
 
-        // WASI 컴포넌트를 통한 유효성 검사
-        let wasm = self.wasm.clone();
-        let bio = req.bio.clone();
-        let bio_err = tokio::task::spawn_blocking(move || wasm.call_validate_bio(&bio))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !bio_err.is_empty() {
-            return Err(Status::invalid_argument(bio_err));
-        }
-
-        let wasm = self.wasm.clone();
-        let website = req.website.clone();
-        let website_err =
-            tokio::task::spawn_blocking(move || wasm.call_validate_website(&website))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
-        if !website_err.is_empty() {
-            return Err(Status::invalid_argument(website_err));
-        }
-
-        let wasm = self.wasm.clone();
-        let theme = req.theme.clone();
-        let theme_val = if theme.is_empty() {
+        let b = req.bio.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_bio(&b)).await?;
+        let ws = req.website.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_website(&ws)).await?;
+        let theme_val = if req.theme.is_empty() {
             "dark".to_string()
         } else {
-            let theme_err =
-                tokio::task::spawn_blocking(move || wasm.call_validate_theme(&theme))
-                    .await
-                    .map_err(|e| Status::internal(e.to_string()))?
-                    .map_err(|e| Status::internal(e.to_string()))?;
-            if !theme_err.is_empty() {
-                return Err(Status::invalid_argument(theme_err));
-            }
+            let th = req.theme.clone();
+            wasi_validate(&self.wasm, move |w| w.call_validate_theme(&th)).await?;
             req.theme.clone()
         };
 
@@ -311,17 +299,8 @@ impl BlogService for BlogServiceImpl {
             return Err(Status::unauthenticated("현재 비밀번호가 올바르지 않습니다."));
         }
 
-        // WASI 컴포넌트를 통한 새 비밀번호 강도 검사
-        let wasm = self.wasm.clone();
-        let new_pw = req.new_password.clone();
-        let pw_err =
-            tokio::task::spawn_blocking(move || wasm.call_validate_password_strength(&new_pw))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
-        if !pw_err.is_empty() {
-            return Err(Status::invalid_argument(pw_err));
-        }
+        let p = req.new_password.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_password_strength(&p)).await?;
 
         let new_hash =
             auth::hash_password(&req.new_password).map_err(|e| Status::internal(e.to_string()))?;
@@ -389,45 +368,14 @@ impl BlogService for BlogServiceImpl {
             req.visibility.clone()
         };
 
-        // WASI 컴포넌트를 통한 유효성 검사
-        let wasm = self.wasm.clone();
-        let title = req.title.clone();
-        let title_err = tokio::task::spawn_blocking(move || wasm.call_validate_title(&title))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !title_err.is_empty() {
-            return Err(Status::invalid_argument(title_err));
-        }
-
-        let wasm = self.wasm.clone();
-        let content = req.content.clone();
-        let content_err = tokio::task::spawn_blocking(move || wasm.call_validate_content(&content))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !content_err.is_empty() {
-            return Err(Status::invalid_argument(content_err));
-        }
-
-        let wasm = self.wasm.clone();
-        let vis = visibility.clone();
-        let vis_err = tokio::task::spawn_blocking(move || wasm.call_validate_visibility(&vis))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !vis_err.is_empty() {
-            return Err(Status::invalid_argument(vis_err));
-        }
-
-        // WASI 컴포넌트를 통한 콘텐츠 정제 (XSS 방지)
-        let wasm = self.wasm.clone();
-        let raw_content = req.content.clone();
-        let sanitized_content =
-            tokio::task::spawn_blocking(move || wasm.call_sanitize_content(&raw_content))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
+        let t = req.title.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_title(&t)).await?;
+        let c = req.content.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_content(&c)).await?;
+        let v = visibility.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_visibility(&v)).await?;
+        let raw = req.content.clone();
+        let sanitized_content = wasi_transform(&self.wasm, move |w| w.call_sanitize_content(&raw)).await?;
 
         let user = self.get_user_info(&user_id).await?;
         let post = self
@@ -486,16 +434,10 @@ impl BlogService for BlogServiceImpl {
         let author = self
             .get_user_info(&post.author_id)
             .await
-            .unwrap_or(UserInfo {
-                id: post.author_id.clone(),
-                username: post.author_username.clone(),
-                email: String::new(),
-                created_at: String::new(),
-                role: String::new(),
-                bio: String::new(),
-                website: String::new(),
-                theme: String::new(),
-            });
+            .unwrap_or_else(|_| make_minimal_user_info(
+                post.author_id.clone(),
+                post.author_username.clone(),
+            ));
 
         Ok(Response::new(PostResponse {
             post: Some(Post {
@@ -535,31 +477,26 @@ impl BlogService for BlogServiceImpl {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let mut result = Vec::with_capacity(posts.len());
-        for post in posts {
-            let post_id = thing_to_id(&post.id);
-            let comment_count = self.db.count_comments(&post_id).await.unwrap_or(0);
+        let post_ids: Vec<String> = posts.iter().map(|p| thing_to_id(&p.id)).collect();
+        let comment_counts = self.db.count_comments_batch(&post_ids).await.unwrap_or_default();
 
-            result.push(Post {
-                id: post_id,
-                title: post.title,
-                content: post.content,
-                author: Some(UserInfo {
-                    id: post.author_id,
-                    username: post.author_username,
-                    email: String::new(),
-                    created_at: String::new(),
-                    role: String::new(),
-                    bio: String::new(),
-                    website: String::new(),
-                    theme: String::new(),
-                }),
-                created_at: post.created_at,
-                updated_at: post.updated_at,
-                comment_count,
-                visibility: post.visibility,
-            });
-        }
+        let result: Vec<Post> = posts
+            .into_iter()
+            .map(|post| {
+                let post_id = thing_to_id(&post.id);
+                let comment_count = comment_counts.get(&post_id).copied().unwrap_or(0);
+                Post {
+                    id: post_id,
+                    title: post.title,
+                    content: post.content,
+                    author: Some(self::make_minimal_user_info(post.author_id, post.author_username)),
+                    created_at: post.created_at,
+                    updated_at: post.updated_at,
+                    comment_count,
+                    visibility: post.visibility,
+                }
+            })
+            .collect();
 
         Ok(Response::new(ListPostsResponse {
             posts: result,
@@ -600,31 +537,26 @@ impl BlogService for BlogServiceImpl {
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
-        let mut result = Vec::with_capacity(posts.len());
-        for post in posts {
-            let post_id = thing_to_id(&post.id);
-            let comment_count = self.db.count_comments(&post_id).await.unwrap_or(0);
+        let post_ids: Vec<String> = posts.iter().map(|p| thing_to_id(&p.id)).collect();
+        let comment_counts = self.db.count_comments_batch(&post_ids).await.unwrap_or_default();
 
-            result.push(Post {
-                id: post_id,
-                title: post.title,
-                content: post.content,
-                author: Some(UserInfo {
-                    id: post.author_id,
-                    username: post.author_username,
-                    email: String::new(),
-                    created_at: String::new(),
-                    role: String::new(),
-                    bio: String::new(),
-                    website: String::new(),
-                    theme: String::new(),
-                }),
-                created_at: post.created_at,
-                updated_at: post.updated_at,
-                comment_count,
-                visibility: post.visibility,
-            });
-        }
+        let result: Vec<Post> = posts
+            .into_iter()
+            .map(|post| {
+                let post_id = thing_to_id(&post.id);
+                let comment_count = comment_counts.get(&post_id).copied().unwrap_or(0);
+                Post {
+                    id: post_id,
+                    title: post.title,
+                    content: post.content,
+                    author: Some(self::make_minimal_user_info(post.author_id, post.author_username)),
+                    created_at: post.created_at,
+                    updated_at: post.updated_at,
+                    comment_count,
+                    visibility: post.visibility,
+                }
+            })
+            .collect();
 
         Ok(Response::new(ListPostsResponse {
             posts: result,
@@ -641,28 +573,11 @@ impl BlogService for BlogServiceImpl {
         let (user_id, role) = self.authenticate(&req.token)?;
         let is_admin = role == "admin";
 
-        // WASI 컴포넌트를 통한 유효성 검사
-        let wasm = self.wasm.clone();
-        let title = req.title.clone();
-        let title_err = tokio::task::spawn_blocking(move || wasm.call_validate_title(&title))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !title_err.is_empty() {
-            return Err(Status::invalid_argument(title_err));
-        }
+        let t = req.title.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_title(&t)).await?;
+        let c = req.content.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_content(&c)).await?;
 
-        let wasm = self.wasm.clone();
-        let content = req.content.clone();
-        let content_err = tokio::task::spawn_blocking(move || wasm.call_validate_content(&content))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !content_err.is_empty() {
-            return Err(Status::invalid_argument(content_err));
-        }
-
-        // visibility가 비어있으면 기존 값 유지
         let visibility = if req.visibility.is_empty() {
             let existing = self
                 .db
@@ -672,26 +587,13 @@ impl BlogService for BlogServiceImpl {
                 .ok_or_else(|| Status::not_found("포스트를 찾을 수 없습니다."))?;
             existing.visibility
         } else {
-            let wasm = self.wasm.clone();
-            let vis = req.visibility.clone();
-            let vis_err = tokio::task::spawn_blocking(move || wasm.call_validate_visibility(&vis))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
-            if !vis_err.is_empty() {
-                return Err(Status::invalid_argument(vis_err));
-            }
+            let v = req.visibility.clone();
+            wasi_validate(&self.wasm, move |w| w.call_validate_visibility(&v)).await?;
             req.visibility.clone()
         };
 
-        // WASI 컴포넌트를 통한 콘텐츠 정제 (XSS 방지)
-        let wasm = self.wasm.clone();
-        let raw_content = req.content.clone();
-        let sanitized_content =
-            tokio::task::spawn_blocking(move || wasm.call_sanitize_content(&raw_content))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
+        let raw = req.content.clone();
+        let sanitized_content = wasi_transform(&self.wasm, move |w| w.call_sanitize_content(&raw)).await?;
 
         let post = self
             .db
@@ -708,6 +610,7 @@ impl BlogService for BlogServiceImpl {
             .ok_or_else(|| Status::not_found("포스트를 찾을 수 없습니다."))?;
 
         let post_id = thing_to_id(&post.id);
+        let comment_count = self.db.count_comments(&post_id).await.unwrap_or(0);
         let user = self.get_user_info(&user_id).await?;
 
         Ok(Response::new(PostResponse {
@@ -718,7 +621,7 @@ impl BlogService for BlogServiceImpl {
                 author: Some(user),
                 created_at: post.created_at,
                 updated_at: post.updated_at,
-                comment_count: 0,
+                comment_count,
                 visibility: post.visibility,
             }),
         }))
@@ -752,16 +655,8 @@ impl BlogService for BlogServiceImpl {
         let req = request.into_inner();
         let (user_id, role) = self.authenticate(&req.token)?;
 
-        // WASI 컴포넌트를 통한 유효성 검사
-        let wasm = self.wasm.clone();
-        let content = req.content.clone();
-        let content_err = tokio::task::spawn_blocking(move || wasm.call_validate_comment(&content))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !content_err.is_empty() {
-            return Err(Status::invalid_argument(content_err));
-        }
+        let c = req.content.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_comment(&c)).await?;
 
         // 포스트 존재 및 읽기 권한 확인
         let post = self
@@ -784,14 +679,8 @@ impl BlogService for BlogServiceImpl {
             req.visibility.clone()
         };
 
-        // WASI 컴포넌트를 통한 콘텐츠 정제 (XSS 방지)
-        let wasm = self.wasm.clone();
-        let raw_content = req.content.clone();
-        let sanitized_content =
-            tokio::task::spawn_blocking(move || wasm.call_sanitize_content(&raw_content))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
+        let raw = req.content.clone();
+        let sanitized_content = wasi_transform(&self.wasm, move |w| w.call_sanitize_content(&raw)).await?;
 
         let user = self.get_user_info(&user_id).await?;
         let comment = self
@@ -841,9 +730,16 @@ impl BlogService for BlogServiceImpl {
             ));
         }
 
-        let comments = self
+        let page = if req.page == 0 { 1 } else { req.page };
+        let per_page = if req.per_page == 0 {
+            20
+        } else {
+            req.per_page.min(100)
+        };
+
+        let (comments, total) = self
             .db
-            .list_comments(&req.post_id)
+            .list_comments(&req.post_id, page, per_page)
             .await
             .map_err(|e| Status::internal(e.to_string()))?;
 
@@ -852,23 +748,14 @@ impl BlogService for BlogServiceImpl {
             .map(|c| Comment {
                 id: thing_to_id(&c.id),
                 content: c.content,
-                author: Some(UserInfo {
-                    id: c.author_id,
-                    username: c.author_username,
-                    email: String::new(),
-                    created_at: String::new(),
-                    role: String::new(),
-                    bio: String::new(),
-                    website: String::new(),
-                    theme: String::new(),
-                }),
+                author: Some(make_minimal_user_info(c.author_id, c.author_username)),
                 post_id: c.post_id,
                 created_at: c.created_at,
                 visibility: c.visibility,
             })
             .collect();
 
-        Ok(Response::new(ListCommentsResponse { comments: result }))
+        Ok(Response::new(ListCommentsResponse { comments: result, total }))
     }
 
     #[instrument(skip(self, request))]
@@ -898,16 +785,8 @@ impl BlogService for BlogServiceImpl {
         let (user_id, role) = self.authenticate(&req.token)?;
         let is_admin = role == "admin";
 
-        // WASI 컴포넌트를 통한 유효성 검사
-        let wasm = self.wasm.clone();
-        let content = req.content.clone();
-        let content_err = tokio::task::spawn_blocking(move || wasm.call_validate_comment(&content))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !content_err.is_empty() {
-            return Err(Status::invalid_argument(content_err));
-        }
+        let c = req.content.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_comment(&c)).await?;
 
         // visibility가 비어있으면 기존 값 유지
         let visibility = if req.visibility.is_empty() {
@@ -922,14 +801,8 @@ impl BlogService for BlogServiceImpl {
             req.visibility.clone()
         };
 
-        // WASI 컴포넌트를 통한 콘텐츠 정제 (XSS 방지)
-        let wasm = self.wasm.clone();
-        let raw_content = req.content.clone();
-        let sanitized_content =
-            tokio::task::spawn_blocking(move || wasm.call_sanitize_content(&raw_content))
-                .await
-                .map_err(|e| Status::internal(e.to_string()))?
-                .map_err(|e| Status::internal(e.to_string()))?;
+        let raw = req.content.clone();
+        let sanitized_content = wasi_transform(&self.wasm, move |w| w.call_sanitize_content(&raw)).await?;
 
         let comment = self
             .db
@@ -1041,16 +914,8 @@ impl BlogService for BlogServiceImpl {
         let (_user_id, role) = self.authenticate(&req.token)?;
         Self::require_admin(&role)?;
 
-        // WASI 컴포넌트를 통한 역할 유효성 검사
-        let wasm = self.wasm.clone();
-        let new_role = req.role.clone();
-        let role_err = tokio::task::spawn_blocking(move || wasm.call_validate_role(&new_role))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !role_err.is_empty() {
-            return Err(Status::invalid_argument(role_err));
-        }
+        let r = req.role.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_role(&r)).await?;
 
         let user = self
             .db
@@ -1083,16 +948,8 @@ impl BlogService for BlogServiceImpl {
         let (user_id, role) = self.authenticate(&req.token)?;
         Self::require_admin(&role)?;
 
-        // WASI 컴포넌트를 통한 공개범위 유효성 검사
-        let wasm = self.wasm.clone();
-        let vis = req.visibility.clone();
-        let vis_err = tokio::task::spawn_blocking(move || wasm.call_validate_visibility(&vis))
-            .await
-            .map_err(|e| Status::internal(e.to_string()))?
-            .map_err(|e| Status::internal(e.to_string()))?;
-        if !vis_err.is_empty() {
-            return Err(Status::invalid_argument(vis_err));
-        }
+        let v = req.visibility.clone();
+        wasi_validate(&self.wasm, move |w| w.call_validate_visibility(&v)).await?;
 
         let post = self
             .db
@@ -1107,16 +964,10 @@ impl BlogService for BlogServiceImpl {
         let author = self
             .get_user_info(&post.author_id)
             .await
-            .unwrap_or(UserInfo {
-                id: post.author_id.clone(),
-                username: post.author_username.clone(),
-                email: String::new(),
-                created_at: String::new(),
-                role: String::new(),
-                bio: String::new(),
-                website: String::new(),
-                theme: String::new(),
-            });
+            .unwrap_or_else(|_| make_minimal_user_info(
+                post.author_id.clone(),
+                post.author_username.clone(),
+            ));
 
         info!(
             "포스트 공개범위 변경: {} -> {} (by admin {})",
@@ -1133,6 +984,30 @@ impl BlogService for BlogServiceImpl {
                 comment_count,
                 visibility: post.visibility,
             }),
+        }))
+    }
+
+    #[instrument(skip(self, request))]
+    async fn get_stats(
+        &self,
+        request: Request<GetStatsRequest>,
+    ) -> Result<Response<StatsResponse>, Status> {
+        let req = request.into_inner();
+        let (_user_id, role) = self.authenticate(&req.token)?;
+        Self::require_admin(&role)?;
+
+        let (total_users, total_posts, total_comments, public_posts, private_posts) = self
+            .db
+            .get_stats()
+            .await
+            .map_err(|e| Status::internal(e.to_string()))?;
+
+        Ok(Response::new(StatsResponse {
+            total_users,
+            total_posts,
+            total_comments,
+            public_posts,
+            private_posts,
         }))
     }
 

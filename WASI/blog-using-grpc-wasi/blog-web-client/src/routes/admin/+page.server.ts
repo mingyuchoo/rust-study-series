@@ -44,8 +44,8 @@ export const load: PageServerLoad = async ({ parent, cookies, url }) => {
 		if (tab === 'comments') {
 			const commentResults = await Promise.all(
 				posts.map(async (post) => {
-					const comments = await listComments(post.id, token);
-					return comments.map((c) => ({ ...c, post_title: post.title }));
+					const result = await listComments(post.id, token);
+					return result.comments.map((c) => ({ ...c, post_title: post.title }));
 				})
 			);
 			allComments = commentResults.flat();

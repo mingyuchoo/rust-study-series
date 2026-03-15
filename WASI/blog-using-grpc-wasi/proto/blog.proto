@@ -33,6 +33,7 @@ service BlogService {
   rpc UpdateUserRole (UpdateUserRoleRequest) returns (UserResponse);
   rpc DeleteUser (DeleteUserRequest) returns (DeleteResponse);
   rpc UpdatePostVisibility (UpdatePostVisibilityRequest) returns (PostResponse);
+  rpc GetStats (GetStatsRequest) returns (StatsResponse);
 
   // System
   rpc GetVersion (VersionRequest) returns (VersionResponse);
@@ -133,6 +134,8 @@ message CreateCommentRequest {
 message ListCommentsRequest {
   string post_id = 1;
   string token = 2;
+  uint32 page = 3;
+  uint32 per_page = 4;
 }
 
 message UpdateCommentRequest {
@@ -162,6 +165,7 @@ message CommentResponse {
 
 message ListCommentsResponse {
   repeated Comment comments = 1;
+  uint32 total = 2;
 }
 
 // --- Admin ---
@@ -201,6 +205,20 @@ message UpdatePostVisibilityRequest {
   string token = 1;
   string post_id = 2;
   string visibility = 3;
+}
+
+// --- Stats ---
+
+message GetStatsRequest {
+  string token = 1;
+}
+
+message StatsResponse {
+  uint32 total_users = 1;
+  uint32 total_posts = 2;
+  uint32 total_comments = 3;
+  uint32 public_posts = 4;
+  uint32 private_posts = 5;
 }
 
 // --- Profile ---

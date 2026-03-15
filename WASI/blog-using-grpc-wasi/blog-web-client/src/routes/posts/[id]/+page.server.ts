@@ -8,13 +8,13 @@ export const load: PageServerLoad = async ({ params, parent, cookies }) => {
 	const token = authCookie ? JSON.parse(authCookie).token ?? '' : '';
 
 	try {
-		const [post, comments] = await Promise.all([
+		const [post, commentsResult] = await Promise.all([
 			getPost(params.id, token),
 			listComments(params.id, token)
 		]);
 		return {
 			post,
-			comments: comments ?? [],
+			comments: commentsResult.comments ?? [],
 			user,
 			error: null as string | null
 		};

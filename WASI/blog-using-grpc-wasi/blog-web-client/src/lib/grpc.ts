@@ -93,8 +93,8 @@ interface BlogServiceClient extends grpc.Client {
 		cb: (err: ServiceError | null, res: { comment: Comment }) => void
 	): ClientUnaryCall;
 	ListComments(
-		req: { post_id: string; token: string },
-		cb: (err: ServiceError | null, res: { comments: Comment[] }) => void
+		req: { post_id: string; token: string; page: number; per_page: number },
+		cb: (err: ServiceError | null, res: { comments: Comment[]; total: number }) => void
 	): ClientUnaryCall;
 	UpdateComment(
 		req: { token: string; id: string; content: string; visibility: string },
@@ -269,11 +269,11 @@ export function createComment(token: string, postId: string, content: string, vi
 	});
 }
 
-export function listComments(postId: string, token = ''): Promise<Comment[]> {
+export function listComments(postId: string, token = '', page = 1, perPage = 100): Promise<{ comments: Comment[]; total: number }> {
 	return new Promise((resolve, reject) => {
-		getClient().ListComments({ post_id: postId, token }, (err, res) => {
+		getClient().ListComments({ post_id: postId, token, page, per_page: perPage }, (err, res) => {
 			if (err) reject(err);
-			else resolve(res.comments ?? []);
+			else resolve({ comments: res.comments ?? [], total: res.total ?? 0 });
 		});
 	});
 }

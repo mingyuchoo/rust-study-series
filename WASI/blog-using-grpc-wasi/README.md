@@ -101,11 +101,12 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 | `UpdatePost` | 포스트 수정 | 작성자 또는 admin |
 | `DeletePost` | 포스트 삭제 | 작성자 또는 admin |
 | `CreateComment` | 댓글 작성 | 인증 + 포스트 읽기 권한 |
-| `ListComments` | 댓글 목록 조회 | 포스트 읽기 권한 |
+| `ListComments` | 댓글 목록 조회 (페이지네이션) | 포스트 읽기 권한 |
 | `DeleteComment` | 댓글 삭제 | 작성자 또는 admin |
 | `ListUsers` | 사용자 목록 조회 | admin 전용 |
 | `UpdateUserRole` | 사용자 역할 변경 | admin 전용 |
 | `UpdatePostVisibility` | 포스트 공개범위 변경 | admin 전용 |
+| `GetStats` | 관리자 통계 (사용자/포스트/댓글 수) | admin 전용 |
 | `GetVersion` | WASI 컴포넌트 버전 조회 | 없음 |
 
 ## WIT 인터페이스
@@ -268,8 +269,8 @@ blog-cli-client profile delete-account '{"password":"secret123"}'
 #### 포스트
 
 ```bash
-# 포스트 작성 (인증 필요, visibility: "public"(기본) 또는 "private")
-blog-cli-client post create '{"title":"첫 번째 포스트","content":"WASI 블로그입니다."}'
+# 포스트 작성 (인증 필요, Markdown 지원, visibility: "public"(기본) 또는 "private")
+blog-cli-client post create '{"title":"첫 번째 포스트","content":"# 안녕하세요\n\nWASI 블로그입니다. **Markdown**을 지원합니다."}'
 blog-cli-client post create '{"title":"비공개 포스트","content":"나만 보는 글","visibility":"private"}'
 
 # 포스트 목록 조회 (로그인 상태에 따라 보이는 범위가 다름)
@@ -380,6 +381,7 @@ SERVER_ADDR=http://192.168.1.100:50051 blog-cli-client post list
 - **jsonwebtoken** - JWT 인증 (RBAC 역할 포함)
 - **argon2** - 비밀번호 해싱
 - **tokio** - 비동기 런타임
+- **marked** - Markdown → HTML 렌더링
 - **Bun** - JavaScript/TypeScript 런타임 및 패키지 매니저
 - **SvelteKit** - 웹 프론트엔드 프레임워크
 - **@grpc/grpc-js** - gRPC 클라이언트

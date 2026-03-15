@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { renderMarkdown } from '$lib/markdown';
 	import type { PageData, ActionData } from './$types';
 
 	export let data: PageData;
@@ -10,6 +11,7 @@
 	$: isOwner = data.user && data.post && data.user.id === data.post.author?.id;
 	$: isAdmin = data.user?.role === 'admin';
 	$: canEdit = isOwner || isAdmin;
+	$: renderedContent = data.post ? renderMarkdown(data.post.content) : '';
 </script>
 
 <svelte:head>
@@ -59,10 +61,8 @@
 				</div>
 			{/if}
 
-			<div class="card">
-				<p style="white-space: pre-wrap; line-height: 1.7; margin: 0; color: var(--text-body)">
-					{data.post.content}
-				</p>
+			<div class="card markdown-body">
+				{@html renderedContent}
 			</div>
 		</article>
 
@@ -102,7 +102,7 @@
 					</form>
 				</div>
 			{:else}
-				<div class="card" style="text-align: center; color: #64748b">
+				<div class="card" style="text-align: center; color: var(--text-dim)">
 					댓글을 작성하려면 <a href="/login">로그인</a>해주세요.
 				</div>
 			{/if}

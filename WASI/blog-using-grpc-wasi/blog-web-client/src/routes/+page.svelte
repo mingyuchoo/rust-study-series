@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { renderExcerpt } from '$lib/markdown';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -54,7 +55,7 @@
 						{/if}
 					</div>
 					<p class="post-excerpt">
-						{post.content}
+						{renderExcerpt(post.content)}
 					</p>
 					<div class="meta">
 						<span>{post.author?.username ?? '?'}</span>

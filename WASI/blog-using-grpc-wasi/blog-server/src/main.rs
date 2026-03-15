@@ -47,6 +47,20 @@ pub struct WasmRuntime {
     linker: Linker<WasiState>,
 }
 
+/// WASI 컴포넌트 호출 메서드를 생성하는 매크로
+macro_rules! wasm_call {
+    ($method:ident, $param:ident) => {
+        pub fn $method(&self, $param: &str) -> Result<String> {
+            let mut store = self.new_store();
+            let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
+            let result = world
+                .component_blog_blogger()
+                .$method(&mut store, $param)?;
+            Ok(result)
+        }
+    };
+}
+
 impl WasmRuntime {
     fn new(wasm_path: &PathBuf) -> Result<Self> {
         let mut config = Config::new();
@@ -73,113 +87,18 @@ impl WasmRuntime {
         Store::new(&self.engine, state)
     }
 
-    pub fn call_validate_title(&self, title: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_title(&mut store, title)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_content(&self, content: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_content(&mut store, content)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_comment(&self, content: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_comment(&mut store, content)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_role(&self, role: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_role(&mut store, role)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_visibility(&self, visibility: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_visibility(&mut store, visibility)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_email(&self, email: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_email(&mut store, email)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_username(&self, username: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_username(&mut store, username)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_password_strength(&self, password: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_password_strength(&mut store, password)?;
-        Ok(result)
-    }
-
-    pub fn call_sanitize_content(&self, content: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_sanitize_content(&mut store, content)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_bio(&self, bio: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_bio(&mut store, bio)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_website(&self, website: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_website(&mut store, website)?;
-        Ok(result)
-    }
-
-    pub fn call_validate_theme(&self, theme: &str) -> Result<String> {
-        let mut store = self.new_store();
-        let world = BlogWorld::instantiate(&mut store, &self.component, &self.linker)?;
-        let result = world
-            .component_blog_blogger()
-            .call_validate_theme(&mut store, theme)?;
-        Ok(result)
-    }
+    wasm_call!(call_validate_title, title);
+    wasm_call!(call_validate_content, content);
+    wasm_call!(call_validate_comment, content);
+    wasm_call!(call_validate_role, role);
+    wasm_call!(call_validate_visibility, visibility);
+    wasm_call!(call_validate_email, email);
+    wasm_call!(call_validate_username, username);
+    wasm_call!(call_validate_password_strength, password);
+    wasm_call!(call_sanitize_content, content);
+    wasm_call!(call_validate_bio, bio);
+    wasm_call!(call_validate_website, website);
+    wasm_call!(call_validate_theme, theme);
 
     pub fn call_get_version(&self) -> Result<String> {
         let mut store = self.new_store();
@@ -248,15 +167,28 @@ async fn main() -> Result<()> {
         info!("Sample data seeded: {} posts with comments", seeded);
     }
 
-    // gRPC 서버 시작
+    // gRPC Health Check 설정
+    let (mut health_reporter, health_service) = tonic_health::server::health_reporter();
+    health_reporter
+        .set_serving::<BlogServiceServer<BlogServiceImpl>>()
+        .await;
+
+    // gRPC 서버 시작 (Graceful Shutdown 지원)
     let addr = "0.0.0.0:50051".parse()?;
     let service = BlogServiceImpl::new(database, wasm_runtime);
 
     info!("gRPC server listening on {}", addr);
     Server::builder()
+        .add_service(health_service)
         .add_service(BlogServiceServer::new(service))
-        .serve(addr)
+        .serve_with_shutdown(addr, async {
+            tokio::signal::ctrl_c()
+                .await
+                .expect("Ctrl+C 시그널 핸들러 설치 실패");
+            info!("Shutting down gRPC server...");
+        })
         .await?;
 
+    info!("Server stopped gracefully");
     Ok(())
 }

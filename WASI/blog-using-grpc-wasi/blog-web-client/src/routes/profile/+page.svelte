@@ -62,7 +62,7 @@
 					maxlength="500"
 					placeholder="자기소개를 입력하세요 (최대 500자)"
 					disabled={isProfileLoading}
-				>{form?.bio ?? data.profile.bio ?? ''}</textarea>
+				>{data.profile.bio ?? ''}</textarea>
 				<span class="meta">블로그에 표시되는 소개글입니다.</span>
 			</div>
 			<div class="form-group">
@@ -73,7 +73,7 @@
 					type="url"
 					maxlength="200"
 					placeholder="https://example.com"
-					value={form?.website ?? data.profile.website ?? ''}
+					value={data.profile.website ?? ''}
 					disabled={isProfileLoading}
 				/>
 			</div>
