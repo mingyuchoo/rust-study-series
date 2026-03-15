@@ -9,7 +9,7 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 │                       Mono Repo Workspace                            │
 │                                                                      │
 │  ┌─────────────────┐                                                 │
-│  │   blog-client   │──────────────────┐                             │
+│  │   blog-cli-client   │──────────────────┐                             │
 │  │  (Native Rust)  │                  │ gRPC                        │
 │  └─────────────────┘                  │                             │
 │                                       ▼                             │
@@ -33,7 +33,7 @@ WASI 0.2 Component Model + gRPC + SurrealDB 블로그 서비스 (Rust Mono-repo)
 |----------|------|------------|----------|
 | `blog-component` | WASI 0.2 콘텐츠 유효성 검사 컴포넌트 | Rust | `wasm32-wasip2` |
 | `blog-server` | gRPC 서버 (SurrealDB + wasmtime) | Rust (tonic) | native |
-| `blog-client` | gRPC CLI 클라이언트 (데모) | Rust | native |
+| `blog-cli-client` | gRPC CLI 클라이언트 (데모) | Rust | native |
 | `blog-web-client` | gRPC 웹 클라이언트 (브라우저 UI) | SvelteKit + Bun | Bun |
 
 ## 도메인 모델

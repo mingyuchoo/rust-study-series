@@ -2,7 +2,7 @@
 members = [
     "blog-component",
     "blog-server",
-    "blog-client",
+    "blog-cli-client",
 ]
 resolver = "2"
 

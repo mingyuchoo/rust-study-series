@@ -1,148 +1,192 @@
 [config]
-default_to_workspace = false
+  default_to_workspace = false
 
 [env]
-WASM_TARGET = "wasm32-wasip2"
-WASM_OUTPUT = "target/${WASM_TARGET}/release/blog_component.wasm"
+  WASM_TARGET = "wasm32-wasip2"
+  WASM_OUTPUT = "target/${WASM_TARGET}/release/blog_component.wasm"
 
-# ─── default ──────────────────────────────────────────────────────────────────
+  # ─── default ──────────────────────────────────────────────────────────────────
 
 [tasks.default]
-alias = "build"
+  alias = "build"
 
-# ─── setup ────────────────────────────────────────────────────────────────────
+  # ─── setup ────────────────────────────────────────────────────────────────────
 
 [tasks.setup]
-description = "Install required targets and tools"
-command = "rustup"
-args = ["target", "add", "${WASM_TARGET}"]
+  args        = ["target", "add", "${WASM_TARGET}"]
+  command     = "rustup"
+  description = "Install required targets and tools"
 
-# ─── database ─────────────────────────────────────────────────────────────────
+  # ─── database ─────────────────────────────────────────────────────────────────
 
 [tasks.start-db]
-description = "Start SurrealDB (in-memory)"
-command = "docker"
-args = [
-    "run", "--rm", "--name", "surrealdb", "-p", "8000:8000",
-    "surrealdb/surrealdb:v1", "start",
-    "--username", "root", "--password", "root", "--bind", "0.0.0.0:8000", "memory"
-]
+  args = [
+    "run",
+    "--rm",
+    "--name",
+    "surrealdb",
+    "-p",
+    "8000:8000",
+    "surrealdb/surrealdb:v1",
+    "start",
+    "--username",
+    "root",
+    "--password",
+    "root",
+    "--bind",
+    "0.0.0.0:8000",
+    "memory",
+  ]
+  command = "docker"
+  description = "Start SurrealDB (in-memory)"
 
 [tasks.start-db-file]
-description = "Start SurrealDB (file-based persistent storage)"
-command = "docker"
-args = [
-    "run", "--rm", "--name", "surrealdb", "-p", "8000:8000",
-    "-v", "${CARGO_MAKE_WORKING_DIRECTORY}/blog.db:/data/blog.db",
-    "surrealdb/surrealdb:v1", "start",
-    "--username", "root", "--password", "root", "--bind", "0.0.0.0:8000", "file:/data/blog.db"
-]
+  args = [
+    "run",
+    "--rm",
+    "--name",
+    "surrealdb",
+    "-p",
+    "8000:8000",
+    "-v",
+    "${CARGO_MAKE_WORKING_DIRECTORY}/blog.db:/data/blog.db",
+    "surrealdb/surrealdb:v1",
+    "start",
+    "--username",
+    "root",
+    "--password",
+    "root",
+    "--bind",
+    "0.0.0.0:8000",
+    "file:/data/blog.db",
+  ]
+  command = "docker"
+  description = "Start SurrealDB (file-based persistent storage)"
 
 [tasks.stop-db]
-description = "Stop SurrealDB"
-command = "docker"
-args = ["stop", "surrealdb"]
+  args        = ["stop", "surrealdb"]
+  command     = "docker"
+  description = "Stop SurrealDB"
 
-# ─── build ────────────────────────────────────────────────────────────────────
+  # ─── build ────────────────────────────────────────────────────────────────────
 
 [tasks.build-component]
-description = "Build the WASI 0.2 component (wasm32-wasip2)"
-command = "cargo"
-args = ["build", "--target", "${WASM_TARGET}", "--release", "-p", "blog-component"]
+  args = [
+    "build",
+    "--target",
+    "${WASM_TARGET}",
+    "--release",
+    "-p",
+    "blog-component",
+  ]
+  command = "cargo"
+  description = "Build the WASI 0.2 component (wasm32-wasip2)"
 
 [tasks.build-server]
-description = "Build the gRPC server"
-command = "cargo"
-args = ["build", "--release", "-p", "blog-server"]
+  args        = ["build", "--release", "-p", "blog-server"]
+  command     = "cargo"
+  description = "Build the gRPC server"
 
-[tasks.build-client]
-description = "Build the gRPC client"
-command = "cargo"
-args = ["build", "--release", "-p", "blog-client"]
+[tasks.build-cli-client]
+  args        = ["build", "--release", "-p", "blog-cli-client"]
+  command     = "cargo"
+  description = "Build the gRPC client"
 
 [tasks.build]
-clear = true
-description = "Build all targets"
-dependencies = ["build-component", "build-server", "build-client", "build-web-client"]
+  clear = true
+  dependencies = [
+    "build-component",
+    "build-server",
+    "build-cli-client",
+    "build-web-client",
+  ]
+  description = "Build all targets"
 
-# ─── run ──────────────────────────────────────────────────────────────────────
+  # ─── run ──────────────────────────────────────────────────────────────────────
 
 [tasks.run-server]
-description = "Run the gRPC server (builds WASM component first)"
-dependencies = ["build-component"]
-command = "cargo"
-args = ["run", "--release", "-p", "blog-server"]
-[tasks.run-server.env]
-BLOG_WASM_PATH = "${WASM_OUTPUT}"
+  args         = ["run", "--release", "-p", "blog-server"]
+  command      = "cargo"
+  dependencies = ["build-component"]
+  description  = "Run the gRPC server (builds WASM component first)"
+  [tasks.run-server.env]
+    BLOG_WASM_PATH = "${WASM_OUTPUT}"
 
-[tasks.run-client]
-description = "Run the gRPC client"
-command = "cargo"
-args = ["run", "--release", "-p", "blog-client"]
+[tasks.run-cli-client]
+  description = "Run the gRPC CLI client (pass args after --)"
+  script      = ["cargo run --release -p blog-cli-client -- ${@}"]
 
-[tasks.run-client-dev]
-description = "Run the gRPC client (debug mode)"
-command = "cargo"
-args = ["run", "-p", "blog-client"]
+[tasks.run-cli-client-dev]
+  description = "Run the gRPC CLI client in debug mode (pass args after --)"
+  script      = ["cargo run -p blog-cli-client -- ${@}"]
 
 [tasks.run-web-client]
-description = "Run the web client dev server (Vite)"
-command = "bun"
-args = ["run", "dev"]
-cwd = "blog-web-client"
+  args        = ["run", "dev"]
+  command     = "bun"
+  cwd         = "blog-web-client"
+  description = "Run the web client dev server (Vite)"
 
 [tasks.run-web-client-prod]
-description = "Run the web client production server (requires build-web-client)"
-command = "bun"
-args = ["run", "start"]
-cwd = "blog-web-client"
+  args        = ["run", "start"]
+  command     = "bun"
+  cwd         = "blog-web-client"
+  description = "Run the web client production server (requires build-web-client)"
 
-# ─── check / lint / fmt ───────────────────────────────────────────────────────
+  # ─── check / lint / fmt ───────────────────────────────────────────────────────
 
 [tasks.check-server]
-command = "cargo"
-args = ["check", "-p", "blog-server"]
+  args    = ["check", "-p", "blog-server"]
+  command = "cargo"
 
-[tasks.check-client]
-command = "cargo"
-args = ["check", "-p", "blog-client"]
+[tasks.check-cli-client]
+  args    = ["check", "-p", "blog-cli-client"]
+  command = "cargo"
 
 [tasks.check-component]
-command = "cargo"
-args = ["check", "--target", "${WASM_TARGET}", "-p", "blog-component"]
+  args    = ["check", "--target", "${WASM_TARGET}", "-p", "blog-component"]
+  command = "cargo"
 
 [tasks.check]
-description = "Check all crates for errors"
-dependencies = ["check-server", "check-client", "check-component"]
+  dependencies = ["check-server", "check-cli-client", "check-component"]
+  description  = "Check all crates for errors"
 
 [tasks.fmt]
-description = "Format all code"
-command = "cargo"
-args = ["fmt", "--all"]
+  args        = ["fmt", "--all"]
+  command     = "cargo"
+  description = "Format all code"
 
 [tasks.clippy]
-description = "Run clippy on native crates"
-command = "cargo"
-args = ["clippy", "-p", "blog-server", "-p", "blog-client", "--", "-D", "warnings"]
+  args = [
+    "clippy",
+    "-p",
+    "blog-server",
+    "-p",
+    "blog-cli-client",
+    "--",
+    "-D",
+    "warnings",
+  ]
+  command = "cargo"
+  description = "Run clippy on native crates"
 
-# ─── web client ───────────────────────────────────────────────────────────────
+  # ─── web client ───────────────────────────────────────────────────────────────
 
 [tasks.install-web-client]
-description = "Install web client dependencies"
-command = "bun"
-args = ["install"]
-cwd = "blog-web-client"
+  args        = ["install"]
+  command     = "bun"
+  cwd         = "blog-web-client"
+  description = "Install web client dependencies"
 
 [tasks.build-web-client]
-description = "Build the web client (SvelteKit production build)"
-dependencies = ["install-web-client"]
-command = "bun"
-args = ["run", "build"]
-cwd = "blog-web-client"
+  args         = ["run", "build"]
+  command      = "bun"
+  cwd          = "blog-web-client"
+  dependencies = ["install-web-client"]
+  description  = "Build the web client (SvelteKit production build)"
 
-# ─── clean ────────────────────────────────────────────────────────────────────
+  # ─── clean ────────────────────────────────────────────────────────────────────
 
 [tasks.clean]
-description = "Clean build artifacts"
-command = "cargo"
-args = ["clean"]
+  args        = ["clean"]
+  command     = "cargo"
+  description = "Clean build artifacts"

@@ -1,10 +1,10 @@
 [package]
-name = "blog-client"
+name = "blog-cli-client"
 version.workspace = true
 edition.workspace = true
 
 [[bin]]
-name = "blog-client"
+name = "blog-cli-client"
 path = "src/main.rs"
 
 [dependencies]
@@ -12,8 +12,8 @@ tonic = "0.12"
 prost = "0.13"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive", "env"] }
+dirs = "6"
 
 [build-dependencies]
 tonic-build = "0.12"
