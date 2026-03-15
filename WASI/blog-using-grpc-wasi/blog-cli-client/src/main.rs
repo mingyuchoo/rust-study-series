@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser, Subcommand};
+use serde::Deserialize;
 use tonic::transport::Channel;
 
 pub mod proto {
@@ -12,6 +13,81 @@ use proto::{
     GetPostRequest, ListCommentsRequest, ListPostsRequest, LoginRequest, RegisterRequest,
     UpdatePostRequest, VersionRequest,
 };
+
+// ─── JSON 입력 타입 ───────────────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct RegisterInput {
+    username: String,
+    email: String,
+    password: String,
+}
+
+#[derive(Deserialize)]
+struct LoginInput {
+    email: String,
+    password: String,
+}
+
+#[derive(Deserialize)]
+struct PostCreateInput {
+    title: String,
+    content: String,
+}
+
+#[derive(Deserialize)]
+struct PostListInput {
+    #[serde(default = "default_page")]
+    page: u32,
+    #[serde(default = "default_per_page")]
+    per_page: u32,
+}
+
+fn default_page() -> u32 {
+    1
+}
+fn default_per_page() -> u32 {
+    10
+}
+
+#[derive(Deserialize)]
+struct PostGetInput {
+    id: String,
+}
+
+#[derive(Deserialize)]
+struct PostUpdateInput {
+    id: String,
+    title: String,
+    content: String,
+}
+
+#[derive(Deserialize)]
+struct PostDeleteInput {
+    id: String,
+}
+
+#[derive(Deserialize)]
+struct CommentCreateInput {
+    post_id: String,
+    content: String,
+}
+
+#[derive(Deserialize)]
+struct CommentListInput {
+    post_id: String,
+}
+
+#[derive(Deserialize)]
+struct CommentDeleteInput {
+    id: String,
+}
+
+// ─── JSON 파싱 ────────────────────────────────────────────────────────────────
+
+fn parse_json<T: serde::de::DeserializeOwned>(json: &str, example: &str) -> Result<T> {
+    serde_json::from_str(json).with_context(|| format!("JSON 파싱 실패. 예시: {}", example))
+}
 
 // ─── CLI 정의 ─────────────────────────────────────────────────────────────────
 
@@ -32,26 +108,17 @@ enum Commands {
     Version,
 
     /// 회원가입
+    /// 예: register '{"username":"alice","email":"a@b.com","password":"pw123"}'
     Register {
-        /// 사용자 이름
-        #[arg(long)]
-        username: String,
-        /// 이메일
-        #[arg(long)]
-        email: String,
-        /// 비밀번호
-        #[arg(long)]
-        password: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 
     /// 로그인 (토큰을 로컬에 저장)
+    /// 예: login '{"email":"a@b.com","password":"pw123"}'
     Login {
-        /// 이메일
-        #[arg(long)]
-        email: String,
-        /// 비밀번호
-        #[arg(long)]
-        password: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 
     /// 포스트 관리
@@ -70,72 +137,62 @@ enum Commands {
 #[derive(Subcommand)]
 enum PostCommands {
     /// 포스트 작성 (인증 필요)
+    /// 예: post create '{"title":"제목","content":"내용"}'
     Create {
-        /// 포스트 제목
-        #[arg(long)]
-        title: String,
-        /// 포스트 내용
-        #[arg(long)]
-        content: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 
     /// 포스트 목록 조회
+    /// 예: post list '{"page":1,"per_page":10}'
     List {
-        /// 페이지 번호
-        #[arg(long, default_value = "1")]
-        page: u32,
-        /// 페이지당 항목 수
-        #[arg(long, default_value = "10")]
-        per_page: u32,
+        /// JSON 형식의 파라미터 (생략 시 기본값 사용)
+        json: Option<String>,
     },
 
     /// 포스트 상세 조회
+    /// 예: post get '{"id":"post:xxx"}'
     Get {
-        /// 포스트 ID
-        id: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 
     /// 포스트 수정 (인증 필요, 본인 포스트만)
+    /// 예: post update '{"id":"post:xxx","title":"새제목","content":"새내용"}'
     Update {
-        /// 포스트 ID
-        id: String,
-        /// 새 제목
-        #[arg(long)]
-        title: String,
-        /// 새 내용
-        #[arg(long)]
-        content: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 
     /// 포스트 삭제 (인증 필요, 본인 포스트만)
+    /// 예: post delete '{"id":"post:xxx"}'
     Delete {
-        /// 포스트 ID
-        id: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 }
 
 #[derive(Subcommand)]
 enum CommentCommands {
     /// 댓글 작성 (인증 필요)
+    /// 예: comment create '{"post_id":"post:xxx","content":"댓글 내용"}'
     Create {
-        /// 대상 포스트 ID
-        #[arg(long)]
-        post_id: String,
-        /// 댓글 내용
-        #[arg(long)]
-        content: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 
     /// 특정 포스트의 댓글 목록 조회
+    /// 예: comment list '{"post_id":"post:xxx"}'
     List {
-        /// 대상 포스트 ID
-        post_id: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 
     /// 댓글 삭제 (인증 필요, 본인 댓글만)
+    /// 예: comment delete '{"id":"comment:xxx"}'
     Delete {
-        /// 댓글 ID
-        id: String,
+        /// JSON 형식의 파라미터
+        json: String,
     },
 }
 
@@ -210,17 +267,16 @@ async fn handle_version(client: &mut BlogServiceClient<Channel>) -> Result<()> {
     Ok(())
 }
 
-async fn handle_register(
-    client: &mut BlogServiceClient<Channel>,
-    username: String,
-    email: String,
-    password: String,
-) -> Result<()> {
+async fn handle_register(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: RegisterInput = parse_json(
+        json,
+        r#"'{"username":"alice","email":"a@b.com","password":"pw123"}'"#,
+    )?;
     let res = client
         .register(RegisterRequest {
-            username,
-            email,
-            password,
+            username: input.username,
+            email: input.email,
+            password: input.password,
         })
         .await?
         .into_inner();
@@ -229,13 +285,13 @@ async fn handle_register(
     Ok(())
 }
 
-async fn handle_login(
-    client: &mut BlogServiceClient<Channel>,
-    email: String,
-    password: String,
-) -> Result<()> {
+async fn handle_login(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: LoginInput = parse_json(json, r#"'{"email":"a@b.com","password":"pw123"}'"#)?;
     let res = client
-        .login(LoginRequest { email, password })
+        .login(LoginRequest {
+            email: input.email,
+            password: input.password,
+        })
         .await?
         .into_inner();
     save_token(&res.token)?;
@@ -245,17 +301,14 @@ async fn handle_login(
     Ok(())
 }
 
-async fn handle_post_create(
-    client: &mut BlogServiceClient<Channel>,
-    title: String,
-    content: String,
-) -> Result<()> {
+async fn handle_post_create(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: PostCreateInput = parse_json(json, r#"'{"title":"제목","content":"내용"}'"#)?;
     let token = load_token()?;
     let res = client
         .create_post(CreatePostRequest {
             token,
-            title,
-            content,
+            title: input.title,
+            content: input.content,
         })
         .await?
         .into_inner();
@@ -268,40 +321,52 @@ async fn handle_post_create(
 
 async fn handle_post_list(
     client: &mut BlogServiceClient<Channel>,
-    page: u32,
-    per_page: u32,
+    json: Option<&str>,
 ) -> Result<()> {
+    let input: PostListInput = match json {
+        Some(j) => parse_json(j, r#"'{"page":1,"per_page":10}'"#)?,
+        None => PostListInput {
+            page: default_page(),
+            per_page: default_per_page(),
+        },
+    };
     let res = client
-        .list_posts(ListPostsRequest { page, per_page })
+        .list_posts(ListPostsRequest {
+            page: input.page,
+            per_page: input.per_page,
+        })
         .await?
         .into_inner();
-    println!("포스트 목록 (총 {}건, 페이지 {}):", res.total, page);
+    println!("포스트 목록 (총 {}건, 페이지 {}):", res.total, input.page);
     for post in &res.posts {
         print_post_summary(post);
     }
     Ok(())
 }
 
-async fn handle_post_get(client: &mut BlogServiceClient<Channel>, id: String) -> Result<()> {
-    let res = client.get_post(GetPostRequest { id }).await?.into_inner();
+async fn handle_post_get(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: PostGetInput = parse_json(json, r#"'{"id":"post:xxx"}'"#)?;
+    let res = client
+        .get_post(GetPostRequest { id: input.id })
+        .await?
+        .into_inner();
     let post = res.post.context("포스트를 찾을 수 없습니다")?;
     print_post_detail(&post);
     Ok(())
 }
 
-async fn handle_post_update(
-    client: &mut BlogServiceClient<Channel>,
-    id: String,
-    title: String,
-    content: String,
-) -> Result<()> {
+async fn handle_post_update(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: PostUpdateInput = parse_json(
+        json,
+        r#"'{"id":"post:xxx","title":"새 제목","content":"새 내용"}'"#,
+    )?;
     let token = load_token()?;
     let res = client
         .update_post(UpdatePostRequest {
             token,
-            id,
-            title,
-            content,
+            id: input.id,
+            title: input.title,
+            content: input.content,
         })
         .await?
         .into_inner();
@@ -312,10 +377,14 @@ async fn handle_post_update(
     Ok(())
 }
 
-async fn handle_post_delete(client: &mut BlogServiceClient<Channel>, id: String) -> Result<()> {
+async fn handle_post_delete(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: PostDeleteInput = parse_json(json, r#"'{"id":"post:xxx"}'"#)?;
     let token = load_token()?;
     let res = client
-        .delete_post(DeletePostRequest { token, id })
+        .delete_post(DeletePostRequest {
+            token,
+            id: input.id,
+        })
         .await?
         .into_inner();
     if res.success {
@@ -326,17 +395,15 @@ async fn handle_post_delete(client: &mut BlogServiceClient<Channel>, id: String)
     Ok(())
 }
 
-async fn handle_comment_create(
-    client: &mut BlogServiceClient<Channel>,
-    post_id: String,
-    content: String,
-) -> Result<()> {
+async fn handle_comment_create(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: CommentCreateInput =
+        parse_json(json, r#"'{"post_id":"post:xxx","content":"댓글 내용"}'"#)?;
     let token = load_token()?;
     let res = client
         .create_comment(CreateCommentRequest {
             token,
-            post_id,
-            content,
+            post_id: input.post_id,
+            content: input.content,
         })
         .await?
         .into_inner();
@@ -347,12 +414,12 @@ async fn handle_comment_create(
     Ok(())
 }
 
-async fn handle_comment_list(
-    client: &mut BlogServiceClient<Channel>,
-    post_id: String,
-) -> Result<()> {
+async fn handle_comment_list(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: CommentListInput = parse_json(json, r#"'{"post_id":"post:xxx"}'"#)?;
     let res = client
-        .list_comments(ListCommentsRequest { post_id })
+        .list_comments(ListCommentsRequest {
+            post_id: input.post_id,
+        })
         .await?
         .into_inner();
     println!("댓글 목록 ({}건):", res.comments.len());
@@ -362,10 +429,14 @@ async fn handle_comment_list(
     Ok(())
 }
 
-async fn handle_comment_delete(client: &mut BlogServiceClient<Channel>, id: String) -> Result<()> {
+async fn handle_comment_delete(client: &mut BlogServiceClient<Channel>, json: &str) -> Result<()> {
+    let input: CommentDeleteInput = parse_json(json, r#"'{"id":"comment:xxx"}'"#)?;
     let token = load_token()?;
     let res = client
-        .delete_comment(DeleteCommentRequest { token, id })
+        .delete_comment(DeleteCommentRequest {
+            token,
+            id: input.id,
+        })
         .await?
         .into_inner();
     if res.success {
@@ -394,31 +465,19 @@ async fn main() -> Result<()> {
 
     match command {
         Commands::Version => handle_version(&mut client).await,
-        Commands::Register {
-            username,
-            email,
-            password,
-        } => handle_register(&mut client, username, email, password).await,
-        Commands::Login { email, password } => handle_login(&mut client, email, password).await,
+        Commands::Register { json } => handle_register(&mut client, &json).await,
+        Commands::Login { json } => handle_login(&mut client, &json).await,
         Commands::Post { command } => match command {
-            PostCommands::Create { title, content } => {
-                handle_post_create(&mut client, title, content).await
-            }
-            PostCommands::List { page, per_page } => {
-                handle_post_list(&mut client, page, per_page).await
-            }
-            PostCommands::Get { id } => handle_post_get(&mut client, id).await,
-            PostCommands::Update { id, title, content } => {
-                handle_post_update(&mut client, id, title, content).await
-            }
-            PostCommands::Delete { id } => handle_post_delete(&mut client, id).await,
+            PostCommands::Create { json } => handle_post_create(&mut client, &json).await,
+            PostCommands::List { json } => handle_post_list(&mut client, json.as_deref()).await,
+            PostCommands::Get { json } => handle_post_get(&mut client, &json).await,
+            PostCommands::Update { json } => handle_post_update(&mut client, &json).await,
+            PostCommands::Delete { json } => handle_post_delete(&mut client, &json).await,
         },
         Commands::Comment { command } => match command {
-            CommentCommands::Create { post_id, content } => {
-                handle_comment_create(&mut client, post_id, content).await
-            }
-            CommentCommands::List { post_id } => handle_comment_list(&mut client, post_id).await,
-            CommentCommands::Delete { id } => handle_comment_delete(&mut client, id).await,
+            CommentCommands::Create { json } => handle_comment_create(&mut client, &json).await,
+            CommentCommands::List { json } => handle_comment_list(&mut client, &json).await,
+            CommentCommands::Delete { json } => handle_comment_delete(&mut client, &json).await,
         },
     }
 }
