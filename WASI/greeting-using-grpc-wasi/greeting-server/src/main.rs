@@ -7,6 +7,11 @@ use wasmtime::component::{Component, Linker};
 use wasmtime::{Config, Engine, Store};
 use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
 
+mod auth;
+
+use auth::proto::auth_service_server::AuthServiceServer;
+use auth::{AuthDb, AuthServiceImpl};
+
 pub mod proto {
     tonic::include_proto!("greeting");
 }
@@ -160,11 +165,17 @@ async fn main() -> Result<()> {
     info!("WASM component loaded successfully");
 
     let addr = "0.0.0.0:50051".parse()?;
-    let service = GreetingServiceImpl::new(runtime);
+    let greeting_service = GreetingServiceImpl::new(runtime);
+
+    info!("Initializing SurrealDB (in-memory)...");
+    let auth_db = Arc::new(AuthDb::new().await?);
+    let auth_service = AuthServiceImpl::new(auth_db);
+    info!("SurrealDB initialized successfully");
 
     info!("gRPC server listening on {}", addr);
     Server::builder()
-        .add_service(GreetingServiceServer::new(service))
+        .add_service(GreetingServiceServer::new(greeting_service))
+        .add_service(AuthServiceServer::new(auth_service))
         .serve(addr)
         .await?;
 

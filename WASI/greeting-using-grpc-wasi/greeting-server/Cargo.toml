@@ -16,6 +16,10 @@ wasmtime-wasi = "29"
 anyhow = "1"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+surrealdb = { version = "2", features = ["kv-mem"] }
+bcrypt = "0.15"
+uuid = { version = "1", features = ["v4"] }
+serde = { version = "1", features = ["derive"] }
 
 [build-dependencies]
 tonic-build = "0.12"
