@@ -135,8 +135,13 @@ async fn main() -> Result<()> {
 
     info!("Connecting to SurrealDB at {}", db_addr);
     let database = Arc::new(Database::new(&db_addr, &db_user, &db_pass).await?);
-    database.init_schema().await?;
-    info!("SurrealDB connected and schema initialized");
+
+    // 스키마 파일 로드 및 적용
+    let schema_path = PathBuf::from(
+        std::env::var("SCHEMA_PATH").unwrap_or_else(|_| "blog-server/data/schema.surql".into()),
+    );
+    database.init_schema(&schema_path).await?;
+    info!("SurrealDB connected and schema initialized from {:?}", schema_path);
 
     // seed.json에서 기본 관리자 로드
     let seed_path = PathBuf::from(

@@ -1,5 +1,6 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
 use surrealdb::sql::Thing;
@@ -65,41 +66,10 @@ impl Database {
         Ok(Self { client })
     }
 
-    pub async fn init_schema(&self) -> Result<()> {
-        self.client
-            .query(
-                "
-                DEFINE TABLE user SCHEMAFULL;
-                DEFINE FIELD username ON TABLE user TYPE string;
-                DEFINE FIELD email ON TABLE user TYPE string;
-                DEFINE FIELD password_hash ON TABLE user TYPE string;
-                DEFINE FIELD role ON TABLE user TYPE string;
-                DEFINE FIELD created_at ON TABLE user TYPE string;
-                DEFINE FIELD bio ON TABLE user TYPE string DEFAULT '';
-                DEFINE FIELD website ON TABLE user TYPE string DEFAULT '';
-                DEFINE FIELD theme ON TABLE user TYPE string DEFAULT 'dark';
-                DEFINE INDEX idx_user_username ON TABLE user COLUMNS username UNIQUE;
-                DEFINE INDEX idx_user_email ON TABLE user COLUMNS email UNIQUE;
-
-                DEFINE TABLE post SCHEMAFULL;
-                DEFINE FIELD title ON TABLE post TYPE string;
-                DEFINE FIELD content ON TABLE post TYPE string;
-                DEFINE FIELD author_id ON TABLE post TYPE string;
-                DEFINE FIELD author_username ON TABLE post TYPE string;
-                DEFINE FIELD visibility ON TABLE post TYPE string;
-                DEFINE FIELD created_at ON TABLE post TYPE string;
-                DEFINE FIELD updated_at ON TABLE post TYPE string;
-
-                DEFINE TABLE comment SCHEMAFULL;
-                DEFINE FIELD content ON TABLE comment TYPE string;
-                DEFINE FIELD post_id ON TABLE comment TYPE string;
-                DEFINE FIELD author_id ON TABLE comment TYPE string;
-                DEFINE FIELD author_username ON TABLE comment TYPE string;
-                DEFINE FIELD visibility ON TABLE comment TYPE string;
-                DEFINE FIELD created_at ON TABLE comment TYPE string;
-                ",
-            )
-            .await?;
+    pub async fn init_schema(&self, schema_path: &Path) -> Result<()> {
+        let schema = std::fs::read_to_string(schema_path)
+            .with_context(|| format!("스키마 파일을 읽을 수 없습니다: {}", schema_path.display()))?;
+        self.client.query(schema).await?;
         Ok(())
     }
 
