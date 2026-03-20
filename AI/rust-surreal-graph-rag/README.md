@@ -7,8 +7,8 @@ Rust와 SurrealDB 기반의 **GraphRAG(Graph-based Retrieval-Augmented Generatio
 ```
 ┌─────────────────┐     ┌──────────────────────────────────────────┐     ┌───────────────┐
 │   Frontend      │     │              Backend (Rust)               │     │   SurrealDB   │
-│  React + Fluent │◄───►│  Actix-web HTTP Server (port 4000)       │◄───►│  (port 8000)  │
-│  UI (Vite)      │     │                                          │     │               │
+│  SvelteKit +    │◄───►│  Actix-web HTTP Server (port 4000)       │◄───►│  (port 8000)  │
+│  Svelte 5       │     │                                          │     │               │
 └─────────────────┘     │  ┌──────────┐ ┌──────────┐ ┌──────────┐ │     │  - chunk      │
                         │  │ lib-api  │ │ lib-index│ │ lib-db   │ │     │  - entity     │
                         │  │ (API     │ │ (인덱싱  │ │ (DB접속) │ │     │  - relation   │
@@ -24,8 +24,8 @@ Rust와 SurrealDB 기반의 **GraphRAG(Graph-based Retrieval-Augmented Generatio
 ## 주요 기능
 
 ### GraphRAG 파이프라인
-- **PDF 문서 처리**: 계층적 청킹(제목/섹션/문단)으로 문서를 분할하고 토큰 기반 겹침 윈도우 적용
-- **NER(Named Entity Recognition)**: 정규식 기반 엔티티 추출 (인명, 조직, 장소, 날짜)
+- **PDF 문서 처리**: 계층적 청킹(제목/섹션/문단)으로 문서를 분할하고 글자 수 기반 겹침 윈도우 적용 (한글/다국어 호환)
+- **NER(Named Entity Recognition)**: 정규식 기반 엔티티 추출 (인명, 조직, 장소, 날짜) — 한글 조사 분리 지원
 - **지식 그래프 구축**: 엔티티 간 동시 출현(CO_OCCURS) 관계를 자동 추론
 - **다중 관점 임베딩**: 의미적(semantic), 구조적(structural), 기능적(functional) 임베딩 생성
 
@@ -69,15 +69,18 @@ rust-surreal-graph-rag/
 │   └── Makefile.toml           # cargo-make 태스크 정의
 ├── frontend/                   # React 프론트엔드
 │   └── src/
-│       ├── pages/              # 페이지 컴포넌트
-│       │   ├── Chat.tsx        # 채팅 페이지
-│       │   ├── VectorSearch.tsx # 벡터 검색 페이지
-│       │   ├── GraphSearch.tsx # 그래프 검색 페이지
-│       │   ├── Reindex.tsx     # 재인덱싱 관리 페이지
-│       │   ├── Login.tsx       # 로그인 페이지
-│       │   └── Health.tsx      # 헬스체크 페이지
-│       └── components/
-│           └── NavBar.tsx      # 네비게이션 바
+│       ├── lib/
+│       │   ├── services/       # API 호출 함수 (fetch 래퍼)
+│       │   ├── stores/         # 인증 상태 관리 (Svelte Store)
+│       │   └── types/          # API 요청/응답 타입 정의
+│       └── routes/             # SvelteKit 파일 기반 라우팅
+│           ├── +layout.svelte  # 레이아웃 (네비게이션 + 인증 가드)
+│           ├── chat/           # 통합 질의응답
+│           ├── vector-search/  # 벡터 검색
+│           ├── graph-search/   # 그래프 검색
+│           ├── reindex/        # 재인덱싱 관리
+│           ├── login/          # 로그인
+│           └── health/         # 헬스체크
 ├── tests/                      # API 테스트 (Zaku)
 ├── docker-compose.yml          # SurrealDB Docker 구성
 ├── run.sh                      # 통합 실행 스크립트 (Linux/macOS)
@@ -94,7 +97,7 @@ rust-surreal-graph-rag/
 | **AI/ML** | Azure OpenAI (text-embedding-3-large, GPT-4.1) |
 | **인증** | JWT (HS256, Access/Refresh Token) |
 | **API 문서** | utoipa + Swagger UI |
-| **프론트엔드** | React 18, TypeScript, Fluent UI, Vite |
+| **프론트엔드** | SvelteKit 2, Svelte 5, TypeScript, Vite |
 | **패키지 관리** | Bun (프론트엔드), Cargo (백엔드) |
 
 ## 사전 요구 사항

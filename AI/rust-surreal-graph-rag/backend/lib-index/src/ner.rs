@@ -25,8 +25,10 @@ impl Default for RegexNer {
         Self {
             re_date: Regex::new(r"\b\d{4}-\d{2}-\d{2}\b").unwrap(),
             re_org: Regex::new(r"(?i)(주식회사|회사|조직|기관|Group|Corp|Inc|LLC|Ltd)").unwrap(),
-            re_place: Regex::new(r"(?i)(서울|부산|대구|인천|Korea|Seoul)").unwrap(),
-            re_person: Regex::new(r"[가-힣]{3}").unwrap(),
+            re_place: Regex::new(r"(?i)(서울|부산|대구|인천|광주|대전|울산|세종|제주|Korea|Seoul)").unwrap(),
+            // 한글 이름: 직함 키워드 뒤에 2~3글자 이름 추출
+            // "인물 홍길동이", "담당자 김철수는" 등에서 이름만 캡처
+            re_person: Regex::new(r"(?:인물|담당자?|대표|교수|박사|사원|팀장|부장|이사|사장)\s*([가-힣]{2,3})(?:[이가은는을를의에와과도만로서]|\s|$)").unwrap(),
         }
     }
 }
@@ -51,11 +53,10 @@ impl Ner for RegexNer {
                 r#type: "LOC".into(),
             });
         }
-        for m in self.re_person.find_iter(text) {
-            let s = m.as_str();
-            if s.chars().count() == 3 {
+        for cap in self.re_person.captures_iter(text) {
+            if let Some(name_match) = cap.get(1) {
                 entities.push(Entity {
-                    name: s.to_string(),
+                    name: name_match.as_str().to_string(),
                     r#type: "PERSON".into(),
                 });
             }
@@ -121,8 +122,21 @@ mod tests {
 
     #[test]
     fn test_extract_person() {
-        let entities = ner().extract("홍길동이 프로젝트를 이끌었습니다.");
+        let entities = ner().extract("인물 홍길동이 프로젝트를 이끌었습니다.");
         assert!(find_entity(&entities, "홍길동", "PERSON"));
+    }
+
+    #[test]
+    fn test_extract_person_with_title() {
+        let entities = ner().extract("담당자 김철수는 회의에 참석했습니다.");
+        assert!(find_entity(&entities, "김철수", "PERSON"));
+    }
+
+    #[test]
+    fn test_no_false_positive_person() {
+        // "프로젝트를" 같은 일반 한글 단어가 PERSON으로 오탐되지 않아야 한다
+        let entities = ner().extract("프로젝트를 시작했습니다.");
+        assert!(!entities.iter().any(|e| e.r#type == "PERSON"));
     }
 
     #[test]

@@ -1,6 +1,6 @@
 //! PDF 처리 모듈
 //! - 계층적 청킹(제목/섹션/문단) 구현
-//! - 중복 영역 최소화한 분할(간단 휴리스틱)
+//! - 한글/다국어 텍스트를 글자 수 기반으로 분할
 //!
 //! 주: PDF에서 텍스트 추출은 다양한 외부 라이브러리 의존이 필요합니다.
 //! 본 구현은 MVP로서 간단히 PDF 확장자 파일을 바이너리로 읽은 뒤,
@@ -13,27 +13,38 @@ use serde_json::json;
 
 use crate::types::{Chunk, ChunkKind};
 
+/// 글자 수 기반 청킹 파라미터
+const CHUNK_MIN_CHARS: usize = 400;
+const CHUNK_MAX_CHARS: usize = 1000;
+const CHUNK_OVERLAP_CHARS: usize = 60;
+
 /// PDF를 읽어 텍스트를 얻고, 계층적 청킹을 수행한다.
 pub fn process_pdf(path: &str) -> Result<Vec<Chunk>> {
     // 실제 PDF 파싱 시도 → 실패 시 시뮬레이션 텍스트로 대체
-    let simulated_text = match extract_text_from_pdf(path) {
+    let raw_text = match extract_text_from_pdf(path) {
         | Ok(t) if !t.trim().is_empty() => t,
         | _ => simulate_extract_text_from_pdf(path),
     };
 
+    // 추출된 텍스트를 정규화(연속 공백/줄바꿈 축소)
+    let text = normalize_text(&raw_text);
+
     // 1) 문서 → 섹션 → 문단 계층으로 분해
-    let sections = split_sections(&simulated_text);
+    let sections = split_sections(&text);
     let mut chunks: Vec<Chunk> = Vec::new();
 
     // 문서 제목(가정): 첫 줄 또는 파일명
-    if let Some(title_line) = simulated_text.lines().next() {
-        chunks.push(Chunk {
-            content: title_line.trim().to_string(),
-            level: 3,
-            kind: ChunkKind::Title,
-            index: 0,
-            metadata: json!({"source": path}),
-        });
+    if let Some(title_line) = text.lines().next() {
+        let title = title_line.trim();
+        if !title.is_empty() {
+            chunks.push(Chunk {
+                content: title.to_string(),
+                level: 3,
+                kind: ChunkKind::Title,
+                index: 0,
+                metadata: json!({"source": path}),
+            });
+        }
     }
 
     // 섹션과 문단을 순회하며 청크 생성
@@ -50,17 +61,17 @@ pub fn process_pdf(path: &str) -> Result<Vec<Chunk>> {
         });
         idx += 1;
 
-        // 섹션 본문 문단 → 토큰 기반 200-500 토큰 범위로 분할 + 30 토큰 겹침
-        let mut section_tokens: Vec<String> = Vec::new();
-        for p in &sec.paragraphs {
-            let toks = tokenize(p);
-            if !toks.is_empty() {
-                section_tokens.extend(toks);
-            }
-        }
+        // 섹션 본문 문단들을 하나의 문자열로 결합
+        let section_text: String = sec
+            .paragraphs
+            .iter()
+            .filter(|p| !p.trim().is_empty())
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n");
 
-        // 섹션 요약(간단): 첫 문장 또는 처음 30 토큰
-        let section_summary = make_simple_summary(&section_tokens, 30);
+        // 섹션 요약(간단): 첫 문장 또는 처음 80자
+        let section_summary = make_simple_summary(&section_text, 80);
         if !section_summary.is_empty() {
             doc_summary_snippets.push(section_summary.clone());
             chunks.push(Chunk {
@@ -73,9 +84,15 @@ pub fn process_pdf(path: &str) -> Result<Vec<Chunk>> {
             idx += 1;
         }
 
-        for part in split_tokens_with_overlap(&section_tokens, 200, 500, 30) {
-            let content = part.join(" ");
-            if content.trim().is_empty() {
+        // 글자 수 기반 청킹(한글 호환)
+        for part in split_text_with_overlap(
+            &section_text,
+            CHUNK_MIN_CHARS,
+            CHUNK_MAX_CHARS,
+            CHUNK_OVERLAP_CHARS,
+        ) {
+            let content = part.trim().to_string();
+            if content.is_empty() {
                 continue;
             }
             chunks.push(Chunk {
@@ -126,7 +143,6 @@ fn extract_text_from_pdf(path: &str) -> Result<String> {
     #[cfg(all(not(feature = "pdfium"), feature = "lopdf"))]
     {
         let doc = lopdf::Document::load(path)?;
-        // lopdf만으로 텍스트를 완전 추출하기는 까다로움 → 간단히 페이지 객체 순회하며 문자열 객체를 수집(제약 존재)
         let mut out = String::new();
         for (page_num, _page_id) in doc.get_pages().keys().enumerate() {
             out.push_str(&format!("\n[Page {}]\n", page_num + 1));
@@ -153,6 +169,21 @@ fn simulate_extract_text_from_pdf(path: &str) -> String {
         "{title}\n1. 개요\n이 문서는 {title} 에 대한 테스트 문서입니다. Rust 기반 GraphRAG 파이프라인 검증 용도입니다.\n\n2. 본문\n조직 A는 2024-01-01에 프로젝트를 시작하였습니다. 장소는 서울입니다.\n인물 홍길동이 프로젝트를 이끌고, 주식회사 샘플이 참여했습니다.\n\n3. 결론\n본 문서는 MVP이므로 실제 PDF 파서로 교체가 필요합니다.",
         title = filename
     )
+}
+
+/// PDF 추출 텍스트를 정규화한다.
+/// - 연속된 공백 줄을 하나로 축소
+/// - 캐리지 리턴 제거
+/// - 줄 앞뒤 공백 제거
+fn normalize_text(text: &str) -> String {
+    let re_blank_lines = Regex::new(r"\n{3,}").unwrap();
+    let cleaned = text.replace('\r', "");
+    let normalized = re_blank_lines.replace_all(&cleaned, "\n\n");
+    normalized
+        .lines()
+        .map(|l| l.trim())
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// 섹션 단위 분리
@@ -191,60 +222,141 @@ fn split_sections(text: &str) -> Vec<Section> {
     sections
 }
 
-/// 토큰 시퀀스를 [min_tokens, max_tokens] 범위로 분할하며, window_overlap 토큰 겹침을 적용
-fn split_tokens_with_overlap(tokens: &[String], min_tokens: usize, max_tokens: usize, window_overlap: usize) -> Vec<Vec<String>> {
-    if tokens.is_empty() {
+/// 글자 수 기반으로 텍스트를 분할한다 (한글/다국어 호환).
+///
+/// `split_whitespace()` 토큰 기반 대신 **글자 수(char count)** 기준으로
+/// 문장 경계에서 분할하여 한글 텍스트도 균일한 크기로 청킹한다.
+fn split_text_with_overlap(
+    text: &str,
+    min_chars: usize,
+    max_chars: usize,
+    overlap_chars: usize,
+) -> Vec<String> {
+    if text.trim().is_empty() {
         return vec![];
     }
-    let min_tokens = min_tokens.max(1);
-    let max_tokens = max_tokens.max(min_tokens);
-    let overlap = window_overlap.min(max_tokens.saturating_sub(1));
 
-    let mut chunks: Vec<Vec<String>> = Vec::new();
-    let mut start = 0usize;
-    while start < tokens.len() {
-        let mut end = (start + max_tokens).min(tokens.len());
-        if end - start < min_tokens {
-            // 남은 토큰이 너무 작다면 마지막 청크로 추가하고 종료
-            chunks.push(tokens[start..tokens.len()].to_vec());
-            break;
-        }
-        // 문장 경계로 조정(가능하면 뒤에서부터 마침표 위치 찾기)
-        if let Some(rel) = find_sentence_boundary(&tokens[start..end]) {
-            let cand = start + rel;
-            if cand - start >= min_tokens {
-                end = cand;
-            }
-        }
-        chunks.push(tokens[start..end].to_vec());
-        if end == tokens.len() {
-            break;
-        }
-        start = end.saturating_sub(overlap);
+    let min_chars = min_chars.max(1);
+    let max_chars = max_chars.max(min_chars);
+    let overlap = overlap_chars.min(max_chars.saturating_sub(1));
+
+    // 문장 단위로 먼저 분리
+    let sentences = split_into_sentences(text);
+    if sentences.is_empty() {
+        return vec![];
     }
+
+    let mut chunks: Vec<String> = Vec::new();
+    let mut current = String::new();
+    let mut current_len: usize = 0;
+
+    for sentence in &sentences {
+        let sent_len = sentence.chars().count();
+
+        // 단일 문장이 max_chars를 초과하면 강제 분할
+        if sent_len > max_chars {
+            // 현재 버퍼가 있으면 먼저 청크로 저장
+            if !current.trim().is_empty() {
+                chunks.push(current.clone());
+                current.clear();
+                current_len = 0;
+            }
+            // 긴 문장을 글자 수 기준으로 강제 분할
+            let chars: Vec<char> = sentence.chars().collect();
+            let mut pos = 0;
+            while pos < chars.len() {
+                let end = (pos + max_chars).min(chars.len());
+                let slice: String = chars[pos..end].iter().collect();
+                chunks.push(slice);
+                pos = end.saturating_sub(overlap);
+            }
+            continue;
+        }
+
+        // 현재 버퍼 + 이 문장이 max_chars를 초과하면 청크 확정
+        if current_len + sent_len > max_chars && current_len >= min_chars {
+            chunks.push(current.clone());
+
+            // 겹침 영역: 현재 청크 끝부분에서 overlap_chars만큼 가져오기
+            let overlap_text = take_tail_chars(&current, overlap);
+            current = overlap_text;
+            current_len = current.chars().count();
+        }
+
+        if !current.is_empty() && !current.ends_with('\n') {
+            current.push(' ');
+            current_len += 1;
+        }
+        current.push_str(sentence);
+        current_len += sent_len;
+    }
+
+    // 남은 버퍼 처리
+    if !current.trim().is_empty() {
+        // 남은 텍스트가 너무 짧으면 이전 청크에 병합
+        if current_len < min_chars && !chunks.is_empty() {
+            let last = chunks.last_mut().unwrap();
+            last.push(' ');
+            last.push_str(current.trim());
+        } else {
+            chunks.push(current);
+        }
+    }
+
     chunks
 }
 
-fn tokenize(s: &str) -> Vec<String> {
-    s.split_whitespace().map(|w| w.to_string()).collect()
-}
+/// 텍스트를 문장 단위로 분리한다.
+/// 한글/영문 구두점(`.` `!` `?` `。`)과 줄바꿈을 문장 경계로 인식한다.
+fn split_into_sentences(text: &str) -> Vec<String> {
+    let re = Regex::new(r"[.!?。]\s+|\n+").unwrap();
+    let mut sentences = Vec::new();
+    let mut last = 0;
 
-fn find_sentence_boundary(tokens: &[String]) -> Option<usize> {
-    for i in (0..tokens.len()).rev() {
-        let t = tokens[i].as_str();
-        if t.ends_with('.') || t.ends_with('!') || t.ends_with('?') || t.ends_with('…') {
-            return Some(i + 1);
+    for m in re.find_iter(text) {
+        let end = m.end();
+        let segment = text[last..end].trim();
+        if !segment.is_empty() {
+            sentences.push(segment.to_string());
         }
+        last = end;
     }
-    None
+
+    // 마지막 잔여 텍스트
+    let tail = text[last..].trim();
+    if !tail.is_empty() {
+        sentences.push(tail.to_string());
+    }
+
+    sentences
 }
 
-fn make_simple_summary(tokens: &[String], max_tokens: usize) -> String {
-    if tokens.is_empty() {
+/// 문자열의 끝에서 최대 n글자를 추출한다.
+fn take_tail_chars(s: &str, n: usize) -> String {
+    let chars: Vec<char> = s.chars().collect();
+    let start = chars.len().saturating_sub(n);
+    chars[start..].iter().collect()
+}
+
+/// 텍스트의 첫 문장 또는 처음 max_chars 글자를 요약으로 반환한다.
+fn make_simple_summary(text: &str, max_chars: usize) -> String {
+    if text.trim().is_empty() {
         return String::new();
     }
-    let end = tokens.len().min(max_tokens.max(1));
-    tokens[..end].join(" ")
+    // 첫 문장 경계 찾기
+    let sentences = split_into_sentences(text);
+    if let Some(first) = sentences.first() {
+        let char_count = first.chars().count();
+        if char_count <= max_chars {
+            return first.clone();
+        }
+    }
+    // 첫 문장이 너무 길면 글자 수 기준으로 자르기
+    let chars: Vec<char> = text.chars().collect();
+    let end = chars.len().min(max_chars);
+    let mut result: String = chars[..end].iter().collect();
+    result.push('…');
+    result
 }
 
 #[derive(Debug)]
@@ -257,44 +369,92 @@ struct Section {
 mod tests {
     use super::*;
 
-    fn tok(words: &[&str]) -> Vec<String> {
-        words.iter().map(|w| w.to_string()).collect()
+    #[test]
+    fn test_split_into_sentences_korean() {
+        let text = "이것은 첫 번째 문장입니다. 이것은 두 번째 문장입니다. 세 번째!";
+        let sentences = split_into_sentences(text);
+        assert_eq!(sentences.len(), 3);
+        assert!(sentences[0].contains("첫 번째"));
+        assert!(sentences[1].contains("두 번째"));
     }
 
     #[test]
-    fn test_tokenize() {
-        let result = tokenize("hello world  foo");
-        assert_eq!(result, vec!["hello", "world", "foo"]);
+    fn test_split_into_sentences_newline() {
+        let text = "첫째 줄\n둘째 줄\n셋째 줄";
+        let sentences = split_into_sentences(text);
+        assert_eq!(sentences.len(), 3);
     }
 
     #[test]
-    fn test_tokenize_empty() {
-        assert!(tokenize("").is_empty());
+    fn test_split_text_with_overlap_korean() {
+        // 한글 텍스트가 글자 수 기준으로 적절히 분할되는지 확인
+        let text = "가".repeat(800); // 800글자
+        let chunks = split_text_with_overlap(&text, 400, 1000, 60);
+        assert_eq!(chunks.len(), 1); // 1000자 이내이므로 1개 청크
     }
 
     #[test]
-    fn test_find_sentence_boundary_with_period() {
-        let tokens = tok(&["hello", "world.", "foo"]);
-        // 역순으로 탐색하므로 마지막 마침표인 "world."(인덱스 1) 다음 위치를 반환
-        assert_eq!(find_sentence_boundary(&tokens), Some(2));
+    fn test_split_text_with_overlap_long_korean() {
+        // 충분히 긴 한글 텍스트를 생성하여 여러 청크로 분할 확인
+        let sentences: Vec<String> = (0..100)
+            .map(|i| format!("이것은 {}번째로 작성된 테스트용 한글 문장이며 청킹 로직을 검증합니다.", i))
+            .collect();
+        let text = sentences.join(" ");
+        assert!(text.chars().count() > 1000, "테스트 텍스트가 충분히 길어야 합니다");
+        let chunks = split_text_with_overlap(&text, 400, 1000, 60);
+        assert!(chunks.len() >= 2, "긴 한글 텍스트는 여러 청크로 분할되어야 합니다");
+        for chunk in &chunks {
+            let char_count = chunk.chars().count();
+            assert!(
+                char_count <= 2000,
+                "청크 글자 수 {}가 합리적 범위를 초과합니다",
+                char_count
+            );
+        }
     }
 
     #[test]
-    fn test_find_sentence_boundary_none() {
-        let tokens = tok(&["hello", "world", "foo"]);
-        assert_eq!(find_sentence_boundary(&tokens), None);
+    fn test_split_text_with_overlap_empty() {
+        let result = split_text_with_overlap("", 400, 1000, 60);
+        assert!(result.is_empty());
     }
 
     #[test]
-    fn test_make_simple_summary() {
-        let tokens = tok(&["가", "나", "다", "라", "마"]);
-        let summary = make_simple_summary(&tokens, 3);
-        assert_eq!(summary, "가 나 다");
+    fn test_split_text_with_overlap_preserves_content() {
+        let text = "첫 번째 문장입니다. 두 번째 문장입니다. 세 번째 문장입니다.";
+        let chunks = split_text_with_overlap(text, 5, 50, 5);
+        // 모든 원본 문장이 어딘가에 포함되어야 함
+        let joined = chunks.join(" ");
+        assert!(joined.contains("첫 번째"));
+        assert!(joined.contains("두 번째"));
+        assert!(joined.contains("세 번째"));
+    }
+
+    #[test]
+    fn test_normalize_text() {
+        let text = "줄 1\r\n\n\n\n줄 2\n  앞뒤 공백  ";
+        let result = normalize_text(text);
+        assert!(!result.contains('\r'));
+        assert!(!result.contains("\n\n\n"));
+        assert!(result.contains("앞뒤 공백"));
+    }
+
+    #[test]
+    fn test_make_simple_summary_korean() {
+        let text = "이것은 요약 대상 문장입니다. 두 번째 문장은 포함되지 않아야 합니다.";
+        let summary = make_simple_summary(text, 80);
+        assert!(summary.contains("요약 대상"));
     }
 
     #[test]
     fn test_make_simple_summary_empty() {
-        assert_eq!(make_simple_summary(&[], 5), "");
+        assert_eq!(make_simple_summary("", 80), "");
+    }
+
+    #[test]
+    fn test_take_tail_chars() {
+        assert_eq!(take_tail_chars("가나다라마", 3), "다라마");
+        assert_eq!(take_tail_chars("ab", 5), "ab");
     }
 
     #[test]
@@ -305,28 +465,19 @@ mod tests {
     }
 
     #[test]
-    fn test_split_tokens_with_overlap_basic() {
-        let tokens: Vec<String> = (0..10).map(|i| format!("token{}", i)).collect();
-        let chunks = split_tokens_with_overlap(&tokens, 3, 5, 1);
-        assert!(!chunks.is_empty());
-        // 최대 청크 크기를 초과하지 않아야 한다
-        for chunk in &chunks {
-            assert!(chunk.len() <= 5);
-        }
-    }
-
-    #[test]
-    fn test_split_tokens_with_overlap_empty() {
-        let result = split_tokens_with_overlap(&[], 5, 10, 2);
-        assert!(result.is_empty());
-    }
-
-    #[test]
     fn test_process_pdf_simulated() {
-        // 시뮬레이션 모드에서 PDF를 처리할 수 있어야 한다
         let chunks = process_pdf("test_doc.pdf").unwrap();
         assert!(!chunks.is_empty());
-        // 제목 청크가 존재해야 한다
         assert!(chunks.iter().any(|c| c.kind == ChunkKind::Title));
+        // 문단 청크가 생성되어야 한다
+        assert!(chunks.iter().any(|c| c.kind == ChunkKind::Paragraph));
+    }
+
+    #[test]
+    fn test_process_pdf_chunks_contain_korean() {
+        let chunks = process_pdf("한글_문서.pdf").unwrap();
+        // 한글 내용이 포함된 청크가 존재해야 한다
+        let has_korean = chunks.iter().any(|c| c.content.contains("프로젝트") || c.content.contains("문서"));
+        assert!(has_korean, "한글 텍스트가 청크에 포함되어야 합니다");
     }
 }
