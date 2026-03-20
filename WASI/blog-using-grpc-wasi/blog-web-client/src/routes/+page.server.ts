@@ -3,7 +3,7 @@ import { listPosts, type Post } from '$lib/grpc';
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
 	const page = Number(url.searchParams.get('page') ?? '1');
-	const filter = url.searchParams.get('filter') ?? '';
+	const filter = url.searchParams.get('filter') || 'public';
 	const authCookie = cookies.get('auth');
 	const token = authCookie ? JSON.parse(authCookie).token ?? '' : '';
 

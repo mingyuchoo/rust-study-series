@@ -4,7 +4,7 @@
 
 	export let data: PageData;
 
-	$: filter = data.filter ?? '';
+	$: filter = data.filter || 'public';
 </script>
 
 <svelte:head>
@@ -20,9 +20,6 @@
 
 	<!-- Filter Tabs -->
 	<div class="filter-tabs">
-		<a href="/" class="filter-tab" class:active={filter === ''}>
-			전체
-		</a>
 		<a href="/?filter=public" class="filter-tab" class:active={filter === 'public'}>
 			공개 포스트
 		</a>
@@ -37,10 +34,8 @@
 		<div class="card empty-state">
 			{#if filter === 'mine'}
 				<p>작성한 포스트가 없습니다.</p>
-			{:else if filter === 'public'}
-				<p>공개된 포스트가 없습니다.</p>
 			{:else}
-				<p>아직 작성된 포스트가 없습니다.</p>
+				<p>공개된 포스트가 없습니다.</p>
 			{/if}
 			<a href="/posts/new" class="btn" style="display: inline-block; margin-top: 0.5rem">첫 글 작성하기</a>
 		</div>
