@@ -51,6 +51,7 @@
 			</a>
 			<a href="/posts/new">{t(locale, 'nav.newPost')}</a>
 			{#if data.user.role === 'admin'}
+				<a href="/dashboard" style="color: #22c55e">{t(locale, 'nav.dashboard')}</a>
 				<a href="/admin" style="color: #f59e0b">{t(locale, 'nav.admin')}</a>
 			{/if}
 			<form method="POST" action="/login?/logout" use:enhance>

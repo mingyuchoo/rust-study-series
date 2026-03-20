@@ -141,6 +141,10 @@ interface BlogServiceClient extends grpc.Client {
 		req: { query: string; page: number; per_page: number; token: string },
 		cb: (err: ServiceError | null, res: { posts: Post[]; total: number }) => void
 	): ClientUnaryCall;
+	GetStats(
+		req: { token: string },
+		cb: (err: ServiceError | null, res: { total_users: number; total_posts: number; total_comments: number; public_posts: number; private_posts: number }) => void
+	): ClientUnaryCall;
 	GetVersion(
 		req: Record<string, never>,
 		cb: (err: ServiceError | null, res: { version: string }) => void
@@ -340,6 +344,25 @@ export function updatePostVisibility(token: string, postId: string, visibility: 
 		getClient().UpdatePostVisibility({ token, post_id: postId, visibility }, (err, res) => {
 			if (err) reject(err);
 			else resolve(res.post);
+		});
+	});
+}
+
+// --- Stats ---
+
+export interface Stats {
+	total_users: number;
+	total_posts: number;
+	total_comments: number;
+	public_posts: number;
+	private_posts: number;
+}
+
+export function getStats(token: string): Promise<Stats> {
+	return new Promise((resolve, reject) => {
+		getClient().GetStats({ token }, (err, res) => {
+			if (err) reject(err);
+			else resolve(res);
 		});
 	});
 }

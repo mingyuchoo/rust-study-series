@@ -11,6 +11,7 @@ const messages: Record<Locale, Record<string, string>> = {
 		// Nav
 		'nav.newPost': '새 글 작성',
 		'nav.admin': '관리',
+		'nav.dashboard': '대시보드',
 		'nav.login': '로그인',
 		'nav.register': '회원가입',
 		'nav.logout': '로그아웃',
@@ -138,10 +139,23 @@ const messages: Record<Locale, Record<string, string>> = {
 		'admin.makePrivate': '비공개',
 		'admin.makePublic': '공개',
 		'admin.view': '보기',
+
+		// Dashboard
+		'dashboard.title': '대시보드',
+		'dashboard.overview': '전체 현황',
+		'dashboard.totalUsers': '전체 사용자',
+		'dashboard.totalPosts': '전체 포스트',
+		'dashboard.totalComments': '전체 댓글',
+		'dashboard.publicPosts': '공개 포스트',
+		'dashboard.privatePosts': '비공개 포스트',
+		'dashboard.postsBreakdown': '포스트 현황',
+		'dashboard.unit': '명',
+		'dashboard.unitPost': '개',
 	},
 	en: {
 		'nav.newPost': 'New Post',
 		'nav.admin': 'Admin',
+		'nav.dashboard': 'Dashboard',
 		'nav.login': 'Login',
 		'nav.register': 'Sign Up',
 		'nav.logout': 'Logout',
@@ -261,10 +275,22 @@ const messages: Record<Locale, Record<string, string>> = {
 		'admin.makePrivate': 'Private',
 		'admin.makePublic': 'Public',
 		'admin.view': 'View',
+
+		'dashboard.title': 'Dashboard',
+		'dashboard.overview': 'Overview',
+		'dashboard.totalUsers': 'Total Users',
+		'dashboard.totalPosts': 'Total Posts',
+		'dashboard.totalComments': 'Total Comments',
+		'dashboard.publicPosts': 'Public Posts',
+		'dashboard.privatePosts': 'Private Posts',
+		'dashboard.postsBreakdown': 'Posts Breakdown',
+		'dashboard.unit': '',
+		'dashboard.unitPost': '',
 	},
 	ja: {
 		'nav.newPost': '新規投稿',
 		'nav.admin': '管理',
+		'nav.dashboard': 'ダッシュボード',
 		'nav.login': 'ログイン',
 		'nav.register': '新規登録',
 		'nav.logout': 'ログアウト',
@@ -384,6 +410,17 @@ const messages: Record<Locale, Record<string, string>> = {
 		'admin.makePrivate': '非公開',
 		'admin.makePublic': '公開',
 		'admin.view': '表示',
+
+		'dashboard.title': 'ダッシュボード',
+		'dashboard.overview': '全体状況',
+		'dashboard.totalUsers': '全ユーザー',
+		'dashboard.totalPosts': '全投稿',
+		'dashboard.totalComments': '全コメント',
+		'dashboard.publicPosts': '公開投稿',
+		'dashboard.privatePosts': '非公開投稿',
+		'dashboard.postsBreakdown': '投稿状況',
+		'dashboard.unit': '人',
+		'dashboard.unitPost': '件',
 	}
 };
 
