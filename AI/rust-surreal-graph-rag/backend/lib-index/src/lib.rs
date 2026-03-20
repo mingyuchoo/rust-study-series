@@ -2,6 +2,7 @@
 
 pub mod database;
 pub mod embedding;
+pub mod graph_algorithms;
 pub mod graph_builder;
 pub mod ner;
 pub mod pdf_processor;

@@ -1,24 +1,26 @@
 //! 그래프 검색 엔드포인트 (임베딩 기반 시드 + 관계 BFS)
 
-use actix_web::{post, web, Result};
+use actix_web::{HttpRequest, post, web, Result};
 use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
+use surrealdb::types::SurrealValue;
 
+use crate::auth::require_auth;
 use crate::error::Error;
 use crate::models::{GraphPathItem, GraphSearchRequest, GraphSearchResponse};
 use crate::types::AppState;
 use lib_db::DB;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
 struct EntityRow {
     name: String,
     r#type: String,
     score: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
 struct RelationRow {
     subject: String,
     predicate: String,
@@ -40,8 +42,11 @@ struct RelationRow {
 #[post("/api/search/graph")]
 pub async fn graph_search(
     state: web::Data<AppState>,
+    req: HttpRequest,
     payload: web::Json<GraphSearchRequest>,
 ) -> Result<web::Json<GraphSearchResponse>, Error> {
+    let _user = require_auth(&req, &state.cfg)?;
+
     let t0 = Instant::now();
     let query = payload.query.trim();
     if query.is_empty() {
@@ -78,7 +83,7 @@ pub async fn graph_search(
         )
         .await
         .map_err(|e| Error::External(e.to_string()))?;
-    let all_entities: Vec<EntityRow> = q.take(0)?;
+    let all_entities: Vec<EntityRow> = q.take(0).unwrap_or_default();
     debug!("[graph] candidate entities: {}", all_entities.len());
     let seeds: Vec<EntityRow> = all_entities.into_iter().take(top_k).collect();
     if seeds.is_empty() {
@@ -140,7 +145,7 @@ pub async fn graph_search(
             .bind(("names", names_vec.clone()))
             .await
             .map_err(|e| Error::External(e.to_string()))?;
-        let rels: Vec<RelationRow> = res.take(0)?;
+        let rels: Vec<RelationRow> = res.take(0).unwrap_or_default();
         debug!("[graph] hop {} relations fetched {}", hop, rels.len());
 
         if rels.is_empty() { break; }

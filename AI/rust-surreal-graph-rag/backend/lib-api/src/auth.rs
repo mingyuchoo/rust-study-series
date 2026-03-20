@@ -132,3 +132,54 @@ pub async fn me(cfg: web::Data<AppConfig>, req: HttpRequest) -> Result<web::Json
     let sub = require_auth(&req, &cfg)?;
     Ok(web::Json(MeResponse { email: sub }))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const TEST_SECRET: &str = "test_jwt_secret_for_unit_tests_only";
+
+    #[test]
+    fn test_create_and_verify_access_token() {
+        let token = create_token("user@example.com", 3600, "access", TEST_SECRET).unwrap();
+        let claims = verify_token(&token, "access", TEST_SECRET).unwrap();
+        assert_eq!(claims.sub, "user@example.com");
+        assert_eq!(claims.r#type, "access");
+    }
+
+    #[test]
+    fn test_create_and_verify_refresh_token() {
+        let token = create_token("user@example.com", 86400, "refresh", TEST_SECRET).unwrap();
+        let claims = verify_token(&token, "refresh", TEST_SECRET).unwrap();
+        assert_eq!(claims.sub, "user@example.com");
+        assert_eq!(claims.r#type, "refresh");
+    }
+
+    #[test]
+    fn test_verify_wrong_token_type() {
+        let token = create_token("user@example.com", 3600, "access", TEST_SECRET).unwrap();
+        let result = verify_token(&token, "refresh", TEST_SECRET);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_verify_wrong_secret() {
+        let token = create_token("user@example.com", 3600, "access", TEST_SECRET).unwrap();
+        let result = verify_token(&token, "access", "wrong_secret");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_verify_expired_token() {
+        // TTL을 -3600(1시간 전)으로 설정하여 확실히 만료된 토큰 생성
+        let token = create_token("user@example.com", -3600, "access", TEST_SECRET).unwrap();
+        let result = verify_token(&token, "access", TEST_SECRET);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_verify_invalid_token_string() {
+        let result = verify_token("not.a.valid.token", "access", TEST_SECRET);
+        assert!(result.is_err());
+    }
+}

@@ -81,3 +81,79 @@ fn dedup_entities(mut v: Vec<Entity>) -> Vec<Entity> {
     v.dedup_by(|a, b| a.name == b.name && a.r#type == b.r#type);
     v
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn ner() -> RegexNer {
+        RegexNer::default()
+    }
+
+    fn find_entity<'a>(entities: &'a [Entity], name: &str, etype: &str) -> bool {
+        entities.iter().any(|e| e.name == name && e.r#type == etype)
+    }
+
+    #[test]
+    fn test_extract_date() {
+        let entities = ner().extract("프로젝트는 2024-01-15 에 시작했습니다.");
+        assert!(find_entity(&entities, "2024-01-15", "DATE"));
+    }
+
+    #[test]
+    fn test_extract_multiple_dates() {
+        let entities = ner().extract("2024-01-01 부터 2024-12-31 까지 진행합니다.");
+        assert!(find_entity(&entities, "2024-01-01", "DATE"));
+        assert!(find_entity(&entities, "2024-12-31", "DATE"));
+    }
+
+    #[test]
+    fn test_extract_org() {
+        let entities = ner().extract("주식회사 샘플이 참여했습니다.");
+        assert!(entities.iter().any(|e| e.r#type == "ORG"));
+    }
+
+    #[test]
+    fn test_extract_place() {
+        let entities = ner().extract("장소는 서울입니다.");
+        assert!(find_entity(&entities, "서울", "LOC"));
+    }
+
+    #[test]
+    fn test_extract_person() {
+        let entities = ner().extract("홍길동이 프로젝트를 이끌었습니다.");
+        assert!(find_entity(&entities, "홍길동", "PERSON"));
+    }
+
+    #[test]
+    fn test_no_entities_in_plain_text() {
+        let entities = ner().extract("hello world 123");
+        assert!(entities.is_empty());
+    }
+
+    #[test]
+    fn test_dedup_removes_duplicates() {
+        let entities = ner().extract("서울에서 서울로 이동합니다.");
+        let seoul_count = entities.iter().filter(|e| e.name == "서울").count();
+        assert_eq!(seoul_count, 1);
+    }
+
+    #[test]
+    fn test_truncate_short_string() {
+        assert_eq!(truncate("짧은", 10), "짧은");
+    }
+
+    #[test]
+    fn test_truncate_long_string() {
+        let result = truncate("이것은 매우 긴 문자열입니다 테스트용", 5);
+        assert_eq!(result.chars().count(), 6); // 5자 + '…'
+        assert!(result.ends_with('…'));
+    }
+
+    #[test]
+    fn test_truncate_multibyte_safe() {
+        // UTF-8 멀티바이트 문자에서도 패닉 없이 동작해야 한다
+        let result = truncate("가나다라마바사아자차", 3);
+        assert_eq!(result, "가나다…");
+    }
+}

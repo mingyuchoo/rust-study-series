@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// 청크 종류(제목/섹션/문단/일반)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ChunkKind {
     Title,
     Section,

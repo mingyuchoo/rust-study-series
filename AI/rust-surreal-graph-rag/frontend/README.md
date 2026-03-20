@@ -1,6 +1,6 @@
 # RAG AI 웹 서비스 (프론트엔드)
 
-> TypeScript, pnpm, Vite, React 18, Axios, Fluent UI v8 기반의 클라이언트
+> TypeScript, Bun, Vite, React 18, Axios, Fluent UI v8 기반의 클라이언트
 
 ## 기능
 
@@ -11,8 +11,7 @@
 
 ## 사전 준비
 
-- Node.js 18+
-- pnpm 8+
+- Bun 1.0+
 - 백엔드 서버 실행 및 CORS 허용 상태
 
 ## 환경 변수
@@ -26,15 +25,15 @@ VITE_API_BASE_URL=http://localhost:4000
 ## 설치 및 실행
 
 ```bash
-pnpm install
-pnpm dev
+bun install
+bun dev
 ```
 
 ## 빌드
 
 ```bash
-pnpm build
-pnpm preview
+bun run build
+bun run preview
 ```
 
 ## 구조

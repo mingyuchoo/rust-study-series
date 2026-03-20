@@ -18,6 +18,7 @@ pub struct AppConfig {
     pub jwt_secret: String,
     pub access_token_ttl_secs: i64,
     pub refresh_token_ttl_secs: i64,
+    pub upload_dir: String,
 }
 
 impl AppConfig {
@@ -42,11 +43,14 @@ impl AppConfig {
         let access_token_ttl_secs = env::var("ACCESS_TOKEN_TTL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(3600);
         let refresh_token_ttl_secs = env::var("REFRESH_TOKEN_TTL_SECS").ok().and_then(|v| v.parse().ok()).unwrap_or(7 * 24 * 3600);
 
+        let upload_dir = env::var("UPLOAD_DIR").unwrap_or_else(|_| "./uploads".to_string());
+
         Self {
             azure,
             jwt_secret,
             access_token_ttl_secs,
             refresh_token_ttl_secs,
+            upload_dir,
         }
     }
 }

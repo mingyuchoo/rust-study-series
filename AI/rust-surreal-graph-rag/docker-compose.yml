@@ -6,11 +6,11 @@ services:
   surrealdb:
     image: "surrealdb/surrealdb:latest"
     container_name: surrealdb
-    command: 
+    command:
       - start
       - --log=trace
-      - --user=${SURREALDB_USERNAME}
-      - --pass=${SURREALDB_PASSWORD}
+      - --username=root
+      - --password=root
     deploy:
       restart_policy:
         condition: on-failure

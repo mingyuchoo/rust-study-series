@@ -252,3 +252,81 @@ struct Section {
     title: String,
     paragraphs: Vec<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn tok(words: &[&str]) -> Vec<String> {
+        words.iter().map(|w| w.to_string()).collect()
+    }
+
+    #[test]
+    fn test_tokenize() {
+        let result = tokenize("hello world  foo");
+        assert_eq!(result, vec!["hello", "world", "foo"]);
+    }
+
+    #[test]
+    fn test_tokenize_empty() {
+        assert!(tokenize("").is_empty());
+    }
+
+    #[test]
+    fn test_find_sentence_boundary_with_period() {
+        let tokens = tok(&["hello", "world.", "foo"]);
+        // 역순으로 탐색하므로 마지막 마침표인 "world."(인덱스 1) 다음 위치를 반환
+        assert_eq!(find_sentence_boundary(&tokens), Some(2));
+    }
+
+    #[test]
+    fn test_find_sentence_boundary_none() {
+        let tokens = tok(&["hello", "world", "foo"]);
+        assert_eq!(find_sentence_boundary(&tokens), None);
+    }
+
+    #[test]
+    fn test_make_simple_summary() {
+        let tokens = tok(&["가", "나", "다", "라", "마"]);
+        let summary = make_simple_summary(&tokens, 3);
+        assert_eq!(summary, "가 나 다");
+    }
+
+    #[test]
+    fn test_make_simple_summary_empty() {
+        assert_eq!(make_simple_summary(&[], 5), "");
+    }
+
+    #[test]
+    fn test_split_sections() {
+        let text = "서론 내용\n1. 개요\n개요 본문입니다.\n2. 결론\n결론 본문입니다.";
+        let sections = split_sections(text);
+        assert!(sections.len() >= 2);
+    }
+
+    #[test]
+    fn test_split_tokens_with_overlap_basic() {
+        let tokens: Vec<String> = (0..10).map(|i| format!("token{}", i)).collect();
+        let chunks = split_tokens_with_overlap(&tokens, 3, 5, 1);
+        assert!(!chunks.is_empty());
+        // 최대 청크 크기를 초과하지 않아야 한다
+        for chunk in &chunks {
+            assert!(chunk.len() <= 5);
+        }
+    }
+
+    #[test]
+    fn test_split_tokens_with_overlap_empty() {
+        let result = split_tokens_with_overlap(&[], 5, 10, 2);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_process_pdf_simulated() {
+        // 시뮬레이션 모드에서 PDF를 처리할 수 있어야 한다
+        let chunks = process_pdf("test_doc.pdf").unwrap();
+        assert!(!chunks.is_empty());
+        // 제목 청크가 존재해야 한다
+        assert!(chunks.iter().any(|c| c.kind == ChunkKind::Title));
+    }
+}

@@ -10,6 +10,7 @@ pub mod vector_search;
 pub mod types;
 pub mod graph_search;
 
+use actix_cors::Cors;
 use actix_web::web;
 use actix_web::{App, HttpServer, *};
 use lib_db::setup_database;
@@ -83,7 +84,19 @@ pub async fn run_server() -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting HTTP server...");
     HttpServer::new(move || {
         let openapi = ApiDoc::openapi();
+        let cors = Cors::default()
+            .allowed_origin("http://localhost:5173")
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+            .allowed_headers(vec![
+                actix_web::http::header::AUTHORIZATION,
+                actix_web::http::header::CONTENT_TYPE,
+                actix_web::http::header::ACCEPT,
+            ])
+            .supports_credentials()
+            .max_age(3600);
+
         App::new()
+            .wrap(cors)
             .app_data(state.clone())
             .app_data(cfg_data.clone())
             // Increase payload limit to allow large file uploads (e.g., PDFs)

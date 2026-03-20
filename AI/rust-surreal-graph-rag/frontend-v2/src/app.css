@@ -1,0 +1,121 @@
+/* 전역 스타일 */
+:root {
+  --color-primary: #0078d4;
+  --color-primary-hover: #106ebe;
+  --color-error: crimson;
+  --color-border: #eee;
+  --color-text-secondary: #555;
+  --color-text-muted: #666;
+  --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  line-height: 1.5;
+  color: #333;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* 공통 버튼 스타일 */
+.btn {
+  padding: 8px 20px;
+  border: 1px solid #8a8886;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: var(--font-family);
+  transition: background-color 0.1s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-default {
+  background-color: white;
+  color: #333;
+}
+
+.btn-default:hover:not(:disabled) {
+  background-color: #f3f2f1;
+}
+
+/* 공통 입력 필드 */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field input,
+.field textarea {
+  padding: 6px 8px;
+  border: 1px solid #8a8886;
+  border-radius: 2px;
+  font-size: 14px;
+  font-family: var(--font-family);
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* 에러 메시지 */
+.error {
+  color: var(--color-error);
+}
+
+/* 페이지 컨테이너 */
+.page {
+  padding: 16px;
+}
+
+.page h2 {
+  margin-bottom: 16px;
+}
+
+/* 폼 스택 (세로 간격) */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stack-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}

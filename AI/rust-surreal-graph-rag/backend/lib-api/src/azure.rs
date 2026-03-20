@@ -1,6 +1,7 @@
 //! Azure OpenAI 호출 유틸리티
 
 use crate::config::AzureOpenAIConfig;
+use log::error;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +14,9 @@ struct ChatMessage {
 #[derive(Debug, Serialize)]
 struct ChatRequestBody {
     messages: Vec<ChatMessage>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     max_tokens: Option<u32>,
 }
 
@@ -110,8 +113,10 @@ impl AzureOpenAI {
             .await?;
 
         if !resp.status().is_success() {
+            let status = resp.status();
             let text = resp.text().await.unwrap_or_default();
-            anyhow::bail!("Azure OpenAI Chat 실패: {}", text);
+            error!("[azure] Chat 실패: status={}, url={}, body={}", status, self.chat_url(), text);
+            anyhow::bail!("Azure OpenAI Chat 실패 ({}): {}", status, text);
         }
 
         let json: ChatResponseBody = resp.json().await?;
@@ -148,8 +153,10 @@ impl AzureOpenAI {
             .await?;
 
         if !resp.status().is_success() {
+            let status = resp.status();
             let text = resp.text().await.unwrap_or_default();
-            anyhow::bail!("Azure OpenAI Embedding 실패: {}", text);
+            error!("[azure] Embedding 실패: status={}, url={}, body={}", status, self.embed_url(), text);
+            anyhow::bail!("Azure OpenAI Embedding 실패 ({}): {}", status, text);
         }
 
         let json: EmbeddingResponseBody = resp.json().await?;
