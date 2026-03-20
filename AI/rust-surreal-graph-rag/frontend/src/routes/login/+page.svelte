@@ -22,34 +22,67 @@
 </script>
 
 <!-- 로그인 페이지 -->
-<div class="login-container">
-  <div class="stack">
-    <h2>로그인</h2>
+<div class="login-page">
+  <div class="login-card card">
+    <div class="stack">
+      <div class="login-header">
+        <h2>로그인</h2>
+        <p>계속하려면 계정 정보를 입력하세요</p>
+      </div>
 
-    <div class="field">
-      <label for="email">이메일</label>
-      <input id="email" type="text" bind:value={email} />
+      <div class="field">
+        <label for="email">이메일</label>
+        <input id="email" type="text" placeholder="name@example.com" bind:value={email} />
+      </div>
+
+      <div class="field">
+        <label for="password">비밀번호</label>
+        <input id="password" type="password" placeholder="비밀번호 입력" bind:value={password} />
+      </div>
+
+      {#if error}
+        <div class="error">{error}</div>
+      {/if}
+
+      <button class="btn btn-primary btn-full" onclick={onSubmit} disabled={loading}>
+        {loading ? '로그인 중...' : '로그인'}
+      </button>
     </div>
-
-    <div class="field">
-      <label for="password">비밀번호</label>
-      <input id="password" type="password" bind:value={password} />
-    </div>
-
-    {#if error}
-      <div class="error">{error}</div>
-    {/if}
-
-    <button class="btn btn-primary" onclick={onSubmit} disabled={loading}>
-      {loading ? '로그인 중...' : '로그인'}
-    </button>
   </div>
 </div>
 
 <style>
-  .login-container {
-    max-width: 420px;
-    margin: 40px auto;
-    padding: 0 16px;
+  .login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 56px);
+    padding: 24px;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .login-header {
+    margin-bottom: 8px;
+  }
+
+  .login-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: var(--color-black);
+    margin-bottom: 4px;
+  }
+
+  .login-header p {
+    font-size: 13px;
+    color: var(--color-gray-500);
+  }
+
+  :global(.btn-full) {
+    width: 100%;
   }
 </style>

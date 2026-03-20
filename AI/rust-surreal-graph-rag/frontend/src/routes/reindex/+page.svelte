@@ -17,7 +17,6 @@
     error = null;
     try {
       const resp = await uploadFile(f);
-      // 업로드된 서버 경로를 재인덱싱 입력에 자동 추가
       const arr = pathsText ? pathsText.split(/\r?\n/).filter(Boolean) : [];
       if (!arr.includes(resp.path)) arr.push(resp.path);
       pathsText = arr.join('\n');
@@ -25,7 +24,6 @@
       error = err?.message ?? '파일 업로드 중 오류가 발생했습니다.';
     } finally {
       uploading = false;
-      // 같은 파일을 다시 선택할 수 있도록 입력 초기화
       target.value = '';
     }
   }
@@ -54,54 +52,71 @@
 <!-- 재인덱싱(관리자) 페이지 -->
 <div class="page">
   <div class="stack">
-    <h2>재인덱싱(관리자)</h2>
+    <h2>재인덱싱</h2>
 
-    <div class="desc">
-      서버에 직접 파일을 업로드하고 업로드된 경로로 재인덱싱을 수행할 수 있습니다. 업로드 후 경로 입력란에 자동으로
-      추가됩니다.
+    <div class="card">
+      <div class="stack">
+        <p class="desc">
+          서버에 파일을 업로드하고 업로드된 경로로 재인덱싱을 수행합니다.
+        </p>
+
+        <div class="upload-area">
+          <label class="upload-label" for="file-upload">
+            <span class="upload-icon">+</span>
+            <span>{uploading ? '업로드 중...' : 'PDF 파일 선택'}</span>
+          </label>
+          <input id="file-upload" type="file" accept="application/pdf" onchange={onUpload} class="file-input" />
+        </div>
+
+        <div class="field">
+          <label for="paths">PDF 파일 경로 (줄바꿈 구분)</label>
+          <textarea id="paths" rows="6" placeholder="/path/to/file.pdf" bind:value={pathsText}></textarea>
+        </div>
+
+        <label class="checkbox-label">
+          <input type="checkbox" bind:checked={clearExisting} />
+          <span>기존 데이터 정리 후 재인덱싱</span>
+        </label>
+
+        <button class="btn btn-primary" onclick={onRun} disabled={loading}>
+          {loading ? '처리 중...' : '재인덱싱 실행'}
+        </button>
+      </div>
     </div>
-
-    <div class="stack-horizontal">
-      <input type="file" accept="application/pdf" onchange={onUpload} />
-      <button class="btn btn-default" disabled={uploading}>
-        {uploading ? '업로드 중...' : '업로드 선택'}
-      </button>
-    </div>
-
-    <div class="field">
-      <label for="paths">PDF 파일 경로(서버 경로, 줄바꿈으로 구분)</label>
-      <textarea id="paths" rows="6" bind:value={pathsText}></textarea>
-    </div>
-
-    <label class="checkbox-label">
-      <input type="checkbox" bind:checked={clearExisting} />
-      기존 데이터 정리(같은 source 데이터 삭제 후 재인덱싱)
-    </label>
-
-    <button class="btn btn-primary" onclick={onRun} disabled={loading}>
-      {loading ? '처리 중...' : '재인덱싱 실행'}
-    </button>
 
     {#if error}
       <div class="error">{error}</div>
     {/if}
 
     {#if result}
-      <div>
-        <h3>실행 결과</h3>
-        <div>전체 소요 시간: {result.elapsed}s</div>
-        <ul>
-          {#each result.results as r}
-            <li>
-              <div>PDF: {r.pdf_path}</div>
-              <div>문서 ID: {r.document_id ?? '-'}</div>
-              <div>청크 수: {r.chunks_indexed}</div>
-              {#if r.error}
-                <div class="error">오류: {r.error}</div>
-              {/if}
-            </li>
-          {/each}
-        </ul>
+      <div class="card">
+        <div class="stack">
+          <div class="result-header">
+            <h3 class="section-title">실행 결과</h3>
+            <span class="result-meta">전체 소요 시간: {result.elapsed}s</span>
+          </div>
+          <div class="result-list">
+            {#each result.results as r}
+              <div class="result-item">
+                <div class="result-row">
+                  <span class="result-label">PDF</span>
+                  <span class="result-value">{r.pdf_path}</span>
+                </div>
+                <div class="result-row">
+                  <span class="result-label">문서 ID</span>
+                  <span class="result-value">{r.document_id ?? '-'}</span>
+                </div>
+                <div class="result-row">
+                  <span class="result-label">청크 수</span>
+                  <span class="result-value">{r.chunks_indexed}</span>
+                </div>
+                {#if r.error}
+                  <div class="error">{r.error}</div>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        </div>
       </div>
     {/if}
   </div>
@@ -109,7 +124,54 @@
 
 <style>
   .desc {
-    color: var(--color-text-muted);
+    font-size: 13px;
+    color: var(--color-gray-500);
+    line-height: 1.5;
+  }
+
+  .upload-area {
+    position: relative;
+  }
+
+  .file-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .upload-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px;
+    border: 2px dashed var(--color-gray-200);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-gray-500);
+    cursor: pointer;
+    transition:
+      border-color var(--transition),
+      color var(--transition);
+  }
+
+  .upload-label:hover {
+    border-color: var(--color-gray-400);
+    color: var(--color-gray-700);
+  }
+
+  .upload-icon {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-gray-100);
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 600;
   }
 
   .checkbox-label {
@@ -117,5 +179,69 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
+    font-size: 13px;
+    color: var(--color-gray-700);
+  }
+
+  .checkbox-label input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-gray-900);
+  }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-gray-500);
+  }
+
+  .result-meta {
+    font-size: 12px;
+    color: var(--color-gray-400);
+  }
+
+  .result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--color-gray-100);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--color-gray-200);
+  }
+
+  .result-item {
+    padding: 16px;
+    background: var(--color-white);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .result-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .result-label {
+    color: var(--color-gray-400);
+    min-width: 60px;
+    flex-shrink: 0;
+  }
+
+  .result-value {
+    color: var(--color-gray-800);
+    font-family: var(--font-mono);
+    word-break: break-all;
   }
 </style>
