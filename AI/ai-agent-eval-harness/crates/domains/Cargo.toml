@@ -1,0 +1,9 @@
+[package]
+  edition.workspace = true
+  name              = "domains"
+  version.workspace = true
+
+[dependencies]
+  execution-tools = {workspace = true}
+  serde_json      = {workspace = true}
+  uuid            = {workspace = true}

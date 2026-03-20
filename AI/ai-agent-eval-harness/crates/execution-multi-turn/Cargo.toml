@@ -1,0 +1,10 @@
+[package]
+  edition.workspace = true
+  name              = "execution-multi-turn"
+  version.workspace = true
+
+[dependencies]
+  agent-models = {workspace = true}
+  chrono       = {workspace = true}
+  serde        = {workspace = true}
+  serde_json   = {workspace = true}

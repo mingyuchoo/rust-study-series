@@ -1,0 +1,11 @@
+[package]
+  edition.workspace = true
+  name              = "execution-tools"
+  version.workspace = true
+
+[dependencies]
+  serde      = {workspace = true}
+  serde_json = {workspace = true}
+
+[dev-dependencies]
+  tempfile = {workspace = true}

@@ -1,0 +1,11 @@
+[package]
+  edition.workspace = true
+  name              = "reporting"
+  version.workspace = true
+
+[dependencies]
+  agent-models = {workspace = true}
+  anyhow       = {workspace = true}
+  chrono       = {workspace = true}
+  colored      = {workspace = true}
+  serde_json   = {workspace = true}
