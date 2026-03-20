@@ -30,6 +30,7 @@ export interface UserInfo {
 	bio: string;
 	website: string;
 	theme: string;
+	locale: string;
 }
 
 export interface AuthResult {
@@ -129,7 +130,7 @@ interface BlogServiceClient extends grpc.Client {
 		cb: (err: ServiceError | null, res: { user: UserInfo }) => void
 	): ClientUnaryCall;
 	UpdateProfile(
-		req: { token: string; bio: string; website: string; theme: string },
+		req: { token: string; bio: string; website: string; theme: string; locale: string },
 		cb: (err: ServiceError | null, res: { user: UserInfo }) => void
 	): ClientUnaryCall;
 	ChangePassword(
@@ -193,9 +194,9 @@ export function getMyProfile(token: string): Promise<UserInfo> {
 	});
 }
 
-export function updateProfile(token: string, bio: string, website: string, theme: string): Promise<UserInfo> {
+export function updateProfile(token: string, bio: string, website: string, theme: string, locale: string): Promise<UserInfo> {
 	return new Promise((resolve, reject) => {
-		getClient().UpdateProfile({ token, bio, website, theme }, (err, res) => {
+		getClient().UpdateProfile({ token, bio, website, theme, locale }, (err, res) => {
 			if (err) reject(err);
 			else resolve(res.user);
 		});

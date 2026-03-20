@@ -16,6 +16,7 @@ DEFINE FIELD created_at ON TABLE user TYPE string;
 DEFINE FIELD bio ON TABLE user TYPE string DEFAULT '';
 DEFINE FIELD website ON TABLE user TYPE string DEFAULT '';
 DEFINE FIELD theme ON TABLE user TYPE string DEFAULT 'dark';
+DEFINE FIELD locale ON TABLE user TYPE string DEFAULT 'ko';
 DEFINE INDEX idx_user_username ON TABLE user COLUMNS username UNIQUE;
 DEFINE INDEX idx_user_email ON TABLE user COLUMNS email UNIQUE;
 

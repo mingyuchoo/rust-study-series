@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { renderMarkdown } from '$lib/markdown';
+	import { t, type Locale } from '$lib/i18n';
 	import type { PageData, ActionData } from './$types';
 
 	export let data: PageData;
@@ -9,19 +10,20 @@
 	let content = form?.content ?? data.post?.content ?? '';
 	let showPreview = false;
 
+	$: locale = (data.locale ?? 'ko') as Locale;
 	$: preview = renderMarkdown(content);
 </script>
 
 <svelte:head>
-	<title>글 수정 - Blog</title>
+	<title>{t(locale, 'editPost.title')} - Blog</title>
 </svelte:head>
 
 <div class="container">
-	<h1>글 수정</h1>
+	<h1>{t(locale, 'editPost.title')}</h1>
 
 	{#if data.error}
 		<div class="alert alert-error">{data.error}</div>
-		<a href="/">&larr; 목록으로</a>
+		<a href="/">&larr; {t(locale, 'post.backToList')}</a>
 	{:else if data.post}
 		{#if form?.error}
 			<div class="alert alert-error">{form.error}</div>
@@ -37,7 +39,7 @@
 				}}
 			>
 				<div class="form-group">
-					<label for="title">제목</label>
+					<label for="title">{t(locale, 'newPost.titleLabel')}</label>
 					<input
 						id="title"
 						name="title"
@@ -50,13 +52,13 @@
 				</div>
 				<div class="form-group">
 					<div class="editor-header">
-						<label for="content">내용</label>
+						<label for="content">{t(locale, 'newPost.content')}</label>
 						<div class="editor-tabs">
 							<button type="button" class="editor-tab" class:active={!showPreview} on:click={() => showPreview = false}>
-								작성
+								{t(locale, 'newPost.write')}
 							</button>
 							<button type="button" class="editor-tab" class:active={showPreview} on:click={() => showPreview = true}>
-								미리보기
+								{t(locale, 'newPost.preview')}
 							</button>
 						</div>
 					</div>
@@ -65,7 +67,7 @@
 							{#if content.trim()}
 								{@html preview}
 							{:else}
-								<p class="meta">미리보기할 내용이 없습니다.</p>
+								<p class="meta">{t(locale, 'newPost.noPreview')}</p>
 							{/if}
 						</div>
 					{:else}
@@ -79,18 +81,18 @@
 						></textarea>
 					{/if}
 					<input type="hidden" name="content" value={content} />
-					<span class="meta">Markdown 문법을 지원합니다.</span>
+					<span class="meta">{t(locale, 'newPost.markdownHelp')}</span>
 				</div>
 				<div class="form-group">
 					<label class="checkbox-label">
 						<input type="checkbox" name="visibility" disabled={isLoading} checked={data.post.visibility === 'public'} />
-						<span>공개</span>
+						<span>{t(locale, 'newPost.public')}</span>
 					</label>
 				</div>
 				<div style="display: flex; gap: 0.75rem; justify-content: flex-end">
-					<a href="/posts/{data.post.id}" class="btn btn-outline">취소</a>
+					<a href="/posts/{data.post.id}" class="btn btn-outline">{t(locale, 'newPost.cancel')}</a>
 					<button type="submit" class="btn" disabled={isLoading}>
-						{isLoading ? '수정 중...' : '수정하기'}
+						{isLoading ? t(locale, 'editPost.submitting') : t(locale, 'editPost.submit')}
 					</button>
 				</div>
 			</form>

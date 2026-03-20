@@ -9,6 +9,9 @@
 				var match = document.cookie.match(/(?:^|; )theme=(\w+)/);
 				var theme = match ? match[1] : 'dark';
 				document.documentElement.setAttribute('data-theme', theme);
+				var lmatch = document.cookie.match(/(?:^|; )locale=(\w+)/);
+				var locale = lmatch ? lmatch[1] : 'ko';
+				document.documentElement.lang = locale === 'ja' ? 'ja' : locale === 'en' ? 'en' : 'ko';
 			})();
 		</script>
 		%sveltekit.head%

@@ -20,6 +20,8 @@ pub struct UserRecord {
     pub website: String,
     #[serde(default)]
     pub theme: String,
+    #[serde(default)]
+    pub locale: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, SurrealValue)]
@@ -82,6 +84,10 @@ impl Database {
         let schema = std::fs::read_to_string(schema_path)
             .with_context(|| format!("스키마 파일을 읽을 수 없습니다: {}", schema_path.display()))?;
         self.client.query(schema).await?;
+        // 기존 레코드에 locale 필드가 없는 경우 기본값 설정 (마이그레이션)
+        self.client
+            .query("UPDATE user SET locale = 'ko' WHERE locale = NONE OR locale = ''")
+            .await?;
         Ok(())
     }
 
@@ -244,7 +250,7 @@ impl Database {
     pub async fn update_user_role(&self, user_id: &str, role: &str) -> Result<Option<UserRecord>> {
         let mut result = self
             .client
-            .query("UPDATE type::thing('user', $id) SET role = $role RETURN AFTER")
+            .query("UPDATE type::record('user', $id) SET role = $role RETURN AFTER")
             .bind(("id", user_id.to_string()))
             .bind(("role", role.to_string()))
             .await?;
@@ -288,7 +294,7 @@ impl Database {
 
         // 사용자 삭제
         self.client
-            .query("DELETE type::thing('user', $uid)")
+            .query("DELETE type::record('user', $uid)")
             .bind(("uid", user_id.to_string()))
             .await?;
 
@@ -451,7 +457,7 @@ impl Database {
         let now = chrono::Utc::now().to_rfc3339();
         let mut result = self
             .client
-            .query("UPDATE type::thing('post', $id) SET title = $title, content = $content, visibility = $visibility, updated_at = $now RETURN AFTER")
+            .query("UPDATE type::record('post', $id) SET title = $title, content = $content, visibility = $visibility, updated_at = $now RETURN AFTER")
             .bind(("id", id.to_string()))
             .bind(("title", title.to_string()))
             .bind(("content", content.to_string()))
@@ -476,7 +482,7 @@ impl Database {
             .await?;
 
         self.client
-            .query("DELETE type::thing('post', $id)")
+            .query("DELETE type::record('post', $id)")
             .bind(("id", id.to_string()))
             .await?;
 
@@ -491,7 +497,7 @@ impl Database {
         let now = chrono::Utc::now().to_rfc3339();
         let mut result = self
             .client
-            .query("UPDATE type::thing('post', $id) SET visibility = $visibility, updated_at = $now RETURN AFTER")
+            .query("UPDATE type::record('post', $id) SET visibility = $visibility, updated_at = $now RETURN AFTER")
             .bind(("id", id.to_string()))
             .bind(("visibility", visibility.to_string()))
             .bind(("now", now))
@@ -568,7 +574,7 @@ impl Database {
 
         let mut result = self
             .client
-            .query("UPDATE type::thing('comment', $id) SET content = $content, visibility = $visibility RETURN AFTER")
+            .query("UPDATE type::record('comment', $id) SET content = $content, visibility = $visibility RETURN AFTER")
             .bind(("id", id.to_string()))
             .bind(("content", content.to_string()))
             .bind(("visibility", visibility.to_string()))
@@ -586,7 +592,7 @@ impl Database {
         }
 
         self.client
-            .query("DELETE type::thing('comment', $id)")
+            .query("DELETE type::record('comment', $id)")
             .bind(("id", id.to_string()))
             .await?;
 
@@ -666,7 +672,7 @@ impl Database {
             return Ok(false);
         }
         self.client
-            .query("UPDATE type::thing('user', $id) SET password_hash = $hash")
+            .query("UPDATE type::record('user', $id) SET password_hash = $hash")
             .bind(("id", user_id.to_string()))
             .bind(("hash", new_password_hash.to_string()))
             .await?;
@@ -679,14 +685,16 @@ impl Database {
         bio: &str,
         website: &str,
         theme: &str,
+        locale: &str,
     ) -> Result<Option<UserRecord>> {
         let mut result = self
             .client
-            .query("UPDATE type::thing('user', $id) SET bio = $bio, website = $website, theme = $theme RETURN AFTER")
+            .query("UPDATE type::record('user', $id) SET bio = $bio, website = $website, theme = $theme, locale = $locale RETURN AFTER")
             .bind(("id", user_id.to_string()))
             .bind(("bio", bio.to_string()))
             .bind(("website", website.to_string()))
             .bind(("theme", theme.to_string()))
+            .bind(("locale", locale.to_string()))
             .await?;
         let users: Vec<UserRecord> = result.take(0)?;
         Ok(users.into_iter().next())

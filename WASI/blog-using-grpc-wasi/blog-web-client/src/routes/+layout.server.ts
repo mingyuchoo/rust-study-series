@@ -2,6 +2,7 @@ import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ cookies }) => {
 	const theme = cookies.get('theme') ?? 'dark';
+	const locale = cookies.get('locale') ?? 'ko';
 
 	const authCookie = cookies.get('auth');
 	if (authCookie) {
@@ -13,11 +14,12 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
 					id: auth.userId,
 					role: auth.role ?? 'user'
 				},
-				theme
+				theme,
+				locale
 			};
 		} catch {
-			return { user: null, theme };
+			return { user: null, theme, locale };
 		}
 	}
-	return { user: null, theme };
+	return { user: null, theme, locale };
 };

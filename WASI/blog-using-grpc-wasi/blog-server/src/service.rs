@@ -31,6 +31,7 @@ fn make_minimal_user_info(id: String, username: String) -> UserInfo {
         bio: String::new(),
         website: String::new(),
         theme: String::new(),
+        locale: String::new(),
     }
 }
 
@@ -110,6 +111,7 @@ impl BlogServiceImpl {
             bio: user.bio,
             website: user.website,
             theme: user.theme,
+            locale: user.locale,
         })
     }
 
@@ -175,6 +177,7 @@ impl BlogService for BlogServiceImpl {
                 bio: user.bio,
                 website: user.website,
                 theme: user.theme,
+                locale: user.locale,
             }),
         }))
     }
@@ -218,6 +221,7 @@ impl BlogService for BlogServiceImpl {
                 bio: user.bio,
                 website: user.website,
                 theme: user.theme,
+                locale: user.locale,
             }),
         }))
     }
@@ -254,10 +258,15 @@ impl BlogService for BlogServiceImpl {
             wasi_validate(&self.wasm, move |w| w.call_validate_theme(&th)).await?;
             req.theme.clone()
         };
+        let locale_val = if req.locale.is_empty() {
+            "ko".to_string()
+        } else {
+            req.locale.clone()
+        };
 
         let user = self
             .db
-            .update_profile(&user_id, &req.bio, &req.website, &theme_val)
+            .update_profile(&user_id, &req.bio, &req.website, &theme_val, &locale_val)
             .await
             .map_err(|e| Status::internal(e.to_string()))?
             .ok_or_else(|| Status::not_found("사용자를 찾을 수 없습니다."))?;
@@ -273,6 +282,7 @@ impl BlogService for BlogServiceImpl {
                 bio: user.bio,
                 website: user.website,
                 theme: user.theme,
+                locale: user.locale,
             }),
         }))
     }
@@ -860,6 +870,7 @@ impl BlogService for BlogServiceImpl {
                 bio: u.bio,
                 website: u.website,
                 theme: u.theme,
+                locale: u.locale,
             })
             .collect();
 
@@ -935,6 +946,7 @@ impl BlogService for BlogServiceImpl {
                 bio: user.bio,
                 website: user.website,
                 theme: user.theme,
+                locale: user.locale,
             }),
         }))
     }

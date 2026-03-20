@@ -1,17 +1,22 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { t, type Locale } from '$lib/i18n';
 	import type { ActionData } from './$types';
+	import type { LayoutData } from '../$types';
 
 	export let form: ActionData;
+	export let data: LayoutData;
 	let isLoading = false;
+
+	$: locale = (data.locale ?? 'ko') as Locale;
 </script>
 
 <svelte:head>
-	<title>회원가입 - Blog</title>
+	<title>{t(locale, 'register.title')} - Blog</title>
 </svelte:head>
 
 <div class="container" style="max-width: 420px">
-	<h1>회원가입</h1>
+	<h1>{t(locale, 'register.title')}</h1>
 
 	{#if form?.error}
 		<div class="alert alert-error">{form.error}</div>
@@ -26,24 +31,24 @@
 			}}
 		>
 			<div class="form-group">
-				<label for="username">사용자명</label>
+				<label for="username">{t(locale, 'register.username')}</label>
 				<input id="username" name="username" type="text" required disabled={isLoading} />
 			</div>
 			<div class="form-group">
-				<label for="email">이메일</label>
+				<label for="email">{t(locale, 'register.email')}</label>
 				<input id="email" name="email" type="email" required disabled={isLoading} />
 			</div>
 			<div class="form-group">
-				<label for="password">비밀번호 (8자 이상)</label>
+				<label for="password">{t(locale, 'register.password')}</label>
 				<input id="password" name="password" type="password" minlength="8" required disabled={isLoading} />
 			</div>
 			<button type="submit" class="btn" style="width: 100%" disabled={isLoading}>
-				{isLoading ? '가입 처리 중...' : '회원가입'}
+				{isLoading ? t(locale, 'register.loading') : t(locale, 'register.submit')}
 			</button>
 		</form>
 	</div>
 
 	<p class="meta" style="text-align: center">
-		이미 계정이 있으신가요? <a href="/login">로그인</a>
+		{t(locale, 'register.hasAccount')} <a href="/login">{t(locale, 'nav.login')}</a>
 	</p>
 </div>

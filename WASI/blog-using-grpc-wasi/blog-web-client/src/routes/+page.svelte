@@ -1,18 +1,20 @@
 <script lang="ts">
 	import { renderExcerpt } from '$lib/markdown';
+	import { t, dateLocale, type Locale } from '$lib/i18n';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
 
 	$: filter = data.filter || 'public';
+	$: locale = (data.locale ?? 'ko') as Locale;
 </script>
 
 <svelte:head>
-	<title>Blog - Home</title>
+	<title>{t(locale, 'home.title')}</title>
 </svelte:head>
 
 <div class="container">
-	<h1>Blog Posts</h1>
+	<h1>{t(locale, 'home.title')}</h1>
 
 	{#if data.error}
 		<div class="alert alert-error">{data.error}</div>
@@ -21,11 +23,11 @@
 	<!-- Filter Tabs -->
 	<div class="filter-tabs">
 		<a href="/?filter=public" class="filter-tab" class:active={filter === 'public'}>
-			공개 포스트
+			{t(locale, 'home.publicPosts')}
 		</a>
 		{#if data.user}
 			<a href="/?filter=mine" class="filter-tab" class:active={filter === 'mine'}>
-				내 포스트
+				{t(locale, 'home.myPosts')}
 			</a>
 		{/if}
 	</div>
@@ -33,11 +35,11 @@
 	{#if data.posts.length === 0}
 		<div class="card empty-state">
 			{#if filter === 'mine'}
-				<p>작성한 포스트가 없습니다.</p>
+				<p>{t(locale, 'home.noMyPosts')}</p>
 			{:else}
-				<p>공개된 포스트가 없습니다.</p>
+				<p>{t(locale, 'home.noPublicPosts')}</p>
 			{/if}
-			<a href="/posts/new" class="btn" style="display: inline-block; margin-top: 0.5rem">첫 글 작성하기</a>
+			<a href="/posts/new" class="btn" style="display: inline-block; margin-top: 0.5rem">{t(locale, 'home.writeFirst')}</a>
 		</div>
 	{:else}
 		{#each data.posts as post}
@@ -46,7 +48,7 @@
 					<div class="post-header">
 						<h2 class="post-title">{post.title}</h2>
 						{#if post.visibility === 'private'}
-							<span class="badge-private">비공개</span>
+							<span class="badge-private">{t(locale, 'home.private')}</span>
 						{/if}
 					</div>
 					<p class="post-excerpt">
@@ -55,16 +57,16 @@
 					<div class="meta">
 						<span>{post.author?.username ?? '?'}</span>
 						<span> &middot; </span>
-						<span>{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
+						<span>{new Date(post.created_at).toLocaleDateString(dateLocale(locale))}</span>
 						<span> &middot; </span>
-						<span>댓글 {post.comment_count}개</span>
+						<span>{t(locale, 'home.comments')} {post.comment_count}{t(locale, 'home.count')}</span>
 					</div>
 				</div>
 			</a>
 		{/each}
 
 		{#if data.total > data.posts.length}
-			<p class="meta" style="text-align: center">총 {data.total}건 중 {data.posts.length}건 표시</p>
+			<p class="meta" style="text-align: center">{t(locale, 'home.showing', { total: data.total, count: data.posts.length })}</p>
 		{/if}
 	{/if}
 </div>

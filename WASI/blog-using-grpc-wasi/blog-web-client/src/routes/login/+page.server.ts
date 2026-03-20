@@ -1,15 +1,17 @@
 import type { Actions } from './$types';
 import { login, getMyProfile } from '$lib/grpc';
 import { fail, redirect } from '@sveltejs/kit';
+import { t, type Locale } from '$lib/i18n';
 
 export const actions: Actions = {
 	login: async ({ request, cookies }) => {
+		const locale = (cookies.get('locale') ?? 'ko') as Locale;
 		const data = await request.formData();
 		const email = (data.get('email') as string)?.trim();
 		const password = data.get('password') as string;
 
 		if (!email || !password) {
-			return fail(400, { error: '이메일과 비밀번호를 입력해주세요.' });
+			return fail(400, { error: t(locale, 'login.emailPasswordRequired') });
 		}
 
 		try {
@@ -25,17 +27,21 @@ export const actions: Actions = {
 				{ path: '/', httpOnly: true, sameSite: 'strict', maxAge: 60 * 60 * 24 }
 			);
 
-			// 서버에 저장된 테마를 쿠키에 반영
 			try {
 				const profile = await getMyProfile(result.token);
 				const savedTheme = profile.theme || 'dark';
+				const savedLocale = profile.locale || 'ko';
 				cookies.set('theme', savedTheme, {
 					path: '/',
 					maxAge: 60 * 60 * 24 * 365,
 					sameSite: 'strict'
 				});
+				cookies.set('locale', savedLocale, {
+					path: '/',
+					maxAge: 60 * 60 * 24 * 365,
+					sameSite: 'strict'
+				});
 			} catch {
-				// 프로필 조회 실패 시 기본 dark 적용
 				cookies.set('theme', 'dark', {
 					path: '/',
 					maxAge: 60 * 60 * 24 * 365,
@@ -46,7 +52,7 @@ export const actions: Actions = {
 			throw redirect(303, '/');
 		} catch (e) {
 			if (e instanceof Response || (e as { status?: number })?.status === 303) throw e;
-			return fail(401, { error: '이메일 또는 비밀번호가 올바르지 않습니다.' });
+			return fail(401, { error: t(locale, 'login.invalidCredentials') });
 		}
 	},
 	logout: async ({ cookies }) => {

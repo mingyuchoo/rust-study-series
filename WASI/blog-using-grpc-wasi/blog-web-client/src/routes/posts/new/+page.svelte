@@ -1,22 +1,26 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { renderMarkdown } from '$lib/markdown';
+	import { t, type Locale } from '$lib/i18n';
 	import type { ActionData } from './$types';
+	import type { LayoutData } from '../../$types';
 
 	export let form: ActionData;
+	export let data: LayoutData;
 	let isLoading = false;
 	let content = '';
 	let showPreview = false;
 
+	$: locale = (data.locale ?? 'ko') as Locale;
 	$: preview = renderMarkdown(content);
 </script>
 
 <svelte:head>
-	<title>새 글 작성 - Blog</title>
+	<title>{t(locale, 'newPost.title')} - Blog</title>
 </svelte:head>
 
 <div class="container">
-	<h1>새 글 작성</h1>
+	<h1>{t(locale, 'newPost.title')}</h1>
 
 	{#if form?.error}
 		<div class="alert alert-error">{form.error}</div>
@@ -31,18 +35,18 @@
 			}}
 		>
 			<div class="form-group">
-				<label for="title">제목</label>
+				<label for="title">{t(locale, 'newPost.titleLabel')}</label>
 				<input id="title" name="title" type="text" maxlength="200" required disabled={isLoading} />
 			</div>
 			<div class="form-group">
 				<div class="editor-header">
-					<label for="content">내용</label>
+					<label for="content">{t(locale, 'newPost.content')}</label>
 					<div class="editor-tabs">
 						<button type="button" class="editor-tab" class:active={!showPreview} on:click={() => showPreview = false}>
-							작성
+							{t(locale, 'newPost.write')}
 						</button>
 						<button type="button" class="editor-tab" class:active={showPreview} on:click={() => showPreview = true}>
-							미리보기
+							{t(locale, 'newPost.preview')}
 						</button>
 					</div>
 				</div>
@@ -51,7 +55,7 @@
 						{#if content.trim()}
 							{@html preview}
 						{:else}
-							<p class="meta">미리보기할 내용이 없습니다.</p>
+							<p class="meta">{t(locale, 'newPost.noPreview')}</p>
 						{/if}
 					</div>
 				{:else}
@@ -61,23 +65,23 @@
 						rows="16"
 						required
 						disabled={isLoading}
-						placeholder="Markdown 형식으로 작성할 수 있습니다.&#10;&#10;# 제목&#10;## 소제목&#10;**굵게**, *기울임*, `코드`&#10;- 목록&#10;```&#10;코드 블록&#10;```"
+						placeholder="Markdown"
 						bind:value={content}
 					></textarea>
 				{/if}
 				<input type="hidden" name="content" value={content} />
-				<span class="meta">Markdown 문법을 지원합니다.</span>
+				<span class="meta">{t(locale, 'newPost.markdownHelp')}</span>
 			</div>
 			<div class="form-group">
 				<label class="checkbox-label">
 					<input type="checkbox" name="visibility" disabled={isLoading} />
-					<span>공개</span>
+					<span>{t(locale, 'newPost.public')}</span>
 				</label>
 			</div>
 			<div style="display: flex; gap: 0.75rem; justify-content: flex-end">
-				<a href="/" class="btn btn-outline">취소</a>
+				<a href="/" class="btn btn-outline">{t(locale, 'newPost.cancel')}</a>
 				<button type="submit" class="btn" disabled={isLoading}>
-					{isLoading ? '게시 중...' : '게시하기'}
+					{isLoading ? t(locale, 'newPost.submitting') : t(locale, 'newPost.submit')}
 				</button>
 			</div>
 		</form>

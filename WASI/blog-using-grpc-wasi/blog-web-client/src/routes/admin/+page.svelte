@@ -1,19 +1,21 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { t, dateLocale, type Locale } from '$lib/i18n';
 	import type { PageData, ActionData } from './$types';
 
 	export let data: PageData;
 	export let form: ActionData;
 
 	$: tab = data.tab;
+	$: locale = (data.locale ?? 'ko') as Locale;
 </script>
 
 <svelte:head>
-	<title>관리자 패널 - Blog</title>
+	<title>{t(locale, 'admin.title')} - Blog</title>
 </svelte:head>
 
 <div class="container" style="max-width: 960px">
-	<h1>관리자 패널</h1>
+	<h1>{t(locale, 'admin.title')}</h1>
 
 	{#if form?.error}
 		<div class="alert alert-error">{form.error}</div>
@@ -29,36 +31,36 @@
 			class="btn btn-sm"
 			style={tab === 'users' ? '' : 'background: transparent; border: 1px solid #334155; color: #94a3b8'}
 		>
-			사용자 관리 ({data.usersTotal})
+			{t(locale, 'admin.users')} ({data.usersTotal})
 		</a>
 		<a
 			href="/admin?tab=posts"
 			class="btn btn-sm"
 			style={tab === 'posts' ? '' : 'background: transparent; border: 1px solid #334155; color: #94a3b8'}
 		>
-			포스트 관리 ({data.postsTotal})
+			{t(locale, 'admin.posts')} ({data.postsTotal})
 		</a>
 		<a
 			href="/admin?tab=comments"
 			class="btn btn-sm"
 			style={tab === 'comments' ? '' : 'background: transparent; border: 1px solid #334155; color: #94a3b8'}
 		>
-			댓글 관리 ({data.commentsTotal})
+			{t(locale, 'admin.comments')} ({data.commentsTotal})
 		</a>
 	</div>
 
 	<!-- Users Tab -->
 	{#if tab === 'users'}
 		{#if data.users.length === 0}
-			<p class="meta" style="text-align: center">사용자가 없습니다.</p>
+			<p class="meta" style="text-align: center">{t(locale, 'admin.noUsers')}</p>
 		{:else}
 			<table style="width: 100%; border-collapse: collapse">
 				<thead>
 					<tr style="border-bottom: 1px solid #334155; text-align: left">
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">사용자명</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">이메일</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">역할</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">작업</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.username')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.email')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.role')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -77,7 +79,7 @@
 										<input type="hidden" name="userId" value={user.id} />
 										<input type="hidden" name="role" value={user.role === 'admin' ? 'user' : 'admin'} />
 										<button type="submit" class="btn btn-sm btn-outline">
-											{user.role === 'admin' ? 'user로' : 'admin으로'}
+											{user.role === 'admin' ? t(locale, 'admin.toUser') : t(locale, 'admin.toAdmin')}
 										</button>
 									</form>
 									<form
@@ -85,13 +87,13 @@
 										action="?/deleteUser"
 										style="margin: 0"
 										use:enhance={({ cancel }) => {
-											if (!confirm(`${user.username} 사용자를 삭제하시겠습니까? 관련 포스트와 댓글이 모두 삭제됩니다.`)) {
+											if (!confirm(t(locale, 'admin.confirmDeleteUser', { username: user.username }))) {
 												cancel();
 											}
 										}}
 									>
 										<input type="hidden" name="userId" value={user.id} />
-										<button type="submit" class="btn btn-sm btn-danger">삭제</button>
+										<button type="submit" class="btn btn-sm btn-danger">{t(locale, 'post.delete')}</button>
 									</form>
 								</div>
 							</td>
@@ -105,16 +107,16 @@
 	<!-- Posts Tab -->
 	{#if tab === 'posts'}
 		{#if data.posts.length === 0}
-			<p class="meta" style="text-align: center">포스트가 없습니다.</p>
+			<p class="meta" style="text-align: center">{t(locale, 'admin.noPosts')}</p>
 		{:else}
 			<table style="width: 100%; border-collapse: collapse">
 				<thead>
 					<tr style="border-bottom: 1px solid #334155; text-align: left">
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">제목</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">작성자</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">공개</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">댓글</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">작업</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.postTitle')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.author')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.publicLabel')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.commentCount')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -138,22 +140,22 @@
 										<input type="hidden" name="postId" value={post.id} />
 										<input type="hidden" name="visibility" value={post.visibility === 'public' ? 'private' : 'public'} />
 										<button type="submit" class="btn btn-sm btn-outline">
-											{post.visibility === 'public' ? '비공개' : '공개'}
+											{post.visibility === 'public' ? t(locale, 'admin.makePrivate') : t(locale, 'admin.makePublic')}
 										</button>
 									</form>
-									<a href="/posts/{post.id}/edit" class="btn btn-sm btn-outline">수정</a>
+									<a href="/posts/{post.id}/edit" class="btn btn-sm btn-outline">{t(locale, 'post.edit')}</a>
 									<form
 										method="POST"
 										action="?/deletePost"
 										style="margin: 0"
 										use:enhance={({ cancel }) => {
-											if (!confirm(`"${post.title}" 포스트를 삭제하시겠습니까?`)) {
+											if (!confirm(t(locale, 'admin.confirmDeletePost', { title: post.title }))) {
 												cancel();
 											}
 										}}
 									>
 										<input type="hidden" name="postId" value={post.id} />
-										<button type="submit" class="btn btn-sm btn-danger">삭제</button>
+										<button type="submit" class="btn btn-sm btn-danger">{t(locale, 'post.delete')}</button>
 									</form>
 								</div>
 							</td>
@@ -167,16 +169,16 @@
 	<!-- Comments Tab -->
 	{#if tab === 'comments'}
 		{#if data.comments.length === 0}
-			<p class="meta" style="text-align: center">댓글이 없습니다.</p>
+			<p class="meta" style="text-align: center">{t(locale, 'admin.noComments')}</p>
 		{:else}
 			<table style="width: 100%; border-collapse: collapse">
 				<thead>
 					<tr style="border-bottom: 1px solid #334155; text-align: left">
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">포스트</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">작성자</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">내용</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">작성일</th>
-						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">작업</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.posts')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.author')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.content')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.createdAt')}</th>
+						<th style="padding: 0.75rem; color: #94a3b8; font-size: 0.8rem">{t(locale, 'admin.actions')}</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -194,23 +196,23 @@
 								{comment.content}
 							</td>
 							<td style="padding: 0.75rem; color: #64748b; font-size: 0.8rem; white-space: nowrap">
-								{new Date(comment.created_at).toLocaleDateString('ko-KR')}
+								{new Date(comment.created_at).toLocaleDateString(dateLocale(locale))}
 							</td>
 							<td style="padding: 0.75rem">
 								<div style="display: flex; gap: 0.5rem">
-									<a href="/posts/{comment.post_id}" class="btn btn-sm btn-outline">보기</a>
+									<a href="/posts/{comment.post_id}" class="btn btn-sm btn-outline">{t(locale, 'admin.view')}</a>
 									<form
 										method="POST"
 										action="?/deleteComment"
 										style="margin: 0"
 										use:enhance={({ cancel }) => {
-											if (!confirm('이 댓글을 삭제하시겠습니까?')) {
+											if (!confirm(t(locale, 'admin.confirmDeleteComment'))) {
 												cancel();
 											}
 										}}
 									>
 										<input type="hidden" name="commentId" value={comment.id} />
-										<button type="submit" class="btn btn-sm btn-danger">삭제</button>
+										<button type="submit" class="btn btn-sm btn-danger">{t(locale, 'post.delete')}</button>
 									</form>
 								</div>
 							</td>

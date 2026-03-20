@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { t, LOCALES, type Locale } from '$lib/i18n';
 	import type { PageData, ActionData } from './$types';
 
 	export let data: PageData;
@@ -8,19 +9,27 @@
 	let isProfileLoading = false;
 	let isPasswordLoading = false;
 
+	$: locale = (data.locale ?? 'ko') as Locale;
+
 	function applyTheme(newTheme: string) {
 		document.documentElement.setAttribute('data-theme', newTheme);
 		document.cookie = `theme=${newTheme};path=/;max-age=${60 * 60 * 24 * 365};samesite=strict`;
 		invalidateAll();
 	}
+
+	function applyLocale(newLocale: string) {
+		document.documentElement.lang = newLocale;
+		document.cookie = `locale=${newLocale};path=/;max-age=${60 * 60 * 24 * 365};samesite=strict`;
+		invalidateAll();
+	}
 </script>
 
 <svelte:head>
-	<title>프로필 - Blog</title>
+	<title>{t(locale, 'profile.title')} - Blog</title>
 </svelte:head>
 
 <div class="container">
-	<h1>내 프로필</h1>
+	<h1>{t(locale, 'profile.title')}</h1>
 
 	<!-- 프로필 정보 카드 -->
 	<div class="card">
@@ -37,12 +46,12 @@
 			</div>
 		</div>
 		<div class="meta" style="margin-top: 0.5rem">
-			가입일: {new Date(data.profile.created_at).toLocaleDateString('ko-KR')}
+			{t(locale, 'profile.joinDate')}: {new Date(data.profile.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : locale === 'ja' ? 'ja-JP' : 'ko-KR')}
 		</div>
 	</div>
 
 	<!-- 프로필 설정 -->
-	<h2 style="margin-top: 2rem">프로필 설정</h2>
+	<h2 style="margin-top: 2rem">{t(locale, 'profile.settings')}</h2>
 
 	{#if form?.success}
 		<div class="alert alert-success">{form.success}</div>
@@ -61,19 +70,19 @@
 			}}
 		>
 			<div class="form-group">
-				<label for="bio">자기소개</label>
+				<label for="bio">{t(locale, 'profile.bio')}</label>
 				<textarea
 					id="bio"
 					name="bio"
 					rows="4"
 					maxlength="500"
-					placeholder="자기소개를 입력하세요 (최대 500자)"
+					placeholder={t(locale, 'profile.bioPlaceholder')}
 					disabled={isProfileLoading}
 				>{data.profile.bio ?? ''}</textarea>
-				<span class="meta">블로그에 표시되는 소개글입니다.</span>
+				<span class="meta">{t(locale, 'profile.bioHelp')}</span>
 			</div>
 			<div class="form-group">
-				<label for="website">웹사이트</label>
+				<label for="website">{t(locale, 'profile.website')}</label>
 				<input
 					id="website"
 					name="website"
@@ -85,7 +94,7 @@
 				/>
 			</div>
 			<div class="form-group">
-				<label for="theme">테마</label>
+				<label for="theme">{t(locale, 'profile.theme')}</label>
 				<div class="theme-selector">
 					<label class="theme-option">
 						<input
@@ -98,7 +107,7 @@
 						/>
 						<span class="theme-preview theme-preview-dark">
 							<span class="theme-icon">🌙</span>
-							<span>다크</span>
+							<span>{t(locale, 'profile.themeDark')}</span>
 						</span>
 					</label>
 					<label class="theme-option">
@@ -112,22 +121,43 @@
 						/>
 						<span class="theme-preview theme-preview-light">
 							<span class="theme-icon">☀️</span>
-							<span>라이트</span>
+							<span>{t(locale, 'profile.themeLight')}</span>
 						</span>
 					</label>
 				</div>
-				<span class="meta">저장하면 모든 기기에서 동일한 테마가 적용됩니다.</span>
+				<span class="meta">{t(locale, 'profile.themeHelp')}</span>
+			</div>
+			<div class="form-group">
+				<label for="locale">{t(locale, 'profile.locale')}</label>
+				<div class="theme-selector">
+					{#each LOCALES as loc}
+						<label class="theme-option">
+							<input
+								type="radio"
+								name="locale"
+								value={loc.code}
+								checked={(data.profile.locale || 'ko') === loc.code}
+								disabled={isProfileLoading}
+								on:change={() => applyLocale(loc.code)}
+							/>
+							<span class="theme-preview">
+								<span>{loc.label}</span>
+							</span>
+						</label>
+					{/each}
+				</div>
+				<span class="meta">{t(locale, 'profile.localeHelp')}</span>
 			</div>
 			<div style="display: flex; justify-content: flex-end">
 				<button type="submit" class="btn" disabled={isProfileLoading}>
-					{isProfileLoading ? '저장 중...' : '프로필 저장'}
+					{isProfileLoading ? t(locale, 'profile.saving') : t(locale, 'profile.save')}
 				</button>
 			</div>
 		</form>
 	</div>
 
 	<!-- 비밀번호 변경 -->
-	<h2 style="margin-top: 2rem">비밀번호 변경</h2>
+	<h2 style="margin-top: 2rem">{t(locale, 'profile.changePassword')}</h2>
 
 	{#if form?.passwordSuccess}
 		<div class="alert alert-success">{form.passwordSuccess}</div>
@@ -146,7 +176,7 @@
 			}}
 		>
 			<div class="form-group">
-				<label for="current_password">현재 비밀번호</label>
+				<label for="current_password">{t(locale, 'profile.currentPassword')}</label>
 				<input
 					id="current_password"
 					name="current_password"
@@ -156,7 +186,7 @@
 				/>
 			</div>
 			<div class="form-group">
-				<label for="new_password">새 비밀번호</label>
+				<label for="new_password">{t(locale, 'profile.newPassword')}</label>
 				<input
 					id="new_password"
 					name="new_password"
@@ -165,10 +195,10 @@
 					minlength="8"
 					disabled={isPasswordLoading}
 				/>
-				<span class="meta">8자 이상, 대문자/소문자/숫자/특수문자 중 2가지 이상 조합</span>
+				<span class="meta">{t(locale, 'profile.newPasswordHelp')}</span>
 			</div>
 			<div class="form-group">
-				<label for="confirm_password">새 비밀번호 확인</label>
+				<label for="confirm_password">{t(locale, 'profile.confirmPassword')}</label>
 				<input
 					id="confirm_password"
 					name="confirm_password"
@@ -180,7 +210,7 @@
 			</div>
 			<div style="display: flex; justify-content: flex-end">
 				<button type="submit" class="btn" disabled={isPasswordLoading}>
-					{isPasswordLoading ? '변경 중...' : '비밀번호 변경'}
+					{isPasswordLoading ? t(locale, 'profile.changingPassword') : t(locale, 'profile.changePasswordSubmit')}
 				</button>
 			</div>
 		</form>
@@ -229,11 +259,12 @@
 		color: #f59e0b;
 	}
 
-	/* Theme selector */
+	/* Theme & Locale selector */
 	.theme-selector {
 		display: flex;
 		gap: 0.75rem;
 		margin-top: 0.25rem;
+		flex-wrap: wrap;
 	}
 	.theme-option {
 		cursor: pointer;

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { renderMarkdown } from '$lib/markdown';
+	import { t, dateLocale, type Locale } from '$lib/i18n';
 	import type { PageData, ActionData } from './$types';
 
 	export let data: PageData;
@@ -8,6 +9,7 @@
 	let isLoading = false;
 	let isDeleting = false;
 
+	$: locale = (data.locale ?? 'ko') as Locale;
 	$: isOwner = data.user && data.post && data.user.id === data.post.author?.id;
 	$: isAdmin = data.user?.role === 'admin';
 	$: canEdit = isOwner || isAdmin;
@@ -21,32 +23,32 @@
 <div class="container">
 	{#if data.error}
 		<div class="alert alert-error">{data.error}</div>
-		<a href="/">&larr; 목록으로</a>
+		<a href="/">&larr; {t(locale, 'post.backToList')}</a>
 	{:else if data.post}
 		{#if form?.error}
 			<div class="alert alert-error">{form.error}</div>
 		{/if}
 		<article>
-			<a href="/" class="meta" style="display: inline-block; margin-bottom: 1rem">&larr; 목록으로</a>
+			<a href="/" class="meta" style="display: inline-block; margin-bottom: 1rem">&larr; {t(locale, 'post.backToList')}</a>
 			<h1 style="margin-bottom: 0.5rem">{data.post.title}</h1>
 			<div class="meta" style="margin-bottom: 1.5rem">
 				<span>{data.post.author?.username ?? '?'}</span>
 				<span> &middot; </span>
-				<span>{new Date(data.post.created_at).toLocaleDateString('ko-KR')}</span>
+				<span>{new Date(data.post.created_at).toLocaleDateString(dateLocale(locale))}</span>
 				{#if data.post.visibility === 'private'}
 					<span> &middot; </span>
-					<span style="color: #f59e0b">비공개</span>
+					<span style="color: #f59e0b">{t(locale, 'post.private')}</span>
 				{/if}
 			</div>
 			{#if canEdit}
 				<div style="display: flex; gap: 0.75rem; margin-bottom: 1rem">
-					<a href="/posts/{data.post.id}/edit" class="btn btn-sm btn-outline">수정</a>
+					<a href="/posts/{data.post.id}/edit" class="btn btn-sm btn-outline">{t(locale, 'post.edit')}</a>
 					<form
 						method="POST"
 						action="?/deletePost"
 						style="margin: 0"
 						use:enhance={({ cancel }) => {
-							if (!confirm('정말로 이 포스트를 삭제하시겠습니까?')) {
+							if (!confirm(t(locale, 'post.confirmDelete'))) {
 								cancel();
 								return;
 							}
@@ -55,7 +57,7 @@
 						}}
 					>
 						<button type="submit" class="btn btn-sm btn-danger" disabled={isDeleting}>
-							{isDeleting ? '삭제 중...' : '삭제'}
+							{isDeleting ? t(locale, 'post.deleting') : t(locale, 'post.delete')}
 						</button>
 					</form>
 				</div>
@@ -68,7 +70,7 @@
 
 		<!-- Comments Section -->
 		<section style="margin-top: 2rem">
-			<h2>댓글 ({data.comments.length})</h2>
+			<h2>{t(locale, 'post.comments')} ({data.comments.length})</h2>
 
 			{#if data.user}
 				<div class="card">
@@ -83,7 +85,7 @@
 						<div class="form-group" style="margin-bottom: 0.75rem">
 							<textarea
 								name="content"
-								placeholder="댓글을 입력하세요..."
+								placeholder={t(locale, 'post.commentPlaceholder')}
 								rows="3"
 								required
 								disabled={isLoading}
@@ -93,17 +95,17 @@
 						<div style="display: flex; gap: 0.75rem; align-items: center">
 							<label class="checkbox-label" style="margin: 0">
 								<input type="checkbox" name="visibility" disabled={isLoading} />
-								<span>공개</span>
+								<span>{t(locale, 'post.public')}</span>
 							</label>
 							<button type="submit" class="btn btn-sm" disabled={isLoading}>
-								{isLoading ? '등록 중...' : '댓글 등록'}
+								{isLoading ? t(locale, 'post.addingComment') : t(locale, 'post.addComment')}
 							</button>
 						</div>
 					</form>
 				</div>
 			{:else}
 				<div class="card" style="text-align: center; color: var(--text-dim)">
-					댓글을 작성하려면 <a href="/login">로그인</a>해주세요.
+					{@html t(locale, 'post.loginToComment', { link: `<a href="/login">${t(locale, 'nav.login')}</a>` })}
 				</div>
 			{/if}
 
@@ -113,7 +115,7 @@
 						<span>
 							<strong style="color: var(--text)">{comment.author?.username ?? '?'}</strong>
 							<span> &middot; </span>
-							<span>{new Date(comment.created_at).toLocaleDateString('ko-KR')}</span>
+							<span>{new Date(comment.created_at).toLocaleDateString(dateLocale(locale))}</span>
 						</span>
 						{#if data.user && (data.user.id === comment.author?.id || isAdmin)}
 							<form
@@ -121,7 +123,7 @@
 								action="?/deleteComment"
 								style="margin: 0"
 								use:enhance={({ cancel }) => {
-									if (!confirm('이 댓글을 삭제하시겠습니까?')) {
+									if (!confirm(t(locale, 'post.confirmDeleteComment'))) {
 										cancel();
 										return;
 									}
@@ -129,7 +131,7 @@
 								}}
 							>
 								<input type="hidden" name="commentId" value={comment.id} />
-								<button type="submit" class="btn btn-sm btn-danger">삭제</button>
+								<button type="submit" class="btn btn-sm btn-danger">{t(locale, 'post.delete')}</button>
 							</form>
 						{/if}
 					</div>
@@ -140,7 +142,7 @@
 			{/each}
 
 			{#if data.comments.length === 0}
-				<p class="meta" style="text-align: center">아직 댓글이 없습니다.</p>
+				<p class="meta" style="text-align: center">{t(locale, 'post.noComments')}</p>
 			{/if}
 		</section>
 	{/if}
