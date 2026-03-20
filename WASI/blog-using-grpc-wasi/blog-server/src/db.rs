@@ -3,12 +3,12 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use surrealdb::engine::remote::ws::{Client, Ws};
 use surrealdb::opt::auth::Root;
-use surrealdb::sql::Thing;
+use surrealdb::types::{RecordId, RecordIdKey, SurrealValue};
 use surrealdb::Surreal;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, SurrealValue)]
 pub struct UserRecord {
-    pub id: Option<Thing>,
+    pub id: Option<RecordId>,
     pub username: String,
     pub email: String,
     pub password_hash: String,
@@ -22,9 +22,9 @@ pub struct UserRecord {
     pub theme: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, SurrealValue)]
 pub struct PostRecord {
-    pub id: Option<Thing>,
+    pub id: Option<RecordId>,
     pub title: String,
     pub content: String,
     pub author_id: String,
@@ -34,9 +34,9 @@ pub struct PostRecord {
     pub updated_at: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, SurrealValue)]
 pub struct CommentRecord {
-    pub id: Option<Thing>,
+    pub id: Option<RecordId>,
     pub content: String,
     pub post_id: String,
     pub author_id: String,
@@ -45,13 +45,20 @@ pub struct CommentRecord {
     pub created_at: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, SurrealValue)]
 struct CountResult {
     count: u64,
 }
 
-pub fn thing_to_id(thing: &Option<Thing>) -> String {
-    thing.as_ref().map(|t| t.id.to_raw()).unwrap_or_default()
+pub fn thing_to_id(record_id: &Option<RecordId>) -> String {
+    record_id
+        .as_ref()
+        .map(|r| match &r.key {
+            RecordIdKey::String(s) => s.clone(),
+            RecordIdKey::Number(n) => n.to_string(),
+            other => format!("{other:?}"),
+        })
+        .unwrap_or_default()
 }
 
 pub struct Database {
@@ -61,7 +68,12 @@ pub struct Database {
 impl Database {
     pub async fn new(addr: &str, username: &str, password: &str) -> Result<Self> {
         let client = Surreal::new::<Ws>(addr).await?;
-        client.signin(Root { username, password }).await?;
+        client
+            .signin(Root {
+                username: username.to_string(),
+                password: password.to_string(),
+            })
+            .await?;
         client.use_ns("blog").use_db("blog").await?;
         Ok(Self { client })
     }
@@ -94,10 +106,10 @@ impl Database {
         let now = chrono::Utc::now().to_rfc3339();
         self.client
             .query("CREATE user SET username = $username, email = $email, password_hash = $password_hash, role = 'admin', created_at = $now")
-            .bind(("username", username))
-            .bind(("email", email))
-            .bind(("password_hash", password_hash))
-            .bind(("now", &now))
+            .bind(("username", username.to_string()))
+            .bind(("email", email.to_string()))
+            .bind(("password_hash", password_hash.to_string()))
+            .bind(("now", now))
             .await?;
 
         Ok(true)
@@ -185,10 +197,10 @@ impl Database {
         let mut result = self
             .client
             .query("CREATE user SET username = $username, email = $email, password_hash = $password_hash, role = 'user', created_at = $now")
-            .bind(("username", username))
-            .bind(("email", email))
-            .bind(("password_hash", password_hash))
-            .bind(("now", &now))
+            .bind(("username", username.to_string()))
+            .bind(("email", email.to_string()))
+            .bind(("password_hash", password_hash.to_string()))
+            .bind(("now", now))
             .await?;
         let user: Option<UserRecord> = result.take(0)?;
         user.ok_or_else(|| anyhow::anyhow!("사용자 생성 실패"))
@@ -198,7 +210,7 @@ impl Database {
         let mut result = self
             .client
             .query("SELECT * FROM user WHERE email = $email LIMIT 1")
-            .bind(("email", email))
+            .bind(("email", email.to_string()))
             .await?;
         let users: Vec<UserRecord> = result.take(0)?;
         Ok(users.into_iter().next())
@@ -233,8 +245,8 @@ impl Database {
         let mut result = self
             .client
             .query("UPDATE type::thing('user', $id) SET role = $role RETURN AFTER")
-            .bind(("id", user_id))
-            .bind(("role", role))
+            .bind(("id", user_id.to_string()))
+            .bind(("role", role.to_string()))
             .await?;
         let users: Vec<UserRecord> = result.take(0)?;
         Ok(users.into_iter().next())
@@ -251,33 +263,33 @@ impl Database {
         let mut post_result = self
             .client
             .query("SELECT * FROM post WHERE author_id = $uid")
-            .bind(("uid", user_id))
+            .bind(("uid", user_id.to_string()))
             .await?;
         let posts: Vec<PostRecord> = post_result.take(0)?;
         for post in &posts {
             let post_id = thing_to_id(&post.id);
             self.client
                 .query("DELETE comment WHERE post_id = $pid")
-                .bind(("pid", &post_id))
+                .bind(("pid", post_id))
                 .await?;
         }
 
         // 사용자가 작성한 댓글 삭제
         self.client
             .query("DELETE comment WHERE author_id = $uid")
-            .bind(("uid", user_id))
+            .bind(("uid", user_id.to_string()))
             .await?;
 
         // 사용자의 포스트 삭제
         self.client
             .query("DELETE post WHERE author_id = $uid")
-            .bind(("uid", user_id))
+            .bind(("uid", user_id.to_string()))
             .await?;
 
         // 사용자 삭제
         self.client
             .query("DELETE type::thing('user', $uid)")
-            .bind(("uid", user_id))
+            .bind(("uid", user_id.to_string()))
             .await?;
 
         Ok(true)
@@ -297,12 +309,12 @@ impl Database {
         let mut result = self
             .client
             .query("CREATE post SET title = $title, content = $content, author_id = $author_id, author_username = $author_username, visibility = $visibility, created_at = $now, updated_at = $now")
-            .bind(("title", title))
-            .bind(("content", content))
-            .bind(("author_id", author_id))
-            .bind(("author_username", author_username))
-            .bind(("visibility", visibility))
-            .bind(("now", &now))
+            .bind(("title", title.to_string()))
+            .bind(("content", content.to_string()))
+            .bind(("author_id", author_id.to_string()))
+            .bind(("author_username", author_username.to_string()))
+            .bind(("visibility", visibility.to_string()))
+            .bind(("now", now))
             .await?;
         let post: Option<PostRecord> = result.take(0)?;
         post.ok_or_else(|| anyhow::anyhow!("포스트 생성 실패"))
@@ -403,14 +415,14 @@ impl Database {
             .bind(("limit", per_page))
             .bind(("offset", offset));
         if let Some(uid) = uid {
-            q = q.bind(("uid", uid));
+            q = q.bind(("uid", uid.to_string()));
         }
         let mut result = q.await?;
         let posts: Vec<PostRecord> = result.take(0)?;
 
         let mut cq = self.client.query(count_query);
         if let Some(uid) = uid {
-            cq = cq.bind(("uid", uid));
+            cq = cq.bind(("uid", uid.to_string()));
         }
         let mut count_result = cq.await?;
         let counts: Vec<CountResult> = count_result.take(0)?;
@@ -440,11 +452,11 @@ impl Database {
         let mut result = self
             .client
             .query("UPDATE type::thing('post', $id) SET title = $title, content = $content, visibility = $visibility, updated_at = $now RETURN AFTER")
-            .bind(("id", id))
-            .bind(("title", title))
-            .bind(("content", content))
-            .bind(("visibility", visibility))
-            .bind(("now", &now))
+            .bind(("id", id.to_string()))
+            .bind(("title", title.to_string()))
+            .bind(("content", content.to_string()))
+            .bind(("visibility", visibility.to_string()))
+            .bind(("now", now))
             .await?;
         let posts: Vec<PostRecord> = result.take(0)?;
         Ok(posts.into_iter().next())
@@ -460,12 +472,12 @@ impl Database {
 
         self.client
             .query("DELETE comment WHERE post_id = $post_id")
-            .bind(("post_id", id))
+            .bind(("post_id", id.to_string()))
             .await?;
 
         self.client
             .query("DELETE type::thing('post', $id)")
-            .bind(("id", id))
+            .bind(("id", id.to_string()))
             .await?;
 
         Ok(true)
@@ -480,9 +492,9 @@ impl Database {
         let mut result = self
             .client
             .query("UPDATE type::thing('post', $id) SET visibility = $visibility, updated_at = $now RETURN AFTER")
-            .bind(("id", id))
-            .bind(("visibility", visibility))
-            .bind(("now", &now))
+            .bind(("id", id.to_string()))
+            .bind(("visibility", visibility.to_string()))
+            .bind(("now", now))
             .await?;
         let posts: Vec<PostRecord> = result.take(0)?;
         Ok(posts.into_iter().next())
@@ -502,12 +514,12 @@ impl Database {
         let mut result = self
             .client
             .query("CREATE comment SET content = $content, post_id = $post_id, author_id = $author_id, author_username = $author_username, visibility = $visibility, created_at = $now")
-            .bind(("content", content))
-            .bind(("post_id", post_id))
-            .bind(("author_id", author_id))
-            .bind(("author_username", author_username))
-            .bind(("visibility", visibility))
-            .bind(("now", &now))
+            .bind(("content", content.to_string()))
+            .bind(("post_id", post_id.to_string()))
+            .bind(("author_id", author_id.to_string()))
+            .bind(("author_username", author_username.to_string()))
+            .bind(("visibility", visibility.to_string()))
+            .bind(("now", now))
             .await?;
         let comment: Option<CommentRecord> = result.take(0)?;
         comment.ok_or_else(|| anyhow::anyhow!("댓글 생성 실패"))
@@ -523,7 +535,7 @@ impl Database {
         let mut result = self
             .client
             .query("SELECT * FROM comment WHERE post_id = $post_id ORDER BY created_at ASC LIMIT $limit START $offset")
-            .bind(("post_id", post_id))
+            .bind(("post_id", post_id.to_string()))
             .bind(("limit", per_page))
             .bind(("offset", offset))
             .await?;
@@ -557,9 +569,9 @@ impl Database {
         let mut result = self
             .client
             .query("UPDATE type::thing('comment', $id) SET content = $content, visibility = $visibility RETURN AFTER")
-            .bind(("id", id))
-            .bind(("content", content))
-            .bind(("visibility", visibility))
+            .bind(("id", id.to_string()))
+            .bind(("content", content.to_string()))
+            .bind(("visibility", visibility.to_string()))
             .await?;
         let comments: Vec<CommentRecord> = result.take(0)?;
         Ok(comments.into_iter().next())
@@ -575,7 +587,7 @@ impl Database {
 
         self.client
             .query("DELETE type::thing('comment', $id)")
-            .bind(("id", id))
+            .bind(("id", id.to_string()))
             .await?;
 
         Ok(true)
@@ -594,10 +606,10 @@ impl Database {
         let mut result = self
             .client
             .query("SELECT post_id, count() AS count FROM comment WHERE post_id IN $ids GROUP BY post_id")
-            .bind(("ids", post_ids))
+            .bind(("ids", post_ids.to_vec()))
             .await?;
 
-        #[derive(Debug, serde::Deserialize)]
+        #[derive(Debug, serde::Deserialize, SurrealValue)]
         struct GroupCount {
             post_id: String,
             count: u64,
@@ -613,7 +625,7 @@ impl Database {
         let mut result = self
             .client
             .query("SELECT count() AS count FROM comment WHERE post_id = $post_id GROUP ALL")
-            .bind(("post_id", post_id))
+            .bind(("post_id", post_id.to_string()))
             .await?;
         let counts: Vec<CountResult> = result.take(0)?;
         Ok(counts.first().map(|c| c.count as u32).unwrap_or(0))
@@ -655,8 +667,8 @@ impl Database {
         }
         self.client
             .query("UPDATE type::thing('user', $id) SET password_hash = $hash")
-            .bind(("id", user_id))
-            .bind(("hash", new_password_hash))
+            .bind(("id", user_id.to_string()))
+            .bind(("hash", new_password_hash.to_string()))
             .await?;
         Ok(true)
     }
@@ -671,10 +683,10 @@ impl Database {
         let mut result = self
             .client
             .query("UPDATE type::thing('user', $id) SET bio = $bio, website = $website, theme = $theme RETURN AFTER")
-            .bind(("id", user_id))
-            .bind(("bio", bio))
-            .bind(("website", website))
-            .bind(("theme", theme))
+            .bind(("id", user_id.to_string()))
+            .bind(("bio", bio.to_string()))
+            .bind(("website", website.to_string()))
+            .bind(("theme", theme.to_string()))
             .await?;
         let users: Vec<UserRecord> = result.take(0)?;
         Ok(users.into_iter().next())
@@ -696,7 +708,7 @@ impl Database {
             let mut result = self
                 .client
                 .query("SELECT * FROM post WHERE title CONTAINS $query OR content CONTAINS $query ORDER BY created_at DESC LIMIT $limit START $offset")
-                .bind(("query", query))
+                .bind(("query", query.to_string()))
                 .bind(("limit", per_page))
                 .bind(("offset", offset))
                 .await?;
@@ -705,7 +717,7 @@ impl Database {
             let mut count_result = self
                 .client
                 .query("SELECT count() AS count FROM post WHERE title CONTAINS $query OR content CONTAINS $query GROUP ALL")
-                .bind(("query", query))
+                .bind(("query", query.to_string()))
                 .await?;
             let counts: Vec<CountResult> = count_result.take(0)?;
             let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
@@ -717,8 +729,8 @@ impl Database {
             let mut result = self
                 .client
                 .query("SELECT * FROM post WHERE (title CONTAINS $query OR content CONTAINS $query) AND (visibility = 'public' OR author_id = $uid) ORDER BY created_at DESC LIMIT $limit START $offset")
-                .bind(("query", query))
-                .bind(("uid", uid))
+                .bind(("query", query.to_string()))
+                .bind(("uid", uid.to_string()))
                 .bind(("limit", per_page))
                 .bind(("offset", offset))
                 .await?;
@@ -727,8 +739,8 @@ impl Database {
             let mut count_result = self
                 .client
                 .query("SELECT count() AS count FROM post WHERE (title CONTAINS $query OR content CONTAINS $query) AND (visibility = 'public' OR author_id = $uid) GROUP ALL")
-                .bind(("query", query))
-                .bind(("uid", uid))
+                .bind(("query", query.to_string()))
+                .bind(("uid", uid.to_string()))
                 .await?;
             let counts: Vec<CountResult> = count_result.take(0)?;
             let total = counts.first().map(|c| c.count as u32).unwrap_or(0);
@@ -740,7 +752,7 @@ impl Database {
         let mut result = self
             .client
             .query("SELECT * FROM post WHERE (title CONTAINS $query OR content CONTAINS $query) AND visibility = 'public' ORDER BY created_at DESC LIMIT $limit START $offset")
-            .bind(("query", query))
+            .bind(("query", query.to_string()))
             .bind(("limit", per_page))
             .bind(("offset", offset))
             .await?;
@@ -749,7 +761,7 @@ impl Database {
         let mut count_result = self
             .client
             .query("SELECT count() AS count FROM post WHERE (title CONTAINS $query OR content CONTAINS $query) AND visibility = 'public' GROUP ALL")
-            .bind(("query", query))
+            .bind(("query", query.to_string()))
             .await?;
         let counts: Vec<CountResult> = count_result.take(0)?;
         let total = counts.first().map(|c| c.count as u32).unwrap_or(0);

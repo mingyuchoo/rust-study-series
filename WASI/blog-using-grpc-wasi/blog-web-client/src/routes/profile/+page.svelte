@@ -1,11 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import type { PageData, ActionData } from './$types';
 
 	export let data: PageData;
 	export let form: ActionData;
 	let isProfileLoading = false;
 	let isPasswordLoading = false;
+
+	function applyTheme(newTheme: string) {
+		document.documentElement.setAttribute('data-theme', newTheme);
+		document.cookie = `theme=${newTheme};path=/;max-age=${60 * 60 * 24 * 365};samesite=strict`;
+		invalidateAll();
+	}
 </script>
 
 <svelte:head>
@@ -87,6 +94,7 @@
 							value="dark"
 							checked={data.profile.theme !== 'light'}
 							disabled={isProfileLoading}
+							on:change={() => applyTheme('dark')}
 						/>
 						<span class="theme-preview theme-preview-dark">
 							<span class="theme-icon">🌙</span>
@@ -100,6 +108,7 @@
 							value="light"
 							checked={data.profile.theme === 'light'}
 							disabled={isProfileLoading}
+							on:change={() => applyTheme('light')}
 						/>
 						<span class="theme-preview theme-preview-light">
 							<span class="theme-icon">☀️</span>

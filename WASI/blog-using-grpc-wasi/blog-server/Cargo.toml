@@ -14,7 +14,7 @@ prost = "0.13"
 tokio = { version = "1", features = ["full"] }
 wasmtime = { version = "29", features = ["component-model"] }
 wasmtime-wasi = "29"
-surrealdb = { version = "1", features = ["protocol-ws"] }
+surrealdb = { version = "3", features = ["protocol-ws"] }
 jsonwebtoken = "9"
 argon2 = "0.5"
 serde = { version = "1", features = ["derive"] }
