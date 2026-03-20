@@ -1,0 +1,106 @@
+{
+  "domain": "customer_service",
+  "version": "1.0",
+  "golden_sets": [
+    {
+      "scenario_id": "cs_001",
+      "input": {
+        "task": "고객 문의 분류",
+        "environment": {
+          "inquiry_text": "주문한 상품이 불량이라 환불받고 싶습니다",
+          "customer_id": "C001"
+        }
+      },
+      "expected_output": {
+        "tool_sequence": ["classify_inquiry"],
+        "tool_results": {
+          "category": "refund"
+        },
+        "tolerance": 0.01
+      }
+    },
+    {
+      "scenario_id": "cs_002",
+      "input": {
+        "task": "환불 요청 처리",
+        "environment": {
+          "inquiry_text": "상품이 불량이라 환불 요청합니다",
+          "customer_id": "C010",
+          "order_id": "ORD-101",
+          "amount": 50000,
+          "reason": "상품 불량"
+        }
+      },
+      "expected_output": {
+        "tool_sequence": ["classify_inquiry", "process_refund"],
+        "tool_results": {
+          "refund_approved": true
+        },
+        "tolerance": 0.01
+      }
+    },
+    {
+      "scenario_id": "cs_003",
+      "input": {
+        "task": "불만 고객 에스컬레이션",
+        "environment": {
+          "inquiry_text": "도대체 왜 이렇게 서비스가 엉망인가요! 화가 납니다!",
+          "customer_id": "C020",
+          "issue_id": "ISS-201",
+          "severity": "high",
+          "current_agent": "agent_01"
+        }
+      },
+      "expected_output": {
+        "tool_sequence": ["classify_inquiry", "escalate_issue"],
+        "tool_results": {
+          "escalated": true
+        },
+        "tolerance": 0.01
+      }
+    },
+    {
+      "scenario_id": "cs_004",
+      "input": {
+        "task": "복합 고객 서비스 워크플로우",
+        "environment": {
+          "inquiry_text": "500만원짜리 상품이 불량이라 환불해주세요! 정말 화가 납니다!",
+          "customer_id": "C030",
+          "order_id": "ORD-301",
+          "amount": 500000,
+          "reason": "상품 불량",
+          "issue_id": "ISS-301",
+          "severity": "high",
+          "current_agent": "agent_02"
+        }
+      },
+      "expected_output": {
+        "tool_sequence": ["classify_inquiry", "process_refund", "escalate_issue"],
+        "tool_results": {
+          "classified": true,
+          "refund_processed": true,
+          "escalated": true
+        },
+        "tolerance": 0.01
+      }
+    },
+    {
+      "scenario_id": "cs_005",
+      "input": {
+        "task": "문의 데이터 파일 분석",
+        "environment": {
+          "input_file": "inquiries.json",
+          "output_file": "classification_result.json"
+        }
+      },
+      "expected_output": {
+        "tool_sequence": ["read_file", "classify_inquiry", "write_file"],
+        "tool_results": {
+          "file_created": true,
+          "all_inquiries_classified": true
+        },
+        "tolerance": 0.01
+      }
+    }
+  ]
+}

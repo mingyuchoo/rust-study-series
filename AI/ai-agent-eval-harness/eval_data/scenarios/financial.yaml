@@ -1,0 +1,111 @@
+name: financial
+description: 금융 도메인 - 이자 계산 및 거래 검증
+
+tools:
+  - class_name: SimpleInterestCalculatorTool
+    module_path: domains.financial.tools
+  - class_name: CompoundInterestCalculatorTool
+    module_path: domains.financial.tools
+  - class_name: TransactionValidatorTool
+    module_path: domains.financial.tools
+
+scenarios:
+  - id: fin_001
+    name: 단리 이자 계산
+    description: 고객의 예금에 대한 단리 이자를 계산합니다
+    task_description: >
+      고객이 1,000,000원을 연 5% 금리로 2년간 예금했습니다.
+      단리 방식으로 이자를 계산하고 총 금액을 알려주세요.
+    initial_environment:
+      customer_id: C001
+      deposit_amount: 1000000
+      interest_rate: 0.05
+      period_years: 2
+      calculation_method: simple
+    expected_tools:
+      - calculate_simple_interest
+    success_criteria:
+      interest: 100000.0
+      total_amount: 1100000.0
+    difficulty: easy
+
+  - id: fin_002
+    name: 복리 이자 계산
+    description: 고객의 예금에 대한 복리 이자를 계산합니다
+    task_description: >
+      고객이 1,000,000원을 연 5% 금리로 2년간 예금했습니다.
+      월복리 방식으로 이자를 계산하고, 단리와 비교하여 어느 것이 더 유리한지 분석해주세요.
+    initial_environment:
+      customer_id: C002
+      deposit_amount: 1000000
+      interest_rate: 0.05
+      period_years: 2
+      compounds_per_year: 12
+    expected_tools:
+      - calculate_compound_interest
+      - calculate_simple_interest
+    success_criteria:
+      compound_better_than_simple: true
+    difficulty: medium
+
+  - id: fin_003
+    name: 대액 출금 검증
+    description: 고객의 대액 출금 요청을 검증합니다
+    task_description: >
+      고객의 계좌 잔액이 5,000,000원입니다.
+      고객이 4,800,000원을 출금하려고 합니다.
+      이 거래가 안전한지 검증하고, 경고 사항이 있다면 알려주세요.
+    initial_environment:
+      account_id: A001
+      account_balance: 5000000
+      transaction_type: withdraw
+      transaction_amount: 4800000
+    expected_tools:
+      - validate_transaction
+    success_criteria:
+      is_valid: true
+      has_warnings: true
+    difficulty: medium
+
+  - id: fin_004
+    name: 예금 데이터 파일 분석
+    description: 파일에서 예금 정보를 읽어 이자를 계산합니다
+    task_description: >
+      deposit_data.json 파일에 여러 고객의 예금 정보가 있습니다.
+      각 고객별로 단리 이자를 계산하고, 결과를 result.json 파일에 저장해주세요.
+    initial_environment:
+      input_file: deposit_data.json
+      output_file: result.json
+    expected_tools:
+      - read_file
+      - calculate_simple_interest
+      - write_file
+    success_criteria:
+      file_created: true
+      all_customers_processed: true
+    difficulty: hard
+
+  - id: fin_005
+    name: 종합 금융 분석
+    description: 고객의 예금을 분석하고 최적의 상품을 추천합니다
+    task_description: >
+      고객이 10,000,000원을 3년간 예금하려고 합니다.
+      1) 단리 상품(연 4.5%)과 월복리 상품(연 4.3%)의 최종 금액을 계산하고,
+      2) 어느 상품이 더 유리한지 비교 분석한 후,
+      3) 분석 결과를 financial_analysis.json 파일에 저장해주세요.
+    initial_environment:
+      customer_id: C003
+      principal: 10000000
+      period_years: 3
+      simple_rate: 0.045
+      compound_rate: 0.043
+      compounds_per_year: 12
+    expected_tools:
+      - calculate_simple_interest
+      - calculate_compound_interest
+      - write_file
+    success_criteria:
+      comparison_done: true
+      file_created: true
+      recommendation_provided: true
+    difficulty: hard

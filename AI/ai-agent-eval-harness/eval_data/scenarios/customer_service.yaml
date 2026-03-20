@@ -1,0 +1,109 @@
+name: customer_service
+description: 고객 서비스 도메인 - 문의 분류, 환불 처리, 이슈 에스컬레이션
+
+tools:
+  - class_name: ClassifyInquiryTool
+    module_path: domains.customer_service.tools
+  - class_name: ProcessRefundTool
+    module_path: domains.customer_service.tools
+  - class_name: EscalateIssueTool
+    module_path: domains.customer_service.tools
+
+scenarios:
+  - id: cs_001
+    name: 고객 문의 분류
+    description: 고객 문의를 카테고리와 우선순위로 분류합니다
+    task_description: >
+      고객으로부터 '주문한 상품이 불량이라 환불받고 싶습니다'라는 문의가 접수되었습니다.
+      문의를 적절한 카테고리로 분류하고 우선순위를 결정해주세요.
+    initial_environment:
+      inquiry_text: "주문한 상품이 불량이라 환불받고 싶습니다"
+      customer_id: C001
+    expected_tools:
+      - classify_inquiry
+    success_criteria:
+      category: refund
+    difficulty: easy
+
+  - id: cs_002
+    name: 환불 요청 처리
+    description: 고객의 환불 요청을 분류하고 환불을 처리합니다
+    task_description: >
+      고객이 주문번호 ORD-101의 상품에 대해 불량을 사유로 50,000원 환불을 요청했습니다.
+      문의를 분류한 후 환불을 처리해주세요.
+    initial_environment:
+      inquiry_text: "상품이 불량이라 환불 요청합니다"
+      customer_id: C010
+      order_id: ORD-101
+      amount: 50000
+      reason: "상품 불량"
+    expected_tools:
+      - classify_inquiry
+      - process_refund
+    success_criteria:
+      refund_approved: true
+    difficulty: medium
+
+  - id: cs_003
+    name: 불만 고객 에스컬레이션
+    description: 불만 고객의 이슈를 분류하고 상위 담당자에게 에스컬레이션합니다
+    task_description: >
+      고객이 '도대체 왜 이렇게 서비스가 엉망인가요!'라며 강하게 불만을 표현하고 있습니다.
+      문의를 분류하고 심각도가 높으므로 상위 담당자에게 에스컬레이션해주세요.
+    initial_environment:
+      inquiry_text: "도대체 왜 이렇게 서비스가 엉망인가요! 화가 납니다!"
+      customer_id: C020
+      issue_id: ISS-201
+      severity: high
+      current_agent: agent_01
+    expected_tools:
+      - classify_inquiry
+      - escalate_issue
+    success_criteria:
+      escalated: true
+    difficulty: medium
+
+  - id: cs_004
+    name: 복합 고객 서비스 워크플로우
+    description: 고객 문의를 분류하고, 환불을 처리한 뒤, 고액 환불이므로 에스컬레이션까지 수행합니다
+    task_description: >
+      고객이 주문번호 ORD-301의 고가 상품(500,000원)에 대해 불량을 사유로
+      환불을 요청하면서 강한 불만을 표현하고 있습니다.
+      1) 문의를 분류하고, 2) 환불을 처리한 후,
+      3) 고액 환불이므로 상위 담당자에게 에스컬레이션해주세요.
+    initial_environment:
+      inquiry_text: "500만원짜리 상품이 불량이라 환불해주세요! 정말 화가 납니다!"
+      customer_id: C030
+      order_id: ORD-301
+      amount: 500000
+      reason: "상품 불량"
+      issue_id: ISS-301
+      severity: high
+      current_agent: agent_02
+    expected_tools:
+      - classify_inquiry
+      - process_refund
+      - escalate_issue
+    success_criteria:
+      classified: true
+      refund_processed: true
+      escalated: true
+    difficulty: hard
+
+  - id: cs_005
+    name: 문의 데이터 파일 분석
+    description: 파일에서 문의 목록을 읽어 일괄 분류하고 결과를 저장합니다
+    task_description: >
+      inquiries.json 파일에 여러 고객의 문의가 있습니다.
+      각 문의를 분류하고, 결과를 classification_result.json 파일에 저장해주세요.
+    initial_environment:
+      input_file: inquiries.json
+      output_file: classification_result.json
+    expected_tools:
+      - read_file
+      - classify_inquiry
+      - write_file
+    success_criteria:
+      file_created: true
+      all_inquiries_classified: true
+    difficulty: hard
