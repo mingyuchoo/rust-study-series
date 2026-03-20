@@ -1,9 +1,9 @@
+import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
 
-// Vite 설정 파일. React 플러그인과 경로 별칭 설정을 포함한다.
+// Vite 설정 파일. SvelteKit 플러그인과 프록시 설정을 포함한다.
 export default defineConfig({
-  plugins: [react()],
+  plugins: [sveltekit()],
   server: {
     port: 5173,
     strictPort: true,
@@ -19,10 +19,5 @@ export default defineConfig({
   preview: {
     port: 5173,
     strictPort: true,
-  },
-  resolve: {
-    alias: {
-      '@': '/src',
-    },
   },
 });

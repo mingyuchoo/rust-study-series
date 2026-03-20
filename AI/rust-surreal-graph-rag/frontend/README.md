@@ -1,52 +1,101 @@
-# RAG AI 웹 서비스 (프론트엔드)
+# RAG AI 웹 서비스 (Svelte 버전)
 
-> TypeScript, Bun, Vite, React 18, Axios, Fluent UI v8 기반의 클라이언트
+React 기반 `frontend`를 SvelteKit + Svelte 5로 포팅한 프론트엔드입니다.
 
-## 기능
+## 기술 스택
 
-- 로그인/로그아웃/내 정보(me)
-- 통합 질의응답(/api/chat/ask)
-- 벡터 검색(/api/search/vector)
-- 헬스 체크(/api/health)
+| 항목 | 기술 |
+|------|------|
+| 프레임워크 | SvelteKit 2 + Svelte 5 (runes) |
+| 언어 | TypeScript 5 |
+| 빌드 도구 | Vite 6 |
+| 런타임 | Bun 1.0+ |
+| HTTP 클라이언트 | 네이티브 fetch (래퍼) |
 
-## 사전 준비
+## 디렉토리 구조
 
-- Bun 1.0+
-- 백엔드 서버 실행 및 CORS 허용 상태
-
-## 환경 변수
-
-`.env` 또는 `.env.local` 파일에 다음 항목을 설정하십시오.
-
-```bash
-VITE_API_BASE_URL=http://localhost:4000
+```
+frontend/
+├── src/
+│   ├── app.html                          # HTML 진입점
+│   ├── app.css                           # 전역 스타일
+│   ├── lib/
+│   │   ├── services/                     # API 호출 함수
+│   │   │   ├── api.ts                    # fetch 래퍼 (인터셉터)
+│   │   │   ├── auth.ts                   # 인증 API
+│   │   │   ├── chat.ts                   # 채팅 API
+│   │   │   ├── vectorSearch.ts           # 벡터 검색 API
+│   │   │   ├── graphSearch.ts            # 그래프 검색 API
+│   │   │   ├── reindex.ts                # 재인덱싱 API
+│   │   │   └── health.ts                 # 헬스 체크 API
+│   │   ├── stores/
+│   │   │   └── auth.ts                   # 인증 상태 관리 (Svelte Store)
+│   │   └── types/
+│   │       └── api.ts                    # API 요청/응답 타입 정의
+│   └── routes/                           # 파일 기반 라우팅
+│       ├── +layout.svelte                # 레이아웃 (네비게이션 + 인증 가드)
+│       ├── +layout.ts                    # SPA 모드 설정
+│       ├── +page.svelte                  # 홈
+│       ├── login/+page.svelte            # 로그인
+│       ├── chat/+page.svelte             # 통합 질의응답
+│       ├── vector-search/+page.svelte    # 벡터 검색
+│       ├── graph-search/+page.svelte     # 그래프 검색
+│       ├── reindex/+page.svelte          # 재인덱싱 관리
+│       └── health/+page.svelte           # 헬스 체크
+├── svelte.config.js                      # SvelteKit 설정
+├── vite.config.ts                        # Vite 설정
+├── tsconfig.json                         # TypeScript 설정
+└── package.json                          # 의존성 및 스크립트
 ```
 
-## 설치 및 실행
+## 시작하기
 
 ```bash
+# 의존성 설치
 bun install
+
+# 개발 서버 실행 (localhost:5173)
 bun dev
-```
 
-## 빌드
+# 타입 체크
+bun run check
 
-```bash
+# 프로덕션 빌드
 bun run build
+
+# 빌드 결과 미리보기
 bun run preview
+
+# 코드 포매팅
+bun run format
 ```
 
-## 구조
+## React → Svelte 주요 변환 사항
 
-- `src/services/*`: Axios 기반 API 호출 래퍼와 인터셉터
-- `src/store/auth.tsx`: 인증 컨텍스트 및 토큰 저장/관리(localStorage)
-- `src/pages/*`: 페이지 컴포넌트 (Login, Chat, VectorSearch, Health)
-- `src/components/*`: 공용 컴포넌트 및 내비게이션 바
+| React | Svelte 5 |
+|-------|----------|
+| `useState` | `$state` rune |
+| `useEffect` | `$effect` rune / `onMount` |
+| `useContext` + Provider | `writable` store |
+| React Router | SvelteKit 파일 기반 라우팅 |
+| Fluent UI 컴포넌트 | CSS 기반 스타일링 |
+| Axios 인터셉터 | 네이티브 fetch 래퍼 |
+| `PrivateRoute` | `+layout.svelte` 인증 가드 |
 
-## 보안 주의
+## 라우팅
 
-- 토큰은 브라우저 저장소(localStorage)에 저장됩니다. 운영 환경에서는 보안 요구사항에 따라 저장소 전략과 SameSite/HttpOnly 쿠키 등으로 전환을 고려하십시오.
+| 경로 | 설명 | 인증 필요 |
+|------|------|-----------|
+| `/` | 홈 페이지 | 아니오 |
+| `/login` | 로그인 | 아니오 |
+| `/chat` | 통합 질의응답 | 예 |
+| `/vector-search` | 벡터 검색 | 예 |
+| `/graph-search` | 그래프 검색 | 예 |
+| `/reindex` | 재인덱싱 관리 | 예 |
+| `/health` | 시스템 상태 | 아니오 |
 
-## 라이선스
+## 보안 참고사항
 
-- 사내/프로젝트 정책을 따르십시오.
+- 토큰은 `localStorage`에 저장됩니다 (`rag_tokens_v1` 키).
+- 운영 환경에서는 **HttpOnly 쿠키** 사용을 권장합니다.
+- 401 응답 시 자동 토큰 갱신 로직이 포함되어 있습니다.
