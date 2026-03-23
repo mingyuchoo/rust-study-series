@@ -58,13 +58,10 @@ async fn create(
     Json(params): Json<RegisterParams>,
 ) -> Result<Response> {
     let user = users::Model::create_with_password(&ctx.db, &params).await?;
-    
+
     // Automatically verify the user since we're creating it from the admin panel
-    let user = user
-        .into_active_model()
-        .verified(&ctx.db)
-        .await?;
-    
+    let user = user.into_active_model().verified(&ctx.db).await?;
+
     format::json(UserResponse::from(&user))
 }
 
@@ -78,23 +75,26 @@ async fn update(
 ) -> Result<Response> {
     let user = users::Model::find_by_pid(&ctx.db, &id).await?;
     let mut user_active = user.into_active_model();
-    
+
     if let Some(email) = params.email {
         user_active.email = sea_orm::ActiveValue::Set(email);
     }
-    
+
     if let Some(name) = params.name {
         user_active.name = sea_orm::ActiveValue::Set(name);
     }
-    
+
     // If password is provided, update it
     if let Some(password) = params.password {
-        user_active = user_active.reset_password(&ctx.db, &password).await?.into_active_model();
+        user_active = user_active
+            .reset_password(&ctx.db, &password)
+            .await?
+            .into_active_model();
     } else {
         // Otherwise just update the other fields
         user_active = user_active.update(&ctx.db).await?.into_active_model();
     }
-    
+
     let updated_user = user_active.update(&ctx.db).await?;
     format::json(UserResponse::from(&updated_user))
 }
