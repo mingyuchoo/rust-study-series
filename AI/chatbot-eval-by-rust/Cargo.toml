@@ -1,0 +1,50 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/models",
+    "crates/rag-core",
+    "crates/eval-runner",
+    "crates/client-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT"
+
+[workspace.dependencies]
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Async
+tokio = { version = "1", features = ["full"] }
+
+# HTTP
+reqwest = { version = "0.12", features = ["json"] }
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Error handling
+thiserror = "2"
+anyhow = "1"
+
+# Environment
+dotenvy = "0.15"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Regex
+regex = "1"
+
+# UUID
+uuid = { version = "1", features = ["v4"] }
+
+# Internal crates
+models = { path = "crates/models" }
+rag-core = { path = "crates/rag-core" }
+eval-runner = { path = "crates/eval-runner" }

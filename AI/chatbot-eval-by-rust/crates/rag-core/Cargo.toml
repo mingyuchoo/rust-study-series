@@ -1,0 +1,17 @@
+[package]
+name = "rag-core"
+description = "RAG 챗봇 핵심 모듈 (OpenAI API + 인메모리 벡터스토어)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+models = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+dotenvy = { workspace = true }

@@ -1,0 +1,53 @@
+[config]
+  default_to_workspace = false
+
+[tasks.clean]
+  args    = ["clean"]
+  command = "cargo"
+
+[tasks.format]
+  args          = ["fmt", "--all"]
+  command       = "cargo"
+  install_crate = "rustfmt"
+
+[tasks.check]
+  args         = ["check", "--all"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.clippy]
+  args         = ["clippy", "--all", "--", "-D", "warnings"]
+  command      = "cargo"
+  dependencies = ["format"]
+
+[tasks.build]
+  args         = ["build", "--profile", "dev"]
+  command      = "cargo"
+  dependencies = ["clippy"]
+
+[tasks.release]
+  args         = ["build", "--profile", "release"]
+  command      = "cargo"
+  dependencies = ["clippy"]
+
+[tasks.test]
+  args         = ["test", "--all"]
+  command      = "cargo"
+  dependencies = ["clippy"]
+
+[tasks.doc]
+  args         = ["doc", "--all", "--no-deps", "--open"]
+  command      = "cargo"
+  dependencies = ["check"]
+
+[tasks.run]
+  args         = ["run", "--bin", "rust-eval-demo"]
+  command      = "cargo"
+  dependencies = ["clippy"]
+
+[tasks.watch-run]
+  # `cargo install cargo-watch`로 설치
+  args          = ["watch", "-x", "run --bin rust-eval-demo"]
+  command       = "cargo"
+  install_crate = "cargo-watch"
+  dependencies  = ["clippy"]

@@ -1,0 +1,11 @@
+[package]
+name = "models"
+description = "평가 데이터 모델 (EvalSample, EvalResult, AdversarialTest 등)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
