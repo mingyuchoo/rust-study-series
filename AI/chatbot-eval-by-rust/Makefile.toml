@@ -45,6 +45,11 @@
   command      = "cargo"
   dependencies = ["clippy"]
 
+[tasks.run-tui]
+  args         = ["run", "--bin", "rust-eval-tui"]
+  command      = "cargo"
+  dependencies = ["clippy"]
+
 [tasks.watch-run]
   # `cargo install cargo-watch`로 설치
   args          = ["watch", "-x", "run --bin rust-eval-demo"]

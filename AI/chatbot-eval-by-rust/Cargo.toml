@@ -5,6 +5,7 @@ members = [
     "crates/rag-core",
     "crates/eval-runner",
     "crates/client-cli",
+    "crates/client-tui",
 ]
 
 [workspace.package]
@@ -43,6 +44,12 @@ regex = "1"
 
 # UUID
 uuid = { version = "1", features = ["v4"] }
+
+# TUI
+ratatui = "0.29"
+crossterm = { version = "0.28", features = ["event-stream"] }
+futures = "0.3"
+libc = "0.2"
 
 # Internal crates
 models = { path = "crates/models" }

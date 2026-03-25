@@ -25,7 +25,12 @@ cargo clippy
 cargo fmt
 
 # 실행 (CLI)
-cargo run -- --tool llm-judge --save
+cargo run --bin rust-eval-demo -- --tool llm-judge --save
+
+# 실행 (TUI)
+cargo run --bin rust-eval-tui
+# 또는
+cargo make run-tui
 cargo run -- --tool safety --use-golden-json --save
 cargo run -- --tool ragas --save
 cargo run -- --tool langfuse --save
@@ -40,7 +45,8 @@ rust-eval-demo/
 │   ├── models/         # 공유 데이터 모델 (EvalSample, EvalResult 등)
 │   ├── rag-core/       # RAG 핵심 (OpenAI API, 임베딩, 벡터스토어)
 │   ├── eval-runner/    # 평가 도구 (LLM Judge, RAGAS, Safety, Langfuse, Promptfoo)
-│   └── client-cli/     # CLI 바이너리 (clap)
+│   ├── client-cli/     # CLI 바이너리 (clap)
+│   └── client-tui/     # TUI 바이너리 (ratatui + crossterm)
 ├── data/
 │   └── golden_dataset.json
 └── .env.example
@@ -54,6 +60,7 @@ rust-eval-demo/
 - **rag-core**: `RagChatbot`, `LlmClient`, `EmbeddingClient`, `VectorStore`, `RagConfig`
 - **eval-runner**: `run_llm_as_judge()`, `run_ragas_evaluation()`, `run_safety_evaluation()`, `run_langfuse_evaluation()`, `run_promptfoo_evaluation()`
 - **client-cli**: clap 기반 CLI 진입점
+- **client-tui**: ratatui + crossterm 기반 TUI 진입점
 
 ## 원본 Python 프로젝트와의 차이
 

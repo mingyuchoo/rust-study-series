@@ -1,0 +1,18 @@
+[package]
+name = "rust-eval-tui"
+description = "AI Agent 테스트 평가 TUI (ratatui + crossterm)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+eval-runner = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+dotenvy = { workspace = true }
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+futures = { workspace = true }
+libc = { workspace = true }
