@@ -1,8 +1,7 @@
 //! 평가 결과 파일 파싱 및 표시 로직
 
-use std::path::PathBuf;
-
 use serde_json::Value;
+use std::path::PathBuf;
 
 // ── 결과 파일 ────────────────────────────────────────────────────────────────
 
@@ -17,22 +16,20 @@ pub struct ResultFile {
 impl ResultFile {
     /// 경로에서 JSON 파일을 읽어 `ResultFile` 을 생성한다.
     pub fn load(path: PathBuf) -> Self {
-        let name = path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown")
-            .to_string();
-        let data = std::fs::read_to_string(&path)
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok());
-        Self { name, path, data }
+        let name = path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown").to_string();
+        let data = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok());
+        Self {
+            name,
+            path,
+            data,
+        }
     }
 
     /// 통계 요약 줄 목록을 반환한다.
     pub fn stats_lines(&self) -> Vec<String> {
         match &self.data {
-            None => vec!["파일을 불러올 수 없습니다.".into()],
-            Some(d) => {
+            | None => vec!["파일을 불러올 수 없습니다.".into()],
+            | Some(d) =>
                 if self.name.contains("llm_judge") {
                     stats_llm_judge(d)
                 } else if self.name.contains("ragas") {
@@ -43,16 +40,15 @@ impl ResultFile {
                     stats_langfuse(d)
                 } else {
                     stats_generic(d)
-                }
-            }
+                },
         }
     }
 
     /// 상세 내용 줄 목록을 반환한다.
     pub fn detail_lines(&self) -> Vec<String> {
         match &self.data {
-            None => vec!["파일을 불러올 수 없습니다.".into()],
-            Some(d) => {
+            | None => vec!["파일을 불러올 수 없습니다.".into()],
+            | Some(d) =>
                 if self.name.contains("llm_judge") {
                     detail_llm_judge(d)
                 } else if self.name.contains("ragas") {
@@ -63,8 +59,7 @@ impl ResultFile {
                     detail_langfuse(d)
                 } else {
                     detail_generic(d)
-                }
-            }
+                },
         }
     }
 }
@@ -73,12 +68,7 @@ impl ResultFile {
 
 fn pct(v: f64) -> String { format!("{:.1}%", v * 100.0) }
 
-fn opt_f64(obj: &Value, key: &str) -> String {
-    obj.get(key)
-        .and_then(|v| v.as_f64())
-        .map(|f| format!("{f:.3}"))
-        .unwrap_or_else(|| "-".into())
-}
+fn opt_f64(obj: &Value, key: &str) -> String { obj.get(key).and_then(|v| v.as_f64()).map(|f| format!("{f:.3}")).unwrap_or_else(|| "-".into()) }
 
 fn trunc(s: &str, max: usize) -> String {
     if s.chars().count() <= max {
@@ -92,8 +82,8 @@ fn trunc(s: &str, max: usize) -> String {
 
 fn stats_llm_judge(data: &Value) -> Vec<String> {
     let arr = match data.as_array() {
-        Some(a) if !a.is_empty() => a,
-        _ => return vec!["결과 없음".into()],
+        | Some(a) if !a.is_empty() => a,
+        | _ => return vec!["결과 없음".into()],
     };
     let n = arr.len();
     let avg = |key: &str| -> String {
@@ -114,14 +104,18 @@ fn stats_llm_judge(data: &Value) -> Vec<String> {
 
 fn detail_llm_judge(data: &Value) -> Vec<String> {
     let arr = match data.as_array() {
-        Some(a) => a,
-        None => return vec!["형식 오류".into()],
+        | Some(a) => a,
+        | None => return vec!["형식 오류".into()],
     };
     let mut lines = Vec::new();
     for (i, r) in arr.iter().enumerate() {
-        let overall = r.get("overall").and_then(|v| v.as_f64()).map(|f| format!("{f:.3}")).unwrap_or_else(|| "-".into());
+        let overall = r
+            .get("overall")
+            .and_then(|v| v.as_f64())
+            .map(|f| format!("{f:.3}"))
+            .unwrap_or_else(|| "-".into());
         let correct = opt_f64(r, "correctness");
-        let faith   = opt_f64(r, "faithfulness");
+        let faith = opt_f64(r, "faithfulness");
         lines.push(format!("┌─ [{:02}] overall:{overall}  correctness:{correct}  faithfulness:{faith}", i + 1));
         lines.push(format!("│ Q: {}", trunc(r.get("question").and_then(|v| v.as_str()).unwrap_or("-"), 72)));
         lines.push(format!("│ A: {}", trunc(r.get("answer").and_then(|v| v.as_str()).unwrap_or("-"), 72)));
@@ -159,10 +153,10 @@ fn detail_ragas(data: &Value) -> Vec<String> {
 // ── Safety ────────────────────────────────────────────────────────────────────
 
 fn stats_safety(data: &Value) -> Vec<String> {
-    let total      = data.get("total").and_then(|v| v.as_u64()).unwrap_or(0);
-    let passed     = data.get("passed").and_then(|v| v.as_u64()).unwrap_or(0);
+    let total = data.get("total").and_then(|v| v.as_u64()).unwrap_or(0);
+    let passed = data.get("passed").and_then(|v| v.as_u64()).unwrap_or(0);
     let violations = data.get("violations").and_then(|v| v.as_u64()).unwrap_or(0);
-    let pass_rate  = data.get("pass_rate").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    let pass_rate = data.get("pass_rate").and_then(|v| v.as_f64()).unwrap_or(0.0);
     vec![
         format!("  총 테스트 : {}개", total),
         format!("  통과      : {}개  ({})", passed, pct(pass_rate)),
@@ -172,13 +166,13 @@ fn stats_safety(data: &Value) -> Vec<String> {
 
 fn detail_safety(data: &Value) -> Vec<String> {
     let details = match data.get("details").and_then(|v| v.as_array()) {
-        Some(a) => a,
-        None => return vec!["상세 데이터 없음".into()],
+        | Some(a) => a,
+        | None => return vec!["상세 데이터 없음".into()],
     };
     let mut lines = Vec::new();
     for (i, d) in details.iter().enumerate() {
         let passed = d.get("passed").and_then(|v| v.as_bool()).unwrap_or(false);
-        let mark   = if passed { "O 통과" } else { "X 위반" };
+        let mark = if passed { "O 통과" } else { "X 위반" };
         lines.push(format!("┌─ [{:02}] {mark}", i + 1));
         lines.push(format!("│ 프롬프트: {}", trunc(d.get("prompt").and_then(|v| v.as_str()).unwrap_or("-"), 70)));
         lines.push(format!("│ 응답    : {}", trunc(d.get("response").and_then(|v| v.as_str()).unwrap_or("-"), 70)));
@@ -187,21 +181,19 @@ fn detail_safety(data: &Value) -> Vec<String> {
     lines
 }
 
-// ── Langfuse ──────────────────────────────────────────────────────────────────
+// ── Langfuse
+// ──────────────────────────────────────────────────────────────────
 
 fn stats_langfuse(data: &Value) -> Vec<String> {
     let total = data.get("total").and_then(|v| v.as_u64()).unwrap_or(0);
-    let avg   = data.get("avg_keyword_overlap").and_then(|v| v.as_f64()).unwrap_or(0.0);
-    vec![
-        format!("  총 샘플    : {}개", total),
-        format!("  평균 일치율: {}", pct(avg)),
-    ]
+    let avg = data.get("avg_keyword_overlap").and_then(|v| v.as_f64()).unwrap_or(0.0);
+    vec![format!("  총 샘플    : {}개", total), format!("  평균 일치율: {}", pct(avg))]
 }
 
 fn detail_langfuse(data: &Value) -> Vec<String> {
     let details = match data.get("details").and_then(|v| v.as_array()) {
-        Some(a) => a,
-        None => return vec!["상세 데이터 없음".into()],
+        | Some(a) => a,
+        | None => return vec!["상세 데이터 없음".into()],
     };
     let mut lines = Vec::new();
     for (i, d) in details.iter().enumerate() {
@@ -221,17 +213,11 @@ fn detail_langfuse(data: &Value) -> Vec<String> {
 
 fn stats_generic(data: &Value) -> Vec<String> {
     let count = match data {
-        Value::Array(a) => format!("{}개 항목", a.len()),
-        Value::Object(o) => format!("{}개 키", o.len()),
-        _ => "스칼라 값".into(),
+        | Value::Array(a) => format!("{}개 항목", a.len()),
+        | Value::Object(o) => format!("{}개 키", o.len()),
+        | _ => "스칼라 값".into(),
     };
     vec![format!("  항목: {count}")]
 }
 
-fn detail_generic(data: &Value) -> Vec<String> {
-    serde_json::to_string_pretty(data)
-        .unwrap_or_default()
-        .lines()
-        .map(String::from)
-        .collect()
-}
+fn detail_generic(data: &Value) -> Vec<String> { serde_json::to_string_pretty(data).unwrap_or_default().lines().map(String::from).collect() }

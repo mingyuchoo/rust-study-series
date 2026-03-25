@@ -1,14 +1,25 @@
 //! TUI 렌더링
 
-use ratatui::{
-    Frame,
-    layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph, Wrap},
-};
-
-use crate::app::{App, RunState, Screen, TOOLS};
+use crate::app::{App,
+                 RunState,
+                 Screen,
+                 TOOLS};
+use ratatui::{Frame,
+              layout::{Constraint,
+                       Direction,
+                       Layout,
+                       Rect},
+              style::{Color,
+                      Modifier,
+                      Style},
+              text::{Line,
+                     Span},
+              widgets::{Block,
+                        Borders,
+                        List,
+                        ListItem,
+                        Paragraph,
+                        Wrap}};
 
 // ── 진입점 ───────────────────────────────────────────────────────────────────
 
@@ -24,8 +35,8 @@ pub fn render(f: &mut Frame, app: &App) {
     render_title(f, root[0], app);
 
     match app.screen {
-        Screen::Run     => render_run_screen(f, root[1], app),
-        Screen::Results => render_results_screen(f, root[1], app),
+        | Screen::Run => render_run_screen(f, root[1], app),
+        | Screen::Results => render_results_screen(f, root[1], app),
     }
 
     render_status_bar(f, root[2], app);
@@ -35,11 +46,11 @@ pub fn render(f: &mut Frame, app: &App) {
 
 fn render_title(f: &mut Frame, area: Rect, app: &App) {
     let (run_style, res_style) = match app.screen {
-        Screen::Run => (
+        | Screen::Run => (
             Style::default().fg(Color::Black).bg(Color::Cyan).add_modifier(Modifier::BOLD),
             Style::default().fg(Color::DarkGray),
         ),
-        Screen::Results => (
+        | Screen::Results => (
             Style::default().fg(Color::DarkGray),
             Style::default().fg(Color::Black).bg(Color::Yellow).add_modifier(Modifier::BOLD),
         ),
@@ -60,10 +71,8 @@ fn render_title(f: &mut Frame, area: Rect, app: &App) {
 
 fn render_status_bar(f: &mut Frame, area: Rect, app: &App) {
     let hint = match app.screen {
-        Screen::Run =>
-            " Tab:결과보기  ↑↓/jk:도구선택  Enter:실행  s:저장  g:데이터셋  q:종료",
-        Screen::Results =>
-            " Tab:실행화면  ↑↓/jk:파일선택  PgUp/PgDn:스크롤  r:새로고침  q:종료",
+        | Screen::Run => " Tab:결과보기  ↑↓/jk:도구선택  Enter:실행  s:저장  g:데이터셋  q:종료",
+        | Screen::Results => " Tab:실행화면  ↑↓/jk:파일선택  PgUp/PgDn:스크롤  r:새로고침  q:종료",
     };
     let bar = Paragraph::new(hint).style(Style::default().bg(Color::DarkGray).fg(Color::White));
     f.render_widget(bar, area);
@@ -94,8 +103,7 @@ fn render_tool_menu(f: &mut Frame, area: Rect, app: &App) {
         .map(|(i, tool)| {
             let label = tool.label();
             if i == app.selected {
-                ListItem::new(format!(" ▶ {label}"))
-                    .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+                ListItem::new(format!(" ▶ {label}")).style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
             } else {
                 ListItem::new(format!("   {label}")).style(Style::default().fg(Color::White))
             }
@@ -106,14 +114,14 @@ fn render_tool_menu(f: &mut Frame, area: Rect, app: &App) {
 }
 
 fn render_options(f: &mut Frame, area: Rect, app: &App) {
-    let on_style  = Style::default().fg(Color::Green).add_modifier(Modifier::BOLD);
+    let on_style = Style::default().fg(Color::Green).add_modifier(Modifier::BOLD);
     let off_style = Style::default().fg(Color::DarkGray);
 
     let (state_label, state_color) = match &app.run_state {
-        RunState::Idle    => ("대기 중",   Color::Gray),
-        RunState::Running => ("실행 중...", Color::Yellow),
-        RunState::Done    => ("완료",      Color::Green),
-        RunState::Failed(_) => ("실패",   Color::Red),
+        | RunState::Idle => ("대기 중", Color::Gray),
+        | RunState::Running => ("실행 중...", Color::Yellow),
+        | RunState::Done => ("완료", Color::Green),
+        | RunState::Failed(_) => ("실패", Color::Red),
     };
 
     let text = vec![
@@ -139,20 +147,20 @@ fn render_options(f: &mut Frame, area: Rect, app: &App) {
         Line::from(Span::styled("  Enter: 실행   q/Ctrl+C: 종료", Style::default().fg(Color::DarkGray))),
     ];
 
-    let para = Paragraph::new(text)
-        .block(Block::default().title(" 옵션 ").borders(Borders::ALL))
-        .wrap(Wrap { trim: false });
+    let para = Paragraph::new(text).block(Block::default().title(" 옵션 ").borders(Borders::ALL)).wrap(Wrap {
+        trim: false,
+    });
     f.render_widget(para, area);
 }
 
 fn render_logs(f: &mut Frame, area: Rect, app: &App) {
     let visible = area.height.saturating_sub(2) as usize;
-    let total   = app.logs.len();
-    let start   = total.saturating_sub(visible);
-    let lines: Vec<Line> = app.logs[start..].iter().map(|l| Line::from(format!("  {l}"))).collect();
-    let para = Paragraph::new(lines)
-        .block(Block::default().title(" 로그 ").borders(Borders::ALL))
-        .wrap(Wrap { trim: false });
+    let total = app.logs.len();
+    let start = total.saturating_sub(visible);
+    let lines: Vec<Line> = app.logs[start ..].iter().map(|l| Line::from(format!("  {l}"))).collect();
+    let para = Paragraph::new(lines).block(Block::default().title(" 로그 ").borders(Borders::ALL)).wrap(Wrap {
+        trim: false,
+    });
     f.render_widget(para, area);
 }
 
@@ -188,8 +196,7 @@ fn render_result_file_list(f: &mut Frame, area: Rect, app: &App) {
                 let icon = if has_data { "○" } else { "×" };
                 let label = format!(" {icon} {}", rf.name);
                 if i == app.result_selected {
-                    ListItem::new(label)
-                        .style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+                    ListItem::new(label).style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
                 } else {
                     let color = if has_data { Color::White } else { Color::DarkGray };
                     ListItem::new(label).style(Style::default().fg(color))
@@ -223,9 +230,9 @@ fn render_result_stats(f: &mut Frame, area: Rect, app: &App) {
         .map(|rf| format!(" 통계 — {} ", rf.name))
         .unwrap_or_else(|| " 통계 ".into());
 
-    let para = Paragraph::new(lines)
-        .block(Block::default().title(title).borders(Borders::ALL))
-        .wrap(Wrap { trim: false });
+    let para = Paragraph::new(lines).block(Block::default().title(title).borders(Borders::ALL)).wrap(Wrap {
+        trim: false,
+    });
     f.render_widget(para, area);
 }
 
@@ -242,10 +249,7 @@ fn render_result_detail(f: &mut Frame, area: Rect, app: &App) {
     // 스크롤 범위 클램프
     let scroll = app.detail_scroll.min(total_lines.saturating_sub(visible));
 
-    let lines: Vec<Line> = detail_lines[scroll..]
-        .iter()
-        .map(|l| Line::from(format!("  {l}")))
-        .collect();
+    let lines: Vec<Line> = detail_lines[scroll ..].iter().map(|l| Line::from(format!("  {l}"))).collect();
 
     // 스크롤 위치 표시
     let scroll_indicator = if total_lines > visible {
@@ -257,6 +261,8 @@ fn render_result_detail(f: &mut Frame, area: Rect, app: &App) {
 
     let para = Paragraph::new(lines)
         .block(Block::default().title(full_title).borders(Borders::ALL))
-        .wrap(Wrap { trim: false });
+        .wrap(Wrap {
+            trim: false,
+        });
     f.render_widget(para, area);
 }

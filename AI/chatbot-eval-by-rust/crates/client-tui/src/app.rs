@@ -1,8 +1,7 @@
 //! TUI 앱 상태 및 이벤트 타입
 
-use tokio::sync::mpsc;
-
 use crate::results::ResultFile;
+use tokio::sync::mpsc;
 
 // ── 평가 도구 ─────────────────────────────────────────────────────────────────
 
@@ -28,12 +27,12 @@ pub const TOOLS: &[EvalTool] = &[
 impl EvalTool {
     pub fn label(self) -> &'static str {
         match self {
-            | Self::LlmJudge  => "LLM-as-Judge",
-            | Self::Ragas     => "RAGAS",
-            | Self::Safety    => "Safety",
-            | Self::Langfuse  => "Langfuse",
+            | Self::LlmJudge => "LLM-as-Judge",
+            | Self::Ragas => "RAGAS",
+            | Self::Safety => "Safety",
+            | Self::Langfuse => "Langfuse",
             | Self::Promptfoo => "Promptfoo",
-            | Self::All       => "전체 평가",
+            | Self::All => "전체 평가",
         }
     }
 }
@@ -71,19 +70,19 @@ pub enum LogMsg {
 /// TUI 앱 전체 상태
 pub struct App {
     // ── 실행 화면
-    pub selected:        usize,
-    pub save:            bool,
+    pub selected: usize,
+    pub save: bool,
     pub use_golden_json: bool,
-    pub run_state:       RunState,
-    pub logs:            Vec<String>,
-    pub log_tx:          mpsc::UnboundedSender<LogMsg>,
-    pub log_rx:          mpsc::UnboundedReceiver<LogMsg>,
+    pub run_state: RunState,
+    pub logs: Vec<String>,
+    pub log_tx: mpsc::UnboundedSender<LogMsg>,
+    pub log_rx: mpsc::UnboundedReceiver<LogMsg>,
 
     // ── 결과 화면
-    pub screen:          Screen,
-    pub result_files:    Vec<ResultFile>,
+    pub screen: Screen,
+    pub result_files: Vec<ResultFile>,
     pub result_selected: usize,
-    pub detail_scroll:   usize,
+    pub detail_scroll: usize,
 }
 
 impl App {
@@ -147,15 +146,11 @@ impl App {
     }
 
     /// 실행 화면으로 전환한다.
-    pub fn switch_to_run(&mut self) {
-        self.screen = Screen::Run;
-    }
+    pub fn switch_to_run(&mut self) { self.screen = Screen::Run; }
 
     /// `eval_results/` 디렉토리의 JSON 파일을 불러온다.
     pub fn load_result_files(&mut self) {
-        let results_dir = std::env::current_dir()
-            .unwrap_or_default()
-            .join("eval_results");
+        let results_dir = std::env::current_dir().unwrap_or_default().join("eval_results");
 
         let mut files: Vec<ResultFile> = std::fs::read_dir(&results_dir)
             .into_iter()
@@ -185,11 +180,7 @@ impl App {
         }
     }
 
-    pub fn scroll_detail_up(&mut self, step: usize) {
-        self.detail_scroll = self.detail_scroll.saturating_sub(step);
-    }
+    pub fn scroll_detail_up(&mut self, step: usize) { self.detail_scroll = self.detail_scroll.saturating_sub(step); }
 
-    pub fn scroll_detail_down(&mut self, step: usize) {
-        self.detail_scroll = self.detail_scroll.saturating_add(step);
-    }
+    pub fn scroll_detail_down(&mut self, step: usize) { self.detail_scroll = self.detail_scroll.saturating_add(step); }
 }

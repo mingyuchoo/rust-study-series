@@ -149,7 +149,7 @@ fn is_quit(key: &crossterm::event::KeyEvent) -> bool {
 async fn handle_key(app: &mut App, code: KeyCode) {
     use app::Screen;
     match app.screen {
-        Screen::Run => match code {
+        | Screen::Run => match code {
             | KeyCode::Tab => app.switch_to_results(),
             | KeyCode::Up | KeyCode::Char('k') => app.move_up(),
             | KeyCode::Down | KeyCode::Char('j') => app.move_down(),
@@ -161,7 +161,7 @@ async fn handle_key(app: &mut App, code: KeyCode) {
                 },
             | _ => {},
         },
-        Screen::Results => match code {
+        | Screen::Results => match code {
             | KeyCode::Tab => app.switch_to_run(),
             | KeyCode::Up | KeyCode::Char('k') => app.move_result_up(),
             | KeyCode::Down | KeyCode::Char('j') => app.move_result_down(),
