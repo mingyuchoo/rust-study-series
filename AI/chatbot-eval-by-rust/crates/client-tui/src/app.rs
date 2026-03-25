@@ -2,7 +2,10 @@
 
 use tokio::sync::mpsc;
 
-/// 평가 도구 목록
+use crate::results::ResultFile;
+
+// ── 평가 도구 ─────────────────────────────────────────────────────────────────
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum EvalTool {
     LlmJudge,
@@ -25,17 +28,29 @@ pub const TOOLS: &[EvalTool] = &[
 impl EvalTool {
     pub fn label(self) -> &'static str {
         match self {
-            | Self::LlmJudge => "LLM-as-Judge",
-            | Self::Ragas => "RAGAS",
-            | Self::Safety => "Safety",
-            | Self::Langfuse => "Langfuse",
+            | Self::LlmJudge  => "LLM-as-Judge",
+            | Self::Ragas     => "RAGAS",
+            | Self::Safety    => "Safety",
+            | Self::Langfuse  => "Langfuse",
             | Self::Promptfoo => "Promptfoo",
-            | Self::All => "전체 평가",
+            | Self::All       => "전체 평가",
         }
     }
 }
 
-/// 실행 상태
+// ── 화면 ──────────────────────────────────────────────────────────────────────
+
+/// 현재 표시 중인 화면
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Screen {
+    /// 평가 실행 화면
+    Run,
+    /// 결과 보기 화면
+    Results,
+}
+
+// ── 실행 상태 ─────────────────────────────────────────────────────────────────
+
 #[derive(Clone, PartialEq)]
 pub enum RunState {
     Idle,
@@ -51,15 +66,24 @@ pub enum LogMsg {
     Failed(String),
 }
 
+// ── 앱 상태 ───────────────────────────────────────────────────────────────────
+
 /// TUI 앱 전체 상태
 pub struct App {
-    pub selected: usize,
-    pub save: bool,
+    // ── 실행 화면
+    pub selected:        usize,
+    pub save:            bool,
     pub use_golden_json: bool,
-    pub run_state: RunState,
-    pub logs: Vec<String>,
-    pub log_tx: mpsc::UnboundedSender<LogMsg>,
-    pub log_rx: mpsc::UnboundedReceiver<LogMsg>,
+    pub run_state:       RunState,
+    pub logs:            Vec<String>,
+    pub log_tx:          mpsc::UnboundedSender<LogMsg>,
+    pub log_rx:          mpsc::UnboundedReceiver<LogMsg>,
+
+    // ── 결과 화면
+    pub screen:          Screen,
+    pub result_files:    Vec<ResultFile>,
+    pub result_selected: usize,
+    pub detail_scroll:   usize,
 }
 
 impl App {
@@ -70,11 +94,17 @@ impl App {
             save: false,
             use_golden_json: false,
             run_state: RunState::Idle,
-            logs: vec!["도구를 선택하고 Enter를 눌러 평가를 실행하세요.".to_string()],
+            logs: vec!["도구를 선택하고 Enter를 눌러 평가를 실행하세요.".into()],
             log_tx,
             log_rx,
+            screen: Screen::Run,
+            result_files: Vec::new(),
+            result_selected: 0,
+            detail_scroll: 0,
         }
     }
+
+    // ── 실행 화면 메서드 ──────────────────────────────────────────────────────
 
     pub fn selected_tool(&self) -> EvalTool { TOOLS[self.selected] }
 
@@ -97,7 +127,7 @@ impl App {
                 | LogMsg::Line(line) => self.logs.push(line),
                 | LogMsg::Done => {
                     self.logs.push("─".repeat(44));
-                    self.logs.push("완료".to_string());
+                    self.logs.push("완료".into());
                     self.run_state = RunState::Done;
                 },
                 | LogMsg::Failed(e) => {
@@ -106,5 +136,60 @@ impl App {
                 },
             }
         }
+    }
+
+    // ── 결과 화면 메서드 ──────────────────────────────────────────────────────
+
+    /// 결과 화면으로 전환하고 파일 목록을 불러온다.
+    pub fn switch_to_results(&mut self) {
+        self.screen = Screen::Results;
+        self.load_result_files();
+    }
+
+    /// 실행 화면으로 전환한다.
+    pub fn switch_to_run(&mut self) {
+        self.screen = Screen::Run;
+    }
+
+    /// `eval_results/` 디렉토리의 JSON 파일을 불러온다.
+    pub fn load_result_files(&mut self) {
+        let results_dir = std::env::current_dir()
+            .unwrap_or_default()
+            .join("eval_results");
+
+        let mut files: Vec<ResultFile> = std::fs::read_dir(&results_dir)
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().and_then(|x| x.to_str()) == Some("json"))
+            .map(|e| ResultFile::load(e.path()))
+            .collect();
+        files.sort_by(|a, b| a.name.cmp(&b.name));
+
+        self.result_files = files;
+        self.result_selected = self.result_selected.min(self.result_files.len().saturating_sub(1));
+        self.detail_scroll = 0;
+    }
+
+    pub fn move_result_up(&mut self) {
+        if self.result_selected > 0 {
+            self.result_selected -= 1;
+            self.detail_scroll = 0;
+        }
+    }
+
+    pub fn move_result_down(&mut self) {
+        if self.result_selected + 1 < self.result_files.len() {
+            self.result_selected += 1;
+            self.detail_scroll = 0;
+        }
+    }
+
+    pub fn scroll_detail_up(&mut self, step: usize) {
+        self.detail_scroll = self.detail_scroll.saturating_sub(step);
+    }
+
+    pub fn scroll_detail_down(&mut self, step: usize) {
+        self.detail_scroll = self.detail_scroll.saturating_add(step);
     }
 }

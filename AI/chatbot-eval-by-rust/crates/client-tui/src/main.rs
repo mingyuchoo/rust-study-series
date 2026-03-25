@@ -11,6 +11,7 @@
 //! 사용하므로 fd 1 리다이렉트의 영향을 받지 않는다.
 
 mod app;
+mod results;
 mod ui;
 
 use anyhow::Result;
@@ -146,16 +147,29 @@ fn is_quit(key: &crossterm::event::KeyEvent) -> bool {
 }
 
 async fn handle_key(app: &mut App, code: KeyCode) {
-    match code {
-        | KeyCode::Up | KeyCode::Char('k') => app.move_up(),
-        | KeyCode::Down | KeyCode::Char('j') => app.move_down(),
-        | KeyCode::Char('s') => app.toggle_save(),
-        | KeyCode::Char('g') => app.toggle_golden_json(),
-        | KeyCode::Enter =>
-            if app.run_state != RunState::Running {
-                start_evaluation(app).await;
-            },
-        | _ => {},
+    use app::Screen;
+    match app.screen {
+        Screen::Run => match code {
+            | KeyCode::Tab => app.switch_to_results(),
+            | KeyCode::Up | KeyCode::Char('k') => app.move_up(),
+            | KeyCode::Down | KeyCode::Char('j') => app.move_down(),
+            | KeyCode::Char('s') => app.toggle_save(),
+            | KeyCode::Char('g') => app.toggle_golden_json(),
+            | KeyCode::Enter =>
+                if app.run_state != RunState::Running {
+                    start_evaluation(app).await;
+                },
+            | _ => {},
+        },
+        Screen::Results => match code {
+            | KeyCode::Tab => app.switch_to_run(),
+            | KeyCode::Up | KeyCode::Char('k') => app.move_result_up(),
+            | KeyCode::Down | KeyCode::Char('j') => app.move_result_down(),
+            | KeyCode::PageUp => app.scroll_detail_up(10),
+            | KeyCode::PageDown => app.scroll_detail_down(10),
+            | KeyCode::Char('r') => app.load_result_files(),
+            | _ => {},
+        },
     }
 }
 
