@@ -3,77 +3,69 @@
     <img src="https://raw.githubusercontent.com/leptos-rs/leptos/main/docs/logos/Leptos_logo_RGB.svg" alt="Leptos Logo">
 </picture>
 
-# Leptos Client-Side Rendered (CSR) App Starter Template
+# leptos-csr-extern-api
 
-This is a template for use with the [Leptos][Leptos] web framework using the [Trunk][Trunk] tool to compile and serve your app in development.
+Leptos CSR (클라이언트 사이드 렌더링) + 외부 API 연동 예제 프로젝트입니다.
+[Trunk](https://github.com/trunk-rs/trunk) 빌드 도구를 사용합니다.
 
-## Creating your repo from the template
+## 주요 의존성
 
-This template requires you to have `cargo-generate` installed. You can install it with
+- `leptos` 0.6 (CSR, nightly 기능) - 반응형 웹 프레임워크
+- `leptos_meta` 0.6 - 메타 태그 관리
+- `leptos_router` 0.6 - 클라이언트 사이드 라우팅
+- `gloo-net` 0.6.0 - HTTP 클라이언트 (WASM용)
+- `gloo-timers` 0.2 - 타이머 유틸리티
+- `serde` 1.0.215 + `serde_json` 1.0.132 - 직렬화/역직렬화
+- `console_log` 1 - 브라우저 콘솔 로깅
 
-```sh
-cargo install cargo-generate
-```
+## 사전 준비
 
+1. Rust nightly 툴체인 설치
 
-To set up your project with this template, run
+   ```bash
+   rustup toolchain install nightly --allow-downgrade
+   ```
 
-```sh
-cargo generate --git https://github.com/leptos-community/start-csr
-```
+2. WebAssembly 타겟 추가
 
-to generate your new project, then
+   ```bash
+   rustup target add wasm32-unknown-unknown
+   ```
 
-```sh
-cd leptos-csr-extern-api
-```
+3. Trunk 설치
 
-to go to your newly created project.
+   ```bash
+   cargo install trunk
+   ```
 
-By default, this template uses Rust `nightly` and requires that you've installed the `wasm` compilation target for your toolchain.
+4. (선택) `cargo-generate` 설치
 
+   ```bash
+   cargo install cargo-generate
+   ```
 
-Sass and Tailwind are also supported by the Trunk build tool, but are optional additions: [see here for more info on how to set those up with Trunk][Trunk-instructions].
+## 개발 모드 실행
 
-
-If you don't have Rust nightly, you can install it with
-```sh
-rustup toolchain install nightly --allow-downgrade
-```
-
-You can add the `wasm` compilation target to rust using
-```sh
-rustup target add wasm32-unknown-unknown
-```
-
-
-## Developing your Leptos CSR project
-
-To develop your Leptos CSR project, running
-
-```sh
+```bash
 trunk serve --port 3000 --open
 ```
 
-will open your app in your default browser at `http://localhost:3000`.
+기본 접속 주소: `http://localhost:3000`
 
+## 릴리즈 빌드
 
-## Deploying your Leptos CSR project
-
-To build a Leptos CSR app for release, use the command
-
-```sh
+```bash
 trunk build --release
 ```
 
-This will output the files necessary to run your app into the `dist` folder; you can then use any static site host to serve these files.
+빌드 결과물은 `dist` 폴더에 생성되며, 정적 파일 호스팅 서비스에 배포할 수 있습니다.
 
-For further information about hosting Leptos CSR apps, please refer to [the Leptos Book chapter on deployment available here][deploy-csr].
+## 참고 자료
 
+- [Leptos 공식 문서](https://book.leptos.dev/)
+- [Trunk 공식 문서](https://trunkrs.dev/)
+- [CSR 배포 가이드](https://book.leptos.dev/deployment/csr.html)
 
-[Leptos]: https://github.com/leptos-rs/leptos
+## Licensing
 
-[Trunk]: https://github.com/trunk-rs/trunk
-[Trunk-instructions]: https://trunkrs.dev/assets/
-
-[deploy-csr]: https://book.leptos.dev/deployment/csr.html
+This template itself is released under the Unlicense.

@@ -2,12 +2,29 @@
 
 ![CI](https://github.com/napi-rs/package-template/workflows/CI/badge.svg)
 
-> [napi-rs](https://napi.rs)를 사용하여 Rust로 Node.js 네이티브 애드온을 작성하는 프로젝트입니다.
+> [napi-rs](https://napi.rs) v3을 사용하여 Rust로 Node.js 네이티브 애드온을 작성하는 프로젝트입니다.
+
+## 주요 기능
+
+현재 구현된 네이티브 함수:
+
+- `plus100(input: number): number` - 입력값에 100을 더하여 반환
+
+## 주요 의존성
+
+| 패키지 | 버전 | 용도 |
+|--------|------|------|
+| napi | 3.0.0 | Node.js N-API 바인딩 |
+| napi-derive | 3.0.0 | `#[napi]` 매크로 |
+| napi-build | 2 | 빌드 스크립트 |
+| @napi-rs/cli | ^3.2.0 | NAPI-RS CLI 도구 |
+| ava | ^7.0.0 | 테스트 프레임워크 |
+| oxlint | ^1.14.0 | 린터 |
 
 ## 요구 사항
 
 - [Rust](https://www.rust-lang.org/tools/install) (최신 stable 버전)
-- [Node.js](https://nodejs.org) v20 이상
+- [Node.js](https://nodejs.org) v12.22+ / v14.17+ / v15.12+ / v16+
 - [Bun](https://bun.sh) v1.2 이상
 
 ## 로컬 개발 환경 설정
@@ -29,10 +46,9 @@ bun run test
 $ ava --verbose
 
   ✔ sync function from native code
-  ✔ sleep function from native code (201ms)
   ─
 
-  2 tests passed
+  1 test passed
 ```
 
 ## 주요 기능
@@ -76,7 +92,7 @@ bun run lint
 
 GitHub Actions를 통해 커밋 및 풀 리퀘스트마다 자동으로 빌드 및 테스트가 실행됩니다.
 
-지원 매트릭스: `node@20`, `node@22` × `macOS`, `Linux`, `Windows`
+지원 플랫폼: `x86_64-pc-windows-msvc`, `x86_64-apple-darwin`, `x86_64-unknown-linux-gnu`, `aarch64-apple-darwin`
 
 ### 릴리스
 

@@ -1,5 +1,21 @@
-# README
-## How to build and run
+# p01_hello_world
+
+> The Rust Programming Language - Hello World 예제
+
+## 프로젝트 설명
+
+Rust의 기본 출력 매크로(`println!`, `print!`, `format!`)와 디버그 출력(`{:?}`, `{:#?}`) 사용법을 학습하는 프로젝트입니다.
+Cargo를 사용하지 않고 `rustc`로 직접 컴파일하는 방식입니다.
+
+## 프로젝트 구조
+
+```
+p01_hello_world/
+  main.rs       # 메인 소스 파일
+  README.md
+```
+
+## 빌드 및 실행 방법
 
 ```bash
 rustup default stable
@@ -8,32 +24,38 @@ rustc main.rs
 ./main
 ```
 
-## How to use watch mode
+## 주요 기능
 
-### Install `cargo-watch` for watch mode
+- `println!` 매크로를 활용한 다양한 출력 형식
+- `format!` 매크로를 사용한 문자열 포맷팅
+- `{:?}`, `{:#?}`를 사용한 디버그 출력
+
+## Watch 모드 사용법
+
+### `cargo-watch` 설치
 
 ```bash
 cargo install cargo-watch
 ```
 
-### Run as watch mode with `cargo-watch`
+### `cargo-watch`로 Watch 모드 실행
 
 ```bash
-# Run test only
+# 테스트만 실행
 cargo watch -x test
 
-# Run check then tests
+# check 후 테스트 실행
 cargo watch -x check -x test
 
-# Run run current application
+# 현재 애플리케이션 실행
 cargo watch -x 'run --bin app'
 
-# Run run with arguments
+# 인수를 전달하여 실행
 cargo watch -x 'run -- --some-arg'
 
-# run an arbitrary command
+# 임의의 명령어 실행
 cargo watch -- echo Hello world
 
-# Run with features passed to carg
+# feature를 전달하여 실행
 cargo watch --features "foo,bar"
 ```

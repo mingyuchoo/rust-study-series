@@ -1,116 +1,117 @@
 # Clean Architecture TODO Application
 
-A Rust-based TODO application built with Clean Architecture principles, featuring clear separation of concerns across domain, application, adapter, and infrastructure layers.
+Rust 기반 Clean Architecture 원칙을 적용한 TODO 애플리케이션입니다.
 
-## Features
+## 주요 기능
 
-- RESTful API for TODO management
-- **Swagger UI integration** for API documentation and testing
-- SQLite database with automatic schema initialization
-- Clean Architecture with dependency inversion
-- Async/await support with Actix-web
-- JSON serialization/deserialization
-- UUID-based entity identification
-- Timestamp tracking for created/updated dates
-- OpenAPI 3.0 specification with detailed schemas
+- TODO 관리용 RESTful API
+- Swagger UI를 통한 API 문서화 및 테스트
+- SQLite 데이터베이스 (자동 스키마 초기화)
+- Clean Architecture (의존성 역전 원칙)
+- Actix-web 기반 비동기 처리
+- JSON 직렬화/역직렬화
+- UUID 기반 엔티티 식별
+- 생성/수정 날짜 추적
+- OpenAPI 3.0 스펙 지원
 
-## Architecture
+## 아키텍처
 
-This project follows Clean Architecture principles with four distinct layers:
+Clean Architecture 원칙에 따른 4개 계층:
 
-- **Domain Layer** (`src/domain/`): Core business entities and rules
-- **Application Layer** (`src/application/`): Use cases and business logic
-- **Adapter Layer** (`src/adapters/`): External interfaces (HTTP, Database)
-- **Infrastructure Layer** (`src/infrastructure/`): Framework configuration and dependency injection
+- **Domain 계층** (`src/domain/`): 핵심 비즈니스 엔티티 및 규칙
+- **Application 계층** (`src/application/`): 유스케이스 및 비즈니스 로직
+- **Adapter 계층** (`src/adapters/`): 외부 인터페이스 (HTTP, 데이터베이스)
+- **Infrastructure 계층** (`src/infrastructure/`): 프레임워크 설정 및 의존성 주입
 
-For detailed architecture information, see [ARCHITECTURE.md](ARCHITECTURE.md).
+자세한 아키텍처 정보는 [ARCHITECTURE.md](ARCHITECTURE.md)를 참조하세요.
 
-## API Documentation
+## 주요 의존성
+
+| 패키지 | 버전 | 설명 |
+|--------|------|------|
+| `actix-web` | 4.9.0 | 웹 프레임워크 |
+| `actix-files` | 0.6.6 | 정적 파일 서빙 |
+| `sqlx` | 0.7 | SQLite 데이터베이스 |
+| `utoipa` | 4.2 | OpenAPI 문서 생성 |
+| `utoipa-swagger-ui` | 6.0 | Swagger UI |
+| `serde` / `serde_json` | 1.0 | JSON 직렬화 |
+| `uuid` | 1.0 | UUID 생성 |
+| `chrono` | 0.4 | 날짜/시간 처리 |
+| `clap` | 4.5.20 | CLI 인자 파싱 |
+| `tokio` | 1.0 | 비동기 런타임 |
+
+## API 문서
 
 ### Swagger UI
-Once the server is running, you can access the interactive API documentation at:
+서버 실행 후 아래 주소에서 API 문서를 확인할 수 있습니다:
 - **Swagger UI**: `http://localhost:8080/swagger-ui/`
 - **OpenAPI JSON**: `http://localhost:8080/api-docs/openapi.json`
 
-### API Endpoints
+### API 엔드포인트
 
-- `GET /api/todos` - Get all todos
-- `POST /api/todos` - Create a new todo
-- `PUT /api/todos/{id}` - Update an existing todo
-- `DELETE /api/todos/{id}` - Delete a todo
+- `GET /api/todos` - 전체 TODO 조회
+- `POST /api/todos` - 새 TODO 생성
+- `PUT /api/todos/{id}` - TODO 수정
+- `DELETE /api/todos/{id}` - TODO 삭제
 
-The Swagger UI provides:
-- Interactive API testing
-- Request/response examples
-- Schema documentation
-- Authentication support
+## 빠른 시작
 
-## Quick Start
+### 사전 요구사항
 
-### Prerequisites
+- Rust (최신 안정 버전)
+- Cargo 패키지 관리자
 
-- Rust (latest stable version)
-- Cargo package manager
-
-### Installation & Running
+### 설치 및 실행
 
 ```bash
-# Clone and navigate to the project
-cd todo-app
-
-# Check the project
+# 프로젝트 확인
 cargo check
 
-# Run tests
+# 테스트 실행
 cargo test
 
-# Run in development mode (default port 8080)
+# 개발 모드 실행 (기본 포트 8080)
 cargo run
 
-# Run with custom port
+# 커스텀 포트로 실행
 cargo run -- --port 8000
 
-# Build for release
+# 릴리스 빌드
 cargo build --release
-
-# Run release binary
-./target/release/backend --port 8000
 ```
 
-### Database
+### 데이터베이스
 
-The application uses SQLite and automatically creates a `todos.db` file in the project root. The database schema is initialized automatically on startup.
+SQLite를 사용하며 프로젝트 루트에 `todos.db` 파일이 자동 생성됩니다.
 
-### Testing the API
-
-You can test the API using curl commands or the Swagger UI:
+### API 테스트
 
 ```bash
-# Get all todos
+# 전체 TODO 조회
 curl -X GET http://localhost:8080/api/todos
 
-# Create a new todo
+# 새 TODO 생성
 curl -X POST http://localhost:8080/api/todos \
   -H "Content-Type: application/json" \
-  -d '{"title": "Learn Rust", "description": "Study Rust programming language"}'
+  -d '{"title": "Rust 학습", "description": "Rust 프로그래밍 언어 학습하기"}'
 
-# Update a todo (replace {id} with actual todo ID)
+# TODO 수정 ({id}를 실제 ID로 대체)
 curl -X PUT http://localhost:8080/api/todos/{id} \
   -H "Content-Type: application/json" \
-  -d '{"title": "Learn Advanced Rust", "completed": true}'
+  -d '{"title": "고급 Rust 학습", "completed": true}'
 
-# Delete a todo (replace {id} with actual todo ID)
+# TODO 삭제
 curl -X DELETE http://localhost:8080/api/todos/{id}
 ```
 
-## Project Structure
+## 프로젝트 구조
 
 ```
 src/
-├── domain/              # Domain entities and business rules
-├── application/         # Use cases and repository traits  
-├── adapters/           # HTTP handlers and database implementations
-├── infrastructure/     # App configuration and dependency injection
-├── lib.rs             # Library entry point
-└── main.rs            # Application entry point
+├── domain/              # 도메인 엔티티 및 비즈니스 규칙
+├── application/         # 유스케이스 및 저장소 트레이트
+├── adapters/            # HTTP 핸들러 및 데이터베이스 구현
+├── infrastructure/      # 앱 설정 및 의존성 주입
+├── lib.rs               # 라이브러리 진입점
+└── main.rs              # 애플리케이션 진입점
 ```

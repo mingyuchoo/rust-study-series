@@ -1,100 +1,92 @@
-# Diesel PostgreSQL Clean Architecture
+# Diesel PostgreSQL 클린 아키텍처
 
-A Rust project demonstrating Clean Architecture principles with Diesel ORM and PostgreSQL integration.
+Diesel ORM과 PostgreSQL을 사용하여 클린 아키텍처 원칙을 적용한 Rust 프로젝트입니다.
 
-## 🚀 Quick Start
+## 빠른 시작
 
 ```bash
-# Start everything with Docker
+# Docker로 전체 실행
 docker-compose -f docker/docker-compose.yaml up --build
 
-# Open your browser
-# 🌐 Web UI: http://localhost:8000
-# 🔌 API: http://localhost:8000/api/todos
+# 브라우저에서 접속
+# 웹 UI: http://localhost:8000
+# API: http://localhost:8000/api/todos
 ```
 
-That's it! The app will automatically set up the database, run migrations, and seed sample data.
+앱이 자동으로 데이터베이스 설정, 마이그레이션, 샘플 데이터 삽입을 수행합니다.
 
-## Architecture
+## 아키텍처
 
-This project follows Clean Architecture with clear separation of concerns across multiple crates:
+클린 아키텍처 원칙에 따라 여러 크레이트로 분리된 워크스페이스 구조입니다:
 
-- **domain**: Core business entities and repository traits
-- **application**: Use cases and business logic
-- **adapters**: Repository implementations and external adapters  
-- **infrastructure**: Database infrastructure, migrations, and models
-- **main**: Application entry point and dependency injection
+- **domain**: 핵심 비즈니스 엔티티 및 리포지토리 트레이트
+- **application**: 유스케이스 및 비즈니스 로직
+- **adapters**: 리포지토리 구현체 및 외부 어댑터
+- **infrastructure**: 데이터베이스 인프라, 마이그레이션, 모델
+- **main**: 애플리케이션 진입점 및 의존성 주입
 
-## Features
+## 주요 기능
 
-- Clean Architecture implementation in Rust
-- PostgreSQL integration with Diesel ORM
-- RESTful API with Axum web framework
-- Full CRUD operations (Create, Read, Update, Delete)
-- Modern web UI with vanilla JavaScript
-- Docker containerization with multi-stage builds
-- Database migrations and seeding
-- Thread-safe database connection handling
+- Rust 기반 클린 아키텍처 구현
+- Diesel ORM을 통한 PostgreSQL 연동
+- Axum 웹 프레임워크 기반 RESTful API
+- 전체 CRUD 기능 (생성, 조회, 수정, 삭제)
+- Vanilla JavaScript 기반 웹 UI
+- Docker 컨테이너화 (멀티 스테이지 빌드)
+- 데이터베이스 마이그레이션 및 시딩
+- 스레드 안전 데이터베이스 연결 관리
 
-## Prerequisites
+## 사전 준비
 
-- Rust 1.86+ (see `rust-toolchain.toml`)
-- Docker and Docker Compose
-- PostgreSQL (if running locally)
+- Rust 1.86+ (`rust-toolchain.toml` 참조)
+- Docker 및 Docker Compose
+- PostgreSQL (로컬 실행 시)
 
-## Quick Start
+## 시작하기
 
-### Using Docker (Recommended)
+### Docker 사용 (권장)
 
 ```bash
-# Start PostgreSQL and the application
+# PostgreSQL과 앱 시작
 docker-compose -f docker/docker-compose.yaml up --build
 
-# Or use make
+# 또는 make 사용
 make docker-up
-
-# The app will automatically run migrations and create sample data
-# Access the web UI at: http://localhost:8000
-# Access the API at: http://localhost:8000/api/todos
 ```
 
-**That's it!** Open your browser and visit `http://localhost:8000` to see the Todo app in action.
-
-### Local Development
+### 로컬 개발
 
 ```bash
-# Install Diesel CLI
+# Diesel CLI 설치
 cargo install diesel_cli --no-default-features --features postgres
 
-# Set up environment
+# 환경 설정
 cp .env.test .env
 
-# Start PostgreSQL (adjust connection details as needed)
+# PostgreSQL 시작
 docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:17.6
 
-# Run migrations
+# 마이그레이션 실행
 diesel migration run --config-file infrastructure/diesel.toml
 
-# Run the application
+# 애플리케이션 실행
 cargo run -p main
 ```
 
-## Project Structure
+## 프로젝트 구조
 
+```text
+├── adapters/           # 리포지토리 구현체
+├── application/        # 유스케이스 (CreateTodo, ListTodos)
+├── domain/            # 엔티티 및 리포지토리 트레이트
+├── infrastructure/    # 데이터베이스 인프라
+│   ├── migrations/    # Diesel 마이그레이션
+│   └── src/          # DB 모델 및 스키마
+├── main/              # 애플리케이션 진입점
+└── docker/            # Docker 설정
 ```
-├── adapters/           # Repository implementations
-├── application/        # Use cases (CreateTodo, ListTodos)
-├── domain/            # Entities and repository traits
-├── infrastructure/             # Database infrastructure
-│   ├── migrations/    # Diesel migrations
-│   └── src/          # DB models and schema
-├── main/              # Application entry point
-└── docker/            # Docker configuration
-```
 
-## Database Schema
-
-The application uses a simple Todo table:
+## 데이터베이스 스키마
 
 ```sql
 CREATE TABLE todo (
@@ -103,156 +95,119 @@ CREATE TABLE todo (
 );
 ```
 
-## API Endpoints
+## API 엔드포인트
 
-The REST API provides full CRUD operations:
+| 메서드 | 엔드포인트 | 설명 |
+|--------|----------|------|
+| GET | `/api/todos` | 전체 할일 목록 |
+| GET | `/api/todos/:id` | 특정 할일 조회 |
+| POST | `/api/todos` | 새 할일 생성 |
+| PUT | `/api/todos/:id` | 할일 수정 |
+| DELETE | `/api/todos/:id` | 할일 삭제 |
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/todos` | List all todos |
-| GET | `/api/todos/:id` | Get a specific todo |
-| POST | `/api/todos` | Create a new todo |
-| PUT | `/api/todos/:id` | Update a todo |
-| DELETE | `/api/todos/:id` | Delete a todo |
-
-### API Examples
+### API 예시
 
 ```bash
-# List all todos
+# 전체 조회
 curl http://localhost:8000/api/todos
 
-# Create a new todo
+# 생성
 curl -X POST http://localhost:8000/api/todos \
   -H "Content-Type: application/json" \
   -d '{"title":"Learn Rust"}'
 
-# Update a todo
+# 수정
 curl -X PUT http://localhost:8000/api/todos/1 \
   -H "Content-Type: application/json" \
   -d '{"title":"Master Rust"}'
 
-# Delete a todo
+# 삭제
 curl -X DELETE http://localhost:8000/api/todos/1
 ```
 
-## Web UI
+## 웹 UI
 
-The application includes a modern, responsive web interface:
+모던하고 반응형인 웹 인터페이스가 포함되어 있습니다:
 
-- **Add todos**: Type in the input field and click "추가" or press Enter
-- **Edit todos**: Click the "수정" button on any todo item
-- **Delete todos**: Click the "삭제" button (with confirmation)
-- **Real-time updates**: The list updates automatically after each operation
+- 할일 추가: 입력 필드에 텍스트 입력 후 "추가" 클릭 또는 Enter
+- 할일 수정: "수정" 버튼 클릭
+- 할일 삭제: "삭제" 버튼 클릭 (확인 후 삭제)
+- 실시간 갱신: 작업 후 자동 갱신
 
-Access the web UI at `http://localhost:8000` after starting the server.
+접속 주소: `http://localhost:8000`
 
-## Development
+## 주요 의존성
 
-### Adding New Features
+- **웹 프레임워크**: Axum 0.7
+- **ORM**: Diesel 2.3
+- **데이터베이스**: PostgreSQL 17.6
+- **비동기 런타임**: Tokio
+- **프론트엔드**: Vanilla JavaScript, HTML5, CSS3
 
-1. Define entities in `domain/src/entities.rs`
-2. Add repository traits in `domain/src/repositories.rs`
-3. Implement use cases in `application/src/`
-4. Create repository implementations in `adapters/src/`
-5. Update database schema in `infrastructure/migrations/`
-6. Add API handlers in `main/src/web/handlers.rs`
-7. Register routes in `main/src/web/routes.rs`
+## 환경 변수
 
-### Code Formatting
+- `DATABASE_URL`: PostgreSQL 연결 문자열 (예: `postgres://user:password@localhost:5432/dbname`)
+- `RUST_LOG`: 로깅 레벨 (기본: info)
 
-The project uses custom rustfmt configuration (see `rustfmt.toml`):
+## 개발
+
+### 빌드
+
+```bash
+# 전체 크레이트 빌드
+cargo build
+
+# 특정 크레이트 빌드
+cargo build -p main
+```
+
+### 코드 포맷팅
 
 ```bash
 cargo fmt
 ```
 
-### Building
+### API 테스트
 
 ```bash
-# Build all crates
-cargo build
-
-# Build specific crate
-cargo build -p main
+./test_api.sh
 ```
 
 ## Docker
 
-The multi-stage Dockerfile optimizes build times by:
-1. Caching dependencies separately from source code
-2. Using slim runtime image for smaller final size
-3. Including only necessary runtime dependencies
+멀티 스테이지 Dockerfile로 빌드 시간을 최적화합니다:
+1. 의존성과 소스 코드를 분리하여 캐싱
+2. 슬림 런타임 이미지로 최종 크기 축소
+3. 런타임에 필요한 의존성만 포함
 
-## Environment Variables
+## 아키텍처 다이어그램
 
-- `DATABASE_URL`: PostgreSQL connection string (e.g., `postgres://user:password@localhost:5432/dbname`)
-- `RUST_LOG`: Logging level (default: info)
-
-## Technology Stack
-
-- **Web Framework**: Axum 0.7
-- **ORM**: Diesel 2.3
-- **Database**: PostgreSQL 17.6
-- **Runtime**: Tokio (async)
-- **Frontend**: Vanilla JavaScript, HTML5, CSS3
-
-## Testing the API
-
-Use the provided test script to verify the API endpoints:
-
-```bash
-# Make sure the server is running first
-./test_api.sh
-```
-
-Or test manually with curl:
-
-```bash
-# Health check - list todos
-curl http://localhost:8000/api/todos
-
-# Create a todo
-curl -X POST http://localhost:8000/api/todos \
-  -H "Content-Type: application/json" \
-  -d '{"title":"My new task"}'
-```
-
-## Project Architecture
-
-This project demonstrates Clean Architecture with clear boundaries:
-
-```
-┌─────────────────────────────────────────┐
-│           Presentation Layer            │
-│  (Web UI + REST API Handlers)           │
-│         main/src/web/                    │
-└──────────────┬──────────────────────────┘
+```text
+┌──────────────────────────────────────┐
+│         프레젠테이션 계층              │
+│  (웹 UI + REST API 핸들러)            │
+│         main/src/web/                │
+└──────────────┬───────────────────────┘
                │
-┌──────────────▼──────────────────────────┐
-│         Application Layer                │
-│  (Use Cases: Create, Read, Update, etc.) │
-│         application/src/                 │
-└──────────────┬──────────────────────────┘
+┌──────────────▼───────────────────────┐
+│         애플리케이션 계층              │
+│  (유스케이스: 생성, 조회, 수정 등)      │
+│         application/src/             │
+└──────────────┬───────────────────────┘
                │
-┌──────────────▼──────────────────────────┐
-│           Domain Layer                   │
-│  (Entities + Repository Traits)          │
-│         domain/src/                      │
-└──────────────▲──────────────────────────┘
+┌──────────────▼───────────────────────┐
+│           도메인 계층                  │
+│  (엔티티 + 리포지토리 트레이트)         │
+│         domain/src/                  │
+└──────────────▲───────────────────────┘
                │
-┌──────────────┴──────────────────────────┐
-│      Infrastructure Layer                │
-│  Adapters: Repository Implementations    │
-│  Infra: Database, Migrations, Models     │
-│    adapters/src/ + infrastructure/src/            │
-└─────────────────────────────────────────┘
+┌──────────────┴───────────────────────┐
+│      인프라스트럭처 계층               │
+│  어댑터: 리포지토리 구현체             │
+│  인프라: 데이터베이스, 마이그레이션, 모델│
+│  adapters/src/ + infrastructure/src/ │
+└──────────────────────────────────────┘
 ```
-
-**Benefits of this architecture:**
-- Business logic is independent of frameworks
-- Easy to test each layer in isolation
-- Database can be swapped without changing business logic
-- Clear separation of concerns
 
 ## License
 

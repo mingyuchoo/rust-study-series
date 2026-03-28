@@ -4,11 +4,34 @@
   <a href="https://github.com/mingyuchoo/rust-study-series/pulls"><img alt="GitHub pull requests" src="https://img.shields.io/github/issues-pr/mingyuchoo/rust-study-series?color=appveyor" /></a>
 </p>
 
-# README
+# Rust Study Series
 
-## For NixOS
+Rust 언어를 활용한 다양한 주제별 학습 프로젝트 모음입니다.
 
-edit `/etc/nixos/configuration.nix` in root account
+## 프로젝트 구조
+
+| 디렉터리 | 설명 | 하위 프로젝트 수 |
+|-----------|------|:-----------------:|
+| **ABI** | Node.js 네이티브 모듈 (NAPI-RS) | 1 |
+| **AI** | AI/LLM 클라이언트, RAG, 에이전트 | 11 |
+| **AWS** | AWS SDK, Lambda, SAM 앱 | 4 |
+| **Azure** | Azure Bicep + Rust 앱 | 1 |
+| **Books** | 서적 기반 학습 (The Rust Programming Language 등) | 1 |
+| **CLI** | 커맨드라인 도구 (매니저, 파서, 크롤러 등) | 12 |
+| **Cache** | Redis 캐싱 | 1 |
+| **Database** | DB 연동 (Diesel, SQLx, MySQL, PostgreSQL, SQLite, Qdrant) | 9 |
+| **GUI** | GUI 프레임워크 (Dioxus, egui, gpui, Iced, Tauri) | 5 |
+| **JupyterLab** | Rust Jupyter 노트북 | 1 |
+| **Patterns** | 디자인 패턴, 클린 아키텍처, 플러그인 아키텍처 | 3 |
+| **TUI** | 터미널 UI (ratatui) | 1 |
+| **WASI** | WebAssembly System Interface + gRPC | 2 |
+| **WASM** | WebAssembly (Game of Life 등) | 3 |
+| **Web** | 웹 프레임워크 (Actix, Axum, Loco, Kafka) | 4 |
+| **gRPC** | gRPC 서비스 | 2 |
+
+### NixOS
+
+root 계정으로 `/etc/nixos/configuration.nix` 편집:
 
 ```nix
 { config, pkgs, ... }:
@@ -19,7 +42,7 @@ edit `/etc/nixos/configuration.nix` in root account
 }
 ```
 
-run following commands to install stable toolchain in user account
+사용자 계정에서 stable 툴체인 설치:
 
 ```bash
 rustup default stable
@@ -28,7 +51,7 @@ rustup component add rust-analysis
 rustup component add rust-analyzer
 ```
 
-run following command to install cargo tools in user account
+사용자 계정에서 cargo 도구 설치:
 
 ```bash
 cargo install cargo-audit
@@ -44,7 +67,7 @@ cargo install cargo-tree
 cargo install cargo-watch
 ```
 
-## For Nix
+### Nix
 
 ```bash
 sh <(curl -L https://nixos.org/nix/install) --daemon
@@ -55,20 +78,22 @@ nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs
 nix-channel --update
 ```
 
-### How to make dev. environment
+#### Nix 개발 환경 실행
+
+이 저장소에는 `flake.nix`가 포함되어 있어 `cargo`, `cargo-watch`, `clippy`, `rustfmt`, `rustup` 등이 자동으로 설정됩니다.
 
 ```bash
 nix develop
 ```
 
-## For Ubuntu
+### Ubuntu
 
 ```bash
 sudo apt update
 sudo apt install -y musl-tools
 ```
 
-### How to install Rustup
+#### Rustup 설치
 
 - <https://rustup.rs/>
 
@@ -78,30 +103,30 @@ rustup default stable
 rustup update stable
 ```
 
-#### Configure Target Architecture
+#### 타겟 아키텍처 설정
 
-For WSL2 on Windows 11 on Snapdraon X Elite
+WSL2 (Windows 11, Snapdragon X Elite) 환경의 경우:
 
 ```bash
 rustup update
 rustup target add aarch64-unknown-linux-gnu
 ```
 
-Create `$HOME/.cargo/config.toml`
+`$HOME/.cargo/config.toml` 생성:
 
 ```toml
 [build]
 target = "aarch64-unknown-linux-gnu"
 ```
 
-Build your project
+프로젝트 빌드:
 
 ```bash
 cargo build
 cargo build --release
 ```
 
-### Install component
+#### 컴포넌트 설치
 
 ```bash
 rustup component list
@@ -113,9 +138,9 @@ rustup component add rust-analysis
 rustup component add rust-analyzer
 ```
 
-### Change Linker
+#### 링커 변경
 
-Create `$HOME/.cargo/config.toml`
+`$HOME/.cargo/config.toml` 생성:
 
 ```toml
 # For Linux/macOS-mold
@@ -129,64 +154,64 @@ rustflags = ["-C", "link-arg=-fuse-ld=mold"]
 rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 ```
 
-## Formatting & linting
+## 포맷팅 및 린트
 
 ```bash
 cargo fmt
 cargo clippy --fix
 ```
 
-## How to use watch mode
+## Watch 모드 사용법
 
-### Install `cargo-watch` for watch mode
+### `cargo-watch` 설치
 
 ```bash
 cargo install cargo-watch
 ```
 
-### Run as watch mode with `cargo-watch`
+### `cargo-watch`로 실행
 
 ```bash
-# Run test only
+# 테스트만 실행
 cargo watch -x test
 
-# Run check then tests
+# check 후 테스트 실행
 cargo watch -x check -x test
 
-# Watch changes in on the `src` and clear the console and then run
+# src 변경 감시 + 콘솔 초기화 후 실행
 cargo watch -c -w src -x run
 
-# Run current application
+# 특정 바이너리 실행
 cargo watch -x 'run --bin app'
 
-# Run with arguments
+# 인자 전달하여 실행
 cargo watch -x 'run -- --some-arg'
 
-# Run with example file 
+# 예제 파일 실행
 cargo watch -q -c -x "run -q --example c01-simple"
 
-# Run an arbitrary command
+# 임의 명령어 실행
 cargo watch -- echo Hello world
 
-# Run with features passed to carg
+# feature 플래그와 함께 실행
 cargo watch --features "foo,bar"
 ```
 
-## How to see module structures
+## 모듈 구조 확인
 
-### Install `cargo-module`
+### `cargo-modules` 설치
 
 ```bash
 cargo install cargo-modules
 ```
 
-### Get structure of modules in your crate
+### 크레이트 모듈 구조 조회
 
 ```bash
 cargo modules generate tree --types
 ```
 
-## How to upgrade modules
+## 의존성 업그레이드
 
 ```bash
 cargo install cargo-edit

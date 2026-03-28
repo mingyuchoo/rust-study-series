@@ -1,11 +1,14 @@
-# README
+# chatbot-eval-by-rust
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Python `chatbot` 프로젝트를 Rust로 포팅한 AI Agent 테스트 방법론 검증용 RAG 챗봇 구현체입니다.
+OpenAI API 직접 호출 + 인메모리 벡터스토어 기반 RAG 파이프라인에 다중 평가 도구를 통합합니다.
 
 ## 프로젝트 개요
 
-Python `chatbot` 프로젝트를 Rust로 포팅한 AI Agent 테스트 방법론 검증용 RAG 챗봇 구현체.
-OpenAI API 직접 호출 + 인메모리 벡터스토어 기반 RAG 파이프라인에 다중 평가 도구를 통합.
+- Rust Edition 2024, 최소 Rust 버전 1.85
+- Cargo 워크스페이스 구조 (5개 크레이트)
+- CLI 및 TUI 두 가지 실행 모드 지원
+- MIT 라이선스
 
 ## 명령어
 

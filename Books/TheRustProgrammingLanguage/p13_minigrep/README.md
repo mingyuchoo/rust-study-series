@@ -1,7 +1,10 @@
-# README
-## Why did I make this?
+# p13_minigrep
 
-## For learn thow to build an application
+> The Rust Programming Language - minigrep 프로젝트
+
+## 프로젝트를 만든 이유
+
+## 애플리케이션 빌드 방법 학습
 
 - 명령줄 인수 처리하기
 - 인수 값 읽어오기
@@ -13,7 +16,7 @@
 - 구조체 생성자 만들기
 - 에러처리 하기
 - 에러 메시지 개선하기
-- panic! 매크로 디신 Result 사용하기
+- panic! 매크로 대신 Result 사용하기
 - 함수 호출하고 에러처리하기
 - 기능 개발하기
 - 로직분리하기
@@ -25,51 +28,64 @@
 - 에러 기록 확인하기
 - 에러를 stderr에 출력하기
 
-## How do you use this?
+## 프로젝트 구조
+
+```
+p13_minigrep/
+  Cargo.toml
+  src/
+    main.rs    # 진입점
+    lib.rs     # 라이브러리 (검색 로직)
+```
+
+## 주요 의존성
+
+- Rust Edition: 2024
+- 외부 의존성 없음
+
+## 실행 방법
 
 ```bash
 rustup default stable
 rustup update stable
 
 cargo run test poem.txt
-# or
+# 또는
 ./run.sh
 ```
 
-## What do you get from this?
-
-## How can you test this?
+## 테스트 방법
 
 ```bash
 cargo test
 ```
 
-## How to use watch mode
+## Watch 모드 사용법
 
-### Install `cargo-watch` for watch mode
+### `cargo-watch` 설치
 
 ```bash
 cargo install cargo-watch
 ```
 
-### Run as watch mode with `cargo-watch`
+### `cargo-watch`로 Watch 모드 실행
 
 ```bash
-# Run test only
+# 테스트만 실행
 cargo watch -x test
 
-# Run check then tests
+# check 후 테스트 실행
 cargo watch -x check -x test
 
-# Run run current application
+# 현재 애플리케이션 실행
 cargo watch -x 'run --bin app'
 
-# Run run with arguments
+# 인수를 전달하여 실행
 cargo watch -x 'run -- --some-arg'
 
-# run an arbitrary command
+# 임의의 명령어 실행
 cargo watch -- echo Hello world
 
-# Run with features passed to carg
+# feature를 전달하여 실행
 cargo watch --features "foo,bar"
 ```

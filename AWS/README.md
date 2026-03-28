@@ -1,14 +1,15 @@
-# README
+# AWS Lambda 프로젝트 (Rust + SAM)
+
 ## SAM
 
-### Prerequsites
+### 사전 요구사항
 
 - `rustup`
 - AWS accout
 - `aws` CLI
 - `sam` CLI
 
-### How to create Lambda project with `sam` CLI
+### SAM CLI로 Lambda 프로젝트 생성하기
 
 ```bash
 sam init
@@ -112,7 +113,7 @@ Commands you can use next
 [*] Test Function in the Cloud: cd rust-sam-app && sam sync --stack-name {stack-name} --watch
 ```
 
-### How to build Lambda project
+### Lambda 프로젝트 빌드하기
 
 ```bash
 vi samconfig.toml
@@ -132,7 +133,7 @@ $sam build
 sam validate
 ```
 
-### How to test Lambda project locally
+### Lambda 프로젝트 로컬 테스트
 
 ```bash
 sam local invoke
@@ -140,20 +141,20 @@ sam local invoke
 sam local invoke --event events/event.json
 ```
 
-### How to test Lambda project with API Gateway locally
+### API Gateway를 사용한 로컬 테스트
 
 ```bash
 sam local start-api
 ```
 
-and run command below in another terminal
+다른 터미널에서 아래 명령 실행
 
 ```bash
 curl http://localhost:3000/hello
 ```
 
 
-### How to deploy Lambda project to AWS
+### Lambda 프로젝트 AWS 배포
 
 ```bash
 sam sync --stack-name rust-sam-app --watch # for sync
@@ -183,7 +184,7 @@ Configuring SAM deploy
 ...
 ```
 
-### How to test Lambda project
+### Lambda 프로젝트 테스트
 
 ```bash
 aws lambda invoke
@@ -194,7 +195,7 @@ aws lambda invoke
 cat output.json  # Prints: {"msg": "Command Say Hi! executed."}
 ```
 
-### How to delete Lambda project
+### Lambda 프로젝트 삭제
 
 ```bash
 sam delete

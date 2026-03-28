@@ -1,15 +1,15 @@
 # React Frontend - Azure Bicep Lab
 
-이 디렉토리는 Azure Bicep Lab 프로젝트의 React 프론트엔드 부분입니다. ASP.NET Core 백엔드와 통합되어 하나의 애플리케이션으로 배포됩니다.
+이 디렉토리는 Azure Bicep Lab 프로젝트의 React 프론트엔드 부분입니다. Rust(Actix-web) 백엔드와 통합되어 하나의 애플리케이션으로 배포됩니다.
 
-## 🛠️ 기술 스택
+## 기술 스택
 
 - **Framework**: React 19.1.1 with TypeScript
-- **Build Tool**: Vite 7.1.6  
+- **Build Tool**: Vite 7.1.6
 - **Compiler**: SWC (Speedy Web Compiler)
 - **Package Manager**: pnpm
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 src/frontend/
@@ -23,7 +23,7 @@ src/frontend/
 └── tsconfig.json         # TypeScript 설정
 ```
 
-## 🚀 개발 및 빌드
+## 개발 및 빌드
 
 ### 개발 서버 실행
 
@@ -45,30 +45,25 @@ pnpm run build
 pnpm run preview
 ```
 
-## 🔧 Vite 설정 특징
+## Vite 설정 특징
 
 `vite.config.ts`에서 다음과 같이 설정되어 있습니다:
 
-- **빌드 출력**: `../backend/wwwroot`로 설정하여 ASP.NET Core와 통합
-- **개발 프록시**: `/api` 요청을 `https://localhost:5173`으로 프록시
+- **빌드 출력**: `../backend/wwwroot`로 설정하여 Rust 백엔드와 통합
+- **개발 프록시**: `/api` 요청을 백엔드 서버로 프록시
 - **SWC 컴파일러**: 빠른 빌드를 위해 SWC 사용
 
-## 🌐 API 통합
+## API 통합
 
-프론트엔드는 다음 백엔드 API와 통신합니다:
+프론트엔드는 Rust(Actix-web) 백엔드 API와 통신합니다:
 
-- `GET /api/health` - 헬스 체크
-- `GET /api/data` - 샘플 데이터 조회
+- `GET /api/todos` - TODO 목록 조회
+- `POST /api/todos` - TODO 생성
+- `PUT /api/todos/{id}` - TODO 수정
+- `DELETE /api/todos/{id}` - TODO 삭제
 
 개발 모드에서는 Vite 프록시를 통해, 프로덕션에서는 동일한 도메인에서 API에 접근합니다.
 
-## 📦 배포
+## 배포
 
-이 React 앱은 빌드 시 자동으로 ASP.NET Core 백엔드의 `wwwroot` 디렉토리에 배포되어 하나의 통합된 애플리케이션으로 동작합니다.
-
-전체 애플리케이션 빌드는 루트 디렉토리에서 실행하세요:
-
-```bash
-# 루트 디렉토리에서
-./build.sh  # 또는 build.bat, build.ps1
-```
+이 React 앱은 빌드 시 자동으로 Rust 백엔드의 `wwwroot` 디렉토리에 배포되어 하나의 통합된 애플리케이션으로 동작합니다.

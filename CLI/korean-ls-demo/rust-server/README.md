@@ -14,15 +14,19 @@ cargo build --release
 cargo run --release
 ```
 
+빌드된 바이너리는 `target/release/korean-language-server`에 생성됩니다.
+
 ## 테스트
 
 ```bash
 cargo test
 ```
 
-## 의존성
+## 주요 의존성
 
-- tower-lsp: LSP 프로토콜 구현
-- tokio: 비동기 런타임
-- serde_json: JSON 직렬화/역직렬화
-- regex: 정규표현식 패턴 매칭
+- **tower-lsp 0.20.0**: LSP 프로토콜 구현
+- **tokio 1.48.0**: 비동기 런타임 (full 피처)
+- **serde_json 1.0.145**: JSON 직렬화/역직렬화
+- **regex 1.12.2**: 정규표현식 패턴 매칭
+
+**Rust Edition**: 2024

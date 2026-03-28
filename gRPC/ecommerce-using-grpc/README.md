@@ -1,10 +1,10 @@
 # ecommerce-using-grpc
 
-A Rust-based gRPC service for managing product information in an e-commerce system. This project demonstrates modern Rust practices including Railway Oriented Programming, structured logging with tracing, in-memory storage, and Cargo workspace (monorepo) architecture.
+Rust 기반 gRPC 전자상거래 상품 관리 서비스입니다. Railway Oriented Programming, tracing을 사용한 구조화 로깅, 인메모리 저장소, Cargo 워크스페이스(모노레포) 아키텍처를 적용하였습니다.
 
-## Prerequisites
+## 사전 요구사항
 
-### Protocol Buffers Compiler
+### Protocol Buffers 컴파일러
 
 **Ubuntu**
 ```bash
@@ -21,93 +21,91 @@ sudo dnf install protobuf-compiler
 brew install protobuf
 ```
 
-## Project Structure
+## 프로젝트 구조
 
-This project uses a Cargo workspace (monorepo) structure with multiple crates:
+Cargo 워크스페이스(모노레포) 구조입니다:
 
 ```
 ecommerce-using-grpc/
-├── Cargo.toml          # Workspace configuration
+├── Cargo.toml          # 워크스페이스 설정
 ├── crates/
-│   ├── proto/          # Shared Protocol Buffer definitions
+│   ├── proto/          # 공유 Protocol Buffer 정의
 │   │   ├── proto/
 │   │   │   └── ProductInfo.proto
 │   │   ├── build.rs
 │   │   └── src/lib.rs
-│   ├── server/         # gRPC server implementation
+│   ├── server/         # gRPC 서버 구현
 │   │   └── src/
-│   │       ├── lib.rs  # Service logic, in-memory store, error handling
-│   │       └── main.rs # Server binary
-│   ├── client/         # gRPC client implementation
+│   │       ├── lib.rs  # 서비스 로직, 인메모리 저장소, 에러 처리
+│   │       └── main.rs # 서버 바이너리
+│   ├── client/         # gRPC 클라이언트 구현
 │   │   └── src/
-│   │       └── main.rs # Client binary
-│   └── tests/          # Integration tests
+│   │       └── main.rs # 클라이언트 바이너리
+│   └── tests/          # 통합 테스트
 │       └── tests/
 │           └── product_service_test.rs
-└── proto/              # Original proto files (for reference)
+└── proto/              # 원본 proto 파일 (참조용)
     └── ProductInfo.proto
 ```
 
-## Features
+## 주요 기능
 
-- **Cargo Workspace (Monorepo) Architecture** - Organized into multiple focused crates
-- **gRPC-based product management service** - Efficient client-server communication
-- **Add and retrieve product information** - Core CRUD operations
-- **In-memory storage** - Thread-safe `HashMap` with `Arc<Mutex<>>` for product persistence
-- **Auto-incremented IDs** - Server assigns product IDs via atomic counter
-- **Railway Oriented Programming** - Clean error handling pattern
-- **Structured logging with tracing** - Production-ready observability
-- **Comprehensive error types** - NotFound, InvalidData, Internal
-- **Input validation** - Product name (non-empty) and price (positive) validation
-- **Shared proto definitions** - Reusable protobuf package
+- **Cargo 워크스페이스(모노레포) 아키텍처** - 여러 크레이트로 조직화
+- **gRPC 기반 상품 관리 서비스** - 효율적인 클라이언트-서버 통신
+- **상품 추가 및 조회** - 핵심 CRUD 작업
+- **인메모리 저장소** - `Arc<Mutex<>>` 기반 스레드 안전 `HashMap`
+- **자동 증가 ID** - 서버가 atomic 카운터로 상품 ID 할당
+- **Railway Oriented Programming** - 깔끔한 에러 처리 패턴
+- **tracing을 사용한 구조화 로깅** - 프로덕션 수준의 관측 가능성
+- **입력 유효성 검사** - 상품명(비어있지 않음) 및 가격(양수) 검증
 
-## Dependencies
+## 주요 의존성
 
-| Crate | Version | Purpose |
-|---|---|---|
-| `tonic` | 0.14.5 | gRPC framework |
-| `prost` | 0.14.3 | Protocol Buffers implementation |
-| `tokio` | 1.50.0 | Async runtime |
-| `anyhow` | 1.0.102 | Error handling |
-| `thiserror` | 2.0.18 | Custom error types |
-| `tracing` | 0.1.44 | Structured logging |
-| `tracing-subscriber` | 0.3.22 | Log formatting and output |
+| 패키지 | 버전 | 설명 |
+|--------|------|------|
+| `tonic` | 0.14.5 | gRPC 프레임워크 |
+| `prost` | 0.14.3 | Protocol Buffers 구현 |
+| `tokio` | 1.50.0 | 비동기 런타임 |
+| `anyhow` | 1.0.102 | 에러 처리 |
+| `thiserror` | 2.0.18 | 커스텀 에러 타입 |
+| `tracing` | 0.1.44 | 구조화 로깅 |
+| `tracing-subscriber` | 0.3.22 | 로그 출력 |
 
-## Building the Project
+## 빌드
 
 ```bash
-# Build the project
+# 프로젝트 빌드
 cargo build
 
-# Build with optimizations
+# 릴리스 빌드
 cargo build --release
 ```
 
-## Running the Service
+## 실행
 
-### Start the Server
+### 서버 시작
 
 ```bash
 cargo run -p server
 ```
 
-The server will start on `[::1]:50051` (IPv6 localhost).
+서버는 `[::1]:50051` (IPv6 localhost)에서 시작됩니다.
 
-### Run the Client
+### 클라이언트 실행
 
-In a separate terminal:
+다른 터미널에서:
 
 ```bash
 cargo run -p client
 ```
 
-## Running Tests
+## 테스트
 
 ```bash
-# Run all tests in the workspace
+# 전체 워크스페이스 테스트
 cargo test
 
-# Run tests for a specific crate
+# 특정 크레이트 테스트
 cargo test -p tests
 ```
 
@@ -115,87 +113,37 @@ cargo test -p tests
 
 ### AddProduct
 
-Adds a new product to the system. The server automatically assigns a unique ID.
+시스템에 새 상품을 추가합니다. 서버가 자동으로 고유 ID를 할당합니다.
 
-**Request:** `Product`
-- `id` (int32): Ignored — the server assigns a new auto-incremented ID
-- `name` (string): Product name (required, non-empty)
-- `description` (string): Product description
-- `price` (float): Product price (required, must be positive)
+**요청:** `Product`
+- `id` (int32): 무시됨 -- 서버가 새 자동 증가 ID를 할당
+- `name` (string): 상품명 (필수, 비어있지 않아야 함)
+- `description` (string): 상품 설명
+- `price` (float): 상품 가격 (필수, 양수여야 함)
 
-**Response:** `ProductId`
-- `id` (int32): The server-assigned ID of the added product
+**응답:** `ProductId`
+- `id` (int32): 서버가 할당한 상품 ID
 
 ### GetProduct
 
-Retrieves product information by ID.
+ID로 상품 정보를 조회합니다.
 
-**Request:** `ProductId`
-- `id` (int32): Product ID (must be positive; returns `NOT_FOUND` if no product exists with that ID)
+**요청:** `ProductId`
+- `id` (int32): 상품 ID (양수, 해당 ID의 상품이 없으면 `NOT_FOUND` 반환)
 
-**Response:** `Product`
-- Complete product information as stored
+**응답:** `Product`
+- 저장된 전체 상품 정보
 
-## Error Handling
+## 에러 처리
 
-The service uses Railway Oriented Programming with custom error types:
+Railway Oriented Programming 패턴으로 커스텀 에러 타입을 사용합니다:
 
-| Error | gRPC Status | Condition |
-|---|---|---|
-| `ServiceError::NotFound` | `NOT_FOUND` | No product exists for the given ID |
-| `ServiceError::InvalidData` | `INVALID_ARGUMENT` | Empty name or non-positive price |
-| `ServiceError::Internal` | `INTERNAL` | Unexpected server-side failure |
-
-## Workspace Benefits
-
-This monorepo structure provides several advantages:
-
-- **Code Reusability** - The `proto` crate is shared across all other crates
-- **Consistent Dependencies** - Workspace-level dependency management ensures version consistency
-- **Faster Builds** - Cargo can cache and reuse compiled artifacts across crates
-- **Better Organization** - Clear separation of concerns (server, client, tests)
-- **Easier Testing** - Integration tests can easily depend on multiple crates
-- **Simplified CI/CD** - Single repository for all related code
-
-## Creating a Similar Workspace
-
-To create a similar workspace from scratch:
-
-```bash
-# Create workspace root
-mkdir {project-name}
-cd {project-name}
-
-# Create workspace Cargo.toml
-cat > Cargo.toml << 'EOF'
-[workspace]
-resolver = "2"
-members = [
-  "crates/proto",
-  "crates/server",
-  "crates/client",
-]
-
-[workspace.package]
-edition = "2024"
-version = "0.1.0"
-
-[workspace.dependencies]
-tokio = { version = "1.50", features = ["macros", "rt-multi-thread"] }
-tonic = "0.14"
-prost = "0.14"
-# ... other dependencies
-EOF
-
-# Create crate structure
-mkdir -p crates/{proto,server,client}
-
-# Initialize each crate
-cd crates/proto && cargo init --lib && cd ../..
-cd crates/server && cargo init && cd ../..
-cd crates/client && cargo init && cd ../..
-```
+| 에러 | gRPC 상태 | 조건 |
+|------|-----------|------|
+| `ServiceError::NotFound` | `NOT_FOUND` | 해당 ID의 상품이 없음 |
+| `ServiceError::InvalidData` | `INVALID_ARGUMENT` | 빈 이름 또는 양수가 아닌 가격 |
+| `ServiceError::Internal` | `INTERNAL` | 예기치 않은 서버 측 오류 |
 
 ## License
 
-See project license file for details.
+프로젝트 라이선스 파일을 참조하세요.

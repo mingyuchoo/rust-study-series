@@ -3,70 +3,78 @@
     <img src="https://raw.githubusercontent.com/leptos-rs/leptos/main/docs/logos/Leptos_logo_RGB.svg" alt="Leptos Logo">
 </picture>
 
-# Leptos Starter Template
+# bin-web (demo-leptos-actix-surreal-v2)
 
-This is a template for use with the [Leptos](https://github.com/leptos-rs/leptos) web framework and the [cargo-leptos](https://github.com/akesson/cargo-leptos) tool.
+Leptos + Actix-Web 기반 풀스택 웹 애플리케이션의 프론트엔드/서버 바이너리 크레이트입니다.
+워크스페이스 내 `lib-adder`, `lib-repo` 라이브러리를 사용합니다.
 
-## Creating your template repo
+## 주요 의존성
 
-If you don't have `cargo-leptos` installed you can install it with
+- `leptos` 0.6.5 - 반응형 웹 프레임워크 (nightly 기능)
+- `leptos_actix` 0.6.5 - Actix-Web 서버 통합
+- `leptos_meta` 0.6.5 - 메타 태그 관리
+- `leptos_router` 0.6.5 - 클라이언트 사이드 라우팅
+- `actix-web` 4.9.0 - 웹 서버 (SSR 모드)
+- `lib-adder` - 워크스페이스 내 유틸리티 라이브러리
+- `lib-repo` - 워크스페이스 내 저장소 라이브러리
 
-`cargo install cargo-leptos --locked`
+## 기능 (Feature Flags)
 
-Then run
+- `csr` - 클라이언트 사이드 렌더링
+- `hydrate` - 하이드레이션
+- `ssr` - 서버 사이드 렌더링 (Actix-Web 기반)
 
-`cargo leptos new --git leptos-rs/start`
+## 사전 준비
 
-to generate a new project template (you will be prompted to enter a project name).
+1. Rust nightly 툴체인 설치
 
-`cd {projectname}`
+   ```bash
+   rustup toolchain install nightly --allow-downgrade
+   ```
 
-to go to your newly created project.
+2. WebAssembly 타겟 추가
 
-Of course, you should explore around the project structure, but the best place to start with your application code is in `src/app.rs`.
+   ```bash
+   rustup target add wasm32-unknown-unknown
+   ```
 
-## Running your project
+3. `cargo-leptos` 설치
 
-`cargo leptos watch`  
-By default, you can access your local project at `http://localhost:3000`
+   ```bash
+   cargo install cargo-leptos --locked
+   ```
 
-## Installing Additional Tools
+## 실행 방법
 
-By default, `cargo-leptos` uses `nightly` Rust, `cargo-generate`, and `sass`. If you run into any trouble, you may need to install one or more of these tools.
-
-1. `rustup toolchain install nightly --allow-downgrade` - make sure you have Rust nightly
-2. `rustup target add wasm32-unknown-unknown` - add the ability to compile Rust to WebAssembly
-3. `cargo install cargo-generate` - install `cargo-generate` binary (should be installed automatically in future)
-4. `npm install -g sass` - install `dart-sass` (should be optional in future)
-
-## Executing a Server on a Remote Machine Without the Toolchain
-After running a `cargo leptos build --release` the minimum files needed are:
-
-1. The server binary located in `target/server/release`
-2. The `site` directory and all files within located in `target/site`
-
-Copy these files to your remote server. The directory structure should be:
-```text
-leptos_start
-site/
+```bash
+cargo leptos watch
 ```
-Set the following environment variables (updating for your project as needed):
-```sh
-export LEPTOS_OUTPUT_NAME="leptos_start"
+
+기본 접속 주소: `http://localhost:3000`
+
+## 릴리즈 빌드
+
+```bash
+cargo leptos build --release
+```
+
+## 원격 서버 배포
+
+빌드 후 필요한 파일:
+
+1. `target/server/release` 의 서버 바이너리
+2. `target/site` 디렉토리 전체
+
+환경 변수 설정:
+
+```bash
+export LEPTOS_OUTPUT_NAME="bin_web"
 export LEPTOS_SITE_ROOT="site"
 export LEPTOS_SITE_PKG_DIR="pkg"
 export LEPTOS_SITE_ADDR="127.0.0.1:3000"
 export LEPTOS_RELOAD_PORT="3001"
 ```
-Finally, run the server binary.
-
-## Notes about CSR and Trunk:
-Although it is not recommended, you can also run your project without server integration using the feature `csr` and `trunk serve`:
-
-`trunk serve --open --features csr`
-
-This may be useful for integrating external tools which require a static site, e.g. `tauri`.
 
 ## Licensing
 
-This template itself is released under the Unlicense. You should replace the LICENSE for your own application with an appropriate license if you plan to release it publicly.
+This template itself is released under the Unlicense.

@@ -1,5 +1,34 @@
-# README
-## How to create rust workspace
+# p16_crates_io
+
+> The Rust Programming Language - Crates.io와 워크스페이스
+
+## 프로젝트 설명
+
+Rust 워크스페이스 구성 방법과 여러 크레이트를 함께 관리하는 방법을 학습하는 프로젝트입니다.
+
+## 프로젝트 구조
+
+```
+p16_crates_io/
+  Cargo.toml          # 워크스페이스 설정
+  adder/
+    Cargo.toml
+    src/main.rs        # 바이너리 크레이트
+  add_one/
+    Cargo.toml
+    src/lib.rs         # 라이브러리 크레이트
+  art/
+    Cargo.toml
+    src/lib.rs         # 라이브러리 크레이트
+```
+
+## 워크스페이스 멤버
+
+- `adder` - 바이너리 크레이트
+- `add_one` - 라이브러리 크레이트
+- `art` - 라이브러리 크레이트
+
+## Rust 워크스페이스 생성 방법
 
 ```bash
 rustup default stable
@@ -10,7 +39,7 @@ cd <workspace_name>
 touch Cargo.toml
 ```
 
-edit `<workspace_name>/Cargo.toml`
+`<workspace_name>/Cargo.toml` 편집
 
 ```toml
 [workspace]
@@ -20,73 +49,73 @@ members = [
 ]
 ```
 
-add a binary crate
+바이너리 크레이트 추가
 
 ```bash
 cargo new <binary_crate_name>
 ```
 
-edit `<workspace_name>/Cargo.toml`
+`<workspace_name>/Cargo.toml` 편집
 
 ```toml
 [workspace]
 
 members = [
   "<binary_crate_name>",
-  "<library_crate_name>", # add HERE
+  "<library_crate_name>",
 ]
 ```
 
-add a library crate
+라이브러리 크레이트 추가
 
 ```bash
 cargo new <library_crate_name> --lib
 ```
 
-## How to build
+## 빌드 방법
 
 ```bash
 cargo clean
 cargo fmt
 cargo test
 cargo doc --no-deps --open  # `target/doc/<package_name>/index.html`
-cargo build --profile dev     # for development
-cargo build --profile release # for release
-cargo run -p adder # or cargo run
+cargo build --profile dev     # 개발용 빌드
+cargo build --profile release # 릴리즈용 빌드
+cargo run -p adder # 또는 cargo run
 ```
 
-## How to use watch mode
+## Watch 모드 사용법
 
-### Install `cargo-watch` for watch mode
+### `cargo-watch` 설치
 
 ```bash
 cargo install cargo-watch
 ```
 
-### Run as watch mode with `cargo-watch`
+### `cargo-watch`로 Watch 모드 실행
 
 ```bash
-# Run test only
+# 테스트만 실행
 cargo watch -x test
 
-# Run check then tests
+# check 후 테스트 실행
 cargo watch -x check -x test
 
-# Run run current application
+# 현재 애플리케이션 실행
 cargo watch -x 'run --bin app'
 
-# Run run with arguments
+# 인수를 전달하여 실행
 cargo watch -x 'run -- --some-arg'
 
-# run an arbitrary command
+# 임의의 명령어 실행
 cargo watch -- echo Hello world
 
-# Run with features passed to carg
+# feature를 전달하여 실행
 cargo watch --features "foo,bar"
 ```
 
-## Important
+## 참고 사항
 
-**Disallow hyphens in Rust crate names, but continue allowing them in Cargo packages.**
+**Rust 크레이트 이름에는 하이픈을 사용할 수 없지만, Cargo 패키지 이름에는 허용됩니다.**
 
--<https://github.com/rust-lang/rfcs/blob/master/text/0940-hyphens-considered-harmful.md>
+- <https://github.com/rust-lang/rfcs/blob/master/text/0940-hyphens-considered-harmful.md>

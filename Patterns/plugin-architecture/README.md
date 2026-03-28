@@ -1,106 +1,91 @@
-# Rust Plugin Architecture System
+# Rust 플러그인 아키텍처 시스템
 
-A dynamic plugin system for Rust that enables runtime feature extension through a workspace architecture. The system allows the core application to load and execute plugins without recompilation.
+런타임에 기능을 확장할 수 있는 Rust 동적 플러그인 시스템입니다. Cargo 워크스페이스 구조를 사용하며, 핵심 애플리케이션이 재컴파일 없이 플러그인을 로드하고 실행할 수 있습니다.
 
-## Architecture
-
-This project uses a Cargo workspace with the following structure:
+## 아키텍처
 
 ```bash
 plugin-architecture/
-├── Cargo.toml           # Workspace root (virtual manifest)
+├── Cargo.toml           # 워크스페이스 루트 (virtual manifest)
 ├── Cargo.lock
 ├── crates/
-│   ├── plugin-interface/     # Shared trait definitions for plugins
-│   ├── plugin-manager/       # Plugin management library
-│   └── plugins/              # Plugin implementations
-│       ├── hello-plugin/     # Example: Simple greeting plugin
-│       └── math-plugin/      # Example: Mathematical operations plugin
+│   ├── plugin-interface/     # 플러그인용 공유 트레이트 정의
+│   ├── plugin-manager/       # 플러그인 관리 라이브러리
+│   └── plugins/              # 플러그인 구현체
+│       ├── hello-plugin/     # 예제: 간단한 인사 플러그인
+│       └── math-plugin/      # 예제: 수학 연산 플러그인
 ├── apps/
-│   └── cli/                  # Main application that loads and manages plugins
+│   └── cli/                  # 플러그인을 로드하고 관리하는 메인 애플리케이션
 └── target/debug/
-    └── plugins/              # Runtime directory for plugin libraries
+    └── plugins/              # 런타임 플러그인 라이브러리 디렉토리
 ```
 
-## Build Process
+## 빌드 방법
 
-### Prerequisites
+### 사전 요구사항
 
-- Rust toolchain (1.70 or later recommended)
+- Rust 툴체인 (1.70 이상 권장)
 - Cargo
 
-### Building the Project
+### 프로젝트 빌드
 
-1. **Build all workspace members:**
+1. **전체 워크스페이스 빌드:**
 
    ```bash
    cargo build
    ```
 
-   This command builds:
-
-   - `plugin-interface` crate (library)
-   - `plugin-manager` executable
-   - `hello-plugin` dynamic library
-   - `math-plugin` dynamic library
-
-2. **Deploy plugins to runtime directory:**
+2. **플러그인을 런타임 디렉토리에 배포:**
 
    ```bash
    ./deploy-plugins.sh
    ```
 
-   Or on Windows:
+   Windows:
 
    ```cmd
    deploy-plugins.bat
    ```
 
-   This script:
-
-   - Creates the `target/debug/plugins/` directory if it doesn't exist
-   - Copies plugin libraries to the runtime directory
-   - Handles platform-specific library extensions (.so, .dll, .dylib)
-
-3. **Run the core application:**
+3. **핵심 애플리케이션 실행:**
    ```bash
    cargo run --bin cli
    ```
 
-### Build Order
+### 빌드 순서
 
-The workspace automatically handles build dependencies:
+워크스페이스가 자동으로 빌드 의존성을 관리합니다:
 
-1. `plugin-interface` is built first (dependency for all other crates)
-2. `plugin-manager` library is built next
-3. Plugin implementations are built
-4. `cli` application is built last
+1. `plugin-interface` 먼저 빌드 (모든 크레이트의 의존성)
+2. `plugin-manager` 라이브러리 빌드
+3. 플러그인 구현체 빌드
+4. `cli` 애플리케이션 마지막으로 빌드
 
-## Running the Application
+## 애플리케이션 실행
 
-After building and deploying plugins:
+빌드 및 플러그인 배포 후:
 
 ```bash
 cargo run --bin cli
 ```
 
-The application will:
+애플리케이션은 다음을 수행합니다:
 
-1. Discover plugins in `target/debug/plugins/`
-2. Load each plugin dynamically
-3. Execute plugin functionality
-4. Clean up and unload plugins on exit
+1. `target/debug/plugins/` 에서 플러그인 탐색
+2. 각 플러그인을 동적으로 로드
+3. 플러그인 기능 실행
+4. 종료 시 플러그인 정리 및 언로드
 
-## Creating a New Plugin
+## 새 플러그인 만들기
 
-1. **Create a new crate in the plugins directory:**
+1. **plugins 디렉토리에 새 크레이트 생성:**
 
    ```bash
    cd crates/plugins
    cargo new --lib my-plugin
    ```
 
-2. **Configure Cargo.toml:**
+2. **Cargo.toml 설정:**
 
    ```toml
    [package]
@@ -115,7 +100,7 @@ The application will:
    plugin-interface = { path = "../../plugin-interface" }
    ```
 
-3. **Implement the Plugin trait:**
+3. **Plugin 트레이트 구현:**
 
    ```rust
    use plugin_interface::{Plugin, PluginContext};
@@ -124,30 +109,21 @@ The application will:
    pub struct MyPlugin;
 
    impl Plugin for MyPlugin {
-       fn name(&self) -> &str {
-           "My Plugin"
-       }
-
-       fn version(&self) -> &str {
-           "0.1.0"
-       }
-
-       fn description(&self) -> &str {
-           "Description of my plugin"
-       }
+       fn name(&self) -> &str { "My Plugin" }
+       fn version(&self) -> &str { "0.1.0" }
+       fn description(&self) -> &str { "플러그인 설명" }
 
        fn on_load(&mut self) -> Result<(), Box<dyn Error>> {
-           println!("MyPlugin loaded");
+           println!("MyPlugin 로드됨");
            Ok(())
        }
 
        fn execute(&self, context: &PluginContext) -> Result<String, Box<dyn Error>> {
-           // Your plugin logic here
-           Ok("Plugin executed successfully".to_string())
+           Ok("플러그인 실행 성공".to_string())
        }
 
        fn on_unload(&mut self) -> Result<(), Box<dyn Error>> {
-           println!("MyPlugin unloaded");
+           println!("MyPlugin 언로드됨");
            Ok(())
        }
    }
@@ -158,7 +134,7 @@ The application will:
    }
    ```
 
-4. **Add to workspace members in root Cargo.toml:**
+4. **루트 Cargo.toml의 workspace members에 추가:**
 
    ```toml
    [workspace]
@@ -167,70 +143,43 @@ The application will:
        "crates/plugin-manager",
        "crates/plugins/hello-plugin",
        "crates/plugins/math-plugin",
-       "crates/plugins/my-plugin",  # Add your plugin here
+       "crates/plugins/my-plugin",  # 새 플러그인 추가
        "apps/cli",
    ]
    ```
 
-5. **Build and deploy:**
+5. **빌드 및 배포:**
    ```bash
    cargo build
    ./deploy-plugins.sh
    ```
 
-## Platform-Specific Notes
+## 플랫폼별 참고사항
 
-### Linux
+- **Linux**: `.so` 확장자 (예: `libhello_plugin.so`)
+- **Windows**: `.dll` 확장자 (예: `hello_plugin.dll`)
+- **macOS**: `.dylib` 확장자 (예: `libhello_plugin.dylib`)
 
-- Plugin libraries have `.so` extension
-- Example: `libhello_plugin.so`
+## 문제 해결
 
-### Windows
+### 플러그인이 로드되지 않는 경우
 
-- Plugin libraries have `.dll` extension
-- Example: `hello_plugin.dll`
+- `crate-type = ["cdylib"]` 설정 확인
+- 플러그인 라이브러리가 `target/debug/plugins/`에 있는지 확인
+- `_plugin_create` 함수에 `#[no_mangle]` 및 `extern "C"` 적용 확인
 
-### macOS
+### 심볼을 찾을 수 없는 경우
 
-- Plugin libraries have `.dylib` extension
-- Example: `libhello_plugin.dylib`
+- plugin-interface 버전이 일치하는지 확인
+- 전체 재빌드: `cargo clean && cargo build`
 
-## Troubleshooting
-
-### Plugin not loading
-
-- Ensure the plugin is built with `crate-type = ["cdylib"]`
-- Verify the plugin library is in `target/debug/plugins/`
-- Check that `_plugin_create` function is exported with `#[no_mangle]` and `extern "C"`
-
-### Symbol not found errors
-
-- Ensure plugin-interface versions match between plugin-manager and plugins
-- Rebuild all workspace members: `cargo clean && cargo build`
-
-### Runtime errors
-
-- Check plugin implementation of the Plugin trait
-- Review error messages in plugin's `on_load` or `execute` methods
-
-## Development Workflow
-
-1. Make changes to plugin code
-2. Rebuild: `cargo build`
-3. Deploy: `./deploy-plugins.sh` (or `deploy-plugins.bat` on Windows)
-4. Run: `cargo run --bin cli`
-
-## Testing
-
-Run tests for all workspace members:
+## 테스트
 
 ```bash
+# 전체 워크스페이스 테스트
 cargo test
-```
 
-Run tests for a specific crate:
-
-```bash
+# 특정 크레이트 테스트
 cargo test -p plugin-interface
 cargo test -p plugin-manager
 cargo test -p hello-plugin

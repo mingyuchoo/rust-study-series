@@ -1,18 +1,18 @@
 # Dioxus App
 
-A full-stack Dioxus application with desktop, web, and mobile support featuring document management, API integration, and local database storage.
+데스크톱, 웹, 모바일을 지원하는 풀스택 Dioxus 애플리케이션입니다. 문서 관리, API 연동, 로컬 데이터베이스 저장 기능을 제공합니다.
 
-## Features
+## 주요 기능
 
-- **Multi-platform support**: Desktop (Linux/Windows/macOS), Web (WASM), Mobile
-- **Document Management**: Local SQLite database for document CRUD operations
-- **API Integration**: JSONPlaceholder API for Posts, Todos, and Users
-- **Modern UI**: Responsive design with tabbed interface
-- **Real-time Updates**: Live data synchronization
+- **멀티 플랫폼 지원**: 데스크톱(Linux/Windows/macOS), 웹(WASM), 모바일
+- **문서 관리**: 로컬 SQLite 데이터베이스를 이용한 문서 CRUD 작업
+- **API 연동**: JSONPlaceholder API를 통한 Posts, Todos, Users 데이터 연동
+- **모던 UI**: 탭 인터페이스를 활용한 반응형 디자인
+- **실시간 업데이트**: 라이브 데이터 동기화
 
-## Prerequisites
+## 사전 준비사항
 
-### For Ubuntu/Debian Linux
+### Ubuntu/Debian Linux
 
 ```bash
 sudo apt update
@@ -25,7 +25,7 @@ sudo apt install libwebkit2gtk-4.1-dev \
                  libxdo-dev
 ```
 
-### For Fedora/RHEL Linux
+### Fedora/RHEL Linux
 
 ```bash
 sudo dnf update
@@ -38,71 +38,71 @@ sudo dnf install glib2-devel         \
                  libxdo-devel
 ```
 
-### For macOS
+### macOS
 
 ```bash
-# Install Xcode Command Line Tools
+# Xcode Command Line Tools 설치
 xcode-select --install
 
-# Install dependencies via Homebrew
+# Homebrew를 통한 의존성 설치
 brew install pkg-config
 ```
 
-### For Windows
+### Windows
 
-Install Visual Studio Build Tools or Visual Studio Community with C++ development tools.
+Visual Studio Build Tools 또는 Visual Studio Community를 C++ 개발 도구와 함께 설치하세요.
 
-## Installation
+## 설치 방법
 
-1. **Install Rust** (if not already installed):
+1. **Rust 설치** (미설치 시):
    ```bash
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
    source ~/.cargo/env
    ```
 
-2. **Install Dioxus CLI**:
+2. **Dioxus CLI 설치**:
    ```bash
    cargo install cargo-binstall
    cargo binstall dioxus-cli
    ```
 
-3. **Clone and setup the project**:
+3. **프로젝트 클론 및 설정**:
    ```bash
    git clone <repository-url>
    cd dioxus-app
    ```
 
-## Key Dependencies
+## 주요 의존성
 
-Based on `Cargo.toml`, this project uses:
+`Cargo.toml` 기준 주요 의존성:
 
-- **Dioxus 0.6.3**: Main framework with router and fullstack features
-- **Reqwest 0.12**: HTTP client for API integration with JSON support
-- **Rusqlite 0.37**: SQLite database (optional, enabled with `native-db` feature)
-- **Serde 1.0**: Serialization/deserialization with derive macros
-- **Async-trait 0.1.89**: Async trait support
-- **Dirs 6.0**: Cross-platform directory paths
-- **Futures 0.3**: Async utilities
+- **Dioxus 0.6.3**: 라우터 및 풀스택 기능을 지원하는 메인 프레임워크
+- **Reqwest 0.12**: JSON 지원 HTTP 클라이언트 (API 연동용)
+- **Rusqlite 0.37**: SQLite 데이터베이스 (`native-db` 피처 활성화 시)
+- **Serde 1.0**: 직렬화/역직렬화 (derive 매크로 포함)
+- **Async-trait 0.1.89**: 비동기 트레이트 지원
+- **Dirs 6.0**: 크로스 플랫폼 디렉터리 경로
+- **Futures 0.3**: 비동기 유틸리티
 
-**Author**: mingyuchoo <mingyuchoo@gmail.com> (Rust Edition 2024)
+**작성자**: mingyuchoo <mingyuchoo@gmail.com> (Rust Edition 2024)
 
-## Project Structure
+## 프로젝트 구조
 
 ```
 dioxus-app/
 ├── .cargo/
-│   └── config.toml          # Linker configuration
-├── assets/                  # Static assets (CSS, images, etc.)
+│   └── config.toml          # 링커 설정
+├── assets/                  # 정적 자산 (CSS, 이미지 등)
 ├── src/
-│   ├── application/         # Application layer (services)
+│   ├── application/         # 애플리케이션 계층 (서비스)
 │   │   ├── doc_application_service.rs
 │   │   ├── post_application_service.rs
 │   │   ├── todo_application_service.rs
 │   │   ├── user_application_service.rs
 │   │   └── mod.rs
-│   ├── domain/             # Domain layer (entities, repositories)
-│   ├── infrastructure/     # Infrastructure layer (API, DB)
-│   ├── presentation/       # Presentation layer (UI components)
+│   ├── domain/             # 도메인 계층 (엔티티, 리포지토리)
+│   ├── infrastructure/     # 인프라 계층 (API, DB)
+│   ├── presentation/       # 표현 계층 (UI 컴포넌트)
 │   │   ├── docs.rs
 │   │   ├── home.rs
 │   │   ├── navbar.rs
@@ -110,108 +110,107 @@ dioxus-app/
 │   │   ├── todos.rs
 │   │   ├── users.rs
 │   │   └── mod.rs
-│   └── main.rs            # Application entry point
-├── Cargo.toml             # Dependencies and features
-├── Dioxus.toml            # Dioxus configuration
+│   └── main.rs            # 애플리케이션 진입점
+├── Cargo.toml             # 의존성 및 피처 설정
+├── Dioxus.toml            # Dioxus 설정
 └── README.md
 ```
 
-## Development
+## 개발
 
-### Running the Application
+### 애플리케이션 실행
 
-**Web (WASM) - Default:**
+**웹 (WASM) - 기본:**
 ```bash
 dx serve
-# or explicitly
+# 또는 명시적으로
 dx serve --platform web
 ```
 
-**Desktop (recommended for full features):**
+**데스크톱 (전체 기능 사용 시 권장):**
 ```bash
 dx serve --platform desktop
 ```
 
-**Mobile (requires additional setup):**
+**모바일 (추가 설정 필요):**
 ```bash
 dx serve --platform mobile
 ```
 
-### Building for Production
+### 프로덕션 빌드
 
-**Desktop:**
+**데스크톱:**
 ```bash
 dx build --release --platform desktop
 ```
 
-**Web:**
+**웹:**
 ```bash
 dx build --release --platform web
 ```
 
-### Available Features
+### 사용 가능한 피처
 
-The application supports different feature flags in `Cargo.toml`:
+`Cargo.toml`에서 지원하는 피처 플래그:
 
-- `desktop`: Desktop application with native database (includes `native-db`)
-- `web`: Web application (WASM) - **default feature**
-- `mobile`: Mobile application (includes `native-db`)
-- `native-db`: Enables SQLite database support via `rusqlite`
+- `desktop`: 네이티브 데이터베이스를 포함한 데스크톱 애플리케이션 (`native-db` 포함)
+- `web`: 웹 애플리케이션 (WASM) - **기본 피처**
+- `mobile`: 모바일 애플리케이션 (`native-db` 포함)
+- `native-db`: `rusqlite`를 통한 SQLite 데이터베이스 지원 활성화
 
-### Development Commands
+### 개발 명령어
 
-- **Rebuild**: Press `r` in the development server
-- **Toggle auto-rebuild**: Press `p`
-- **Verbose logging**: Press `v`
-- **Exit**: Press `Ctrl+C`
+- **재빌드**: 개발 서버에서 `r` 키 입력
+- **자동 재빌드 전환**: `p` 키 입력
+- **상세 로깅**: `v` 키 입력
+- **종료**: `Ctrl+C`
 
-### Web Configuration
+### 웹 설정
 
-The `Dioxus.toml` file configures web-specific settings:
-- **Port**: 8080 (default development server port)
-- **Output directory**: `dist/` for web builds
-- **Public URL**: `/` (can be changed for deployment to subdirectories)
+`Dioxus.toml` 파일에서 웹 관련 설정을 구성합니다:
+- **포트**: 8080 (기본 개발 서버 포트)
+- **출력 디렉터리**: `dist/` (웹 빌드용)
+- **공개 URL**: `/` (서브 디렉터리 배포 시 변경 가능)
 
-## Application Features
+## 애플리케이션 기능
 
-### Document Management
-- Create, read, update, and delete documents
-- Local SQLite database storage
-- Archive/unarchive functionality
-- Persistent data storage in `~/.local/share/dioxus-app/`
+### 문서 관리
+- 문서 생성, 조회, 수정, 삭제
+- 로컬 SQLite 데이터베이스 저장
+- 아카이브/아카이브 해제 기능
+- `~/.local/share/dioxus-app/`에 영구 데이터 저장
 
-### API Integration
-- **Posts**: Fetch and manage blog posts from JSONPlaceholder
-- **Todos**: Task management with completion status
-- **Users**: User information display and management
+### API 연동
+- **Posts**: JSONPlaceholder에서 블로그 게시물 조회 및 관리
+- **Todos**: 완료 상태가 있는 할 일 관리
+- **Users**: 사용자 정보 표시 및 관리
 
-### Cross-Platform Support
-- **Desktop**: Native application with full feature set
-- **Web**: Browser-based application with API features
-- **Mobile**: Touch-optimized interface (requires platform-specific setup)
+### 크로스 플랫폼 지원
+- **데스크톱**: 전체 기능을 갖춘 네이티브 애플리케이션
+- **웹**: API 기능이 포함된 브라우저 기반 애플리케이션
+- **모바일**: 터치 최적화 인터페이스 (플랫폼별 추가 설정 필요)
 
-## Troubleshooting
+## 문제 해결
 
-### Linker Issues
-If you encounter linker errors on Linux, the project includes a `.cargo/config.toml` file that configures the linker to use `gcc` with `bfd` linker for x86_64-unknown-linux-gnu targets for compatibility.
+### 링커 문제
+Linux에서 링커 오류가 발생하면, 프로젝트에 포함된 `.cargo/config.toml` 파일이 x86_64-unknown-linux-gnu 타겟에 대해 `gcc`와 `bfd` 링커를 사용하도록 설정되어 있습니다.
 
-### Missing Dependencies
-Ensure all system dependencies are installed for your platform. The error messages will typically indicate which libraries are missing.
+### 의존성 누락
+해당 플랫폼에 필요한 시스템 의존성이 모두 설치되어 있는지 확인하세요. 오류 메시지에서 누락된 라이브러리를 안내합니다.
 
-### Database Issues
-The SQLite database is automatically created in `~/.local/share/dioxus-app/docs.db`. If you encounter database issues, you can safely delete this file to reset the database.
+### 데이터베이스 문제
+SQLite 데이터베이스는 `~/.local/share/dioxus-app/docs.db`에 자동 생성됩니다. 데이터베이스 문제 발생 시 이 파일을 삭제하여 초기화할 수 있습니다.
 
-## Contributing
+## 기여
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `cargo test`
-5. Check formatting: `cargo fmt`
-6. Run clippy: `cargo clippy`
-7. Submit a pull request
+1. 리포지토리 포크
+2. 기능 브랜치 생성
+3. 변경사항 작성
+4. 테스트 실행: `cargo test`
+5. 포맷 확인: `cargo fmt`
+6. Clippy 실행: `cargo clippy`
+7. 풀 리퀘스트 제출
 
-## License
+## 라이선스
 
-[Add your license information here]
-
+[라이선스 정보 추가 필요]

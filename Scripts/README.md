@@ -1,27 +1,31 @@
-# README
+# Scripts
 
-## Run Rust code using `rust-script`
+Rust 스크립트 실행 방법을 소개합니다.
 
-### Install
+## `rust-script`를 사용하여 Rust 코드 실행
+
+### 설치
 
 ```bash
 cargo install rust-script
 ```
 
-### Run
+### 실행
 
 ```bash
 rust-script <rust-filename>.rs
 ```
 
-## Run Rust code using Shebang
+## Shebang을 사용하여 Rust 코드 실행
 
-### Example code
+### 예제 코드
 
 ```rust
 #!/usr/bin/env rust-script
-//! ```carg
+//! ```cargo
 //! [dependencies]
+//! serde = {version = "1.0", features = ["derive"]}
+//! serde_json = "1.0"
 //! ```
 
 fn main() {
@@ -35,12 +39,16 @@ chmod +x example.rs
 ./example.rs
 ```
 
-## Run Rust code using `cargo-eval`
+## `cargo-eval`을 사용하여 Rust 코드 실행
 
-### Install
+### 설치
 
 ```bash
 cargo install cargo-eval
 
-cargo eval <rust-filename>rs
+cargo eval <rust-filename>.rs
 ```
+
+## 포함된 예제
+
+- `example.rs` - serde를 사용한 JSON 직렬화 예제 (rust-script shebang 방식)

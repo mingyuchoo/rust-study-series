@@ -1,14 +1,14 @@
-# Rust Qdrant Vector RAG
+# rust-qdrant-vector-rag
 
-A modern full-stack application featuring a high-performance Rust backend with Azure OpenAI integration and Qdrant vector database, paired with a responsive frontend built with Svelte and TypeScript.
+Azure OpenAI와 Qdrant 벡터 데이터베이스를 활용한 고성능 Rust 백엔드와 Svelte/TypeScript 프론트엔드로 구성된 풀스택 RAG(Retrieval-Augmented Generation) 애플리케이션입니다.
 
-## 🏗️ Architecture Overview
+## 아키텍처 개요
 
-This project consists of three main components:
+이 프로젝트는 세 가지 주요 컴포넌트로 구성됩니다:
 
-- **Backend**: Rust-based RAG (Retrieval-Augmented Generation) service using Actix Web
-- **Frontend**: Svelte/TypeScript application with Vite build system
-- **Docker**: Containerized deployment configuration
+- **백엔드**: Actix Web 기반 Rust RAG 서비스
+- **프론트엔드**: Vite 빌드 시스템을 사용하는 Svelte/TypeScript 애플리케이션
+- **Docker**: 컨테이너화된 배포 구성
 
 ```
 project-root/
@@ -18,48 +18,48 @@ project-root/
 └── README.md          # This file
 ```
 
-## 🚀 Quick Start
+## 빠른 시작
 
-### Prerequisites
+### 사전 요구사항
 
-- **Rust** 1.78+ (for backend)
-- **Node.js** 18+ and **pnpm** (for frontend)
-- **Docker** and **Docker Compose** (for services)
-- **Azure OpenAI** resource with embedding and chat deployments
+- **Rust** 1.78+ (백엔드)
+- **Node.js** 18+ 및 **pnpm** (프론트엔드)
+- **Docker** 및 **Docker Compose** (인프라 서비스)
+- **Azure OpenAI** 리소스 (임베딩 및 채팅 배포)
 
-### 1. Start Infrastructure Services
+### 1. 인프라 서비스 시작
 
 ```bash
 cd docker
 docker-compose up -d
 ```
 
-This starts Qdrant vector database and any other required services.
+Qdrant 벡터 데이터베이스 및 기타 필수 서비스를 시작합니다.
 
-### 2. Configure Environment
+### 2. 환경 설정
 
-Copy environment files and configure:
+환경 파일을 복사하고 설정합니다:
 
 ```bash
-# Backend configuration
+# 백엔드 설정
 cp backend/.env.example backend/.env
-# Edit backend/.env with your Azure OpenAI credentials
+# backend/.env에 Azure OpenAI 자격 증명 입력
 
-# Frontend configuration  
+# 프론트엔드 설정
 cp frontend/.env.example frontend/.env
-# Edit frontend/.env with API endpoints
+# frontend/.env에 API 엔드포인트 설정
 ```
 
-### 3. Start Backend
+### 3. 백엔드 시작
 
 ```bash
 cd backend
 cargo run
 ```
 
-The backend API will be available at `http://localhost:8080`
+백엔드 API는 `http://localhost:8080`에서 사용 가능합니다.
 
-### 4. Start Frontend
+### 4. 프론트엔드 시작
 
 ```bash
 cd frontend
@@ -67,13 +67,13 @@ pnpm install
 pnpm dev
 ```
 
-The frontend will be available at `http://localhost:5173`
+프론트엔드는 `http://localhost:5173`에서 사용 가능합니다.
 
-## 📁 Project Structure
+## 프로젝트 구조
 
-### Backend (`/backend`)
+### 백엔드 (`/backend`)
 
-The Rust backend provides a high-performance RAG service with the following architecture:
+Rust 백엔드는 다음 아키텍처를 갖춘 고성능 RAG 서비스를 제공합니다:
 
 ```
 backend/src/
@@ -101,18 +101,18 @@ backend/src/
 └── models/              # Data models and types
 ```
 
-**Key Features:**
-- Document upload and processing (Markdown support)
-- Azure OpenAI embedding generation with batch processing
-- Qdrant vector storage and similarity search
-- RAG pipeline with context retrieval and answer generation
-- Comprehensive monitoring with Prometheus metrics
-- OpenAPI documentation with Swagger UI
-- Resilient design with retry logic and caching
+**주요 기능:**
+- 문서 업로드 및 처리 (마크다운 지원)
+- Azure OpenAI 배치 임베딩 생성
+- Qdrant 벡터 저장 및 유사도 검색
+- 컨텍스트 검색 및 답변 생성 RAG 파이프라인
+- Prometheus 메트릭을 활용한 종합 모니터링
+- OpenAPI 문서 및 Swagger UI
+- 재시도 로직 및 캐싱을 포함한 복원력 설계
 
-### Frontend (`/frontend`)
+### 프론트엔드 (`/frontend`)
 
-Modern Svelte application with TypeScript:
+TypeScript를 사용하는 최신 Svelte 애플리케이션:
 
 ```
 frontend/src/
@@ -124,28 +124,28 @@ frontend/src/
 └── static/              # Static assets
 ```
 
-**Key Features:**
-- Responsive UI built with Svelte and TypeScript
-- Tailwind CSS for styling
-- Vite for fast development and building
-- ESLint and Prettier for code quality
-- Vitest for testing
+**주요 기능:**
+- Svelte 및 TypeScript로 구축된 반응형 UI
+- Tailwind CSS 스타일링
+- Vite 기반 빠른 개발 및 빌드
+- ESLint 및 Prettier 코드 품질 관리
+- Vitest 테스팅
 
-### Docker Configuration (`/docker`)
+### Docker 구성 (`/docker`)
 
-Containerized deployment setup:
+컨테이너화된 배포 설정:
 
-- `docker-compose.yml`: Orchestrates Qdrant and other services
-- `.dockerignore`: Optimizes Docker build context
+- `docker-compose.yml`: Qdrant 및 기타 서비스 오케스트레이션
+- `.dockerignore`: Docker 빌드 컨텍스트 최적화
 
-## 🔧 Configuration
+## 설정
 
-### Backend Configuration
+### 백엔드 설정
 
-Key environment variables in `backend/.env`:
+`backend/.env`의 주요 환경 변수:
 
 ```bash
-# Server Configuration
+# 서버 설정
 SERVER_HOST=127.0.0.1
 SERVER_PORT=8080
 SERVER_MAX_REQUEST_SIZE=10485760
@@ -157,171 +157,171 @@ AZURE_OPENAI_API_KEY=your-api-key
 AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-large
 AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4
 
-# Qdrant Vector Database
+# Qdrant 벡터 데이터베이스
 QDRANT_URL=http://localhost:6334
 QDRANT_COLLECTION_NAME=documents
 QDRANT_VECTOR_SIZE=3072
 
-# Performance & Caching
+# 성능 및 캐싱
 CACHE_TTL_SECONDS=3600
 MAX_CONCURRENT_REQUESTS=100
 ```
 
-### Frontend Configuration
+### 프론트엔드 설정
 
-Configure API endpoints in `frontend/.env`:
+`frontend/.env`에서 API 엔드포인트를 설정합니다:
 
 ```bash
 VITE_API_BASE_URL=http://localhost:8080/api/v1
 VITE_APP_TITLE=RAG Application
 ```
 
-## 📡 API Endpoints
+## API 엔드포인트
 
-The backend provides a comprehensive REST API:
+백엔드는 종합적인 REST API를 제공합니다:
 
-### Document Management
-- `POST /api/v1/upload` - Upload documents (multipart)
-- `POST /api/v1/upload/json` - Upload via JSON
+### 문서 관리
+- `POST /api/v1/upload` - 문서 업로드 (멀티파트)
+- `POST /api/v1/upload/json` - JSON으로 업로드
 
-### Query Processing  
-- `POST /api/v1/query` - Process RAG queries
-- `GET /api/v1/query/{question}` - Simple query via URL
+### 질의 처리
+- `POST /api/v1/query` - RAG 질의 처리
+- `GET /api/v1/query/{question}` - URL 경로 파라미터를 통한 간단 질의
 
-### Monitoring & Management
-- `GET /api/v1/health` - Health check
-- `GET /api/v1/metrics` - Application metrics
-- `GET /api/v1/metrics/prometheus` - Prometheus format metrics
-- `GET /api/v1/cache/stats` - Cache statistics
-- `POST /api/v1/cache/clear` - Clear cache
+### 모니터링 및 관리
+- `GET /api/v1/health` - 헬스 체크
+- `GET /api/v1/metrics` - 애플리케이션 메트릭
+- `GET /api/v1/metrics/prometheus` - Prometheus 포맷 메트릭
+- `GET /api/v1/cache/stats` - 캐시 통계
+- `POST /api/v1/cache/clear` - 캐시 초기화
 
-### Documentation
-- `GET /swagger-ui/` - Interactive API documentation
+### 문서화
+- `GET /swagger-ui/` - 대화형 API 문서
 
-## 🧪 Testing
+## 테스트
 
-### Backend Testing
+### 백엔드 테스트
 
 ```bash
 cd backend
 
-# Run unit tests
+# 단위 테스트 실행
 cargo test
 
-# Run with coverage
+# 커버리지 측정
 cargo tarpaulin --ignore-tests
 
-# Run integration tests
+# 통합 테스트 실행
 cargo test --test integration_tests
 
-# Performance benchmarks
+# 성능 벤치마크
 cargo test --release benchmark
 ```
 
-### Frontend Testing
+### 프론트엔드 테스트
 
 ```bash
 cd frontend
 
-# Run unit tests
+# 단위 테스트 실행
 pnpm test
 
-# Run tests in watch mode
+# 감시 모드 테스트
 pnpm test:watch
 
-# Run tests with coverage
+# 커버리지 포함 테스트
 pnpm test:coverage
 
-# Type checking
+# 타입 검사
 pnpm check
 ```
 
-## 📊 Monitoring
+## 모니터링
 
-The application includes comprehensive monitoring:
+애플리케이션은 종합적인 모니터링을 포함합니다:
 
-- **Prometheus Metrics**: Request rates, latencies, error rates
-- **Health Checks**: Service availability and dependency status  
-- **Performance Monitoring**: Response times and resource usage
-- **Cache Statistics**: Hit rates and memory usage
-- **Logging**: Structured logging with tracing
+- **Prometheus 메트릭**: 요청 비율, 지연 시간, 에러율
+- **헬스 체크**: 서비스 가용성 및 의존성 상태
+- **성능 모니터링**: 응답 시간 및 리소스 사용량
+- **캐시 통계**: 적중률 및 메모리 사용량
+- **로깅**: tracing을 활용한 구조화된 로깅
 
-Access metrics at:
-- Application metrics: `GET /api/v1/metrics`
-- Prometheus format: `GET /api/v1/metrics/prometheus`
+메트릭 접근:
+- 애플리케이션 메트릭: `GET /api/v1/metrics`
+- Prometheus 포맷: `GET /api/v1/metrics/prometheus`
 
-## 🚀 Deployment
+## 배포
 
-### Development
+### 개발 환경
 
-Use the quick start guide above for local development.
+위의 빠른 시작 가이드를 참고하세요.
 
-### Production
+### 프로덕션
 
-1. **Build the application:**
+1. **애플리케이션 빌드:**
 
 ```bash
-# Build backend
+# 백엔드 빌드
 cd backend
 cargo build --release
 
-# Build frontend
+# 프론트엔드 빌드
 cd frontend
 pnpm build
 ```
 
-2. **Deploy with Docker:**
+2. **Docker로 배포:**
 
 ```bash
 cd docker
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-## 🛠️ Development Tools
+## 개발 도구
 
-### Backend Tools
-- **cargo-make**: Task runner (see `Makefile.toml`)
-- **rustfmt**: Code formatting
-- **clippy**: Linting
-- **tarpaulin**: Coverage reporting
+### 백엔드 도구
+- **cargo-make**: 태스크 러너 (`Makefile.toml` 참고)
+- **rustfmt**: 코드 포매팅
+- **clippy**: 린팅
+- **tarpaulin**: 커버리지 리포트
 
-### Frontend Tools
-- **ESLint**: Code linting
-- **Prettier**: Code formatting  
-- **Vitest**: Testing framework
-- **TypeScript**: Type checking
+### 프론트엔드 도구
+- **ESLint**: 코드 린팅
+- **Prettier**: 코드 포매팅
+- **Vitest**: 테스팅 프레임워크
+- **TypeScript**: 타입 검사
 
-## 🔍 Troubleshooting
+## 문제 해결
 
-### Common Issues
+### 일반적인 문제
 
-**Backend Issues:**
-- **Rate limiting**: Reduce request frequency or use batch embedding
-- **Vector dimension mismatch**: Ensure embedding model matches `QDRANT_VECTOR_SIZE`
-- **Connection errors**: Verify Qdrant is running and accessible
+**백엔드 문제:**
+- **레이트 리미팅**: 요청 빈도를 줄이거나 배치 임베딩 사용
+- **벡터 차원 불일치**: 임베딩 모델이 `QDRANT_VECTOR_SIZE`와 일치하는지 확인
+- **연결 에러**: Qdrant가 실행 중이고 접근 가능한지 확인
 
-**Frontend Issues:**
-- **API connection**: Check `VITE_API_BASE_URL` configuration
-- **Build errors**: Ensure Node.js version compatibility
-- **Type errors**: Run `pnpm check` for TypeScript validation
+**프론트엔드 문제:**
+- **API 연결**: `VITE_API_BASE_URL` 설정 확인
+- **빌드 에러**: Node.js 버전 호환성 확인
+- **타입 에러**: `pnpm check`로 TypeScript 검증
 
-### Logs and Debugging
+### 로그 및 디버깅
 
-- Backend logs: Structured logging with configurable levels
-- Frontend logs: Browser console and network tab
-- Service logs: `docker-compose logs <service-name>`
+- 백엔드 로그: 설정 가능한 레벨의 구조화된 로깅
+- 프론트엔드 로그: 브라우저 콘솔 및 네트워크 탭
+- 서비스 로그: `docker-compose logs <service-name>`
 
-## 📄 License
+## 라이선스
 
-This project follows the organization's licensing policy. See individual component directories for specific license information.
+이 프로젝트는 조직의 라이선스 정책을 따릅니다. 구체적인 라이선스 정보는 개별 컴포넌트 디렉터리를 참고하세요.
 
-## 🤝 Contributing
+## 기여 방법
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
+1. 저장소를 포크합니다.
+2. 기능 브랜치를 생성합니다.
+3. 변경 사항을 적용합니다.
+4. 새 기능에 대한 테스트를 추가합니다.
+5. 모든 테스트가 통과하는지 확인합니다.
+6. Pull Request를 제출합니다.
 
-For detailed contribution guidelines, see the individual component READMEs in `/backend` and `/frontend` directories.
+상세한 기여 가이드라인은 `/backend` 및 `/frontend` 디렉터리의 개별 README를 참고하세요.
