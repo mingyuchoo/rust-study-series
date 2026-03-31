@@ -1,0 +1,241 @@
+{
+  "last_prd_id": 4,
+  "last_spec_id": 4,
+  "entries": [
+    {
+      "id": "PRD-001",
+      "type": "prd",
+      "title": "세계 시계 CLI 앱",
+      "status": "implemented",
+      "created": "2026-03-31"
+    },
+    {
+      "id": "SPEC-001",
+      "type": "spec",
+      "title": "세계 시계 핵심 기능",
+      "prd": "PRD-001",
+      "status": "implemented",
+      "test_status": "passed",
+      "created": "2026-03-31"
+    },
+    {
+      "id": "PRD-002",
+      "type": "prd",
+      "title": "세계 시계 웹 서비스",
+      "status": "implemented",
+      "created": "2026-03-31"
+    },
+    {
+      "id": "SPEC-002",
+      "type": "spec",
+      "title": "세계 시계 웹 서비스 REST API",
+      "prd": "PRD-002",
+      "status": "implemented",
+      "test_status": "passed",
+      "created": "2026-03-31"
+    }
+    ,{
+      "id": "PRD-003",
+      "type": "prd",
+      "title": "세계 시계 웹 프론트엔드",
+      "status": "implemented",
+      "created": "2026-03-31"
+    },
+    {
+      "id": "SPEC-003",
+      "type": "spec",
+      "title": "세계 시계 웹 프론트엔드",
+      "prd": "PRD-003",
+      "status": "implemented",
+      "test_status": "passed",
+      "created": "2026-03-31"
+    },
+    {
+      "id": "PRD-004",
+      "type": "prd",
+      "title": "추적성 맵 그래프 시각화",
+      "status": "implemented",
+      "created": "2026-03-31"
+    },
+    {
+      "id": "SPEC-004",
+      "type": "spec",
+      "title": "추적성 맵 그래프 시각화",
+      "prd": "PRD-004",
+      "status": "implemented",
+      "test_status": "passed",
+      "created": "2026-03-31"
+    }
+  ],
+  "trace_map": {
+    "PRD-001": {
+      "fr": {
+        "FR-1": {
+          "title": "여러 타임존의 현재 시간 표시",
+          "specs": ["SPEC-001"],
+          "test_cases": ["SPEC-001/TC-1", "SPEC-001/TC-2", "SPEC-001/TC-3", "SPEC-001/TC-4"],
+          "test_files": ["tests/test_clock.rs"],
+          "impl_files": ["src/clock.rs", "src/config.rs"],
+          "impl_symbols": ["get_clock_display", "format_clocks", "Config::load"],
+          "status": "passed"
+        },
+        "FR-2": {
+          "title": "도시/타임존 추가",
+          "specs": ["SPEC-001"],
+          "test_cases": ["SPEC-001/TC-5", "SPEC-001/TC-6", "SPEC-001/TC-7", "SPEC-001/TC-10"],
+          "test_files": ["tests/test_config.rs"],
+          "impl_files": ["src/config.rs"],
+          "impl_symbols": ["Config::add", "Config::save"],
+          "status": "passed"
+        },
+        "FR-3": {
+          "title": "도시/타임존 삭제",
+          "specs": ["SPEC-001"],
+          "test_cases": ["SPEC-001/TC-8", "SPEC-001/TC-9", "SPEC-001/TC-10"],
+          "test_files": ["tests/test_config.rs"],
+          "impl_files": ["src/config.rs"],
+          "impl_symbols": ["Config::remove", "Config::save"],
+          "status": "passed"
+        },
+        "FR-4": {
+          "title": "저장된 도시 목록 조회",
+          "specs": ["SPEC-001"],
+          "test_cases": ["SPEC-001/TC-11", "SPEC-001/TC-12"],
+          "test_files": ["tests/test_config.rs"],
+          "impl_files": ["src/config.rs"],
+          "impl_symbols": ["Config::load"],
+          "status": "passed"
+        }
+      }
+    },
+    "PRD-002": {
+      "fr": {
+        "FR-1": {
+          "title": "REST API로 모든 도시의 현재 시간 조회",
+          "specs": ["SPEC-002"],
+          "test_cases": ["SPEC-002/TC-1", "SPEC-002/TC-2"],
+          "test_files": ["tests/test_web.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["create_router", "get_clocks", "AppState"],
+          "status": "passed"
+        },
+        "FR-2": {
+          "title": "REST API로 도시 추가",
+          "specs": ["SPEC-002"],
+          "test_cases": ["SPEC-002/TC-3", "SPEC-002/TC-4", "SPEC-002/TC-5"],
+          "test_files": ["tests/test_web.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["add_city"],
+          "status": "passed"
+        },
+        "FR-3": {
+          "title": "REST API로 도시 삭제",
+          "specs": ["SPEC-002"],
+          "test_cases": ["SPEC-002/TC-6", "SPEC-002/TC-7"],
+          "test_files": ["tests/test_web.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["remove_city"],
+          "status": "passed"
+        },
+        "FR-4": {
+          "title": "REST API로 도시 목록 조회",
+          "specs": ["SPEC-002"],
+          "test_cases": ["SPEC-002/TC-8"],
+          "test_files": ["tests/test_web.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["list_cities"],
+          "status": "passed"
+        },
+        "FR-5": {
+          "title": "웹 서버 시작/종료",
+          "specs": ["SPEC-002"],
+          "test_cases": ["SPEC-002/TC-9"],
+          "test_files": ["tests/test_web.rs"],
+          "impl_files": ["src/cli.rs", "src/main.rs"],
+          "impl_symbols": ["Commands::Serve", "run"],
+          "status": "passed"
+        }
+      }
+    },
+    "PRD-003": {
+      "fr": {
+        "FR-1": {
+          "title": "루트 경로(/)에서 HTML 페이지 제공",
+          "specs": ["SPEC-003"],
+          "test_cases": ["SPEC-003/TC-1", "SPEC-003/TC-2", "SPEC-003/TC-3", "SPEC-003/TC-6"],
+          "test_files": ["tests/test_frontend.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["index_html", "INDEX_HTML", "create_router"],
+          "status": "passed"
+        },
+        "FR-2": {
+          "title": "웹 페이지에서 모든 도시의 현재 시간을 실시간 표시",
+          "specs": ["SPEC-003"],
+          "test_cases": ["SPEC-003/TC-2", "SPEC-003/TC-4"],
+          "test_files": ["tests/test_frontend.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["INDEX_HTML"],
+          "status": "passed"
+        },
+        "FR-3": {
+          "title": "웹 페이지에서 도시 추가",
+          "specs": ["SPEC-003"],
+          "test_cases": ["SPEC-003/TC-3", "SPEC-003/TC-4"],
+          "test_files": ["tests/test_frontend.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["INDEX_HTML"],
+          "status": "passed"
+        },
+        "FR-4": {
+          "title": "웹 페이지에서 도시 삭제",
+          "specs": ["SPEC-003"],
+          "test_cases": ["SPEC-003/TC-4", "SPEC-003/TC-5"],
+          "test_files": ["tests/test_frontend.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["INDEX_HTML"],
+          "status": "passed"
+        }
+      }
+    },
+    "PRD-004": {
+      "fr": {
+        "FR-1": {
+          "title": "추적성 데이터를 JSON API로 제공",
+          "specs": ["SPEC-004"],
+          "test_cases": ["SPEC-004/TC-1", "SPEC-004/TC-2"],
+          "test_files": ["tests/test_trace.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["get_trace", "AppState"],
+          "status": "passed"
+        },
+        "FR-2": {
+          "title": "추적성 그래프 웹 페이지 제공",
+          "specs": ["SPEC-004"],
+          "test_cases": ["SPEC-004/TC-3", "SPEC-004/TC-4", "SPEC-004/TC-8"],
+          "test_files": ["tests/test_trace.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["trace_html", "TRACE_HTML", "create_router"],
+          "status": "passed"
+        },
+        "FR-3": {
+          "title": "정방향 추적 그래프 표시",
+          "specs": ["SPEC-004"],
+          "test_cases": ["SPEC-004/TC-4", "SPEC-004/TC-5", "SPEC-004/TC-7"],
+          "test_files": ["tests/test_trace.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["TRACE_HTML"],
+          "status": "passed"
+        },
+        "FR-4": {
+          "title": "역방향 추적 그래프 표시",
+          "specs": ["SPEC-004"],
+          "test_cases": ["SPEC-004/TC-6", "SPEC-004/TC-7"],
+          "test_files": ["tests/test_trace.rs"],
+          "impl_files": ["src/web.rs"],
+          "impl_symbols": ["TRACE_HTML"],
+          "status": "passed"
+        }
+      }
+    }
+  }
+}
