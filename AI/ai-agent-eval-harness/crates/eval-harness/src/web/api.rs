@@ -42,7 +42,14 @@ pub fn build_agent_registry() -> AgentRegistry {
     registry.register("passthrough", Arc::new(PassthroughAgent));
     dotenvy::dotenv().ok();
     if let Ok(llm_config) = agent_core::config::AzureOpenAiConfig::from_env() {
-        let eval_config = agent_core::config::EvaluationConfig::default();
+        let base = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        let eval_config = match crate::data_paths::load_evaluation_config(&base) {
+            | Ok(cfg) => cfg,
+            | Err(e) => {
+                eprintln!("[warn] eval-harness.toml [evaluation] 파싱 실패: {e} — 기본값 사용");
+                agent_core::config::EvaluationConfig::default()
+            },
+        };
         let llm = agent_core::llm_client::LlmClient::new(llm_config);
         let agent = agent_core::agent::PpaAgent::new(llm, eval_config);
         registry.register("ppa", Arc::new(agent));
@@ -102,8 +109,8 @@ pub fn scenario_detail_impl(dir: &Path, domain: &str, id: &str) -> Option<Scenar
 /// @trace TC: SPEC-003/TC-6, SPEC-003/TC-7
 /// @trace FR: PRD-003/FR-5
 #[cfg(test)]
-pub fn run_suite_impl(suite: &str, agent_name: &str, scenarios_dir: &Path, reports_dir: &Path) -> Result<EvaluationReport, String> {
-    run_suite_with_save_impl(suite, agent_name, scenarios_dir, reports_dir, None).map(|(r, _)| r)
+pub fn run_eval_scenario_impl(eval_scenario: &str, agent_name: &str, scenarios_dir: &Path, reports_dir: &Path) -> Result<EvaluationReport, String> {
+    run_eval_scenario_with_save_impl(eval_scenario, agent_name, scenarios_dir, reports_dir, None).map(|(r, _)| r)
 }
 
 /// SPEC-005: 실행 후 aggregate report를 디스크에 저장한다.
@@ -112,15 +119,15 @@ pub fn run_suite_impl(suite: &str, agent_name: &str, scenarios_dir: &Path, repor
 /// @trace SPEC: SPEC-005
 /// @trace TC: SPEC-005/TC-1, SPEC-005/TC-2, SPEC-005/TC-3
 /// @trace FR: PRD-005/FR-1
-pub fn run_suite_with_save_impl(
-    suite: &str,
+pub fn run_eval_scenario_with_save_impl(
+    eval_scenario: &str,
     agent_name: &str,
     scenarios_dir: &Path,
     reports_dir: &Path,
     output: Option<&str>,
 ) -> Result<(EvaluationReport, String), String> {
-    if !is_safe_name(suite) || !is_safe_name(agent_name) {
-        return Err("invalid suite/agent name".into());
+    if !is_safe_name(eval_scenario) || !is_safe_name(agent_name) {
+        return Err("invalid eval_scenario/agent name".into());
     }
     if let Some(name) = output {
         if !is_safe_name(name) {
@@ -132,7 +139,9 @@ pub fn run_suite_with_save_impl(
     let reports_str = reports_dir.to_str().ok_or_else(|| "invalid reports_dir".to_string())?;
     let scenarios_str = scenarios_dir.to_str().ok_or_else(|| "invalid scenarios_dir".to_string())?;
     let mut runner = HarnessRunner::new(reports_str);
-    let report = runner.run_suite(suite, agent.as_ref(), scenarios_str).map_err(|e| e.to_string())?;
+    let report = runner
+        .run_eval_scenario(eval_scenario, agent.as_ref(), scenarios_str)
+        .map_err(|e| e.to_string())?;
     let save_path: PathBuf = match output {
         | Some(n) => reports_dir.join(n),
         | None => reports_dir.join(format!("evaluation_report_{}.json", report.timestamp)),
@@ -237,18 +246,31 @@ pub struct ListAllResponse {
 
 #[derive(Deserialize)]
 pub struct RunRequest {
-    pub suite: String,
+    pub eval_scenario: String,
     pub agent: String,
     #[serde(default)]
     pub output: Option<String>,
 }
 
-pub async fn run_suite(State(st): State<AppState>, Json(req): Json<RunRequest>) -> Result<Json<RunResponse>, (StatusCode, String)> {
+pub async fn run_eval_scenario(State(st): State<AppState>, Json(req): Json<RunRequest>) -> Result<Json<RunResponse>, (StatusCode, String)> {
     let scen = st.scenarios_dir.clone();
     let reps = st.reports_dir.clone();
-    let res = tokio::task::spawn_blocking(move || run_suite_with_save_impl(&req.suite, &req.agent, &scen, &reps, req.output.as_deref()))
+    let eval_scenario_label = req.eval_scenario.clone();
+    let agent_label = req.agent.clone();
+    println!("▶ [web] POST /api/run eval_scenario={} agent={}", eval_scenario_label, agent_label);
+    let res = tokio::task::spawn_blocking(move || run_eval_scenario_with_save_impl(&req.eval_scenario, &req.agent, &scen, &reps, req.output.as_deref()))
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    match &res {
+        | Ok((_, saved_to)) => println!(
+            "✔ [web] 평가 시나리오 완료: eval_scenario={} agent={} → {}",
+            eval_scenario_label, agent_label, saved_to
+        ),
+        | Err(e) => println!(
+            "✘ [web] 평가 시나리오 실패: eval_scenario={} agent={} — {}",
+            eval_scenario_label, agent_label, e
+        ),
+    }
     res.map(|(report, saved_to)| {
         Json(RunResponse {
             report,
@@ -377,18 +399,18 @@ mod tests {
 
     /// @trace TC: SPEC-003/TC-6
     /// @trace FR: PRD-003/FR-5
-    /// @trace scenario: run_suite_impl 정상
+    /// @trace scenario: run_eval_scenario_impl 정상
     #[test]
-    fn test_tc_6_run_suite_passthrough() {
+    fn test_tc_6_run_eval_scenario_passthrough() {
         let scen = workspace_scenarios();
         if !scen.exists() {
             return;
         }
         let reps = tempdir().unwrap();
-        let r = run_suite_impl("customer_service", "passthrough", &scen, reps.path());
+        let r = run_eval_scenario_impl("customer_service", "passthrough", &scen, reps.path());
         assert!(r.is_ok(), "run failed: {:?}", r.err());
         let report = r.unwrap();
-        assert_eq!(report.suite, "customer_service");
+        assert_eq!(report.eval_scenario, "customer_service");
     }
 
     /// @trace TC: SPEC-003/TC-7
@@ -401,7 +423,7 @@ mod tests {
             return;
         }
         let reps = tempdir().unwrap();
-        let r = run_suite_impl("customer_service", "unknown_agent_xyz", &scen, reps.path());
+        let r = run_eval_scenario_impl("customer_service", "unknown_agent_xyz", &scen, reps.path());
         assert!(r.is_err());
     }
 
@@ -415,7 +437,7 @@ mod tests {
             return;
         }
         let reps = tempdir().unwrap();
-        let report = run_suite_impl("customer_service", "passthrough", &scen, reps.path()).unwrap();
+        let report = run_eval_scenario_impl("customer_service", "passthrough", &scen, reps.path()).unwrap();
         let text = serde_json::to_string(&report).unwrap();
         fs::write(reps.path().join("a.json"), &text).unwrap();
         fs::write(reps.path().join("b.json"), &text).unwrap();
@@ -438,7 +460,7 @@ mod tests {
 
     /// @trace TC: SPEC-005/TC-1
     /// @trace FR: PRD-005/FR-1
-    /// @trace scenario: run_suite_with_save_impl 기본 저장
+    /// @trace scenario: run_eval_scenario_with_save_impl 기본 저장
     #[test]
     fn test_spec005_tc_1_run_with_default_save() {
         let scen = workspace_scenarios();
@@ -446,14 +468,14 @@ mod tests {
             return;
         }
         let reps = tempdir().unwrap();
-        let (_report, path) = run_suite_with_save_impl("customer_service", "passthrough", &scen, reps.path(), None).unwrap();
+        let (_report, path) = run_eval_scenario_with_save_impl("customer_service", "passthrough", &scen, reps.path(), None).unwrap();
         assert!(std::path::Path::new(&path).exists());
         assert!(path.contains("evaluation_report_"));
     }
 
     /// @trace TC: SPEC-005/TC-2
     /// @trace FR: PRD-005/FR-1
-    /// @trace scenario: run_suite_with_save_impl output 지정
+    /// @trace scenario: run_eval_scenario_with_save_impl output 지정
     #[test]
     fn test_spec005_tc_2_run_with_custom_output() {
         let scen = workspace_scenarios();
@@ -461,7 +483,7 @@ mod tests {
             return;
         }
         let reps = tempdir().unwrap();
-        let (_r, path) = run_suite_with_save_impl("customer_service", "passthrough", &scen, reps.path(), Some("custom_name.json")).unwrap();
+        let (_r, path) = run_eval_scenario_with_save_impl("customer_service", "passthrough", &scen, reps.path(), Some("custom_name.json")).unwrap();
         assert!(path.ends_with("custom_name.json"));
         assert!(reps.path().join("custom_name.json").exists());
     }
@@ -472,7 +494,7 @@ mod tests {
     #[test]
     fn test_spec005_tc_3_run_rejects_traversal_output() {
         let reps = tempdir().unwrap();
-        let r = run_suite_with_save_impl("customer_service", "passthrough", Path::new("/nonexistent"), reps.path(), Some("../evil.json"));
+        let r = run_eval_scenario_with_save_impl("customer_service", "passthrough", Path::new("/nonexistent"), reps.path(), Some("../evil.json"));
         assert!(r.is_err());
     }
 
@@ -486,7 +508,7 @@ mod tests {
             return;
         }
         let reps = tempdir().unwrap();
-        let report = run_suite_impl("customer_service", "passthrough", &scen, reps.path()).unwrap();
+        let report = run_eval_scenario_impl("customer_service", "passthrough", &scen, reps.path()).unwrap();
         let text = serde_json::to_string(&report).unwrap();
         fs::write(reps.path().join("a.json"), &text).unwrap();
         fs::write(reps.path().join("b.json"), &text).unwrap();
@@ -505,7 +527,7 @@ mod tests {
             return;
         }
         let reps = tempdir().unwrap();
-        let report = run_suite_impl("customer_service", "passthrough", &scen, reps.path()).unwrap();
+        let report = run_eval_scenario_impl("customer_service", "passthrough", &scen, reps.path()).unwrap();
         let text = serde_json::to_string(&report).unwrap();
         fs::write(reps.path().join("a.json"), &text).unwrap();
         fs::write(reps.path().join("b.json"), &text).unwrap();

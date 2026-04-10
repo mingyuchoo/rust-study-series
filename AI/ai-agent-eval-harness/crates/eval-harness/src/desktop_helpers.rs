@@ -5,9 +5,12 @@
 // @trace file-type: impl
 // =============================================================================
 
-use std::io;
-use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::time::{Duration, Instant};
+use std::{io,
+          net::{SocketAddr,
+                TcpListener,
+                TcpStream},
+          time::{Duration,
+                 Instant}};
 
 /// 사용 가능한 로컬호스트 TCP 포트를 하나 선택해서 반환한다.
 ///
@@ -63,7 +66,8 @@ mod tests {
     /// @trace scenario: lib 경로로 web::build_router 접근
     #[test]
     fn test_tc_1_lib_reexports_web_module() {
-        // 라이브러리 모드에서 `web::build_router` 심볼이 공개되어 있는지 컴파일 타임 검증.
+        // 라이브러리 모드에서 `web::build_router` 심볼이 공개되어 있는지 컴파일 타임
+        // 검증.
         let state = crate::web::AppState {
             scenarios_dir: std::path::PathBuf::from("."),
             reports_dir: std::path::PathBuf::from("."),
@@ -80,8 +84,8 @@ mod tests {
     fn test_tc_2_pick_free_port_returns_usable_port() {
         let port = pick_free_port().expect("OS must allocate a port");
         assert!(port > 0);
-        // 동일 포트를 바로 다시 요청하면 일반적으로 다른 값이 나오거나 재사용될 수 있다 —
-        // 핵심은 > 0 이고, 뒤이어 그 포트에 바인드할 수 있다는 것.
+        // 동일 포트를 바로 다시 요청하면 일반적으로 다른 값이 나오거나 재사용될 수 있다
+        // — 핵심은 > 0 이고, 뒤이어 그 포트에 바인드할 수 있다는 것.
         let bound = TcpListener::bind(("127.0.0.1", port));
         assert!(bound.is_ok(), "port {port} should be bindable");
     }

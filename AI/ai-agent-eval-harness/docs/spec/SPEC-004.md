@@ -18,6 +18,7 @@
 | PRD-004 | FR-5 | POST /api/score |
 | PRD-004 | FR-6 | POST /api/tools/:name/simulate-fault |
 | PRD-004 | FR-7 | GET /api/trajectories[/:name] |
+| PRD-004 | FR-8 | POST /api/agents/:name/execute (domain 필드) |
 
 ### 역방향 추적
 | TC ID | 시나리오 | 검증 대상 FR | 테스트 파일 | 상태 |
@@ -33,6 +34,8 @@
 | TC-9  | fault sim 결과 반환 | FR-6 | crates/eval-harness/src/web/api_exec.rs | Draft |
 | TC-10 | list_trajectories 스캔 | FR-7 | crates/eval-harness/src/web/api_exec.rs | Draft |
 | TC-11 | get_trajectory 경로 이탈 거부 | FR-7 | crates/eval-harness/src/web/api_exec.rs | Draft |
+| TC-12 | agent_execute_impl + customer_service 도메인으로 도구 로드 성공 | FR-8 | crates/eval-harness/src/web/api_exec.rs | Draft |
+| TC-13 | agent_execute_impl + 알 수 없는 도메인 Err 반환 | FR-8 | crates/eval-harness/src/web/api_exec.rs | Draft |
 
 ### 구현 추적
 | 패키지 | 파일 | 심볼 | 관련 FR |
@@ -53,8 +56,8 @@ pub fn build_full_tool_registry() -> ToolRegistry;
 pub fn run_scenario_impl(scen_dir: &Path, reps_dir: &Path,
     domain: &str, id: &str, agent_name: &str) -> Result<EvaluationResult, String>;
 
-pub fn agent_execute_impl(agent_name: &str, task: &str,
-    env: Option<HashMap<String, Value>>) -> Result<Trajectory, String>;
+pub fn agent_execute_impl(scen_dir: &Path, agent_name: &str, task: &str,
+    env: Option<HashMap<String, Value>>, domain: Option<&str>) -> Result<Trajectory, String>;
 
 pub fn tool_invoke_impl(name: &str, params: &HashMap<String, Value>)
     -> Result<HashMap<String, Value>, String>;
@@ -91,6 +94,8 @@ pub fn get_trajectory_impl(dir: &Path, name: &str) -> Option<serde_json::Value>;
 | TC-9 | classify_inquiry + disabled config | Ok(map) |
 | TC-10 | 임시 dir에 .json 3개 | 3개 반환 |
 | TC-11 | `../evil` 이름 | None |
+| TC-12 | scen_dir + `passthrough` + task + domain=`customer_service` | Ok(trajectory), 에러 없음 |
+| TC-13 | scen_dir + `passthrough` + task + domain=`bogus_xxx` | Err("domain not found: ...") |
 
 ## 완료 정의
 - 모든 TC 통과

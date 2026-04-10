@@ -17,7 +17,21 @@ pub struct PpaAgent {
     llm: Arc<LlmClient>,
     tools: Mutex<ToolRegistry>,
     config: EvaluationConfig,
-    rt: tokio::runtime::Runtime,
+}
+
+fn block_on_future<F: std::future::Future>(fut: F) -> F::Output {
+    // 이미 tokio 런타임 안(예: axum 핸들러의 spawn_blocking 스레드)이면
+    // 해당 Handle을 재사용해야 한다. 중첩 런타임을 만들면 드롭 시
+    // "Cannot drop a runtime in a context where blocking is not allowed"로
+    // 패닉한다.
+    match tokio::runtime::Handle::try_current() {
+        | Ok(handle) => handle.block_on(fut),
+        | Err(_) => tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("failed to build tokio runtime")
+            .block_on(fut),
+    }
 }
 
 impl PpaAgent {
@@ -26,7 +40,6 @@ impl PpaAgent {
             llm: Arc::new(llm),
             tools: Mutex::new(ToolRegistry::new()),
             config,
-            rt: tokio::runtime::Runtime::new().unwrap(),
         }
     }
 
@@ -38,7 +51,7 @@ impl PpaAgent {
 
         let messages = LlmClient::create_perceive_prompt(&state.task_description, &state.perceived_info, Some(&ctx_map));
 
-        match self.rt.block_on(self.llm.invoke(messages)) {
+        match block_on_future(self.llm.invoke(messages)) {
             | Ok(response) => {
                 let parsed = LlmClient::parse_json_response(&response);
                 let duration = start.elapsed().as_millis() as f64;
@@ -78,7 +91,7 @@ impl PpaAgent {
 
         let messages = LlmClient::create_policy_prompt(&state.task_description, &state.perceived_info, &tools_meta, Some(&ctx_map));
 
-        match self.rt.block_on(self.llm.invoke(messages)) {
+        match block_on_future(self.llm.invoke(messages)) {
             | Ok(response) => {
                 let policy_data = LlmClient::parse_json_response(&response);
                 let duration = start.elapsed().as_millis() as f64;
@@ -208,6 +221,8 @@ impl BaseAgent for PpaAgent {
 
     fn execute_task(&self, task_description: &str, initial_environment: Option<HashMap<String, serde_json::Value>>) -> Trajectory {
         let task_id = uuid::Uuid::new_v4().to_string();
+        let started_at = std::time::Instant::now();
+        println!("▶ PPA 실행 시작: task=\"{}\" (task_id={})", task_description, task_id);
         let mut trajectory = Trajectory {
             task_id: task_id.clone(),
             task_description: task_description.to_string(),
@@ -263,12 +278,23 @@ impl BaseAgent for PpaAgent {
         trajectory.end_time = Some(chrono::Utc::now());
         trajectory.success = state.is_complete && state.error_message.is_none();
         trajectory.total_iterations = state.iteration;
+        let elapsed = started_at.elapsed().as_secs_f64();
+        let status = if trajectory.success { "성공" } else { "실패" };
+        let err_suffix = state.error_message.as_deref().map(|m| format!(" (사유: {})", m)).unwrap_or_default();
+        println!(
+            "✔ PPA 실행 완료: task_id={} · {} · {}회 반복 · {:.2}초{}",
+            task_id, status, trajectory.total_iterations, elapsed, err_suffix
+        );
         trajectory.final_state = Some(state);
         trajectory
     }
 
-    fn load_domain_tools(&mut self, domain_config: &DomainConfig) {
+    fn load_domain_tools(&self, domain_config: &DomainConfig) {
+        // 도메인 교체 시 이전 도메인 도구가 남지 않도록 레지스트리를 재생성한다.
+        // ToolRegistry::new()는 read_file/write_file/list_directory 기본 도구를 항상
+        // 포함.
         let mut registry = self.tools.lock().unwrap();
+        *registry = execution_tools::registry::ToolRegistry::new();
         match domain_config.name.as_str() {
             | "financial" => {
                 registry.register(Arc::new(domains::financial::tools::SimpleInterestCalculatorTool::new()));

@@ -343,8 +343,18 @@ scenarios:
     fn test_spec007_tc_2_help_has_guides() {
         let body = help_html_body();
         for keyword in [
-            "Run", "Scenarios", "Tools", "Agents", "Reports", "Trajectories", "Goldens",
-            "/api/run", "/api/compare", "/api/tools/", "/api/agents/", "curl",
+            "Run",
+            "Scenarios",
+            "Tools",
+            "Agents",
+            "Reports",
+            "Trajectories",
+            "Goldens",
+            "/api/run",
+            "/api/compare",
+            "/api/tools/",
+            "/api/agents/",
+            "curl",
         ] {
             assert!(body.contains(keyword), "help page missing keyword: {}", keyword);
         }

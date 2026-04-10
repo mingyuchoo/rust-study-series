@@ -18,7 +18,8 @@ mod tests {
 
     // @trace TC: TC-1
     // @trace FR: FR-1
-    // @trace scenario: index.html 에 테마 토글 버튼 컨테이너와 라이트/다크 버튼이 존재
+    // @trace scenario: index.html 에 테마 토글 버튼 컨테이너와 라이트/다크 버튼이
+    // 존재
     #[test]
     fn tc1_index_has_theme_switch_buttons() {
         assert!(
@@ -49,22 +50,17 @@ mod tests {
             "index.html 은 [data-theme=\"dark\"] CSS 셀렉터 블록을 포함해야 함"
         );
         for var in ["--bg", "--fg", "--accent"] {
-            assert!(
-                WEB_INDEX_HTML.contains(var),
-                "index.html 은 CSS 변수 `{var}` 를 정의해야 함"
-            );
+            assert!(WEB_INDEX_HTML.contains(var), "index.html 은 CSS 변수 `{var}` 를 정의해야 함");
         }
     }
 
     // @trace TC: TC-3
     // @trace FR: FR-3
-    // @trace scenario: index.html 이 setTheme 에서 선택된 테마를 localStorage 에 저장
+    // @trace scenario: index.html 이 setTheme 에서 선택된 테마를 localStorage 에
+    // 저장
     #[test]
     fn tc3_index_persists_theme_to_localstorage() {
-        assert!(
-            WEB_INDEX_HTML.contains("setTheme"),
-            "index.html 은 setTheme 함수를 포함해야 함"
-        );
+        assert!(WEB_INDEX_HTML.contains("setTheme"), "index.html 은 setTheme 함수를 포함해야 함");
         assert!(
             WEB_INDEX_HTML.contains("localStorage.setItem('theme'"),
             "index.html 은 localStorage.setItem('theme', ...) 호출을 포함해야 함"
@@ -95,10 +91,7 @@ mod tests {
             WEB_HELP_HTML.contains(r#"[data-theme="light"]"#),
             "help.html 은 [data-theme=\"light\"] CSS 셀렉터 블록을 포함해야 함"
         );
-        assert!(
-            WEB_HELP_HTML.contains("setTheme"),
-            "help.html 은 setTheme 함수를 포함해야 함"
-        );
+        assert!(WEB_HELP_HTML.contains("setTheme"), "help.html 은 setTheme 함수를 포함해야 함");
         assert!(
             WEB_HELP_HTML.contains("localStorage.setItem('theme'"),
             "help.html 도 localStorage 에 테마를 저장해야 함"

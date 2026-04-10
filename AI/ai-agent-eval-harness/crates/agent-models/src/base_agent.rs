@@ -15,6 +15,5 @@ pub struct AgentMetadata {
 pub trait BaseAgent: Send + Sync {
     fn metadata(&self) -> AgentMetadata;
     fn execute_task(&self, task_description: &str, initial_environment: Option<HashMap<String, serde_json::Value>>) -> Trajectory;
-    #[allow(dead_code)]
-    fn load_domain_tools(&mut self, _domain_config: &DomainConfig) {}
+    fn load_domain_tools(&self, _domain_config: &DomainConfig) {}
 }

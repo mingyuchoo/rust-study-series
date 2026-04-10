@@ -150,9 +150,9 @@ cargo run -- serve
     <p>메인 SPA 는 상단 탭 바로 구성됩니다. 각 탭은 관련 REST API 를 호출하여 작업 결과를 현재 화면에서 보여줍니다.</p>
 
     <div class="tab-card">
-      <h4><span class="badge">Run</span> 벤치마크 스위트 실행</h4>
-      <p>스위트와 에이전트를 선택하고 선택적으로 출력 파일명을 지정한 뒤 <em>Run</em> 버튼을 누릅니다.</p>
-      <ul><li>호출: <span class="endpoint method-post">POST /api/run</span> body <code>{"suite","agent","output?"}</code></li></ul>
+      <h4><span class="badge">Run</span> 평가 시나리오 실행</h4>
+      <p>평가 시나리오와 에이전트를 선택하고 선택적으로 출력 파일명을 지정한 뒤 <em>Run</em> 버튼을 누릅니다.</p>
+      <ul><li>호출: <span class="endpoint method-post">POST /api/run</span> body <code>{"eval_scenario","agent","output?"}</code></li></ul>
     </div>
 
     <div class="tab-card">
@@ -211,7 +211,7 @@ cargo run -- serve
     <h3>실행 API (POST, spawn_blocking)</h3>
     <table>
       <tr><th>메서드</th><th>경로</th><th>요청 body</th></tr>
-      <tr><td><span class="method-post">POST</span></td><td><code>/api/run</code></td><td><code>{"suite","agent","output?"}</code></td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/run</code></td><td><code>{"eval_scenario","agent","output?"}</code></td></tr>
       <tr><td><span class="method-post">POST</span></td><td><code>/api/compare</code></td><td><code>{"baseline","current","threshold?","output?"}</code></td></tr>
       <tr><td><span class="method-post">POST</span></td><td><code>/api/scenarios/:d/:id/run</code></td><td><code>{"agent"}</code></td></tr>
       <tr><td><span class="method-post">POST</span></td><td><code>/api/agents/:name/execute</code></td><td><code>{"task","environment?"}</code></td></tr>
@@ -224,7 +224,7 @@ cargo run -- serve
     <pre><code># 벤치마크 실행
 curl -X POST http://127.0.0.1:8080/api/run \
   -H 'content-type: application/json' \
-  -d '{"suite":"customer_service","agent":"passthrough","output":"my.json"}'
+  -d '{"eval_scenario":"customer_service","agent":"passthrough","output":"my.json"}'
 
 # 단일 도구 호출
 curl -X POST http://127.0.0.1:8080/api/tools/classify_inquiry/invoke \
@@ -272,9 +272,9 @@ cargo run -- serve
     <p>The main SPA is organised as a top tab bar. Each tab calls a related REST API and renders the result inline.</p>
 
     <div class="tab-card">
-      <h4><span class="badge">Run</span> Run benchmark suite</h4>
-      <p>Pick a suite and agent, optionally set an output filename, then click <em>Run</em>.</p>
-      <ul><li>Calls: <span class="endpoint method-post">POST /api/run</span> body <code>{"suite","agent","output?"}</code></li></ul>
+      <h4><span class="badge">Run</span> Run eval scenario</h4>
+      <p>Pick an eval scenario and agent, optionally set an output filename, then click <em>Run</em>.</p>
+      <ul><li>Calls: <span class="endpoint method-post">POST /api/run</span> body <code>{"eval_scenario","agent","output?"}</code></li></ul>
     </div>
 
     <div class="tab-card">
@@ -333,7 +333,7 @@ cargo run -- serve
     <h3>Execute API (POST, spawn_blocking)</h3>
     <table>
       <tr><th>Method</th><th>Path</th><th>Body</th></tr>
-      <tr><td><span class="method-post">POST</span></td><td><code>/api/run</code></td><td><code>{"suite","agent","output?"}</code></td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/run</code></td><td><code>{"eval_scenario","agent","output?"}</code></td></tr>
       <tr><td><span class="method-post">POST</span></td><td><code>/api/compare</code></td><td><code>{"baseline","current","threshold?","output?"}</code></td></tr>
       <tr><td><span class="method-post">POST</span></td><td><code>/api/scenarios/:d/:id/run</code></td><td><code>{"agent"}</code></td></tr>
       <tr><td><span class="method-post">POST</span></td><td><code>/api/agents/:name/execute</code></td><td><code>{"task","environment?"}</code></td></tr>
@@ -346,7 +346,7 @@ cargo run -- serve
     <pre><code># Run a benchmark
 curl -X POST http://127.0.0.1:8080/api/run \
   -H 'content-type: application/json' \
-  -d '{"suite":"customer_service","agent":"passthrough","output":"my.json"}'
+  -d '{"eval_scenario":"customer_service","agent":"passthrough","output":"my.json"}'
 
 # Invoke a single tool
 curl -X POST http://127.0.0.1:8080/api/tools/classify_inquiry/invoke \

@@ -24,8 +24,8 @@ pub struct EvaluationReport {
     pub timestamp: String,
     #[serde(default = "default_agent")]
     pub agent_name: String,
-    #[serde(default = "default_suite")]
-    pub suite: String,
+    #[serde(default = "default_eval_scenario")]
+    pub eval_scenario: String,
     pub total_scenarios: usize,
     pub success_count: usize,
     pub success_rate: f64,
@@ -37,7 +37,7 @@ pub struct EvaluationReport {
 
 fn default_version() -> String { "1.0".into() }
 fn default_agent() -> String { "ppa".into() }
-fn default_suite() -> String { "all".into() }
+fn default_eval_scenario() -> String { "all".into() }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MetricDelta {

@@ -2,6 +2,7 @@ use crate::{models::{EvaluationReport,
                      ScenarioResult},
             report_renderer::ReportRenderer};
 use agent_models::{base_agent::BaseAgent,
+                   domain_config::DomainConfig,
                    models::EvaluationResult};
 use anyhow::Result;
 use chrono::Utc;
@@ -51,21 +52,27 @@ impl HarnessRunner {
         evaluation
     }
 
-    pub fn run_suite(&mut self, suite_name: &str, agent: &dyn BaseAgent, scenarios_dir: &str) -> Result<EvaluationReport> {
+    pub fn run_eval_scenario(&mut self, eval_scenario_name: &str, agent: &dyn BaseAgent, scenarios_dir: &str) -> Result<EvaluationReport> {
         let loader = ScenarioLoader::new();
         let scenarios_path = Path::new(scenarios_dir);
 
-        let domain_configs = if suite_name == "all" {
+        let domain_configs = if eval_scenario_name == "all" {
             loader.load_all_domains(scenarios_dir)?
         } else {
-            let config_path = scenarios_path.join(format!("{}.yaml", suite_name));
+            let config_path = scenarios_path.join(format!("{}.yaml", eval_scenario_name));
             vec![loader.load_domain_config(&config_path.to_string_lossy())?]
         };
 
-        let mut all_scenarios: Vec<Scenario> = Vec::new();
+        // 도메인별로 시나리오를 묶어 순서를 보존한다. 각 도메인 실행 직전에
+        // load_domain_tools를 호출하여 해당 도메인 도구를 에이전트 레지스트리에
+        // 등록한다.
+        let mut grouped: Vec<(&DomainConfig, Vec<Scenario>)> = Vec::new();
+        let mut total_count = 0usize;
         for config in &domain_configs {
-            for s in &config.scenarios {
-                all_scenarios.push(Scenario {
+            let scenarios: Vec<Scenario> = config
+                .scenarios
+                .iter()
+                .map(|s| Scenario {
                     id: s.id.clone(),
                     name: s.name.clone(),
                     description: s.description.clone(),
@@ -75,29 +82,36 @@ impl HarnessRunner {
                     success_criteria: s.success_criteria.clone(),
                     difficulty: s.difficulty.clone(),
                     domain: config.name.clone(),
-                });
-            }
+                })
+                .collect();
+            total_count += scenarios.len();
+            grouped.push((config, scenarios));
         }
 
         println!("\n{}", "평가 시작".yellow().bold());
         println!("에이전트: {}", agent.metadata().name);
-        println!("스위트: {}", suite_name);
-        println!("총 {}개 시나리오\n", all_scenarios.len());
+        println!("평가 시나리오: {}", eval_scenario_name);
+        println!("총 {}개 시나리오\n", total_count);
 
         self.results.clear();
-        for (i, scenario) in all_scenarios.iter().enumerate() {
-            println!("[{}/{}] {}", i + 1, all_scenarios.len(), scenario.name);
-            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.run_scenario(scenario, agent))) {
-                | Ok(eval) => self.results.push(eval),
-                | Err(e) => eprintln!("  {}: {:?}", "오류".red(), e),
+        let mut idx = 0usize;
+        for (config, scenarios) in &grouped {
+            agent.load_domain_tools(config);
+            for scenario in scenarios {
+                idx += 1;
+                println!("[{}/{}] {}", idx, total_count, scenario.name);
+                match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.run_scenario(scenario, agent))) {
+                    | Ok(eval) => self.results.push(eval),
+                    | Err(e) => eprintln!("  {}: {:?}", "오류".red(), e),
+                }
             }
         }
 
-        let report = self.build_report(suite_name, &agent.metadata().name);
+        let report = self.build_report(eval_scenario_name, &agent.metadata().name);
         Ok(report)
     }
 
-    fn build_report(&self, suite_name: &str, agent_name: &str) -> EvaluationReport {
+    fn build_report(&self, eval_scenario_name: &str, agent_name: &str) -> EvaluationReport {
         let avg_metrics = self.calculate_average_metrics();
         let success_count = self.results.iter().filter(|r| r.trajectory.success).count();
         let total = self.results.len();
@@ -120,7 +134,7 @@ impl HarnessRunner {
             version: "1.0".into(),
             timestamp: Utc::now().format("%Y%m%d_%H%M%S").to_string(),
             agent_name: agent_name.to_string(),
-            suite: suite_name.to_string(),
+            eval_scenario: eval_scenario_name.to_string(),
             total_scenarios: total,
             success_count,
             success_rate: if total > 0 { success_count as f64 / total as f64 } else { 0.0 },

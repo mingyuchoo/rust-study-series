@@ -1,7 +1,7 @@
 // =============================================================================
 // @trace SPEC-004
 // @trace PRD: PRD-004
-// @trace FR: FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7
+// @trace FR: FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8
 // @trace file-type: impl
 // =============================================================================
 
@@ -45,31 +45,6 @@ pub fn build_full_tool_registry() -> ToolRegistry {
     reg
 }
 
-fn load_domain_scenarios(dir: &Path, domain: &str) -> Option<Vec<Scenario>> {
-    if !is_safe_name(domain) {
-        return None;
-    }
-    let dir_str = dir.to_str()?;
-    let configs = ScenarioLoader::new().load_all_domains(dir_str).ok()?;
-    let cfg = configs.into_iter().find(|c| c.name == domain)?;
-    Some(
-        cfg.scenarios
-            .into_iter()
-            .map(|s| Scenario {
-                id: s.id,
-                name: s.name,
-                description: s.description,
-                task_description: s.task_description,
-                initial_environment: s.initial_environment,
-                expected_tools: s.expected_tools,
-                success_criteria: s.success_criteria,
-                difficulty: s.difficulty,
-                domain: domain.to_string(),
-            })
-            .collect(),
-    )
-}
-
 // --------------------------------------------------------------------------
 // FR-1: 단일 시나리오 실행
 // --------------------------------------------------------------------------
@@ -81,13 +56,39 @@ pub fn run_scenario_impl(scen_dir: &Path, reps_dir: &Path, domain: &str, id: &st
     if !is_safe_name(id) || !is_safe_name(agent_name) {
         return Err("invalid identifier".into());
     }
-    let scenarios = load_domain_scenarios(scen_dir, domain).ok_or_else(|| format!("domain not found: {}", domain))?;
-    let scenario = scenarios
+    // 해당 도메인의 전체 DomainConfig를 로드하여 에이전트에 도구를 등록한 뒤
+    // 실행한다.
+    let dir_str = scen_dir.to_str().ok_or("invalid scenarios_dir")?;
+    let configs = ScenarioLoader::new()
+        .load_all_domains(dir_str)
+        .map_err(|e| format!("failed to load domain configs: {}", e))?;
+    let domain_cfg = configs
         .into_iter()
+        .find(|c| c.name == domain)
+        .ok_or_else(|| format!("domain not found: {}", domain))?;
+
+    let scenario_cfg = domain_cfg
+        .scenarios
+        .iter()
         .find(|s| s.id == id)
-        .ok_or_else(|| format!("scenario not found: {}", id))?;
+        .ok_or_else(|| format!("scenario not found: {}", id))?
+        .clone();
+    let scenario = Scenario {
+        id: scenario_cfg.id,
+        name: scenario_cfg.name,
+        description: scenario_cfg.description,
+        task_description: scenario_cfg.task_description,
+        initial_environment: scenario_cfg.initial_environment,
+        expected_tools: scenario_cfg.expected_tools,
+        success_criteria: scenario_cfg.success_criteria,
+        difficulty: scenario_cfg.difficulty,
+        domain: domain.to_string(),
+    };
+
     let registry = build_agent_registry();
     let agent = registry.get_agent(agent_name).ok_or_else(|| format!("unknown agent: {}", agent_name))?;
+    agent.load_domain_tools(&domain_cfg);
+
     let reps_str = reps_dir.to_str().ok_or("invalid reports_dir")?;
     let runner = HarnessRunner::new(reps_str);
     Ok(runner.run_scenario(&scenario, agent.as_ref()))
@@ -98,14 +99,33 @@ pub fn run_scenario_impl(scen_dir: &Path, reps_dir: &Path, domain: &str, id: &st
 // --------------------------------------------------------------------------
 
 /// @trace SPEC: SPEC-004
-/// @trace TC: SPEC-004/TC-3
-/// @trace FR: PRD-004/FR-2
-pub fn agent_execute_impl(agent_name: &str, task: &str, env: Option<HashMap<String, Value>>) -> Result<Trajectory, String> {
+/// @trace TC: SPEC-004/TC-3, SPEC-004/TC-12, SPEC-004/TC-13
+/// @trace FR: PRD-004/FR-2, PRD-004/FR-8
+pub fn agent_execute_impl(
+    scen_dir: &Path,
+    agent_name: &str,
+    task: &str,
+    env: Option<HashMap<String, Value>>,
+    domain: Option<&str>,
+) -> Result<Trajectory, String> {
     if !is_safe_name(agent_name) {
         return Err("invalid agent name".into());
     }
     let registry = build_agent_registry();
     let agent = registry.get_agent(agent_name).ok_or_else(|| format!("unknown agent: {}", agent_name))?;
+
+    if let Some(d) = domain {
+        if !is_safe_name(d) {
+            return Err("invalid domain name".into());
+        }
+        let dir_str = scen_dir.to_str().ok_or("invalid scenarios_dir")?;
+        let configs = ScenarioLoader::new()
+            .load_all_domains(dir_str)
+            .map_err(|e| format!("failed to load domain configs: {}", e))?;
+        let cfg = configs.into_iter().find(|c| c.name == d).ok_or_else(|| format!("domain not found: {}", d))?;
+        agent.load_domain_tools(&cfg);
+    }
+
     Ok(agent.execute_task(task, env))
 }
 
@@ -229,9 +249,16 @@ pub async fn run_scenario(
 ) -> Result<Json<EvaluationResult>, (StatusCode, String)> {
     let scen = st.scenarios_dir.clone();
     let reps = st.reports_dir.clone();
+    println!("▶ [web] POST /api/scenarios/{}/{}/run agent={}", domain, id, req.agent);
+    let label = format!("{}/{}", domain, id);
+    let agent_label = req.agent.clone();
     let res = tokio::task::spawn_blocking(move || run_scenario_impl(&scen, &reps, &domain, &id, &req.agent))
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    match &res {
+        | Ok(_) => println!("✔ [web] 시나리오 완료: {} (agent={})", label, agent_label),
+        | Err(e) => println!("✘ [web] 시나리오 실패: {} (agent={}) — {}", label, agent_label, e),
+    }
     res.map(Json).map_err(|e| (StatusCode::NOT_FOUND, e))
 }
 
@@ -240,12 +267,26 @@ pub struct AgentExecReq {
     pub task: String,
     #[serde(default)]
     pub environment: Option<HashMap<String, Value>>,
+    #[serde(default)]
+    pub domain: Option<String>,
 }
 
-pub async fn agent_execute(AxPath(name): AxPath<String>, Json(req): Json<AgentExecReq>) -> Result<Json<Trajectory>, (StatusCode, String)> {
-    let res = tokio::task::spawn_blocking(move || agent_execute_impl(&name, &req.task, req.environment))
+pub async fn agent_execute(
+    State(st): State<AppState>,
+    AxPath(name): AxPath<String>,
+    Json(req): Json<AgentExecReq>,
+) -> Result<Json<Trajectory>, (StatusCode, String)> {
+    let scen = st.scenarios_dir.clone();
+    let agent_label = name.clone();
+    let domain_label = req.domain.clone().unwrap_or_else(|| "(none)".into());
+    println!("▶ [web] POST /api/agents/{}/execute domain={}", agent_label, domain_label);
+    let res = tokio::task::spawn_blocking(move || agent_execute_impl(&scen, &name, &req.task, req.environment, req.domain.as_deref()))
         .await
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    match &res {
+        | Ok(_) => println!("✔ [web] 에이전트 실행 완료: agent={} domain={}", agent_label, domain_label),
+        | Err(e) => println!("✘ [web] 에이전트 실행 실패: agent={} domain={} — {}", agent_label, domain_label, e),
+    }
     res.map(Json).map_err(|e| (StatusCode::NOT_FOUND, e))
 }
 
@@ -314,7 +355,7 @@ mod tests {
     // =============================================================================
     // @trace SPEC-004
     // @trace PRD: PRD-004
-    // @trace FR: FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7
+    // @trace FR: FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8
     // @trace file-type: test
     // =============================================================================
 
@@ -367,10 +408,42 @@ mod tests {
     /// @trace scenario: agent_execute_impl passthrough
     #[test]
     fn test_tc_3_agent_execute_passthrough() {
-        let res = agent_execute_impl("passthrough", "hello world", None);
+        let scen = ws_scenarios();
+        let res = agent_execute_impl(&scen, "passthrough", "hello world", None, None);
         assert!(res.is_ok());
         let traj = res.unwrap();
         assert_eq!(traj.task_description, "hello world");
+    }
+
+    /// @trace TC: SPEC-004/TC-12
+    /// @trace FR: PRD-004/FR-8
+    /// @trace scenario: agent_execute_impl + customer_service 도메인으로 도구
+    /// 로드
+    #[test]
+    fn test_tc_12_agent_execute_with_domain_loads_tools() {
+        let scen = ws_scenarios();
+        if !scen.exists() {
+            return;
+        }
+        let res = agent_execute_impl(&scen, "passthrough", "refund please", None, Some("customer_service"));
+        assert!(res.is_ok(), "{:?}", res.err());
+        let traj = res.unwrap();
+        assert_eq!(traj.task_description, "refund please");
+    }
+
+    /// @trace TC: SPEC-004/TC-13
+    /// @trace FR: PRD-004/FR-8
+    /// @trace scenario: agent_execute_impl + 알 수 없는 도메인 Err
+    #[test]
+    fn test_tc_13_agent_execute_unknown_domain() {
+        let scen = ws_scenarios();
+        if !scen.exists() {
+            return;
+        }
+        let res = agent_execute_impl(&scen, "passthrough", "hi", None, Some("bogus_xxx"));
+        assert!(res.is_err());
+        let err = res.err().unwrap();
+        assert!(err.contains("domain not found"), "unexpected error: {}", err);
     }
 
     /// @trace TC: SPEC-004/TC-4

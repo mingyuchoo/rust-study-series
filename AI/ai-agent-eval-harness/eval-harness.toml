@@ -1,0 +1,3 @@
+[evaluation]
+  early_stop_threshold = 1
+  max_iterations       = 1

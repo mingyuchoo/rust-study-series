@@ -158,22 +158,22 @@
   </header>
 
   <nav class="tabs" id="tab-bar">
-    <button data-tab="run" class="active" data-i18n="nav.run">Run</button>
+    <button data-tab="goldens" data-i18n="nav.goldens">Goldens</button>
     <button data-tab="scenarios" data-i18n="nav.scenarios">Scenarios</button>
+    <button data-tab="run" class="active" data-i18n="nav.run">Run</button>
     <button data-tab="tools" data-i18n="nav.tools">Tools</button>
     <button data-tab="agents" data-i18n="nav.agents">Agents</button>
-    <button data-tab="reports" data-i18n="nav.reports">Reports</button>
     <button data-tab="trajectories" data-i18n="nav.trajectories">Trajectories</button>
-    <button data-tab="goldens" data-i18n="nav.goldens">Goldens</button>
+    <button data-tab="reports" data-i18n="nav.reports">Reports</button>
   </nav>
 
   <main>
     <!-- ============ RUN ============ -->
     <section id="panel-run" class="panel active">
-      <h2 data-i18n="run.title">Run benchmark suite</h2>
-      <form id="run-form" onsubmit="runSuite(event)" class="form-block">
+      <h2 data-i18n="run.title">Run eval scenario</h2>
+      <form id="run-form" onsubmit="runEvalScenario(event)" class="form-block">
         <div class="row">
-          <label><span data-i18n="run.suite">Suite</span> <select id="run-suite"><option>all</option><option>customer_service</option><option>financial</option></select></label>
+          <label><span data-i18n="run.evalScenario">Eval Scenario</span> <select id="run-eval-scenario"><option>all</option><option>customer_service</option><option>financial</option></select></label>
           <label><span data-i18n="run.agent">Agent</span> <select id="run-agent"></select></label>
           <label><span data-i18n="run.output">Output</span> <input id="run-output" data-i18n-placeholder="run.outputPh" placeholder="(optional) my_report.json" size="30"/></label>
           <button type="submit" class="primary" data-i18n="run.button">Run → POST /api/run</button>
@@ -230,6 +230,11 @@
       <div class="form-block">
         <div class="row">
           <label><span data-i18n="run.agent">Agent</span> <select id="agent-name"></select></label>
+          <label><span data-i18n="agents.domain">Domain</span>
+            <select id="agent-domain">
+              <option value="">(none)</option>
+            </select>
+          </label>
         </div>
         <h3 data-i18n="agents.task">Task description</h3>
         <textarea id="agent-task" placeholder="hello world">hello world</textarea>
@@ -300,15 +305,15 @@
       ko: {
         "header.sub": "— REST API 싱글 페이지 클라이언트",
         "header.help": "📖 사용안내",
-        "nav.run": "실행",
-        "nav.scenarios": "시나리오",
+        "nav.run": "전체 평가 시나리오 실행",
+        "nav.scenarios": "단일 평가 시나리오 실행",
         "nav.tools": "도구",
         "nav.agents": "에이전트",
         "nav.reports": "리포트",
         "nav.trajectories": "궤적",
         "nav.goldens": "골든셋",
-        "run.title": "벤치마크 스위트 실행",
-        "run.suite": "스위트",
+        "run.title": "평가 시나리오 실행",
+        "run.evalScenario": "평가 시나리오",
         "run.agent": "에이전트",
         "run.output": "출력",
         "run.outputPh": "(선택) my_report.json",
@@ -328,6 +333,7 @@
         "agents.title": "에이전트 (직접 실행)",
         "agents.task": "태스크 설명",
         "agents.env": "환경 (JSON, 선택)",
+        "agents.domain": "도메인 (선택)",
         "agents.execute": "실행 → POST /api/agents/:n/execute",
         "reports.title": "리포트 (조회 + 비교)",
         "reports.compareTitle": "두 리포트 비교",
@@ -349,15 +355,15 @@
       en: {
         "header.sub": "— single-page client for the REST API",
         "header.help": "📖 Help",
-        "nav.run": "Run",
-        "nav.scenarios": "Scenarios",
+        "nav.run": "Run all eval scenarios",
+        "nav.scenarios": "Run single eval scenario",
         "nav.tools": "Tools",
         "nav.agents": "Agents",
         "nav.reports": "Reports",
         "nav.trajectories": "Trajectories",
         "nav.goldens": "Goldens",
-        "run.title": "Run benchmark suite",
-        "run.suite": "Suite",
+        "run.title": "Run eval scenario",
+        "run.evalScenario": "Eval Scenario",
         "run.agent": "Agent",
         "run.output": "Output",
         "run.outputPh": "(optional) my_report.json",
@@ -377,6 +383,7 @@
         "agents.title": "Agents (direct execute)",
         "agents.task": "Task description",
         "agents.env": "Environment (JSON, optional)",
+        "agents.domain": "Domain (optional)",
         "agents.execute": "Execute → POST /api/agents/:n/execute",
         "reports.title": "Reports (view + compare)",
         "reports.compareTitle": "Compare two reports",
@@ -457,9 +464,9 @@
     }
 
     // ---------- RUN ----------
-    async function runSuite(e) {
+    async function runEvalScenario(e) {
       e.preventDefault();
-      const body = { suite: $('run-suite').value, agent: $('run-agent').value };
+      const body = { eval_scenario: $('run-eval-scenario').value, agent: $('run-agent').value };
       const o = $('run-output').value.trim();
       if (o) body.output = o;
       try { showOk($('run-out'), await API.post('/api/run', body)); } catch (err) { showErr($('run-out'), err); }
@@ -541,6 +548,18 @@
     // ---------- AGENTS ----------
     async function initAgentsPanel() {
       if (AGENTS.length === 0) await loadAgents();
+      try {
+        const data = await API.get('/api/list');
+        const sel = $('agent-domain');
+        const none = sel.querySelector('option[value=""]');
+        sel.innerHTML = '';
+        if (none) sel.appendChild(none);
+        (data.domains || []).forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.name; opt.textContent = d.name;
+          sel.appendChild(opt);
+        });
+      } catch (e) { /* domain list optional */ }
     }
     async function executeAgent() {
       let env = null;
@@ -548,6 +567,8 @@
       if (envText) { try { env = JSON.parse(envText); } catch (e) { return showErr($('agent-out'), 'environment is not valid JSON'); } }
       const body = { task: $('agent-task').value };
       if (env) body.environment = env;
+      const dom = $('agent-domain').value;
+      if (dom) body.domain = dom;
       try { showOk($('agent-out'), await API.post(`/api/agents/${$('agent-name').value}/execute`, body)); } catch (err) { showErr($('agent-out'), err); }
     }
 

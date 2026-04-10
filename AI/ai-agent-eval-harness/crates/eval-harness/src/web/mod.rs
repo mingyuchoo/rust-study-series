@@ -41,7 +41,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/tools", get(api::list_tools))
         .route("/api/golden-sets", get(api::list_golden_sets))
         .route("/api/list", get(api::list_all))
-        .route("/api/run", post(api::run_suite))
+        .route("/api/run", post(api::run_eval_scenario))
         .route("/api/compare", post(api::compare_reports))
         .route("/api/scenarios/:domain/:id/run", post(api_exec::run_scenario))
         .route("/api/agents/:name/execute", post(api_exec::agent_execute))

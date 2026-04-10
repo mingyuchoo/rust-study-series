@@ -29,9 +29,10 @@ impl Message {
 #[derive(Debug, Serialize)]
 struct ChatRequest {
     messages: Vec<Message>,
-    temperature: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
-    max_tokens: Option<u32>,
+    temperature: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max_completion_tokens: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -66,24 +67,36 @@ impl LlmClient {
             self.config.azure_openai_api_version,
         );
 
-        let req = ChatRequest {
-            messages,
-            temperature: self.config.temperature,
-            max_tokens: self.config.max_tokens,
+        // gpt-5.x 계열 배포는 temperature가 기본값(1.0)일 때만 허용되므로, 기본값이면
+        // 필드 자체를 생략한다.
+        let temperature = if (self.config.temperature - 1.0).abs() < f64::EPSILON {
+            None
+        } else {
+            Some(self.config.temperature)
         };
 
-        let resp: ChatResponse = self
+        let req = ChatRequest {
+            messages,
+            temperature,
+            max_completion_tokens: self.config.max_tokens,
+        };
+
+        let resp = self
             .http
             .post(&url)
             .header("api-key", &self.config.azure_openai_api_key)
             .json(&req)
             .send()
-            .await?
-            .error_for_status()?
-            .json()
             .await?;
 
-        Ok(resp.choices.into_iter().next().map(|c| c.message.content).unwrap_or_default())
+        let status = resp.status();
+        if !status.is_success() {
+            let body = resp.text().await.unwrap_or_default();
+            anyhow::bail!("Azure OpenAI {} at {}: {}", status, url, body);
+        }
+
+        let parsed: ChatResponse = resp.json().await?;
+        Ok(parsed.choices.into_iter().next().map(|c| c.message.content).unwrap_or_default())
     }
 
     /// LLM 응답에서 JSON 파싱

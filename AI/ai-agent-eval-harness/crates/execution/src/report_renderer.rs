@@ -10,7 +10,7 @@ impl ReportRenderer {
     pub fn render(&self, report: &EvaluationReport) {
         println!(
             "\n{}",
-            format!("=== 평가 리포트 - {} (에이전트: {}) ===", report.suite, report.agent_name)
+            format!("=== 평가 리포트 - {} (에이전트: {}) ===", report.eval_scenario, report.agent_name)
                 .cyan()
                 .bold()
         );
@@ -22,7 +22,7 @@ impl ReportRenderer {
 
     fn render_summary(&self, report: &EvaluationReport) {
         println!("\n{:<20} {}", "타임스탬프:", report.timestamp);
-        println!("{:<20} {}", "스위트:", report.suite);
+        println!("{:<20} {}", "평가 시나리오:", report.eval_scenario);
         println!("{:<20} {}", "에이전트:", report.agent_name);
         println!("{:<20} {}", "총 시나리오:", report.total_scenarios);
         println!("{:<20} {}", "성공:", report.success_count);

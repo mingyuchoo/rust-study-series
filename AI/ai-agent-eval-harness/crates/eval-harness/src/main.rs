@@ -6,10 +6,11 @@
 // @trace file-type: impl
 // =============================================================================
 
-use eval_harness::{data_paths::DataPaths, tui, web};
-
 use clap::{Parser,
            Subcommand};
+use eval_harness::{data_paths::DataPaths,
+                   tui,
+                   web};
 use execution::{agent_registry::AgentRegistry,
                 base_agent::PassthroughAgent,
                 comparator::ReportComparator,
@@ -27,10 +28,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// 벤치마크 스위트 실행
+    /// 평가 시나리오 실행
     Run {
         #[arg(short, long, default_value = "all")]
-        suite: String,
+        eval_scenario: String,
         #[arg(short, long, default_value = "passthrough")]
         agent: String,
         #[arg(short, long)]
@@ -49,7 +50,7 @@ enum Commands {
         #[arg(short, long)]
         output: Option<String>,
     },
-    /// 사용 가능한 스위트/시나리오 목록 표시
+    /// 사용 가능한 평가 시나리오 목록 표시
     List {
         #[arg(long)]
         scenarios_dir: Option<String>,
@@ -89,13 +90,26 @@ fn resolve_data_paths(scenarios: Option<&str>, golden_sets: Option<&str>) -> Dat
     }
 }
 
+/// @trace SPEC: SPEC-016
+/// @trace FR: PRD-016/FR-3
 fn build_registry() -> AgentRegistry {
     let mut registry = AgentRegistry::new();
     registry.register("passthrough", Arc::new(PassthroughAgent));
 
     dotenvy::dotenv().ok();
     if let Ok(llm_config) = agent_core::config::AzureOpenAiConfig::from_env() {
-        let eval_config = agent_core::config::EvaluationConfig::default();
+        let base = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+        let eval_config = match eval_harness::data_paths::load_evaluation_config(&base) {
+            | Ok(cfg) => cfg,
+            | Err(e) => {
+                eprintln!("[warn] eval-harness.toml [evaluation] 파싱 실패: {e} — 기본값 사용");
+                agent_core::config::EvaluationConfig::default()
+            },
+        };
+        println!(
+            "[cfg] PPA 설정: max_iterations={}, early_stop_threshold={}",
+            eval_config.max_iterations, eval_config.early_stop_threshold
+        );
         let llm = agent_core::llm_client::LlmClient::new(llm_config);
         let agent = agent_core::agent::PpaAgent::new(llm, eval_config);
         registry.register("ppa", Arc::new(agent));
@@ -111,7 +125,7 @@ fn main() {
 
     match cli.command {
         | Commands::Run {
-            suite,
+            eval_scenario,
             agent,
             output,
             scenarios_dir,
@@ -130,7 +144,7 @@ fn main() {
             let paths = resolve_data_paths(scenarios_dir.as_deref(), None);
             let scenarios_dir = paths.scenarios_dir.to_string_lossy().into_owned();
             let mut runner = HarnessRunner::new(&output_dir);
-            let report = match runner.run_suite(&suite, agent_impl.as_ref(), &scenarios_dir) {
+            let report = match runner.run_eval_scenario(&eval_scenario, agent_impl.as_ref(), &scenarios_dir) {
                 | Ok(r) => r,
                 | Err(e) => {
                     eprintln!("실행 오류: {}", e);
@@ -183,7 +197,7 @@ fn main() {
             match loader.load_all_domains(&scenarios_dir) {
                 | Ok(configs) => {
                     if configs.is_empty() {
-                        println!("등록된 스위트가 없습니다.");
+                        println!("등록된 평가 시나리오가 없습니다.");
                         return;
                     }
                     for config in &configs {
@@ -229,13 +243,7 @@ fn main() {
                 },
             };
             let paths = resolve_data_paths(scenarios_dir.as_deref(), golden_sets_dir.as_deref());
-            if let Err(e) = web::run_server(
-                socket,
-                paths.scenarios_dir,
-                reports_dir.into(),
-                paths.golden_sets_dir,
-                trajectories_dir.into(),
-            ) {
+            if let Err(e) = web::run_server(socket, paths.scenarios_dir, reports_dir.into(), paths.golden_sets_dir, trajectories_dir.into()) {
                 eprintln!("서버 오류: {}", e);
                 std::process::exit(1);
             }
