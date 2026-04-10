@@ -1,0 +1,31 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "본문에 IBM Plex Sans KR + IBM Plex Sans 적용",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "코드/pre/textarea 에 IBM Plex Mono 적용",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "index.html + help.html 양쪽에 동일 폰트 스택",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}
