@@ -1,0 +1,43 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "color-scheme: dark 선언으로 네이티브 위젯 다크 모드",
+      "specs": [
+        "SPEC-011"
+      ],
+      "test_cases": [
+        "SPEC-011/{'id': 'TC-1', 'scenario': 'color-scheme: dark 포함'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "option 요소 명시 배경/텍스트 색상",
+      "specs": [
+        "SPEC-011"
+      ],
+      "test_cases": [
+        "SPEC-011/{'id': 'TC-2', 'scenario': 'option 배경/색상 규칙 포함'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "닫힌 select 에 커스텀 화살표 + 충분한 패딩",
+      "specs": [
+        "SPEC-011"
+      ],
+      "test_cases": [
+        "SPEC-011/{'id': 'TC-3', 'scenario': 'select 커스텀 appearance 규칙 포함'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

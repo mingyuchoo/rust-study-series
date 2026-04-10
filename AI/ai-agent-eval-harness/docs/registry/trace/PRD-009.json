@@ -1,0 +1,71 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "eval-harness 크레이트를 lib+bin 하이브리드로 전환",
+      "specs": [
+        "SPEC-009"
+      ],
+      "test_cases": [
+        "SPEC-009/{'id': 'TC-1', 'scenario': 'lib 경로로 web::build_router 접근'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "포트 자동 선택 + 서버 readiness 대기 헬퍼 제공",
+      "specs": [
+        "SPEC-009"
+      ],
+      "test_cases": [
+        "SPEC-009/{'id': 'TC-2', 'scenario': 'pick_free_port 는 유효 포트 반환'}",
+        "SPEC-009/{'id': 'TC-3', 'scenario': 'wait_for_port 타임아웃 false'}",
+        "SPEC-009/{'id': 'TC-4', 'scenario': 'wait_for_port 실제 리스너 감지'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "desktop/ 스탠드얼론 Tauri 프로젝트 생성 (워크스페이스 exclude)",
+      "specs": [
+        "SPEC-009"
+      ],
+      "test_cases": [
+        "SPEC-009/{'id': 'TC-5', 'scenario': 'desktop Cargo.toml + tauri.conf.json 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-4": {
+      "title": "Tauri 메인이 내장 Axum 서버 기동 후 WebView 로 SPA 로드",
+      "specs": [
+        "SPEC-009"
+      ],
+      "test_cases": [
+        "SPEC-009/{'id': 'TC-6', 'scenario': 'desktop main.rs 에 build_router/run_server 호출 키워드'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-5": {
+      "title": "README 에 데스크톱 빌드/실행 안내 (시스템 의존성 포함)",
+      "specs": [
+        "SPEC-009"
+      ],
+      "test_cases": [
+        "SPEC-009/{'id': 'TC-7', 'scenario': 'README 에 tauri dev 명령 포함'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

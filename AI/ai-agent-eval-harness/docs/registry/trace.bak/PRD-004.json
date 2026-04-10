@@ -1,0 +1,99 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "POST /api/scenarios/:domain/:id/run 단일 시나리오 실행",
+      "specs": [
+        "SPEC-004"
+      ],
+      "test_cases": [
+        "SPEC-004/{'id': 'TC-1', 'scenario': 'run_scenario_impl 성공'}",
+        "SPEC-004/{'id': 'TC-2', 'scenario': 'scenario 404'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "POST /api/agents/:name/execute 에이전트 직접 호출",
+      "specs": [
+        "SPEC-004"
+      ],
+      "test_cases": [
+        "SPEC-004/{'id': 'TC-3', 'scenario': 'agent_execute_impl passthrough'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "POST /api/tools/:name/invoke 도구 단일 호출",
+      "specs": [
+        "SPEC-004"
+      ],
+      "test_cases": [
+        "SPEC-004/{'id': 'TC-4', 'scenario': 'tool_invoke_impl 성공'}",
+        "SPEC-004/{'id': 'TC-5', 'scenario': '알 수 없는 도구'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-4": {
+      "title": "GET /api/golden-sets/:domain/:scenario_id 엔트리 조회",
+      "specs": [
+        "SPEC-004"
+      ],
+      "test_cases": [
+        "SPEC-004/{'id': 'TC-6', 'scenario': 'golden entry 조회 성공'}",
+        "SPEC-004/{'id': 'TC-7', 'scenario': 'golden entry 404'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-5": {
+      "title": "POST /api/score 궤적 채점",
+      "specs": [
+        "SPEC-004"
+      ],
+      "test_cases": [
+        "SPEC-004/{'id': 'TC-8', 'scenario': 'score_impl 정상'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-6": {
+      "title": "POST /api/tools/:name/simulate-fault 폴트 주입 실행",
+      "specs": [
+        "SPEC-004"
+      ],
+      "test_cases": [
+        "SPEC-004/{'id': 'TC-9', 'scenario': 'fault sim 반환'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-7": {
+      "title": "GET /api/trajectories 및 /:name 궤적 조회",
+      "specs": [
+        "SPEC-004"
+      ],
+      "test_cases": [
+        "SPEC-004/{'id': 'TC-10', 'scenario': 'list_trajectories'}",
+        "SPEC-004/{'id': 'TC-11', 'scenario': 'get_trajectory 경로 이탈 거부'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

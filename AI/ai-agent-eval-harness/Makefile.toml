@@ -44,3 +44,66 @@
   command      = "cargo"
   dependencies = ["format"]
   workspace    = false
+
+  # =============================================================================
+  # Desktop release tasks (SPEC-012, PRD-012)
+  #
+  # 루트 가상 워크스페이스에는 `desktop/` 가 포함되어 있지 않으므로(`exclude`),
+  # 모든 desktop-release-* 태스크는 `cwd = "desktop"` 로 진입하고
+  # `workspace = false` 로 루트에서 단 한 번만 실행한다.
+  #
+  # `cargo-tauri` CLI 는 `install_crate` 로 자동 설치된다.
+  # =============================================================================
+
+[tasks.desktop-release-windows]
+  args = [
+    "tauri",
+    "build",
+    "--target",
+    "x86_64-pc-windows-msvc",
+    "--bundles",
+    "msi",
+    "nsis",
+  ]
+  command = "cargo"
+  cwd = "desktop"
+  description = "Build Windows MSI/NSIS desktop bundle via Tauri"
+  install_crate = {binary = "cargo", crate_name = "tauri-cli", test_arg = ["tauri", "--version"]}
+  workspace = false
+
+[tasks.desktop-release-linux]
+  args = [
+    "tauri",
+    "build",
+    "--target",
+    "x86_64-unknown-linux-gnu",
+    "--bundles",
+    "deb",
+    "appimage",
+  ]
+  command = "cargo"
+  cwd = "desktop"
+  description = "Build Linux AppImage/Deb desktop bundle via Tauri"
+  install_crate = {binary = "cargo", crate_name = "tauri-cli", test_arg = ["tauri", "--version"]}
+  workspace = false
+
+[tasks.desktop-release-macos]
+  args = [
+    "tauri",
+    "build",
+    "--target",
+    "universal-apple-darwin",
+    "--bundles",
+    "app",
+    "dmg",
+  ]
+  command = "cargo"
+  cwd = "desktop"
+  description = "Build macOS .app/.dmg universal desktop bundle via Tauri"
+  install_crate = {binary = "cargo", crate_name = "tauri-cli", test_arg = ["tauri", "--version"]}
+  workspace = false
+
+[tasks.desktop-release-all]
+  description = "Build Windows, Linux, and macOS desktop bundles sequentially"
+  run_task    = {name = ["desktop-release-windows", "desktop-release-linux", "desktop-release-macos"]}
+  workspace   = false

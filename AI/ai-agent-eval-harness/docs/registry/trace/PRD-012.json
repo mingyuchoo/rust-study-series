@@ -1,0 +1,59 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "플랫폼별 desktop-release-* 태스크 3개 존재",
+      "specs": [
+        "SPEC-012"
+      ],
+      "test_cases": [
+        "SPEC-012/TC-1",
+        "SPEC-012/TC-2",
+        "SPEC-012/TC-3"
+      ],
+      "test_files": [
+        "crates/eval-harness/src/build_release.rs"
+      ],
+      "impl_files": [
+        "Makefile.toml"
+      ],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "desktop-release-all 집계 태스크 존재",
+      "specs": [
+        "SPEC-012"
+      ],
+      "test_cases": [
+        "SPEC-012/TC-4"
+      ],
+      "test_files": [
+        "crates/eval-harness/src/build_release.rs"
+      ],
+      "impl_files": [
+        "Makefile.toml"
+      ],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "각 태스크가 cargo tauri build 와 명시적 --target triple 포함",
+      "specs": [
+        "SPEC-012"
+      ],
+      "test_cases": [
+        "SPEC-012/TC-1",
+        "SPEC-012/TC-2",
+        "SPEC-012/TC-3"
+      ],
+      "test_files": [
+        "crates/eval-harness/src/build_release.rs"
+      ],
+      "impl_files": [
+        "Makefile.toml"
+      ],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

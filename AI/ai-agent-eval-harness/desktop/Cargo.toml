@@ -1,18 +1,18 @@
 [package]
-name = "eval-harness-desktop"
-version = "0.1.0"
-edition = "2021"
-description = "Tauri desktop wrapper for the eval-harness web SPA"
-license = "BSD-3-Clause"
+  description = "Tauri desktop wrapper for the eval-harness web SPA"
+  edition     = "2021"
+  license     = "BSD-3-Clause"
+  name        = "eval-harness-desktop"
+  version     = "0.1.0"
 
 [[bin]]
-name = "eval-harness-desktop"
-path = "src/main.rs"
+  name = "eval-harness-desktop"
+  path = "src/main.rs"
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+  tauri-build = {features = [], version = "2"}
 
 [dependencies]
-tauri = { version = "2", features = [] }
-# eval-harness 크레이트를 라이브러리로 재사용 (web/desktop_helpers 모듈 접근).
-eval-harness = { path = "../crates/eval-harness" }
+  tauri = {features = [], version = "2"}
+  # eval-harness 크레이트를 라이브러리로 재사용 (web/desktop_helpers 모듈 접근).
+  eval-harness = {path = "../crates/eval-harness"}

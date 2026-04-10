@@ -5,8 +5,7 @@
 // @trace file-type: impl
 // =============================================================================
 
-mod tui;
-mod web;
+use eval_harness::{tui, web};
 
 use clap::{Parser,
            Subcommand};

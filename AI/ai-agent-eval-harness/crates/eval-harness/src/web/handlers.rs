@@ -424,4 +424,79 @@ scenarios:
         assert!(html.contains("개요"));
         assert!(html.contains("빠른 시작"));
     }
+
+    // --- SPEC-010 IBM Plex typography -----------------------------------
+
+    /// @trace TC: SPEC-010/TC-1
+    /// @trace FR: PRD-010/FR-1
+    /// @trace scenario: body font-family 에 IBM Plex Sans KR 포함
+    #[test]
+    fn test_spec010_tc_1_body_font_family() {
+        for html in [index_html_body(), help_html_body()] {
+            assert!(html.contains("'IBM Plex Sans KR'"));
+            assert!(html.contains("'IBM Plex Sans'"));
+        }
+    }
+
+    /// @trace TC: SPEC-010/TC-2
+    /// @trace FR: PRD-010/FR-2
+    /// @trace scenario: mono font-family 에 IBM Plex Mono 포함
+    #[test]
+    fn test_spec010_tc_2_mono_font_family() {
+        for html in [index_html_body(), help_html_body()] {
+            assert!(html.contains("'IBM Plex Mono'"));
+        }
+    }
+
+    /// @trace TC: SPEC-010/TC-3
+    /// @trace FR: PRD-010/FR-3
+    /// @trace scenario: 두 페이지 모두 Google Fonts 링크 포함
+    #[test]
+    fn test_spec010_tc_3_google_fonts_link() {
+        for html in [index_html_body(), help_html_body()] {
+            assert!(html.contains("fonts.googleapis.com/css2"));
+            assert!(html.contains("IBM+Plex+Sans+KR"));
+            assert!(html.contains("IBM+Plex+Mono"));
+            assert!(html.contains("rel=\"preconnect\""));
+        }
+    }
+
+    // --- SPEC-011 select/option dark styling ----------------------------
+
+    /// @trace TC: SPEC-011/TC-1
+    /// @trace FR: PRD-011/FR-1
+    /// @trace scenario: 두 페이지 모두 color-scheme: dark
+    #[test]
+    fn test_spec011_tc_1_color_scheme_dark() {
+        for html in [index_html_body(), help_html_body()] {
+            assert!(
+                html.contains("color-scheme: dark") || html.contains("color-scheme:dark"),
+                "color-scheme declaration missing"
+            );
+        }
+    }
+
+    /// @trace TC: SPEC-011/TC-2
+    /// @trace FR: PRD-011/FR-2
+    /// @trace scenario: option 배경/색상 규칙
+    #[test]
+    fn test_spec011_tc_2_option_styling() {
+        let html = index_html_body();
+        assert!(html.contains("select option"));
+        assert!(html.contains("#1e1e1e"));
+        assert!(html.contains("option:checked"));
+    }
+
+    /// @trace TC: SPEC-011/TC-3
+    /// @trace FR: PRD-011/FR-3
+    /// @trace scenario: select 에 appearance:none + 커스텀 화살표
+    #[test]
+    fn test_spec011_tc_3_custom_select_appearance() {
+        let html = index_html_body();
+        assert!(html.contains("appearance: none"));
+        assert!(html.contains("-webkit-appearance: none"));
+        // 인라인 SVG 화살표 data URL
+        assert!(html.contains("data:image/svg+xml"));
+        assert!(html.contains("background-position: right"));
+    }
 }

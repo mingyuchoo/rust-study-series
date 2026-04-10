@@ -1,0 +1,43 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "본문에 IBM Plex Sans KR + IBM Plex Sans 적용",
+      "specs": [
+        "SPEC-010"
+      ],
+      "test_cases": [
+        "SPEC-010/{'id': 'TC-1', 'scenario': 'body font-family 에 IBM Plex Sans KR 포함'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "코드/pre/textarea 에 IBM Plex Mono 적용",
+      "specs": [
+        "SPEC-010"
+      ],
+      "test_cases": [
+        "SPEC-010/{'id': 'TC-2', 'scenario': 'pre font-family 에 IBM Plex Mono 포함'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "index.html + help.html 양쪽에 동일 폰트 스택",
+      "specs": [
+        "SPEC-010"
+      ],
+      "test_cases": [
+        "SPEC-010/{'id': 'TC-3', 'scenario': 'index + help 양쪽에 Google Fonts 링크'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}
