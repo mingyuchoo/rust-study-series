@@ -9,6 +9,10 @@
     header { padding: 10px 16px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 16px; }
     header h1 { margin: 0; font-size: 16px; color: #f0c419; }
     header .spacer { flex: 1; }
+    .lang-switch { display: inline-flex; border: 1px solid #444; border-radius: 4px; overflow: hidden; }
+    .lang-switch button { background: #1e1e1e; color: #888; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .lang-switch button.active { background: #f0c419; color: #111; }
+    .lang-switch button:hover:not(.active) { background: #2a2a2a; color: #eee; }
     header a.help-btn { background: #2a2a2a; color: #f0c419; border: 1px solid #444; border-radius: 4px; padding: 6px 14px; text-decoration: none; font-size: 13px; font-weight: 600; }
     header a.help-btn:hover { background: #3a3a3a; border-color: #f0c419; }
     nav.tabs { display: flex; gap: 2px; background: #1a1a1a; border-bottom: 1px solid #333; padding: 0 12px; }
@@ -47,149 +51,266 @@
 <body>
   <header>
     <h1>AI Agent Eval Harness</h1>
-    <span style="color:#666;font-size:12px;">— single-page client for the REST API</span>
+    <span style="color:#666;font-size:12px;" data-i18n="header.sub">— single-page client for the REST API</span>
     <div class="spacer"></div>
-    <a href="/help" target="_blank" class="help-btn" title="사용안내 페이지를 새 탭에서 엽니다">📖 사용안내</a>
+    <div class="lang-switch" id="lang-switch">
+      <button id="lang-ko" class="lang-btn" data-lang="ko">한</button>
+      <button id="lang-en" class="lang-btn" data-lang="en">EN</button>
+    </div>
+    <a href="/help" target="_blank" class="help-btn" data-i18n="header.help">📖 사용안내</a>
   </header>
 
   <nav class="tabs" id="tab-bar">
-    <button data-tab="run" class="active">Run</button>
-    <button data-tab="scenarios">Scenarios</button>
-    <button data-tab="tools">Tools</button>
-    <button data-tab="agents">Agents</button>
-    <button data-tab="reports">Reports</button>
-    <button data-tab="trajectories">Trajectories</button>
-    <button data-tab="goldens">Goldens</button>
+    <button data-tab="run" class="active" data-i18n="nav.run">Run</button>
+    <button data-tab="scenarios" data-i18n="nav.scenarios">Scenarios</button>
+    <button data-tab="tools" data-i18n="nav.tools">Tools</button>
+    <button data-tab="agents" data-i18n="nav.agents">Agents</button>
+    <button data-tab="reports" data-i18n="nav.reports">Reports</button>
+    <button data-tab="trajectories" data-i18n="nav.trajectories">Trajectories</button>
+    <button data-tab="goldens" data-i18n="nav.goldens">Goldens</button>
   </nav>
 
   <main>
     <!-- ============ RUN ============ -->
     <section id="panel-run" class="panel active">
-      <h2>Run benchmark suite</h2>
+      <h2 data-i18n="run.title">Run benchmark suite</h2>
       <form id="run-form" onsubmit="runSuite(event)" class="form-block">
         <div class="row">
-          <label>Suite <select id="run-suite"><option>all</option><option>customer_service</option><option>financial</option></select></label>
-          <label>Agent <select id="run-agent"></select></label>
-          <label>Output <input id="run-output" placeholder="(optional) my_report.json" size="30"/></label>
-          <button type="submit" class="primary">Run → POST /api/run</button>
+          <label><span data-i18n="run.suite">Suite</span> <select id="run-suite"><option>all</option><option>customer_service</option><option>financial</option></select></label>
+          <label><span data-i18n="run.agent">Agent</span> <select id="run-agent"></select></label>
+          <label><span data-i18n="run.output">Output</span> <input id="run-output" data-i18n-placeholder="run.outputPh" placeholder="(optional) my_report.json" size="30"/></label>
+          <button type="submit" class="primary" data-i18n="run.button">Run → POST /api/run</button>
         </div>
-        <div class="hint">Calls <code>POST /api/run</code>. Always saves to reports_dir (default timestamp name if output omitted).</div>
+        <div class="hint" data-i18n="run.hint">Calls POST /api/run. Always saves to reports_dir.</div>
       </form>
-      <pre id="run-out">waiting…</pre>
+      <pre id="run-out" data-i18n="common.waiting">waiting…</pre>
     </section>
 
     <!-- ============ SCENARIOS ============ -->
     <section id="panel-scenarios" class="panel">
-      <h2>Scenarios (list + single run)</h2>
+      <h2 data-i18n="scenarios.title">Scenarios (list + single run)</h2>
       <div class="split">
         <div class="list" id="scenarios-list"></div>
         <div>
-          <div class="form-block" id="scenario-detail"><em>select a scenario</em></div>
+          <div class="form-block" id="scenario-detail"><em data-i18n="scenarios.empty">select a scenario</em></div>
           <div class="form-block">
-            <h3>Run this scenario</h3>
+            <h3 data-i18n="scenarios.formTitle">Run this scenario</h3>
             <div class="row">
-              <label>Agent <select id="scen-agent"></select></label>
-              <button class="primary" onclick="runScenario()">Run → POST /api/scenarios/:d/:id/run</button>
+              <label><span data-i18n="run.agent">Agent</span> <select id="scen-agent"></select></label>
+              <button class="primary" onclick="runScenario()" data-i18n="scenarios.runBtn">Run → POST /api/scenarios/:d/:id/run</button>
             </div>
           </div>
-          <pre id="scen-out">waiting…</pre>
+          <pre id="scen-out" data-i18n="common.waiting">waiting…</pre>
         </div>
       </div>
     </section>
 
     <!-- ============ TOOLS ============ -->
     <section id="panel-tools" class="panel">
-      <h2>Tools (invoke + fault injection)</h2>
+      <h2 data-i18n="tools.title">Tools (invoke + fault injection)</h2>
       <div class="split">
         <div class="list" id="tools-list"></div>
         <div>
-          <div class="form-block" id="tool-detail"><em>select a tool</em></div>
+          <div class="form-block" id="tool-detail"><em data-i18n="tools.empty">select a tool</em></div>
           <div class="form-block">
-            <h3>Parameters (JSON)</h3>
+            <h3 data-i18n="tools.params">Parameters (JSON)</h3>
             <textarea id="tool-params">{}</textarea>
             <div class="row">
-              <button class="primary" onclick="invokeTool()">Invoke → POST /api/tools/:n/invoke</button>
-              <button class="secondary" onclick="invokeToolFault()">Simulate fault → /simulate-fault</button>
+              <button class="primary" onclick="invokeTool()" data-i18n="tools.invoke">Invoke → POST /api/tools/:n/invoke</button>
+              <button class="secondary" onclick="invokeToolFault()" data-i18n="tools.fault">Simulate fault → /simulate-fault</button>
               <label>seed <input id="tool-seed" type="number" size="6" value=""/></label>
               <label>rate <input id="tool-rate" type="number" step="0.1" value="0.5" size="4"/></label>
             </div>
           </div>
-          <pre id="tool-out">waiting…</pre>
+          <pre id="tool-out" data-i18n="common.waiting">waiting…</pre>
         </div>
       </div>
     </section>
 
     <!-- ============ AGENTS ============ -->
     <section id="panel-agents" class="panel">
-      <h2>Agents (direct execute)</h2>
+      <h2 data-i18n="agents.title">Agents (direct execute)</h2>
       <div class="form-block">
         <div class="row">
-          <label>Agent <select id="agent-name"></select></label>
+          <label><span data-i18n="run.agent">Agent</span> <select id="agent-name"></select></label>
         </div>
-        <h3>Task description</h3>
-        <textarea id="agent-task" placeholder="에이전트에게 전달할 태스크">hello world</textarea>
-        <h3>Environment (JSON, optional)</h3>
+        <h3 data-i18n="agents.task">Task description</h3>
+        <textarea id="agent-task" placeholder="hello world">hello world</textarea>
+        <h3 data-i18n="agents.env">Environment (JSON, optional)</h3>
         <textarea id="agent-env">{}</textarea>
         <div class="row">
-          <button class="primary" onclick="executeAgent()">Execute → POST /api/agents/:n/execute</button>
+          <button class="primary" onclick="executeAgent()" data-i18n="agents.execute">Execute → POST /api/agents/:n/execute</button>
         </div>
       </div>
-      <pre id="agent-out">waiting…</pre>
+      <pre id="agent-out" data-i18n="common.waiting">waiting…</pre>
     </section>
 
     <!-- ============ REPORTS ============ -->
     <section id="panel-reports" class="panel">
-      <h2>Reports (view + compare)</h2>
+      <h2 data-i18n="reports.title">Reports (view + compare)</h2>
       <div class="split">
         <div class="list" id="reports-list"></div>
         <div>
           <div class="form-block">
-            <h3>Compare two reports</h3>
+            <h3 data-i18n="reports.compareTitle">Compare two reports</h3>
             <div class="row">
-              <label>Baseline <select id="cmp-base"></select></label>
-              <label>Current <select id="cmp-cur"></select></label>
-              <label>Threshold <input id="cmp-threshold" type="number" step="0.1" value="5.0" size="5"/></label>
-              <label>Output <input id="cmp-output" placeholder="(optional)"/></label>
-              <button class="primary" onclick="compareReports()">Compare → POST /api/compare</button>
+              <label><span data-i18n="reports.baseline">Baseline</span> <select id="cmp-base"></select></label>
+              <label><span data-i18n="reports.current">Current</span> <select id="cmp-cur"></select></label>
+              <label><span data-i18n="reports.threshold">Threshold</span> <input id="cmp-threshold" type="number" step="0.1" value="5.0" size="5"/></label>
+              <label><span data-i18n="run.output">Output</span> <input id="cmp-output" data-i18n-placeholder="common.optional" placeholder="(optional)"/></label>
+              <button class="primary" onclick="compareReports()" data-i18n="reports.compareBtn">Compare → POST /api/compare</button>
             </div>
           </div>
-          <pre id="report-out">waiting…</pre>
+          <pre id="report-out" data-i18n="common.waiting">waiting…</pre>
         </div>
       </div>
     </section>
 
     <!-- ============ TRAJECTORIES ============ -->
     <section id="panel-trajectories" class="panel">
-      <h2>Trajectories (view + score)</h2>
+      <h2 data-i18n="traj.title">Trajectories (view + score)</h2>
       <div class="split">
         <div class="list" id="trajectories-list"></div>
         <div>
           <div class="row">
-            <button class="secondary" onclick="refreshTrajectories()">Refresh → GET /api/trajectories</button>
-            <button class="primary" onclick="scoreTrajectory()">Score this trajectory → POST /api/score</button>
+            <button class="secondary" onclick="refreshTrajectories()" data-i18n="traj.refresh">Refresh → GET /api/trajectories</button>
+            <button class="primary" onclick="scoreTrajectory()" data-i18n="traj.score">Score this trajectory → POST /api/score</button>
           </div>
-          <pre id="traj-out">select a trajectory</pre>
+          <pre id="traj-out" data-i18n="traj.selectHint">select a trajectory</pre>
         </div>
       </div>
     </section>
 
     <!-- ============ GOLDENS ============ -->
     <section id="panel-goldens" class="panel">
-      <h2>Golden sets</h2>
+      <h2 data-i18n="gold.title">Golden sets</h2>
       <div class="form-block">
-        <h3>Lookup entry</h3>
+        <h3 data-i18n="gold.lookup">Lookup entry</h3>
         <div class="row">
-          <label>Domain <input id="gold-domain" placeholder="customer_service"/></label>
-          <label>Scenario ID <input id="gold-sid" placeholder="cs_001"/></label>
-          <button class="primary" onclick="fetchGolden()">Fetch → GET /api/golden-sets/:d/:sid</button>
-          <button class="secondary" onclick="fetchAllGoldens()">All files → /api/golden-sets</button>
+          <label><span data-i18n="gold.domain">Domain</span> <input id="gold-domain" placeholder="customer_service"/></label>
+          <label><span data-i18n="gold.scenarioId">Scenario ID</span> <input id="gold-sid" placeholder="cs_001"/></label>
+          <button class="primary" onclick="fetchGolden()" data-i18n="gold.fetch">Fetch → GET /api/golden-sets/:d/:sid</button>
+          <button class="secondary" onclick="fetchAllGoldens()" data-i18n="gold.all">All files → /api/golden-sets</button>
         </div>
       </div>
-      <pre id="gold-out">waiting…</pre>
+      <pre id="gold-out" data-i18n="common.waiting">waiting…</pre>
     </section>
   </main>
 
   <script>
+    // ---------- i18n ----------
+    const I18N = {
+      ko: {
+        "header.sub": "— REST API 싱글 페이지 클라이언트",
+        "header.help": "📖 사용안내",
+        "nav.run": "실행",
+        "nav.scenarios": "시나리오",
+        "nav.tools": "도구",
+        "nav.agents": "에이전트",
+        "nav.reports": "리포트",
+        "nav.trajectories": "궤적",
+        "nav.goldens": "골든셋",
+        "run.title": "벤치마크 스위트 실행",
+        "run.suite": "스위트",
+        "run.agent": "에이전트",
+        "run.output": "출력",
+        "run.outputPh": "(선택) my_report.json",
+        "run.button": "실행 → POST /api/run",
+        "run.hint": "POST /api/run 을 호출합니다. reports_dir 에 항상 저장됩니다 (output 생략 시 기본 파일명 사용).",
+        "common.waiting": "대기 중…",
+        "common.optional": "(선택)",
+        "scenarios.title": "시나리오 (탐색 + 단일 실행)",
+        "scenarios.empty": "시나리오를 선택하세요",
+        "scenarios.formTitle": "이 시나리오 실행",
+        "scenarios.runBtn": "실행 → POST /api/scenarios/:d/:id/run",
+        "tools.title": "도구 (호출 + 폴트 주입)",
+        "tools.empty": "도구를 선택하세요",
+        "tools.params": "매개변수 (JSON)",
+        "tools.invoke": "호출 → POST /api/tools/:n/invoke",
+        "tools.fault": "폴트 시뮬레이션 → /simulate-fault",
+        "agents.title": "에이전트 (직접 실행)",
+        "agents.task": "태스크 설명",
+        "agents.env": "환경 (JSON, 선택)",
+        "agents.execute": "실행 → POST /api/agents/:n/execute",
+        "reports.title": "리포트 (조회 + 비교)",
+        "reports.compareTitle": "두 리포트 비교",
+        "reports.baseline": "기준",
+        "reports.current": "현재",
+        "reports.threshold": "임계값",
+        "reports.compareBtn": "비교 → POST /api/compare",
+        "traj.title": "궤적 (조회 + 채점)",
+        "traj.refresh": "새로고침 → GET /api/trajectories",
+        "traj.score": "이 궤적 채점 → POST /api/score",
+        "traj.selectHint": "궤적을 선택하세요",
+        "gold.title": "골든셋",
+        "gold.lookup": "엔트리 조회",
+        "gold.domain": "도메인",
+        "gold.scenarioId": "시나리오 ID",
+        "gold.fetch": "조회 → GET /api/golden-sets/:d/:sid",
+        "gold.all": "전체 파일 → /api/golden-sets",
+      },
+      en: {
+        "header.sub": "— single-page client for the REST API",
+        "header.help": "📖 Help",
+        "nav.run": "Run",
+        "nav.scenarios": "Scenarios",
+        "nav.tools": "Tools",
+        "nav.agents": "Agents",
+        "nav.reports": "Reports",
+        "nav.trajectories": "Trajectories",
+        "nav.goldens": "Goldens",
+        "run.title": "Run benchmark suite",
+        "run.suite": "Suite",
+        "run.agent": "Agent",
+        "run.output": "Output",
+        "run.outputPh": "(optional) my_report.json",
+        "run.button": "Run → POST /api/run",
+        "run.hint": "Calls POST /api/run. Always saves to reports_dir (default timestamp name if output omitted).",
+        "common.waiting": "waiting…",
+        "common.optional": "(optional)",
+        "scenarios.title": "Scenarios (list + single run)",
+        "scenarios.empty": "select a scenario",
+        "scenarios.formTitle": "Run this scenario",
+        "scenarios.runBtn": "Run → POST /api/scenarios/:d/:id/run",
+        "tools.title": "Tools (invoke + fault injection)",
+        "tools.empty": "select a tool",
+        "tools.params": "Parameters (JSON)",
+        "tools.invoke": "Invoke → POST /api/tools/:n/invoke",
+        "tools.fault": "Simulate fault → /simulate-fault",
+        "agents.title": "Agents (direct execute)",
+        "agents.task": "Task description",
+        "agents.env": "Environment (JSON, optional)",
+        "agents.execute": "Execute → POST /api/agents/:n/execute",
+        "reports.title": "Reports (view + compare)",
+        "reports.compareTitle": "Compare two reports",
+        "reports.baseline": "Baseline",
+        "reports.current": "Current",
+        "reports.threshold": "Threshold",
+        "reports.compareBtn": "Compare → POST /api/compare",
+        "traj.title": "Trajectories (view + score)",
+        "traj.refresh": "Refresh → GET /api/trajectories",
+        "traj.score": "Score this trajectory → POST /api/score",
+        "traj.selectHint": "select a trajectory",
+        "gold.title": "Golden sets",
+        "gold.lookup": "Lookup entry",
+        "gold.domain": "Domain",
+        "gold.scenarioId": "Scenario ID",
+        "gold.fetch": "Fetch → GET /api/golden-sets/:d/:sid",
+        "gold.all": "All files → /api/golden-sets",
+      }
+    };
+    function t(key) { const lang = currentLang(); return (I18N[lang] && I18N[lang][key]) || (I18N.ko && I18N.ko[key]) || key; }
+    function currentLang() { return localStorage.getItem('lang') || 'ko'; }
+    function setLang(lang) {
+      localStorage.setItem('lang', lang);
+      document.documentElement.lang = lang;
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+      document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+    }
+    document.querySelectorAll('.lang-btn').forEach(btn => { btn.onclick = () => setLang(btn.dataset.lang); });
+    setLang(currentLang());
+
     // ---------- utilities ----------
     const $ = (id) => document.getElementById(id);
     const API = {
@@ -237,7 +358,7 @@
     }
 
     // ---------- SCENARIOS ----------
-    let SELECTED_SCEN = null;  // {domain, scenario}
+    let SELECTED_SCEN = null;
     async function initScenarios() {
       const data = await API.get('/api/list');
       const el = $('scenarios-list'); el.innerHTML = '';
@@ -253,10 +374,10 @@
             try {
               const full = await API.get(`/api/scenarios/${d.name}/${s.id}`);
               $('scenario-detail').innerHTML = `<h3>${full.name}</h3>
-                <div><strong>Domain:</strong> ${d.name} · <strong>Difficulty:</strong> ${full.difficulty}</div>
+                <div><strong>${t('gold.domain')}:</strong> ${d.name} · <strong>difficulty:</strong> ${full.difficulty}</div>
                 <div><strong>ID:</strong> ${full.id}</div>
-                <div style="margin-top:6px"><strong>Task:</strong><br><small>${full.task_description}</small></div>
-                <div style="margin-top:6px"><strong>Expected tools:</strong> ${(full.expected_tools||[]).join(', ') || '—'}</div>`;
+                <div style="margin-top:6px"><small>${full.task_description}</small></div>
+                <div style="margin-top:6px"><strong>tools:</strong> ${(full.expected_tools||[]).join(', ') || '—'}</div>`;
             } catch (err) { $('scenario-detail').innerHTML = `<div class="error">${err.message}</div>`; }
           };
           el.appendChild(it);
@@ -276,14 +397,14 @@
     async function initTools() {
       const tools = await API.get('/api/tools');
       const el = $('tools-list'); el.innerHTML = '';
-      tools.forEach(t => {
+      tools.forEach(tool => {
         const it = document.createElement('div'); it.className = 'item';
-        it.textContent = t.name;
+        it.textContent = tool.name;
         it.onclick = () => {
           document.querySelectorAll('#tools-list .item').forEach(x=>x.classList.remove('active'));
           it.classList.add('active');
-          SELECTED_TOOL = t.name;
-          $('tool-detail').innerHTML = `<h3>${t.name}</h3><div>${t.description||''}</div><pre style="max-height:200px">${pretty(t.parameters_schema||{})}</pre>`;
+          SELECTED_TOOL = tool.name;
+          $('tool-detail').innerHTML = `<h3>${tool.name}</h3><div>${tool.description||''}</div><pre style="max-height:200px">${pretty(tool.parameters_schema||{})}</pre>`;
         };
         el.appendChild(it);
       });
@@ -391,8 +512,6 @@
       trajectories: initTrajectories,
       goldens: initGoldens,
     };
-
-    // bootstrap: run tab is active by default
     (async () => { try { await initFns.run(); initialized.run = true; } catch (e) { console.error(e); } })();
   </script>
 </body>

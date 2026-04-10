@@ -201,7 +201,7 @@ cargo run -- tui --scenarios-dir eval_data/scenarios --reports-dir reporting_log
 
 ### 웹 클라이언트 (HTTP 서버)
 
-Axum 기반 내장 HTTP 서버를 띄우면 **7-탭 SPA**가 함께 제공되어, 브라우저에서 모든 REST API(조회·실행·비교·채점·폴트주입)를 직접 사용할 수 있습니다. `index.html`은 바이너리에 임베드되어 있어 별도 파일 배포가 필요 없습니다.
+Axum 기반 내장 HTTP 서버를 띄우면 **7-탭 SPA**가 함께 제공되어, 브라우저에서 모든 REST API(조회·실행·비교·채점·폴트주입)를 직접 사용할 수 있습니다. `index.html`과 `help.html`은 바이너리에 임베드되며 **한국어/영어 다국어 토글**을 지원합니다 (헤더의 `[한][EN]` 버튼, 선택은 `localStorage`에 저장).
 
 **탭 구성**
 
@@ -433,6 +433,7 @@ docs/prd/PRD-004.md  ──┘     └─ TC → @trace (테스트/구현 함수
 | PRD-005 | CLI↔Web 완전 동등화 (`/api/list`, `run/compare` 의 `output` 필드) | SPEC-005 |
 | PRD-006 | 탭 기반 SPA UI — 7개 탭에서 전체 API 사용 | SPEC-006 |
 | PRD-007 | `/help` 사용안내 페이지 + SPA 헤더 버튼 | SPEC-007 |
+| PRD-008 | 한/영 다국어 토글 (헤더 버튼, localStorage 영속화) | SPEC-008 |
 
 **추적성 검증**
 

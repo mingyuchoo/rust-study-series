@@ -359,4 +359,69 @@ scenarios:
         assert!(html.contains("href=\"/help\""));
         assert!(html.contains("사용안내"));
     }
+
+    // --- SPEC-008 i18n --------------------------------------------------
+
+    /// @trace TC: SPEC-008/TC-1
+    /// @trace FR: PRD-008/FR-1
+    /// @trace scenario: 언어 토글 버튼 존재 (index + help)
+    #[test]
+    fn test_spec008_tc_1_lang_toggle_buttons() {
+        for html in [index_html_body(), help_html_body()] {
+            assert!(html.contains("id=\"lang-ko\"") || html.contains("data-lang=\"ko\""));
+            assert!(html.contains("data-lang=\"en\""));
+            assert!(html.contains("lang-switch"));
+        }
+    }
+
+    /// @trace TC: SPEC-008/TC-2
+    /// @trace FR: PRD-008/FR-1
+    /// @trace scenario: setLang + localStorage 영속화
+    #[test]
+    fn test_spec008_tc_2_setlang_persistence() {
+        for html in [index_html_body(), help_html_body()] {
+            assert!(html.contains("setLang("));
+            assert!(html.contains("localStorage"));
+        }
+    }
+
+    /// @trace TC: SPEC-008/TC-3
+    /// @trace FR: PRD-008/FR-2
+    /// @trace scenario: I18N 사전에 ko/en 키
+    #[test]
+    fn test_spec008_tc_3_i18n_dict_present() {
+        let html = index_html_body();
+        assert!(html.contains("const I18N"));
+        assert!(html.contains("ko:") || html.contains("ko :"));
+        assert!(html.contains("en:") || html.contains("en :"));
+        // sample keys that must exist in both languages
+        assert!(html.contains("\"nav.run\""));
+        assert!(html.contains("\"run.title\""));
+    }
+
+    /// @trace TC: SPEC-008/TC-4
+    /// @trace FR: PRD-008/FR-2
+    /// @trace scenario: data-i18n 마킹 충분히 존재
+    #[test]
+    fn test_spec008_tc_4_data_i18n_markers() {
+        let html = index_html_body();
+        let count = html.matches("data-i18n=\"").count();
+        assert!(count >= 20, "expected at least 20 data-i18n markers, got {}", count);
+    }
+
+    /// @trace TC: SPEC-008/TC-5
+    /// @trace FR: PRD-008/FR-3
+    /// @trace scenario: help.html lang-ko + lang-en 블록 양쪽 존재
+    #[test]
+    fn test_spec008_tc_5_help_has_both_langs() {
+        let html = help_html_body();
+        assert!(html.contains("class=\"lang-ko\""));
+        assert!(html.contains("class=\"lang-en\""));
+        // content sanity: English section must have English headings
+        assert!(html.contains("Overview"));
+        assert!(html.contains("Quick start"));
+        // and Korean section headings
+        assert!(html.contains("개요"));
+        assert!(html.contains("빠른 시작"));
+    }
 }

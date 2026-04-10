@@ -1,0 +1,45 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "헤더에 ko/en 언어 토글 버튼 추가 (localStorage 영속화)",
+      "specs": [
+        "SPEC-008"
+      ],
+      "test_cases": [
+        "SPEC-008/{'id': 'TC-1', 'scenario': '언어 토글 버튼 존재'}",
+        "SPEC-008/{'id': 'TC-2', 'scenario': 'localStorage setLang 함수 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "index.html SPA 의 모든 UI 문자열을 ko/en 으로 전환",
+      "specs": [
+        "SPEC-008"
+      ],
+      "test_cases": [
+        "SPEC-008/{'id': 'TC-3', 'scenario': 'I18N 사전 ko/en 키 존재'}",
+        "SPEC-008/{'id': 'TC-4', 'scenario': '주요 UI 요소에 data-i18n 속성'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "help.html 사용안내 페이지의 모든 본문을 ko/en 으로 전환",
+      "specs": [
+        "SPEC-008"
+      ],
+      "test_cases": [
+        "SPEC-008/{'id': 'TC-5', 'scenario': 'help 페이지 lang-ko/lang-en 블록 양쪽 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

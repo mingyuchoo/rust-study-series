@@ -1,6 +1,6 @@
 # 추적성 매트릭스
 
-최종 갱신: 2026-04-10 17:23
+최종 갱신: 2026-04-10 17:31
 
 ## 정방향 추적 (요구사항 -> 구현)
 
@@ -101,7 +101,12 @@
 | crates/eval-harness/src/web/handlers.rs | test_spec006_tc_8_goldens | - | SPEC-007/TC-1 | PRD-007/FR-1 | PRD-007 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_spec007_tc_1_help_embedded | - | SPEC-007/TC-2 | PRD-007/FR-1 | PRD-007 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_spec007_tc_2_help_has_guides | - | SPEC-007/TC-3 | PRD-007/FR-2 | PRD-007 | OK |
-| crates/eval-harness/src/web/handlers.rs | test_spec007_tc_3_index_has_help_link | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/handlers.rs | test_spec007_tc_3_index_has_help_link | - | SPEC-008/TC-1 | PRD-008/FR-1 | PRD-008 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec008_tc_1_lang_toggle_buttons | - | SPEC-008/TC-2 | PRD-008/FR-1 | PRD-008 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec008_tc_2_setlang_persistence | - | SPEC-008/TC-3 | PRD-008/FR-2 | PRD-008 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec008_tc_3_i18n_dict_present | - | SPEC-008/TC-4 | PRD-008/FR-2 | PRD-008 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec008_tc_4_data_i18n_markers | - | SPEC-008/TC-5 | PRD-008/FR-3 | PRD-008 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec008_tc_5_help_has_both_langs | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/handlers.rs | test_tc_2_list_scenarios_loads_yaml | - | SPEC-002/TC-3 | PRD-002/FR-3 | PRD-002 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_tc_3_list_reports_filters_json | - | SPEC-002/TC-4 | PRD-002/FR-4 | PRD-002 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_tc_4_get_report_returns_content | - | SPEC-002/TC-5 | PRD-002/FR-4 | PRD-002 | OK |
@@ -160,7 +165,7 @@
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::list_reports
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::get_report
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::index_html_body
-- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::test_spec007_tc_3_index_has_help_link
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::test_spec008_tc_5_help_has_both_langs
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/mod.rs::run_tui
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/mod.rs::event_loop
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/view.rs::draw
