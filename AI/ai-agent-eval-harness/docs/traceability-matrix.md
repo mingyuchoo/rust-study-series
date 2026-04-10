@@ -1,19 +1,44 @@
 # 추적성 매트릭스
 
-최종 갱신: 2026-04-10 18:32
+최종 갱신: 2026-04-10 18:54
 
 ## 정방향 추적 (요구사항 -> 구현)
 
 | PRD | FR ID | FR 제목 | SPEC | TC | 테스트 파일 | 구현 파일 | 구현 심볼 | 상태 |
 |-----|-------|--------|------|-----|-----------|----------|----------|------|
-| PRD-014 | FR-1 | 상단 헤더 우측(언어 전환 옆)에 라이트/다크 테마 토 | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014 | TC-1, TC-1, TC-1, TC-1, TC-2, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-2, TC-1, TC-1, TC-1, TC-1, TC-2, TC-3, TC-1 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
-| PRD-014 | FR-2 | 토글 클릭 시 `index.html` 및 `help.h | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014 | TC-2, TC-3, TC-2, TC-2, TC-3, TC-4, TC-5, TC-6, TC-2, TC-3, TC-3, TC-4, TC-2, TC-3, TC-4, TC-2, TC-2, TC-4, TC-2, TC-5 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
-| PRD-014 | FR-3 | 선택된 테마는 `localStorage` 의 `them | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014 | TC-4, TC-5, TC-3, TC-3, TC-4, TC-5, TC-7, TC-3, TC-5, TC-5, TC-3, TC-3, TC-1, TC-2, TC-3, TC-3, TC-4 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-014 | FR-1 | 상단 헤더 우측(언어 전환 옆)에 라이트/다크 테마 토 | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-1, TC-1, TC-1, TC-1, TC-2, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-2, TC-1, TC-1, TC-1, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-014 | FR-2 | 토글 클릭 시 `index.html` 및 `help.h | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-2, TC-3, TC-2, TC-2, TC-3, TC-4, TC-5, TC-6, TC-2, TC-3, TC-3, TC-4, TC-2, TC-3, TC-4, TC-2, TC-2, TC-4, TC-2, TC-5, TC-3, TC-4, TC-9 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-014 | FR-3 | 선택된 테마는 `localStorage` 의 `them | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-4, TC-5, TC-3, TC-3, TC-4, TC-5, TC-7, TC-3, TC-5, TC-5, TC-3, TC-3, TC-1, TC-2, TC-3, TC-3, TC-4, TC-5 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-015 | FR-1 | 프로젝트 루트(또는 사용자가 지정한 위치)의 `eval | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-1, TC-1, TC-1, TC-1, TC-2, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-2, TC-1, TC-1, TC-1, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | write_cfg, test_tc_1_load_full_config | PASS |
+| PRD-015 | FR-2 | 설정 파일의 경로 값이 절대 경로(`/`/`C:\\`  | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-2, TC-3, TC-2, TC-2, TC-3, TC-4, TC-5, TC-6, TC-2, TC-3, TC-3, TC-4, TC-2, TC-3, TC-4, TC-2, TC-2, TC-4, TC-2, TC-5, TC-3, TC-4, TC-9 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | test_tc_2_partial_config_fallback, test_tc_3_relative_path_uses_config_dir | PASS |
+| PRD-015 | FR-3 | 환경변수 `EVAL_HARNESS_SCENARIOS_D | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-4, TC-5, TC-3, TC-3, TC-4, TC-5, TC-7, TC-3, TC-5, TC-5, TC-3, TC-3, TC-1, TC-2, TC-3, TC-3, TC-4, TC-5 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | test_tc_4_absolute_path_kept_as_is | PASS |
+| PRD-015 | FR-4 | CLI 의 `--scenarios-dir`, `--go | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-006, SPEC-009, SPEC-015 | TC-6, TC-4, TC-5, TC-4, TC-5, TC-6, TC-7, TC-4, TC-6, TC-6 | - | crates/eval-harness/src/data_paths.rs | test_tc_5_env_overrides_config | PASS |
+| PRD-015 | FR-5 | 설정 파일/환경변수/CLI 인자가 모두 없으면 기존 동 | SPEC-002, SPEC-003, SPEC-004, SPEC-006, SPEC-009, SPEC-015 | TC-6, TC-6, TC-7, TC-8, TC-5, TC-7, TC-2, TC-7 | - | crates/eval-harness/src/data_paths.rs | test_tc_1_load_full_config, test_tc_6_cli_overrides_all | PASS |
+| PRD-015 | FR-6 | `desktop/src/main.rs` 도 `crate | SPEC-003, SPEC-004, SPEC-006, SPEC-015 | TC-8, TC-9, TC-9, TC-6, TC-8 | - | crates/eval-harness/src/data_paths.rs | test_tc_7_builtin_defaults_when_nothing_set | PASS |
 
 ## 역방향 추적 (구현 -> 요구사항)
 
 | 구현 파일 | 심볼 | SPEC | TC | FR | PRD | 상태 |
 |----------|------|------|-----|-----|-----|------|
+| crates/eval-harness/src/data_paths.rs | apply_config | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | apply_env | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | apply_env_from | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | default | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | load | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | read_config | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | resolve_for_root | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | resolve_relative | - | - | FR-1, FR-2, FR-3, FR-4, FR-5, FR-6 | - | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_1_load_full_config | - | SPEC-015/TC-2 | PRD-015/FR-1, PRD-015/FR-5 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_2_partial_config_fallback | - | SPEC-015/TC-3 | PRD-015/FR-2 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_3_relative_path_uses_config_dir | - | SPEC-015/TC-4 | PRD-015/FR-2 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_4_absolute_path_kept_as_is | - | SPEC-015/TC-5 | PRD-015/FR-3 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_5_env_overrides_config | - | SPEC-015/TC-6 | PRD-015/FR-4 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_6_cli_overrides_all | - | SPEC-015/TC-7 | PRD-015/FR-5 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_7_builtin_defaults_when_nothing_set | - | SPEC-015/TC-8 | PRD-015/FR-6 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_8_resolve_for_root_joins_root | - | SPEC-015/TC-9 | PRD-015/NFR-2 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_9_invalid_toml_returns_parse_error | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | with_overrides | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | write_cfg | - | SPEC-015/TC-1 | PRD-015/FR-1 | PRD-015 | OK |
 | crates/eval-harness/src/build_release.rs | read_root_makefile | - | SPEC-012/TC-1 | PRD-012/FR-1, PRD-012/FR-3 | PRD-012 | OK |
 | crates/eval-harness/src/build_release.rs | test_tc_1_makefile_has_desktop_release_windows | - | SPEC-012/TC-2 | PRD-012/FR-1, PRD-012/FR-3 | PRD-012 | OK |
 | crates/eval-harness/src/build_release.rs | test_tc_2_makefile_has_desktop_release_linux | - | SPEC-012/TC-3 | PRD-012/FR-1, PRD-012/FR-3 | PRD-012 | OK |
@@ -27,6 +52,7 @@
 | crates/eval-harness/src/desktop_helpers.rs | wait_for_port | - | SPEC-009/TC-1 | FR-1, FR-2, PRD-009/FR-1 | PRD-009 | OK |
 | crates/eval-harness/src/main.rs | build_registry | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/main.rs | main | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/main.rs | resolve_data_paths | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/mod.rs | build_router | SPEC-002 | SPEC-002/TC-1 | PRD-002/FR-1 | PRD-002 | OK |
 | crates/eval-harness/src/web/mod.rs | run_server | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api_exec.rs | agent_execute | - | - | - | - | UNTRACED |
@@ -154,12 +180,23 @@
 
 | PRD | 전체 FR | 커버된 FR | SPEC 수 | TC 수 | 통과 | 실패 | 커버리지 |
 |-----|--------|----------|--------|-------|------|------|---------|
-| PRD-014 | 3 | 0 | 13 | 57 | 0 | 57 | 0% |
+| PRD-014 | 3 | 0 | 14 | 63 | 0 | 63 | 0% |
+| PRD-015 | 6 | 6 | 14 | 86 | 86 | 0 | 100% |
 
 ## 미추적 항목 (경고)
 
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::default
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::load
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::resolve_for_root
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::apply_env
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::apply_env_from
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::with_overrides
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::read_config
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::apply_config
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::test_tc_9_invalid_toml_returns_parse_error
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/build_release.rs::test_tc_4_makefile_has_desktop_release_all_aggregate
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/desktop_helpers.rs::test_tc_4_wait_for_port_detects_listener
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/main.rs::resolve_data_paths
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/main.rs::build_registry
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/main.rs::main
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/mod.rs::run_server

@@ -1,0 +1,8 @@
+{
+  "spec_id": "SPEC-015",
+  "prd_id": "PRD-015",
+  "title": "eval_data 경로 외부 설정화",
+  "created_at": "2026-04-10",
+  "status": "Implemented",
+  "test_status": "passed"
+}

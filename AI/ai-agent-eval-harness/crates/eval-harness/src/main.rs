@@ -1,11 +1,12 @@
 // =============================================================================
 // @trace SPEC-001
-// @trace PRD: PRD-001
-// @trace FR: FR-1
+// @trace SPEC-015
+// @trace PRD: PRD-001, PRD-015
+// @trace FR: PRD-001/FR-1, PRD-015/FR-4, PRD-015/FR-5
 // @trace file-type: impl
 // =============================================================================
 
-use eval_harness::{tui, web};
+use eval_harness::{data_paths::DataPaths, tui, web};
 
 use clap::{Parser,
            Subcommand};
@@ -34,8 +35,8 @@ enum Commands {
         agent: String,
         #[arg(short, long)]
         output: Option<String>,
-        #[arg(long, default_value = "eval_data/scenarios")]
-        scenarios_dir: String,
+        #[arg(long)]
+        scenarios_dir: Option<String>,
         #[arg(long, default_value = "reporting_logs")]
         output_dir: String,
     },
@@ -50,15 +51,15 @@ enum Commands {
     },
     /// 사용 가능한 스위트/시나리오 목록 표시
     List {
-        #[arg(long, default_value = "eval_data/scenarios")]
-        scenarios_dir: String,
+        #[arg(long)]
+        scenarios_dir: Option<String>,
     },
     /// 저장된 리포트 표시
     Report { filepath: String },
     /// 대화형 TUI 모드 실행
     Tui {
-        #[arg(long, default_value = "eval_data/scenarios")]
-        scenarios_dir: String,
+        #[arg(long)]
+        scenarios_dir: Option<String>,
         #[arg(long, default_value = "reporting_logs")]
         reports_dir: String,
     },
@@ -66,15 +67,26 @@ enum Commands {
     Serve {
         #[arg(long, default_value = "127.0.0.1:8080")]
         addr: String,
-        #[arg(long, default_value = "eval_data/scenarios")]
-        scenarios_dir: String,
+        #[arg(long)]
+        scenarios_dir: Option<String>,
         #[arg(long, default_value = "reporting_logs")]
         reports_dir: String,
-        #[arg(long, default_value = "eval_data/golden_sets")]
-        golden_sets_dir: String,
+        #[arg(long)]
+        golden_sets_dir: Option<String>,
         #[arg(long, default_value = "reporting_trajectories")]
         trajectories_dir: String,
     },
+}
+
+fn resolve_data_paths(scenarios: Option<&str>, golden_sets: Option<&str>) -> DataPaths {
+    let base = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+    match DataPaths::load(&base) {
+        | Ok(p) => p.with_overrides(scenarios, golden_sets),
+        | Err(e) => {
+            eprintln!("설정 파일 오류: {e}");
+            std::process::exit(1);
+        },
+    }
 }
 
 fn build_registry() -> AgentRegistry {
@@ -115,6 +127,8 @@ fn main() {
                 },
             };
 
+            let paths = resolve_data_paths(scenarios_dir.as_deref(), None);
+            let scenarios_dir = paths.scenarios_dir.to_string_lossy().into_owned();
             let mut runner = HarnessRunner::new(&output_dir);
             let report = match runner.run_suite(&suite, agent_impl.as_ref(), &scenarios_dir) {
                 | Ok(r) => r,
@@ -158,6 +172,8 @@ fn main() {
         } => {
             use data_scenarios::loader::ScenarioLoader;
 
+            let paths = resolve_data_paths(scenarios_dir.as_deref(), None);
+            let scenarios_dir = paths.scenarios_dir.to_string_lossy().into_owned();
             let loader = ScenarioLoader::new();
             if !std::path::Path::new(&scenarios_dir).exists() {
                 eprintln!("디렉토리 없음: {}", scenarios_dir);
@@ -190,11 +206,13 @@ fn main() {
         | Commands::Tui {
             scenarios_dir,
             reports_dir,
-        } =>
-            if let Err(e) = tui::run_tui(Path::new(&scenarios_dir), Path::new(&reports_dir)) {
+        } => {
+            let paths = resolve_data_paths(scenarios_dir.as_deref(), None);
+            if let Err(e) = tui::run_tui(&paths.scenarios_dir, Path::new(&reports_dir)) {
                 eprintln!("TUI 오류: {}", e);
                 std::process::exit(1);
-            },
+            }
+        },
 
         | Commands::Serve {
             addr,
@@ -210,11 +228,12 @@ fn main() {
                     std::process::exit(1);
                 },
             };
+            let paths = resolve_data_paths(scenarios_dir.as_deref(), golden_sets_dir.as_deref());
             if let Err(e) = web::run_server(
                 socket,
-                scenarios_dir.into(),
+                paths.scenarios_dir,
                 reports_dir.into(),
-                golden_sets_dir.into(),
+                paths.golden_sets_dir,
                 trajectories_dir.into(),
             ) {
                 eprintln!("서버 오류: {}", e);

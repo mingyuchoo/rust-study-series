@@ -1,7 +1,8 @@
 // =============================================================================
 // @trace SPEC-009
-// @trace PRD: PRD-009
-// @trace FR: FR-3, FR-4
+// @trace SPEC-015
+// @trace PRD: PRD-009, PRD-015
+// @trace FR: PRD-009/FR-3, PRD-009/FR-4, PRD-015/FR-6
 // @trace file-type: impl
 // =============================================================================
 //
@@ -16,7 +17,7 @@
 // 웹 SPA(index.html, help.html, i18n, 7-탭) 가 그대로 재사용되므로 Tauri 측에서
 // 별도 IPC 명령을 정의할 필요가 없다.
 
-use eval_harness::{desktop_helpers, web};
+use eval_harness::{data_paths::DataPaths, desktop_helpers, web};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use tauri::{WebviewUrl, WebviewWindowBuilder};
@@ -40,9 +41,13 @@ fn main() {
         .parse()
         .expect("valid loopback addr");
 
-    let scenarios_dir = root.join("eval_data/scenarios");
+    let data_paths = DataPaths::resolve_for_root(&root).unwrap_or_else(|e| {
+        eprintln!("[eval-harness-desktop] data path 설정 오류: {e}");
+        std::process::exit(1);
+    });
+    let scenarios_dir = data_paths.scenarios_dir;
     let reports_dir = root.join("reporting_logs");
-    let golden_sets_dir = root.join("eval_data/golden_sets");
+    let golden_sets_dir = data_paths.golden_sets_dir;
     let trajectories_dir = root.join("reporting_trajectories");
 
     // 내장 Axum 서버를 별도 OS 스레드에서 기동. 프로세스 종료 시 OS 가 정리한다.

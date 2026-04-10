@@ -1,0 +1,58 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "TOML 설정 파일에서 데이터 경로 읽기",
+      "specs": ["SPEC-015"],
+      "test_cases": ["SPEC-015/TC-1", "SPEC-015/TC-2"],
+      "test_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_symbols": ["DataPaths", "DataPaths::load"],
+      "status": "passed"
+    },
+    "FR-2": {
+      "title": "상대 경로는 설정 파일 디렉토리 기준 해석",
+      "specs": ["SPEC-015"],
+      "test_cases": ["SPEC-015/TC-3", "SPEC-015/TC-4"],
+      "test_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_symbols": ["resolve_relative"],
+      "status": "passed"
+    },
+    "FR-3": {
+      "title": "환경변수 override 지원",
+      "specs": ["SPEC-015"],
+      "test_cases": ["SPEC-015/TC-5"],
+      "test_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_symbols": ["DataPaths::apply_env"],
+      "status": "passed"
+    },
+    "FR-4": {
+      "title": "CLI 인자가 최우선",
+      "specs": ["SPEC-015"],
+      "test_cases": ["SPEC-015/TC-6"],
+      "test_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_files": ["crates/eval-harness/src/data_paths.rs", "crates/eval-harness/src/main.rs"],
+      "impl_symbols": ["DataPaths::with_overrides"],
+      "status": "passed"
+    },
+    "FR-5": {
+      "title": "내장 기본값 fallback",
+      "specs": ["SPEC-015"],
+      "test_cases": ["SPEC-015/TC-7"],
+      "test_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_symbols": ["DataPaths::default", "DEFAULT_SCENARIOS_DIR", "DEFAULT_GOLDEN_SETS_DIR"],
+      "status": "passed"
+    },
+    "FR-6": {
+      "title": "desktop 진입점도 동일 로직 사용",
+      "specs": ["SPEC-015"],
+      "test_cases": ["SPEC-015/TC-8"],
+      "test_files": ["crates/eval-harness/src/data_paths.rs"],
+      "impl_files": ["desktop/src/main.rs", "crates/eval-harness/src/data_paths.rs"],
+      "impl_symbols": ["DataPaths::resolve_for_root"],
+      "status": "passed"
+    }
+  }
+}

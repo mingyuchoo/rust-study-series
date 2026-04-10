@@ -133,6 +133,27 @@ AZURE_OPENAI_MAX_TOKENS=4096
 
 > 모든 명령은 `cargo run -- <command>` 또는 릴리즈 빌드 후 `./target/release/eval-harness <command>` 형태로 실행합니다.
 
+### 데이터 경로 설정 (`eval-harness.toml`)
+
+`eval_data/` 계열 디렉토리(시나리오, 골든셋)는 다음 4단계 우선순위로 해석됩니다 (높음 → 낮음):
+
+1. **CLI 인자** — `--scenarios-dir`, `--golden-sets-dir`
+2. **환경변수** — `EVAL_HARNESS_SCENARIOS_DIR`, `EVAL_HARNESS_GOLDEN_SETS_DIR`
+3. **설정 파일** — 프로젝트 루트의 `eval-harness.toml`
+4. **내장 기본값** — `eval_data/scenarios`, `eval_data/golden_sets`
+
+설정 파일 예시 (`eval-harness.toml`):
+
+```toml
+[data]
+# 상대 경로는 이 설정 파일이 위치한 디렉토리를 기준으로 해석됩니다.
+scenarios_dir   = "eval_data/scenarios"
+# 절대 경로도 가능합니다.
+golden_sets_dir = "/var/lib/eval/golden"
+```
+
+설정 파일이 없으면 기존 동작과 동일하게 내장 기본값(CWD 기준)이 사용됩니다. desktop 앱은 워크스페이스 루트에서 동일한 설정 파일을 검색합니다. 자세한 명세는 `docs/spec/SPEC-015.md` 참조.
+
 ### 시나리오 목록 조회
 
 ```bash

@@ -1,1 +1,7 @@
 /target
+
+# cargo test 부산물 (eval-harness 가 작업 디렉토리 기준으로 생성)
+crates/eval-harness/reporting_logs/
+crates/eval-harness/reporting_trajectories/
+/reporting_logs/
+/reporting_trajectories/
