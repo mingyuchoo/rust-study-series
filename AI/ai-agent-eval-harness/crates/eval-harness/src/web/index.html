@@ -1,51 +1,144 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <title>eval-harness</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    // SPEC-014: FOUC 방지 — 스타일 로드 전에 data-theme 속성을 먼저 설정
+    (function () {
+      try {
+        var t = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+    })();
+  </script>
   <style>
+    /* SPEC-014: CSS 변수 기반 라이트/다크 테마 */
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #121212;
+      --bg-elev: #1e1e1e;
+      --bg-panel: #1a1a1a;
+      --bg-input: #1e1e1e;
+      --bg-input-hover: #2a2a2a;
+      --bg-secondary: #2a2a2a;
+      --bg-secondary-hover: #3a3a3a;
+      --bg-pre: #0a0a0a;
+      --bg-item-hover: #262626;
+      --fg: #e0e0e0;
+      --fg-strong: #eee;
+      --fg-muted: #888;
+      --fg-subtle: #6a6a6a;
+      --fg-label: #aaa;
+      --accent: #f0c419;
+      --accent-hover: #ffd83a;
+      --accent-contrast: #111;
+      --border: #333;
+      --border-strong: #444;
+      --border-faint: #262626;
+      --border-pre: #222;
+      --link: #6af;
+      --err: #ff6b6b;
+      --ok: #51cf66;
+      --select-arrow: "%23f0c419";
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f7f7f5;
+      --bg-elev: #ffffff;
+      --bg-panel: #ffffff;
+      --bg-input: #ffffff;
+      --bg-input-hover: #f0ede4;
+      --bg-secondary: #eeeae0;
+      --bg-secondary-hover: #e2ddd0;
+      --bg-pre: #f3f1ea;
+      --bg-item-hover: #f0ede4;
+      --fg: #1f1f1f;
+      --fg-strong: #0d0d0d;
+      --fg-muted: #6a6a6a;
+      --fg-subtle: #9a9a9a;
+      --fg-label: #555;
+      --accent: #b8860b;
+      --accent-hover: #946c09;
+      --accent-contrast: #ffffff;
+      --border: #d7d3c7;
+      --border-strong: #c0bcae;
+      --border-faint: #e7e3d6;
+      --border-pre: #d7d3c7;
+      --link: #1565c0;
+      --err: #c92a2a;
+      --ok: #2b8a3e;
+      --select-arrow: "%23b8860b";
+    }
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, "Segoe UI", sans-serif; margin: 0; background: #121212; color: #e0e0e0; font-size: 13px; }
-    header { padding: 10px 16px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 16px; }
-    header h1 { margin: 0; font-size: 16px; color: #f0c419; }
+    body { font-family: 'IBM Plex Sans KR', 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--fg); font-size: 13px; }
+    header { padding: 10px 16px; background: var(--bg-elev); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+    header h1 { margin: 0; font-size: 16px; color: var(--accent); }
     header .spacer { flex: 1; }
-    .lang-switch { display: inline-flex; border: 1px solid #444; border-radius: 4px; overflow: hidden; }
-    .lang-switch button { background: #1e1e1e; color: #888; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
-    .lang-switch button.active { background: #f0c419; color: #111; }
-    .lang-switch button:hover:not(.active) { background: #2a2a2a; color: #eee; }
-    header a.help-btn { background: #2a2a2a; color: #f0c419; border: 1px solid #444; border-radius: 4px; padding: 6px 14px; text-decoration: none; font-size: 13px; font-weight: 600; }
-    header a.help-btn:hover { background: #3a3a3a; border-color: #f0c419; }
-    nav.tabs { display: flex; gap: 2px; background: #1a1a1a; border-bottom: 1px solid #333; padding: 0 12px; }
-    nav.tabs button { background: none; border: none; color: #888; padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; }
-    nav.tabs button:hover { color: #eee; }
-    nav.tabs button.active { color: #f0c419; border-bottom-color: #f0c419; }
+    .lang-switch, .theme-switch { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 4px; overflow: hidden; }
+    .lang-switch button, .theme-switch button { background: var(--bg-elev); color: var(--fg-muted); border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .lang-switch button.active, .theme-switch button.active { background: var(--accent); color: var(--accent-contrast); }
+    .lang-switch button:hover:not(.active), .theme-switch button:hover:not(.active) { background: var(--bg-input-hover); color: var(--fg-strong); }
+    header a.help-btn { background: var(--bg-secondary); color: var(--accent); border: 1px solid var(--border-strong); border-radius: 4px; padding: 6px 14px; text-decoration: none; font-size: 13px; font-weight: 600; }
+    header a.help-btn:hover { background: var(--bg-secondary-hover); border-color: var(--accent); }
+    nav.tabs { display: flex; gap: 2px; background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 0 12px; }
+    nav.tabs button { background: none; border: none; color: var(--fg-muted); padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; }
+    nav.tabs button:hover { color: var(--fg-strong); }
+    nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
     main { padding: 16px; }
     .panel { display: none; }
     .panel.active { display: block; }
-    .panel h2 { margin-top: 0; color: #f0c419; font-size: 15px; }
+    .panel h2 { margin-top: 0; color: var(--accent); font-size: 15px; }
     .row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
     .split { display: grid; grid-template-columns: 280px 1fr; gap: 12px; }
-    label { font-size: 12px; color: #aaa; }
+    label { font-size: 12px; color: var(--fg-label); }
     select, input, textarea, button {
-      background: #1e1e1e; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; padding: 6px 10px; font-size: 13px; font-family: inherit;
+      background: var(--bg-input); color: var(--fg); border: 1px solid var(--border-strong); border-radius: 4px; padding: 6px 10px; font-size: 13px; font-family: inherit;
     }
-    textarea { font-family: "SF Mono", Menlo, monospace; font-size: 12px; width: 100%; min-height: 90px; }
-    button.primary { background: #f0c419; color: #111; border-color: #f0c419; font-weight: 600; cursor: pointer; }
-    button.primary:hover { background: #ffd83a; }
-    button.secondary { background: #2a2a2a; cursor: pointer; }
-    button.secondary:hover { background: #3a3a3a; }
-    .list { border: 1px solid #333; border-radius: 4px; background: #1a1a1a; max-height: 60vh; overflow-y: auto; }
-    .list .item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #262626; font-size: 12px; }
-    .list .item:hover { background: #262626; }
-    .list .item.active { background: #f0c419; color: #111; font-weight: 600; }
-    .list .group { padding: 6px 12px; font-size: 11px; color: #6af; text-transform: uppercase; border-top: 1px solid #262626; }
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding: 6px 28px 6px 10px;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'><path d='M1 1l6 6 6-6' stroke='%23f0c419' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-color: var(--bg-input);
+    }
+    :root[data-theme="light"] select {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'><path d='M1 1l6 6 6-6' stroke='%23b8860b' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    }
+    select:hover { border-color: var(--accent); }
+    select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    select option {
+      background: var(--bg-input);
+      color: var(--fg);
+      padding: 8px 10px;
+      font-family: 'IBM Plex Sans KR', 'IBM Plex Sans', sans-serif;
+    }
+    select option:checked { background: var(--accent); color: var(--accent-contrast); font-weight: 600; }
+    textarea { font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 12px; width: 100%; min-height: 90px; }
+    code, pre { font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; }
+    button.primary { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 600; cursor: pointer; }
+    button.primary:hover { background: var(--accent-hover); }
+    button.secondary { background: var(--bg-secondary); cursor: pointer; }
+    button.secondary:hover { background: var(--bg-secondary-hover); }
+    .list { border: 1px solid var(--border); border-radius: 4px; background: var(--bg-panel); max-height: 60vh; overflow-y: auto; }
+    .list .item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border-faint); font-size: 12px; }
+    .list .item:hover { background: var(--bg-item-hover); }
+    .list .item.active { background: var(--accent); color: var(--accent-contrast); font-weight: 600; }
+    .list .group { padding: 6px 12px; font-size: 11px; color: var(--link); text-transform: uppercase; border-top: 1px solid var(--border-faint); }
     .badge { float: right; font-size: 10px; opacity: 0.7; }
-    pre { background: #0a0a0a; border: 1px solid #222; padding: 12px; border-radius: 4px; overflow: auto; max-height: 60vh; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
-    .error { color: #ff6b6b; }
-    .ok { color: #51cf66; }
-    .hint { color: #666; font-size: 11px; margin-top: 4px; }
-    .form-block { background: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 12px; margin-bottom: 12px; }
-    .form-block h3 { margin: 0 0 10px; font-size: 13px; color: #aaa; }
+    pre { background: var(--bg-pre); border: 1px solid var(--border-pre); padding: 12px; border-radius: 4px; overflow: auto; max-height: 60vh; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+    .error { color: var(--err); }
+    .ok { color: var(--ok); }
+    .hint { color: var(--fg-subtle); font-size: 11px; margin-top: 4px; }
+    .form-block { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+    .form-block h3 { margin: 0 0 10px; font-size: 13px; color: var(--fg-label); }
   </style>
 </head>
 <body>
@@ -53,6 +146,10 @@
     <h1>AI Agent Eval Harness</h1>
     <span style="color:#666;font-size:12px;" data-i18n="header.sub">— single-page client for the REST API</span>
     <div class="spacer"></div>
+    <div class="theme-switch" id="theme-switch">
+      <button class="theme-btn" data-theme="light" title="Light">☀</button>
+      <button class="theme-btn" data-theme="dark" title="Dark">☾</button>
+    </div>
     <div class="lang-switch" id="lang-switch">
       <button id="lang-ko" class="lang-btn" data-lang="ko">한</button>
       <button id="lang-en" class="lang-btn" data-lang="en">EN</button>
@@ -310,6 +407,17 @@
     }
     document.querySelectorAll('.lang-btn').forEach(btn => { btn.onclick = () => setLang(btn.dataset.lang); });
     setLang(currentLang());
+
+    // ---------- theme toggle (SPEC-014) ----------
+    function currentTheme() { return localStorage.getItem('theme') || 'dark'; }
+    function setTheme(theme) {
+      localStorage.setItem('theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+    }
+    function initTheme() { setTheme(currentTheme()); }
+    document.querySelectorAll('.theme-btn').forEach(btn => { btn.onclick = () => setTheme(btn.dataset.theme); });
+    initTheme();
 
     // ---------- utilities ----------
     const $ = (id) => document.getElementById(id);

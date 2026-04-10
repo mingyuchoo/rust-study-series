@@ -307,6 +307,77 @@ curl http://127.0.0.1:8080/api/trajectories
 
 > 웹 API는 인증/인가 기능이 없습니다. 외부 노출 시 리버스 프록시에서 보호하세요.
 
+### 데스크톱 앱 (Tauri)
+
+`desktop/` 디렉토리는 **Tauri 2.x 기반 크로스 플랫폼 데스크톱 래퍼**입니다. 내장 Axum 서버를 무료 로컬 포트에 기동한 뒤, 시스템 WebView 로 동일한 7-탭 SPA 를 로드합니다. 웹 버전과 **100% 동일한 기능**을 네이티브 윈도우에서 사용할 수 있습니다.
+
+> 이 프로젝트는 워크스페이스에서 `exclude` 되어 있어, 기본 `cargo build` 는 Tauri 시스템 의존성이 없어도 성공합니다.
+
+**시스템 의존성**
+
+| OS | 필수 패키지 |
+|----|------------|
+| Ubuntu 22.04+ | `sudo apt install libwebkit2gtk-4.1-dev build-essential libssl-dev libayatana-appindicator3-dev librsvg2-dev` |
+| macOS | `xcode-select --install` (Xcode Command Line Tools) |
+| Windows | WebView2 Runtime (Win11 기본 포함) + MSVC 빌드 도구 |
+
+**Tauri CLI 설치**
+
+```bash
+cargo install tauri-cli --version "^2.0"
+```
+
+**개발 실행** (데스크톱 윈도우 자동 오픈)
+
+```bash
+cd desktop
+cargo tauri dev
+```
+
+**릴리즈 빌드** (플랫폼 네이티브 바이너리 생성)
+
+```bash
+cd desktop
+cargo tauri build
+```
+
+또는 워크스페이스 루트에서 `cargo-make` 로 플랫폼별 번들을 한 번에 생성할 수 있습니다 (PRD-012 / SPEC-012):
+
+```bash
+# Windows (MSI/NSIS, 타겟: x86_64-pc-windows-msvc)
+cargo make desktop-release-windows
+
+# Linux (Deb/AppImage, 타겟: x86_64-unknown-linux-gnu)
+cargo make desktop-release-linux
+
+# macOS (.app/.dmg, 타겟: universal-apple-darwin)
+cargo make desktop-release-macos
+
+# 세 플랫폼을 연속 실행
+cargo make desktop-release-all
+```
+
+> 위 태스크는 `desktop/` 크레이트로 `cwd` 진입 후 `cargo tauri build` 를 호출합니다. 크로스 타겟 toolchain(mingw, osxcross 등)과 `cargo-tauri` CLI 가 설치되어 있어야 해당 타겟을 실제로 빌드할 수 있으며, `install_crate` 메커니즘이 `cargo-tauri` 를 자동 설치합니다.
+
+> `desktop/icons/icon.png` 에는 32×32 플레이스홀더(#f0c419 단색)가 포함되어 있어 `cargo tauri dev` / `cargo build` 가 즉시 동작합니다. 릴리즈 번들용 실제 아이콘 세트가 필요하면 `desktop/icons/README.md` 의 `cargo tauri icon` 가이드를 참조하고 `tauri.conf.json` 의 `bundle.active` 를 `true` 로 변경하세요.
+
+**아키텍처**
+
+```
+┌─────────────────────────────────────────────┐
+│  Tauri Desktop Window (system WebView)      │
+│  └─ loads http://127.0.0.1:<auto_port>      │
+│       └─ 7-탭 SPA + 한/영 i18n 그대로 재사용 │
+└──────────────────────┬──────────────────────┘
+                       │
+              ┌────────▼────────┐
+              │ 내장 Axum 서버  │  (detached thread)
+              │ (같은 프로세스) │
+              └─────────────────┘
+```
+
+> 백엔드 변경 없이 웹 UI 를 네이티브 앱으로 감싸는 패턴입니다. 향후 Tauri IPC(`invoke()`) 기반 직접 호출로 전환하는 것은 별도 PRD 대상입니다.
+
 ## 에이전트
 
 | 에이전트 | 설명 |
@@ -383,6 +454,12 @@ cargo make format
 
 # 린트만
 cargo make clippy
+
+# 데스크톱 릴리즈 번들 (Windows/Linux/macOS, SPEC-012)
+cargo make desktop-release-windows
+cargo make desktop-release-linux
+cargo make desktop-release-macos
+cargo make desktop-release-all
 ```
 
 ## 아키텍처
@@ -434,6 +511,11 @@ docs/prd/PRD-004.md  ──┘     └─ TC → @trace (테스트/구현 함수
 | PRD-006 | 탭 기반 SPA UI — 7개 탭에서 전체 API 사용 | SPEC-006 |
 | PRD-007 | `/help` 사용안내 페이지 + SPA 헤더 버튼 | SPEC-007 |
 | PRD-008 | 한/영 다국어 토글 (헤더 버튼, localStorage 영속화) | SPEC-008 |
+| PRD-009 | Tauri 데스크톱 앱 (`desktop/`, 내장 Axum 서버 + 시스템 WebView) | SPEC-009 |
+| PRD-010 | IBM Plex Sans KR/Sans/Mono 타이포그래피 적용 | SPEC-010 |
+| PRD-011 | select/option 다크 테마 스타일 (color-scheme, 커스텀 화살표) | SPEC-011 |
+| PRD-012 | 데스크톱 앱 크로스 플랫폼 릴리즈 스크립트 (Makefile.toml) | SPEC-012 |
+| PRD-014 | 웹 UI 라이트/다크 테마 토글 (CSS 변수 기반, localStorage 영속화) | SPEC-014 |
 
 **추적성 검증**
 

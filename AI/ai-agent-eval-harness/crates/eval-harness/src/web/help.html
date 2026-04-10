@@ -1,52 +1,125 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <title>eval-harness — Help</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <script>
+    // SPEC-014: FOUC 방지
+    (function () {
+      try {
+        var t = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+    })();
+  </script>
   <style>
+    /* SPEC-014: CSS 변수 기반 라이트/다크 테마 */
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #121212;
+      --bg-elev: #1e1e1e;
+      --bg-panel: #1a1a1a;
+      --bg-input-hover: #2a2a2a;
+      --bg-pre: #0a0a0a;
+      --bg-code: #262626;
+      --fg: #e0e0e0;
+      --fg-strong: #eee;
+      --fg-muted: #888;
+      --fg-subtle: #555;
+      --fg-label: #aaa;
+      --fg-code: #cdd6f4;
+      --accent: #f0c419;
+      --accent-soft: #ffd83a;
+      --accent-contrast: #111;
+      --border: #333;
+      --border-strong: #444;
+      --border-faint: #2a2a2a;
+      --border-pre: #222;
+      --link: #6af;
+      --err: #ff6b6b;
+      --ok: #51cf66;
+      --note-bg: #1a1f2a;
+      --warn-bg: #2a1a1a;
+      --warn-fg: #ffd0d0;
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f7f7f5;
+      --bg-elev: #ffffff;
+      --bg-panel: #ffffff;
+      --bg-input-hover: #f0ede4;
+      --bg-pre: #f3f1ea;
+      --bg-code: #eeeae0;
+      --fg: #1f1f1f;
+      --fg-strong: #0d0d0d;
+      --fg-muted: #6a6a6a;
+      --fg-subtle: #9a9a9a;
+      --fg-label: #555;
+      --fg-code: #2a2a2a;
+      --accent: #b8860b;
+      --accent-soft: #946c09;
+      --accent-contrast: #ffffff;
+      --border: #d7d3c7;
+      --border-strong: #c0bcae;
+      --border-faint: #e7e3d6;
+      --border-pre: #d7d3c7;
+      --link: #1565c0;
+      --err: #c92a2a;
+      --ok: #2b8a3e;
+      --note-bg: #eef3fa;
+      --warn-bg: #fbecec;
+      --warn-fg: #742121;
+    }
     * { box-sizing: border-box; }
-    body { font-family: -apple-system, "Segoe UI", sans-serif; margin: 0; background: #121212; color: #e0e0e0; font-size: 14px; line-height: 1.6; }
-    header { padding: 14px 24px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    header h1 { margin: 0; font-size: 18px; color: #f0c419; }
+    body { font-family: 'IBM Plex Sans KR', 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--fg); font-size: 14px; line-height: 1.6; }
+    header { padding: 14px 24px; background: var(--bg-elev); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    header h1 { margin: 0; font-size: 18px; color: var(--accent); }
     header .right { display: flex; gap: 12px; align-items: center; }
-    .lang-switch { display: inline-flex; border: 1px solid #444; border-radius: 4px; overflow: hidden; }
-    .lang-switch button { background: #1e1e1e; color: #888; border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
-    .lang-switch button.active { background: #f0c419; color: #111; }
-    .lang-switch button:hover:not(.active) { background: #2a2a2a; color: #eee; }
-    header a.back { color: #6af; text-decoration: none; font-size: 13px; }
+    .lang-switch, .theme-switch { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 4px; overflow: hidden; }
+    .lang-switch button, .theme-switch button { background: var(--bg-elev); color: var(--fg-muted); border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .lang-switch button.active, .theme-switch button.active { background: var(--accent); color: var(--accent-contrast); }
+    .lang-switch button:hover:not(.active), .theme-switch button:hover:not(.active) { background: var(--bg-input-hover); color: var(--fg-strong); }
+    header a.back { color: var(--link); text-decoration: none; font-size: 13px; }
     header a.back:hover { text-decoration: underline; }
     main { max-width: 960px; margin: 0 auto; padding: 24px; }
     main.lang-en { display: none; }
     html[lang="en"] main.lang-ko { display: none; }
     html[lang="en"] main.lang-en { display: block; }
-    h2 { color: #f0c419; border-bottom: 1px solid #333; padding-bottom: 6px; margin-top: 36px; font-size: 20px; }
-    h3 { color: #ffd83a; margin-top: 24px; font-size: 16px; }
-    h4 { color: #6af; margin-top: 16px; font-size: 14px; }
-    code, pre { font-family: "SF Mono", Menlo, monospace; }
-    code { background: #262626; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #ffd83a; }
-    pre { background: #0a0a0a; border: 1px solid #222; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 12px; color: #cdd6f4; }
+    h2 { color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 36px; font-size: 20px; }
+    h3 { color: var(--accent-soft); margin-top: 24px; font-size: 16px; }
+    h4 { color: var(--link); margin-top: 16px; font-size: 14px; }
+    code, pre { font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; }
+    code { background: var(--bg-code); padding: 2px 6px; border-radius: 3px; font-size: 12px; color: var(--accent-soft); }
+    pre { background: var(--bg-pre); border: 1px solid var(--border-pre); padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 12px; color: var(--fg-code); }
     pre code { background: none; padding: 0; color: inherit; }
     table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
-    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #2a2a2a; }
-    th { background: #1a1a1a; color: #aaa; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
-    tr:hover td { background: #1a1a1a; }
-    .badge { display: inline-block; background: #2a2a2a; color: #f0c419; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-    .note { background: #1a1f2a; border-left: 3px solid #6af; padding: 10px 14px; margin: 14px 0; border-radius: 3px; }
-    .warn { background: #2a1a1a; border-left: 3px solid #ff6b6b; padding: 10px 14px; margin: 14px 0; border-radius: 3px; color: #ffd0d0; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border-faint); }
+    th { background: var(--bg-panel); color: var(--fg-label); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    tr:hover td { background: var(--bg-panel); }
+    .badge { display: inline-block; background: var(--bg-code); color: var(--accent); padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .note { background: var(--note-bg); border-left: 3px solid var(--link); padding: 10px 14px; margin: 14px 0; border-radius: 3px; }
+    .warn { background: var(--warn-bg); border-left: 3px solid var(--err); padding: 10px 14px; margin: 14px 0; border-radius: 3px; color: var(--warn-fg); }
     ul { padding-left: 22px; }
     li { margin: 4px 0; }
-    .tab-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 14px 18px; margin: 12px 0; }
-    .tab-card h4 { margin-top: 0; color: #f0c419; }
-    .endpoint { display: inline-block; background: #0a0a0a; color: #6af; padding: 1px 6px; border-radius: 3px; font-family: monospace; font-size: 11px; border: 1px solid #2a2a2a; }
-    .method-get { color: #51cf66; }
-    .method-post { color: #ffd83a; }
-    footer { text-align: center; color: #555; padding: 30px 0; font-size: 12px; }
+    .tab-card { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; margin: 12px 0; }
+    .tab-card h4 { margin-top: 0; color: var(--accent); }
+    .endpoint { display: inline-block; background: var(--bg-pre); color: var(--link); padding: 1px 6px; border-radius: 3px; font-family: monospace; font-size: 11px; border: 1px solid var(--border-faint); }
+    .method-get { color: var(--ok); }
+    .method-post { color: var(--accent); }
+    footer { text-align: center; color: var(--fg-subtle); padding: 30px 0; font-size: 12px; }
   </style>
 </head>
 <body>
   <header>
     <h1>eval-harness — <span id="hdr-title">사용안내</span></h1>
     <div class="right">
+      <div class="theme-switch" id="theme-switch">
+        <button class="theme-btn" data-theme="light" title="Light">☀</button>
+        <button class="theme-btn" data-theme="dark" title="Dark">☾</button>
+      </div>
       <div class="lang-switch">
         <button class="lang-btn" data-lang="ko">한</button>
         <button class="lang-btn" data-lang="en">EN</button>
@@ -313,6 +386,17 @@ curl -X POST http://127.0.0.1:8080/api/tools/classify_inquiry/invoke \
     }
     document.querySelectorAll('.lang-btn').forEach(btn => { btn.onclick = () => setLang(btn.dataset.lang); });
     setLang(currentLang());
+
+    // SPEC-014: 테마 토글
+    function currentTheme() { return localStorage.getItem('theme') || 'dark'; }
+    function setTheme(theme) {
+      localStorage.setItem('theme', theme);
+      document.documentElement.setAttribute('data-theme', theme);
+      document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+    }
+    function initTheme() { setTheme(currentTheme()); }
+    document.querySelectorAll('.theme-btn').forEach(btn => { btn.onclick = () => setTheme(btn.dataset.theme); });
+    initTheme();
   </script>
 </body>
 </html>

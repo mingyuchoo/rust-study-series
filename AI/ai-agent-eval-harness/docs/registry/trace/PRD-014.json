@@ -1,0 +1,70 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "상단 헤더 테마 토글 버튼",
+      "specs": [
+        "SPEC-014"
+      ],
+      "test_cases": [
+        "SPEC-014/TC-1"
+      ],
+      "test_files": [
+        "crates/eval-harness/src/web_theme.rs"
+      ],
+      "impl_files": [
+        "crates/eval-harness/src/web/index.html"
+      ],
+      "impl_symbols": [
+        "theme-switch",
+        "setTheme",
+        "initTheme"
+      ],
+      "status": "passed"
+    },
+    "FR-2": {
+      "title": "전체 컴포넌트 테마 일관 적용",
+      "specs": [
+        "SPEC-014"
+      ],
+      "test_cases": [
+        "SPEC-014/TC-2",
+        "SPEC-014/TC-5"
+      ],
+      "test_files": [
+        "crates/eval-harness/src/web_theme.rs"
+      ],
+      "impl_files": [
+        "crates/eval-harness/src/web/index.html",
+        "crates/eval-harness/src/web/help.html"
+      ],
+      "impl_symbols": [
+        "theme-switch",
+        "setTheme"
+      ],
+      "status": "passed"
+    },
+    "FR-3": {
+      "title": "테마 선택 localStorage 영속화",
+      "specs": [
+        "SPEC-014"
+      ],
+      "test_cases": [
+        "SPEC-014/TC-3",
+        "SPEC-014/TC-4"
+      ],
+      "test_files": [
+        "crates/eval-harness/src/web_theme.rs"
+      ],
+      "impl_files": [
+        "crates/eval-harness/src/web/index.html",
+        "crates/eval-harness/src/web/help.html"
+      ],
+      "impl_symbols": [
+        "setTheme",
+        "currentTheme",
+        "initTheme"
+      ],
+      "status": "passed"
+    }
+  }
+}

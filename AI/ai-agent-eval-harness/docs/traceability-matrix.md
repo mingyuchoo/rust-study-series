@@ -1,16 +1,30 @@
 # 추적성 매트릭스
 
-최종 갱신: 2026-04-10 17:31
+최종 갱신: 2026-04-10 18:32
 
 ## 정방향 추적 (요구사항 -> 구현)
 
 | PRD | FR ID | FR 제목 | SPEC | TC | 테스트 파일 | 구현 파일 | 구현 심볼 | 상태 |
 |-----|-------|--------|------|-----|-----------|----------|----------|------|
+| PRD-014 | FR-1 | 상단 헤더 우측(언어 전환 옆)에 라이트/다크 테마 토 | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014 | TC-1, TC-1, TC-1, TC-1, TC-2, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-2, TC-1, TC-1, TC-1, TC-1, TC-2, TC-3, TC-1 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-014 | FR-2 | 토글 클릭 시 `index.html` 및 `help.h | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014 | TC-2, TC-3, TC-2, TC-2, TC-3, TC-4, TC-5, TC-6, TC-2, TC-3, TC-3, TC-4, TC-2, TC-3, TC-4, TC-2, TC-2, TC-4, TC-2, TC-5 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-014 | FR-3 | 선택된 테마는 `localStorage` 의 `them | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014 | TC-4, TC-5, TC-3, TC-3, TC-4, TC-5, TC-7, TC-3, TC-5, TC-5, TC-3, TC-3, TC-1, TC-2, TC-3, TC-3, TC-4 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
 
 ## 역방향 추적 (구현 -> 요구사항)
 
 | 구현 파일 | 심볼 | SPEC | TC | FR | PRD | 상태 |
 |----------|------|------|-----|-----|-----|------|
+| crates/eval-harness/src/build_release.rs | read_root_makefile | - | SPEC-012/TC-1 | PRD-012/FR-1, PRD-012/FR-3 | PRD-012 | OK |
+| crates/eval-harness/src/build_release.rs | test_tc_1_makefile_has_desktop_release_windows | - | SPEC-012/TC-2 | PRD-012/FR-1, PRD-012/FR-3 | PRD-012 | OK |
+| crates/eval-harness/src/build_release.rs | test_tc_2_makefile_has_desktop_release_linux | - | SPEC-012/TC-3 | PRD-012/FR-1, PRD-012/FR-3 | PRD-012 | OK |
+| crates/eval-harness/src/build_release.rs | test_tc_3_makefile_has_desktop_release_macos | - | SPEC-012/TC-4 | PRD-012/FR-2 | PRD-012 | OK |
+| crates/eval-harness/src/build_release.rs | test_tc_4_makefile_has_desktop_release_all_aggregate | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/desktop_helpers.rs | pick_free_port | SPEC-009 | SPEC-009/TC-3, SPEC-009/TC-4 | PRD-009/FR-2 | PRD-009 | OK |
+| crates/eval-harness/src/desktop_helpers.rs | test_tc_1_lib_reexports_web_module | - | SPEC-009/TC-2 | PRD-009/FR-2 | PRD-009 | OK |
+| crates/eval-harness/src/desktop_helpers.rs | test_tc_2_pick_free_port_returns_usable_port | - | SPEC-009/TC-3 | PRD-009/FR-2 | PRD-009 | OK |
+| crates/eval-harness/src/desktop_helpers.rs | test_tc_3_wait_for_port_times_out | - | SPEC-009/TC-4 | PRD-009/FR-2 | PRD-009 | OK |
+| crates/eval-harness/src/desktop_helpers.rs | test_tc_4_wait_for_port_detects_listener | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/desktop_helpers.rs | wait_for_port | - | SPEC-009/TC-1 | FR-1, FR-2, PRD-009/FR-1 | PRD-009 | OK |
 | crates/eval-harness/src/main.rs | build_registry | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/main.rs | main | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/mod.rs | build_router | SPEC-002 | SPEC-002/TC-1 | PRD-002/FR-1 | PRD-002 | OK |
@@ -106,7 +120,13 @@
 | crates/eval-harness/src/web/handlers.rs | test_spec008_tc_2_setlang_persistence | - | SPEC-008/TC-3 | PRD-008/FR-2 | PRD-008 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_spec008_tc_3_i18n_dict_present | - | SPEC-008/TC-4 | PRD-008/FR-2 | PRD-008 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_spec008_tc_4_data_i18n_markers | - | SPEC-008/TC-5 | PRD-008/FR-3 | PRD-008 | OK |
-| crates/eval-harness/src/web/handlers.rs | test_spec008_tc_5_help_has_both_langs | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/handlers.rs | test_spec008_tc_5_help_has_both_langs | - | SPEC-010/TC-1 | PRD-010/FR-1 | PRD-010 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec010_tc_1_body_font_family | - | SPEC-010/TC-2 | PRD-010/FR-2 | PRD-010 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec010_tc_2_mono_font_family | - | SPEC-010/TC-3 | PRD-010/FR-3 | PRD-010 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec010_tc_3_google_fonts_link | - | SPEC-011/TC-1 | PRD-011/FR-1 | PRD-011 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec011_tc_1_color_scheme_dark | - | SPEC-011/TC-2 | PRD-011/FR-2 | PRD-011 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec011_tc_2_option_styling | - | SPEC-011/TC-3 | PRD-011/FR-3 | PRD-011 | OK |
+| crates/eval-harness/src/web/handlers.rs | test_spec011_tc_3_custom_select_appearance | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/handlers.rs | test_tc_2_list_scenarios_loads_yaml | - | SPEC-002/TC-3 | PRD-002/FR-3 | PRD-002 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_tc_3_list_reports_filters_json | - | SPEC-002/TC-4 | PRD-002/FR-4 | PRD-002 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_tc_4_get_report_returns_content | - | SPEC-002/TC-5 | PRD-002/FR-4 | PRD-002 | OK |
@@ -134,9 +154,12 @@
 
 | PRD | 전체 FR | 커버된 FR | SPEC 수 | TC 수 | 통과 | 실패 | 커버리지 |
 |-----|--------|----------|--------|-------|------|------|---------|
+| PRD-014 | 3 | 0 | 13 | 57 | 0 | 57 | 0% |
 
 ## 미추적 항목 (경고)
 
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/build_release.rs::test_tc_4_makefile_has_desktop_release_all_aggregate
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/desktop_helpers.rs::test_tc_4_wait_for_port_detects_listener
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/main.rs::build_registry
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/main.rs::main
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/mod.rs::run_server
@@ -165,7 +188,7 @@
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::list_reports
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::get_report
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::index_html_body
-- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::test_spec008_tc_5_help_has_both_langs
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::test_spec011_tc_3_custom_select_appearance
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/mod.rs::run_tui
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/mod.rs::event_loop
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/view.rs::draw
@@ -174,3 +197,6 @@
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/state.rs::focused_list
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/state.rs::set_focused_idx
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/state.rs::test_tc_6_quit_keys_set_should_quit
+- ERROR: 구현 없는 FR: PRD-014/FR-1 "상단 헤더 우측(언어 전환 옆)에 라이트/다크 테마 토글 버튼을 배치한다. 현재 선택된 테마가 시각적으로 구분된다."
+- ERROR: 구현 없는 FR: PRD-014/FR-2 "토글 클릭 시 `index.html` 및 `help.html` 의 모든 컴포넌트(header, nav, panel, form, list, button, select, pre, code, badge, note/warn 등)가 선택된 테마의 색상 팔레트에 맞게 일관되게 변경된다."
+- ERROR: 구현 없는 FR: PRD-014/FR-3 "선택된 테마는 `localStorage` 의 `theme` 키에 저장되어, 페이지 재로드/재접속 시에도 유지된다. 기본값은 `dark`."
