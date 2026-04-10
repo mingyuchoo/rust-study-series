@@ -1,0 +1,31 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "GET /help 라우트가 사용안내 HTML 페이지 반환",
+      "specs": [
+        "SPEC-007"
+      ],
+      "test_cases": [
+        "SPEC-007/{'id': 'TC-1', 'scenario': '/help 핸들러 HTML 반환'}",
+        "SPEC-007/{'id': 'TC-2', 'scenario': 'help 본문에 탭별 가이드 포함'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "메인 SPA 헤더에 사용안내 버튼 추가 (/help 새 탭)",
+      "specs": [
+        "SPEC-007"
+      ],
+      "test_cases": [
+        "SPEC-007/{'id': 'TC-3', 'scenario': 'index.html 헤더에 사용안내 링크'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

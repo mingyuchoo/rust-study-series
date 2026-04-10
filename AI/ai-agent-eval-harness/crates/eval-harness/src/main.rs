@@ -1,3 +1,13 @@
+// =============================================================================
+// @trace SPEC-001
+// @trace PRD: PRD-001
+// @trace FR: FR-1
+// @trace file-type: impl
+// =============================================================================
+
+mod tui;
+mod web;
+
 use clap::{Parser,
            Subcommand};
 use execution::{agent_registry::AgentRegistry,
@@ -5,7 +15,8 @@ use execution::{agent_registry::AgentRegistry,
                 comparator::ReportComparator,
                 report_renderer::ReportRenderer,
                 runner::HarnessRunner};
-use std::sync::Arc;
+use std::{path::Path,
+          sync::Arc};
 
 #[derive(Parser)]
 #[command(name = "eval-harness", about = "AI Agent 평가 하네스 - 통합 실행 및 비교 도구")]
@@ -45,6 +56,26 @@ enum Commands {
     },
     /// 저장된 리포트 표시
     Report { filepath: String },
+    /// 대화형 TUI 모드 실행
+    Tui {
+        #[arg(long, default_value = "eval_data/scenarios")]
+        scenarios_dir: String,
+        #[arg(long, default_value = "reporting_logs")]
+        reports_dir: String,
+    },
+    /// 웹 클라이언트(HTTP 서버) 실행
+    Serve {
+        #[arg(long, default_value = "127.0.0.1:8080")]
+        addr: String,
+        #[arg(long, default_value = "eval_data/scenarios")]
+        scenarios_dir: String,
+        #[arg(long, default_value = "reporting_logs")]
+        reports_dir: String,
+        #[arg(long, default_value = "eval_data/golden_sets")]
+        golden_sets_dir: String,
+        #[arg(long, default_value = "reporting_trajectories")]
+        trajectories_dir: String,
+    },
 }
 
 fn build_registry() -> AgentRegistry {
@@ -155,6 +186,41 @@ fn main() {
 
             let registry = build_registry();
             println!("\n등록된 에이전트: {:?}", registry.get_agent_names());
+        },
+
+        | Commands::Tui {
+            scenarios_dir,
+            reports_dir,
+        } =>
+            if let Err(e) = tui::run_tui(Path::new(&scenarios_dir), Path::new(&reports_dir)) {
+                eprintln!("TUI 오류: {}", e);
+                std::process::exit(1);
+            },
+
+        | Commands::Serve {
+            addr,
+            scenarios_dir,
+            reports_dir,
+            golden_sets_dir,
+            trajectories_dir,
+        } => {
+            let socket: std::net::SocketAddr = match addr.parse() {
+                | Ok(a) => a,
+                | Err(e) => {
+                    eprintln!("주소 파싱 오류: {}", e);
+                    std::process::exit(1);
+                },
+            };
+            if let Err(e) = web::run_server(
+                socket,
+                scenarios_dir.into(),
+                reports_dir.into(),
+                golden_sets_dir.into(),
+                trajectories_dir.into(),
+            ) {
+                eprintln!("서버 오류: {}", e);
+                std::process::exit(1);
+            }
         },
 
         | Commands::Report {

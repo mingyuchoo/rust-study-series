@@ -1,0 +1,8 @@
+{
+  "spec_id": "SPEC-002",
+  "prd_id": "PRD-002",
+  "title": "Axum 기반 웹 서버 및 정적 SPA",
+  "created_at": "2026-04-10",
+  "status": "draft",
+  "test_status": "pending"
+}

@@ -1,0 +1,8 @@
+{
+  "spec_id": "SPEC-003",
+  "prd_id": "PRD-003",
+  "title": "전체 크레이트 기능 HTTP 노출",
+  "created_at": "2026-04-10",
+  "status": "draft",
+  "test_status": "pending"
+}

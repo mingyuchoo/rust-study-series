@@ -1,0 +1,70 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "cargo run -- serve 명령으로 HTTP 서버 실행",
+      "specs": [
+        "SPEC-002"
+      ],
+      "test_cases": [
+        "SPEC-002/{'id': 'TC-1', 'scenario': 'serve 서브커맨드 파싱'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "GET /api/scenarios 로 도메인/시나리오 JSON 반환",
+      "specs": [
+        "SPEC-002"
+      ],
+      "test_cases": [
+        "SPEC-002/{'id': 'TC-2', 'scenario': 'scenarios 핸들러가 YAML 로드'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "GET /api/reports 로 저장된 리포트 파일 목록 반환",
+      "specs": [
+        "SPEC-002"
+      ],
+      "test_cases": [
+        "SPEC-002/{'id': 'TC-3', 'scenario': 'reports 핸들러가 .json 파일 나열'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-4": {
+      "title": "GET /api/reports/:name 로 리포트 내용 반환",
+      "specs": [
+        "SPEC-002"
+      ],
+      "test_cases": [
+        "SPEC-002/{'id': 'TC-4', 'scenario': 'report content 반환'}",
+        "SPEC-002/{'id': 'TC-5', 'scenario': '경로 순회 거부'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-5": {
+      "title": "GET / 로 정적 HTML SPA 제공",
+      "specs": [
+        "SPEC-002"
+      ],
+      "test_cases": [
+        "SPEC-002/{'id': 'TC-6', 'scenario': 'index.html 임베드 반환'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

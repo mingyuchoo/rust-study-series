@@ -1,0 +1,58 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "사용자는 cargo run -- tui 로 TUI 모드 실행",
+      "specs": [
+        "SPEC-001"
+      ],
+      "test_cases": [
+        "SPEC-001/{'id': 'TC-1', 'scenario': 'tui 서브커맨드 파싱'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "TUI에서 시나리오 목록 표시 및 키보드 탐색",
+      "specs": [
+        "SPEC-001"
+      ],
+      "test_cases": [
+        "SPEC-001/{'id': 'TC-2', 'scenario': '시나리오 목록 로딩'}",
+        "SPEC-001/{'id': 'TC-3', 'scenario': '선택 인덱스 이동'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "TUI에서 저장된 리포트 파일 목록 표시",
+      "specs": [
+        "SPEC-001"
+      ],
+      "test_cases": [
+        "SPEC-001/{'id': 'TC-4', 'scenario': '리포트 파일 목록 로딩'}",
+        "SPEC-001/{'id': 'TC-5', 'scenario': 'Tab으로 포커스 전환'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-4": {
+      "title": "q 키로 TUI 종료",
+      "specs": [
+        "SPEC-001"
+      ],
+      "test_cases": [
+        "SPEC-001/{'id': 'TC-6', 'scenario': 'q/Esc 입력 시 should_quit=true'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

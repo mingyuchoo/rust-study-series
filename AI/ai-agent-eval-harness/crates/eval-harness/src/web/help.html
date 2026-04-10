@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>eval-harness — 사용안내</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, "Segoe UI", sans-serif; margin: 0; background: #121212; color: #e0e0e0; font-size: 14px; line-height: 1.6; }
+    header { padding: 14px 24px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; font-size: 18px; color: #f0c419; }
+    header a { color: #6af; text-decoration: none; font-size: 13px; }
+    header a:hover { text-decoration: underline; }
+    main { max-width: 960px; margin: 0 auto; padding: 24px; }
+    h2 { color: #f0c419; border-bottom: 1px solid #333; padding-bottom: 6px; margin-top: 36px; font-size: 20px; }
+    h3 { color: #ffd83a; margin-top: 24px; font-size: 16px; }
+    h4 { color: #6af; margin-top: 16px; font-size: 14px; }
+    code, pre { font-family: "SF Mono", Menlo, monospace; }
+    code { background: #262626; padding: 2px 6px; border-radius: 3px; font-size: 12px; color: #ffd83a; }
+    pre { background: #0a0a0a; border: 1px solid #222; padding: 14px; border-radius: 6px; overflow-x: auto; font-size: 12px; color: #cdd6f4; }
+    pre code { background: none; padding: 0; color: inherit; }
+    table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 13px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #2a2a2a; }
+    th { background: #1a1a1a; color: #aaa; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    tr:hover td { background: #1a1a1a; }
+    .badge { display: inline-block; background: #2a2a2a; color: #f0c419; padding: 1px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+    .note { background: #1a1f2a; border-left: 3px solid #6af; padding: 10px 14px; margin: 14px 0; border-radius: 3px; color: #cdd6f4; }
+    .warn { background: #2a1a1a; border-left: 3px solid #ff6b6b; padding: 10px 14px; margin: 14px 0; border-radius: 3px; color: #ffd0d0; }
+    ul { padding-left: 22px; }
+    li { margin: 4px 0; }
+    .tab-card { background: #1a1a1a; border: 1px solid #333; border-radius: 6px; padding: 14px 18px; margin: 12px 0; }
+    .tab-card h4 { margin-top: 0; color: #f0c419; }
+    .endpoint { display: inline-block; background: #0a0a0a; color: #6af; padding: 1px 6px; border-radius: 3px; font-family: monospace; font-size: 11px; border: 1px solid #2a2a2a; }
+    .method-get { color: #51cf66; }
+    .method-post { color: #ffd83a; }
+    footer { text-align: center; color: #555; padding: 30px 0; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>eval-harness — 사용안내</h1>
+    <a href="/">← 메인 화면으로</a>
+  </header>
+
+  <main>
+    <h2>1. 개요</h2>
+    <p>
+      <strong>ai-agent-eval-harness</strong> 는 Rust 로 구현된 AI 에이전트 평가 하네스입니다. 다양한 도메인 시나리오에서 에이전트의 도구 호출 정확도, 성능, 회귀 여부를 자동으로 평가합니다. 본 웹 클라이언트는 CLI 가 제공하는 모든 기능을 브라우저에서 직접 수행할 수 있도록 합니다.
+    </p>
+
+    <h3>빠른 시작</h3>
+    <pre><code># 1) 빌드
+cargo build
+
+# 2) 웹 서버 기동 (기본 포트 8080)
+cargo run -- serve
+
+# 3) 브라우저에서 http://127.0.0.1:8080 접속</code></pre>
+
+    <div class="note">
+      <strong>에이전트 선택</strong>: 기본 에이전트 <code>passthrough</code> 는 환경 설정 없이 즉시 사용 가능합니다. Azure OpenAI 기반 <code>ppa</code> 에이전트를 쓰려면 프로젝트 루트에 <code>.env</code> 파일을 만들고 <code>AZURE_OPENAI_*</code> 키를 설정하세요.
+    </div>
+
+    <h2>2. 화면 구성 (7개 탭)</h2>
+    <p>메인 SPA 는 상단 탭 바로 구성됩니다. 각 탭은 관련 REST API 를 호출하여 작업 결과를 현재 화면에서 보여줍니다.</p>
+
+    <div class="tab-card">
+      <h4><span class="badge">Run</span> 벤치마크 스위트 실행</h4>
+      <p>드롭다운에서 <strong>suite</strong>(all / customer_service / financial)와 <strong>agent</strong>를 선택하고, 선택적으로 출력 파일명을 지정한 뒤 <em>Run</em> 버튼을 누릅니다.</p>
+      <ul>
+        <li>호출: <span class="endpoint method-post">POST /api/run</span> body <code>{"suite","agent","output?"}</code></li>
+        <li>결과: <code>EvaluationReport</code> JSON이 표시되고, <code>reports_dir/</code> 에 파일로 저장됩니다 (기본: <code>evaluation_report_&lt;timestamp&gt;.json</code>).</li>
+      </ul>
+    </div>
+
+    <div class="tab-card">
+      <h4><span class="badge">Scenarios</span> 시나리오 탐색 + 단일 실행</h4>
+      <p>좌측 트리에서 도메인별 시나리오를 탐색합니다. 시나리오를 선택하면 우측에 상세 정보가 표시되고, 에이전트를 선택한 뒤 <em>Run this scenario</em> 버튼으로 단일 시나리오만 실행할 수 있습니다.</p>
+      <ul>
+        <li>호출: <span class="endpoint method-get">GET /api/list</span>, <span class="endpoint method-get">GET /api/scenarios/:domain/:id</span>, <span class="endpoint method-post">POST /api/scenarios/:domain/:id/run</span></li>
+      </ul>
+    </div>
+
+    <div class="tab-card">
+      <h4><span class="badge">Tools</span> 도구 직접 호출 + 폴트 주입</h4>
+      <p>좌측 목록에서 도구를 선택하면 우측에 파라미터 스키마가 표시됩니다. <em>Parameters (JSON)</em> 텍스트 에어리어에 JSON 을 입력하고 <em>Invoke</em> 버튼으로 정상 호출하거나, <em>Simulate fault</em> 버튼으로 폴트 주입 후 호출합니다 (seed, failure_rate 지정 가능).</p>
+      <ul>
+        <li>호출: <span class="endpoint method-get">GET /api/tools</span>, <span class="endpoint method-post">POST /api/tools/:name/invoke</span>, <span class="endpoint method-post">POST /api/tools/:name/simulate-fault</span></li>
+      </ul>
+    </div>
+
+    <div class="tab-card">
+      <h4><span class="badge">Agents</span> 에이전트 직접 호출</h4>
+      <p>에이전트를 선택하고, 자유 태스크 문장과 선택적 environment JSON 을 입력한 뒤 <em>Execute</em> 로 실행합니다. 시나리오 없이 임의 태스크를 실행해볼 때 유용합니다.</p>
+      <ul>
+        <li>호출: <span class="endpoint method-post">POST /api/agents/:name/execute</span> body <code>{"task","environment?"}</code></li>
+        <li>결과: <code>Trajectory</code> JSON (PPA steps 포함)</li>
+      </ul>
+    </div>
+
+    <div class="tab-card">
+      <h4><span class="badge">Reports</span> 저장된 리포트 조회 + 비교</h4>
+      <p>좌측 목록에서 저장된 리포트 JSON 을 선택하면 우측에 내용이 표시됩니다. 하단 Compare 패널에서 두 리포트를 골라 임계값과 함께 비교합니다.</p>
+      <ul>
+        <li>호출: <span class="endpoint method-get">GET /api/reports</span>, <span class="endpoint method-get">GET /api/reports/:name</span>, <span class="endpoint method-post">POST /api/compare</span></li>
+      </ul>
+    </div>
+
+    <div class="tab-card">
+      <h4><span class="badge">Trajectories</span> 저장된 궤적 조회 + 채점</h4>
+      <p>스위트/시나리오 실행 시 저장되는 trajectory JSON 파일들을 목록에서 확인합니다. 선택한 궤적을 <em>Score this trajectory</em> 버튼으로 다시 채점할 수 있습니다.</p>
+      <ul>
+        <li>호출: <span class="endpoint method-get">GET /api/trajectories</span>, <span class="endpoint method-get">GET /api/trajectories/:name</span>, <span class="endpoint method-post">POST /api/score</span></li>
+      </ul>
+    </div>
+
+    <div class="tab-card">
+      <h4><span class="badge">Goldens</span> 골든셋 조회</h4>
+      <p>전체 골든셋 파일을 한 번에 조회하거나, domain + scenario_id 를 입력해 단일 기준 엔트리만 가져올 수 있습니다.</p>
+      <ul>
+        <li>호출: <span class="endpoint method-get">GET /api/golden-sets</span>, <span class="endpoint method-get">GET /api/golden-sets/:domain/:scenario_id</span></li>
+      </ul>
+    </div>
+
+    <h2>3. REST API 전체 목록</h2>
+
+    <h3>조회 API</h3>
+    <table>
+      <tr><th>메서드</th><th>경로</th><th>설명</th></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/</code></td><td>SPA 메인 화면</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/help</code></td><td>이 사용안내 페이지</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/list</code></td><td>도메인/시나리오 + 에이전트 집계</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/scenarios</code></td><td>도메인 요약 배열</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/scenarios/:domain/:id</code></td><td>시나리오 상세</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/agents</code></td><td>등록된 에이전트 목록</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/tools</code></td><td>도메인 도구 메타데이터</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/golden-sets</code></td><td>전체 골든셋 파일</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/golden-sets/:d/:sid</code></td><td>단일 골든셋 엔트리</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/reports</code></td><td>저장된 리포트 파일명 목록</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/reports/:name</code></td><td>리포트 JSON 원문</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/trajectories</code></td><td>저장된 궤적 파일명 목록</td></tr>
+      <tr><td><span class="method-get">GET</span></td><td><code>/api/trajectories/:name</code></td><td>궤적 JSON 원문</td></tr>
+    </table>
+
+    <h3>실행 API (POST, spawn_blocking)</h3>
+    <table>
+      <tr><th>메서드</th><th>경로</th><th>요청 body</th></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/run</code></td><td><code>{"suite","agent","output?"}</code></td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/compare</code></td><td><code>{"baseline","current","threshold?","output?"}</code></td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/scenarios/:d/:id/run</code></td><td><code>{"agent"}</code></td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/agents/:name/execute</code></td><td><code>{"task","environment?"}</code></td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/tools/:name/invoke</code></td><td><code>{"params"}</code></td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/tools/:name/simulate-fault</code></td><td><code>{"params","config"}</code></td></tr>
+      <tr><td><span class="method-post">POST</span></td><td><code>/api/score</code></td><td><code>{"trajectory"}</code></td></tr>
+    </table>
+
+    <h3>curl 예시</h3>
+    <pre><code># 벤치마크 실행
+curl -X POST http://127.0.0.1:8080/api/run \
+  -H 'content-type: application/json' \
+  -d '{"suite":"customer_service","agent":"passthrough","output":"my.json"}'
+
+# 단일 도구 호출
+curl -X POST http://127.0.0.1:8080/api/tools/classify_inquiry/invoke \
+  -H 'content-type: application/json' \
+  -d '{"params":{"inquiry_text":"환불 요청","customer_id":"C1"}}'
+
+# 단일 시나리오 실행
+curl -X POST http://127.0.0.1:8080/api/scenarios/customer_service/cs_001/run \
+  -H 'content-type: application/json' \
+  -d '{"agent":"passthrough"}'
+
+# 리포트 비교
+curl -X POST http://127.0.0.1:8080/api/compare \
+  -H 'content-type: application/json' \
+  -d '{"baseline":"a.json","current":"b.json","threshold":5.0}'
+
+# 에이전트 직접 실행
+curl -X POST http://127.0.0.1:8080/api/agents/passthrough/execute \
+  -H 'content-type: application/json' \
+  -d '{"task":"hello"}'</code></pre>
+
+    <h2>4. CLI ↔ Web 대응 표</h2>
+    <table>
+      <tr><th>CLI 명령</th><th>Web API / 탭</th></tr>
+      <tr><td><code>cargo run -- list</code></td><td><span class="endpoint method-get">GET /api/list</span></td></tr>
+      <tr><td><code>cargo run -- run --suite S --agent A [--output F]</code></td><td>Run 탭 or <span class="endpoint method-post">POST /api/run</span></td></tr>
+      <tr><td><code>cargo run -- report &lt;file&gt;</code></td><td>Reports 탭 or <span class="endpoint method-get">GET /api/reports/:name</span></td></tr>
+      <tr><td><code>cargo run -- compare B C [--threshold T] [--output F]</code></td><td>Reports 탭 Compare or <span class="endpoint method-post">POST /api/compare</span></td></tr>
+      <tr><td><code>cargo run -- tui</code></td><td>브라우저 SPA 자체</td></tr>
+      <tr><td><code>cargo run -- serve</code></td><td>서버 자체 (이 페이지를 제공)</td></tr>
+    </table>
+
+    <h2>5. 주의사항</h2>
+    <div class="warn">
+      <strong>인증/인가 없음</strong>: 이 서버는 기본적으로 인증이 없습니다. 로컬/내부망 전용이며, 외부 노출 시 반드시 리버스 프록시에서 인증 레이어를 추가하세요.
+    </div>
+    <div class="note">
+      <strong>경로 순회 차단</strong>: 모든 파일명 파라미터(리포트/궤적/output 등)는 <code>/</code>, <code>\\</code>, <code>..</code>, 빈 문자열을 거부합니다. 지정한 디렉토리 내부 파일만 접근 가능합니다.
+    </div>
+    <div class="note">
+      <strong>블로킹 작업</strong>: <code>/api/run</code>, <code>/api/compare</code>, <code>/api/scenarios/:d/:id/run</code>, <code>/api/agents/:n/execute</code> 등 동기 로직은 <code>tokio::task::spawn_blocking</code> 으로 감싸 서버 블로킹을 방지합니다.
+    </div>
+
+    <footer>
+      ai-agent-eval-harness · BSD-3-Clause · <a href="/" style="color:#6af">메인으로</a>
+    </footer>
+  </main>
+</body>
+</html>

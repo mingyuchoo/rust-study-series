@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "docs_root": "docs",
+  "prd_dir": "docs/prd",
+  "spec_dir": "docs/spec",
+  "registry_dir": "docs/registry",
+  "state_file": "docs/.tdd-state.json",
+  "traceability_matrix": "docs/traceability-matrix.md",
+
+  "test_path_pattern": "tests/spec-{spec_id}/",
+  "impl_path_pattern": "src/",
+  "source_dirs": [
+    "src",
+    "lib",
+    "app",
+    "tests",
+    "packages",
+    "apps",
+    "libs",
+    "crates"
+  ],
+
+  "commit": {
+    "subject_prefix": "chore(tdd)",
+    "phase_tag_prefix": "tdd-phase"
+  }
+}

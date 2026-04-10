@@ -1,0 +1,85 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "GET /api/agents 등록된 에이전트 목록",
+      "specs": [
+        "SPEC-003"
+      ],
+      "test_cases": [
+        "SPEC-003/{'id': 'TC-1', 'scenario': 'agents 목록'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "GET /api/tools 도메인 도구 메타데이터 목록",
+      "specs": [
+        "SPEC-003"
+      ],
+      "test_cases": [
+        "SPEC-003/{'id': 'TC-2', 'scenario': 'tools 메타데이터'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "GET /api/golden-sets 골든셋 목록",
+      "specs": [
+        "SPEC-003"
+      ],
+      "test_cases": [
+        "SPEC-003/{'id': 'TC-3', 'scenario': 'golden-sets 로드'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-4": {
+      "title": "GET /api/scenarios/:domain/:id 시나리오 상세",
+      "specs": [
+        "SPEC-003"
+      ],
+      "test_cases": [
+        "SPEC-003/{'id': 'TC-4', 'scenario': 'scenario detail 성공'}",
+        "SPEC-003/{'id': 'TC-5', 'scenario': 'scenario detail 404'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-5": {
+      "title": "POST /api/run 벤치마크 스위트 실행",
+      "specs": [
+        "SPEC-003"
+      ],
+      "test_cases": [
+        "SPEC-003/{'id': 'TC-6', 'scenario': 'run_suite_impl 정상'}",
+        "SPEC-003/{'id': 'TC-7', 'scenario': '알 수 없는 에이전트 거부'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-6": {
+      "title": "POST /api/compare 두 리포트 비교",
+      "specs": [
+        "SPEC-003"
+      ],
+      "test_cases": [
+        "SPEC-003/{'id': 'TC-8', 'scenario': 'compare 동일파일 pass'}",
+        "SPEC-003/{'id': 'TC-9', 'scenario': 'compare 경로 이탈 거부'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

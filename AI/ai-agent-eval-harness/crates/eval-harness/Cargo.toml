@@ -16,3 +16,17 @@
   execution      = {workspace = true}
   serde_json     = {workspace = true}
   tracing-subscriber = {workspace = true}
+  ratatui        = {workspace = true}
+  crossterm      = {workspace = true}
+  axum           = {workspace = true}
+  tokio          = {workspace = true}
+  serde          = {workspace = true}
+  domains        = {workspace = true}
+  execution-tools = {workspace = true}
+  scoring        = {workspace = true}
+  reporting      = {workspace = true}
+  execution-fault-injection = {workspace = true}
+
+[dev-dependencies]
+  tempfile = {workspace = true}
+  chrono   = {workspace = true}

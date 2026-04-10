@@ -1,0 +1,47 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "POST /api/run 에 output 필드로 리포트 파일 저장",
+      "specs": [
+        "SPEC-005"
+      ],
+      "test_cases": [
+        "SPEC-005/{'id': 'TC-1', 'scenario': 'run_suite_impl 기본 저장'}",
+        "SPEC-005/{'id': 'TC-2', 'scenario': 'run_suite_impl output 지정 저장'}",
+        "SPEC-005/{'id': 'TC-3', 'scenario': 'output 경로 이탈 거부'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "POST /api/compare 에 output 필드로 비교 결과 파일 저장",
+      "specs": [
+        "SPEC-005"
+      ],
+      "test_cases": [
+        "SPEC-005/{'id': 'TC-4', 'scenario': 'compare_impl output 저장'}",
+        "SPEC-005/{'id': 'TC-5', 'scenario': 'compare output 없을 때 저장 안 함'}",
+        "SPEC-005/{'id': 'TC-6', 'scenario': 'compare output 경로 이탈 거부'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "GET /api/list 집계 (도메인+에이전트)",
+      "specs": [
+        "SPEC-005"
+      ],
+      "test_cases": [
+        "SPEC-005/{'id': 'TC-7', 'scenario': 'list_all_impl 집계'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

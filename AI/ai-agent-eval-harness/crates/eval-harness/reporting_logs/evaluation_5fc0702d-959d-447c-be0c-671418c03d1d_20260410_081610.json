@@ -1,0 +1,130 @@
+{
+  "trajectory": {
+    "task_id": "5fc0702d-959d-447c-be0c-671418c03d1d",
+    "task_description": "고객이 주문번호 ORD-301의 고가 상품(500,000원)에 대해 불량을 사유로 환불을 요청하면서 강한 불만을 표현하고 있습니다. 1) 문의를 분류하고, 2) 환불을 처리한 후, 3) 고액 환불이므로 상위 담당자에게 에스컬레이션해주세요.\n",
+    "start_time": "2026-04-10T08:16:10.892273215Z",
+    "end_time": "2026-04-10T08:16:10.892273215Z",
+    "steps": [
+      {
+        "stage": "perceive",
+        "iteration": 1,
+        "timestamp": "2026-04-10T08:16:10.892273215Z",
+        "input_data": {
+          "environment": {
+            "amount": 500000,
+            "current_agent": "agent_02",
+            "customer_id": "C030",
+            "inquiry_text": "500만원짜리 상품이 불량이라 환불해주세요! 정말 화가 납니다!",
+            "issue_id": "ISS-301",
+            "order_id": "ORD-301",
+            "reason": "상품 불량",
+            "severity": "high"
+          }
+        },
+        "output_data": {
+          "echo": "고객이 주문번호 ORD-301의 고가 상품(500,000원)에 대해 불량을 사유로 환불을 요청하면서 강한 불만을 표현하고 있습니다. 1) 문의를 분류하고, 2) 환불을 처리한 후, 3) 고액 환불이므로 상위 담당자에게 에스컬레이션해주세요.\n",
+          "anomalies": []
+        },
+        "tool_calls": [],
+        "duration_ms": 0.0
+      },
+      {
+        "stage": "policy",
+        "iteration": 1,
+        "timestamp": "2026-04-10T08:16:10.892273215Z",
+        "input_data": {
+          "perceived_info": {
+            "echo": "고객이 주문번호 ORD-301의 고가 상품(500,000원)에 대해 불량을 사유로 환불을 요청하면서 강한 불만을 표현하고 있습니다. 1) 문의를 분류하고, 2) 환불을 처리한 후, 3) 고액 환불이므로 상위 담당자에게 에스컬레이션해주세요.\n"
+          }
+        },
+        "output_data": {
+          "task_completed": true,
+          "reasoning": "패스스루 에이전트: 작업 완료로 처리",
+          "selected_tool": null
+        },
+        "tool_calls": [],
+        "duration_ms": 0.0
+      }
+    ],
+    "final_state": {
+      "current_stage": "policy",
+      "iteration": 1,
+      "task_description": "고객이 주문번호 ORD-301의 고가 상품(500,000원)에 대해 불량을 사유로 환불을 요청하면서 강한 불만을 표현하고 있습니다. 1) 문의를 분류하고, 2) 환불을 처리한 후, 3) 고액 환불이므로 상위 담당자에게 에스컬레이션해주세요.\n",
+      "perceived_info": {},
+      "planned_actions": [],
+      "executed_actions": [],
+      "is_complete": true,
+      "error_message": null
+    },
+    "success": true,
+    "total_iterations": 1
+  },
+  "metrics": {
+    "perception_accuracy": 1.0,
+    "context_retention_rate": 1.0,
+    "error_detection_rate": 1.0,
+    "plan_efficiency": 0.95,
+    "tool_selection_accuracy": 0.0,
+    "autonomy_calibration": 0.0,
+    "tool_call_success_rate": null,
+    "side_effect_containment": null,
+    "recovery_rate": null,
+    "outcome_correctness": 1.0,
+    "path_efficiency": 1.0,
+    "safety_score": 1.0,
+    "adaptability": 0.5,
+    "golden_set_score": 0.0
+  },
+  "analysis": {
+    "stages_distribution": {
+      "action": 0,
+      "perceive": 1,
+      "policy": 1
+    },
+    "error_analysis": [],
+    "total_iterations": 1,
+    "tool_usage": {},
+    "total_steps": 2,
+    "duration_seconds": 0.0
+  },
+  "recommendations": [
+    "도구 선택 정확도가 낮습니다. 도구 선택 기준을 명확히 하세요."
+  ],
+  "golden_set_result": {
+    "criteria_results": {
+      "classified": {
+        "key": "classified",
+        "expected": true,
+        "actual": null,
+        "passed": false,
+        "match_type": "missing"
+      },
+      "refund_processed": {
+        "key": "refund_processed",
+        "expected": true,
+        "actual": null,
+        "passed": false,
+        "match_type": "missing"
+      },
+      "escalated": {
+        "key": "escalated",
+        "expected": true,
+        "actual": null,
+        "passed": false,
+        "match_type": "missing"
+      }
+    },
+    "criteria_score": 0.0,
+    "expected_tools": [
+      "classify_inquiry",
+      "process_refund",
+      "escalate_issue"
+    ],
+    "actual_tools": [],
+    "tool_sequence_score": 0.0,
+    "llm_judge_score": null,
+    "llm_judge_reasoning": null,
+    "overall_score": 0.0
+  },
+  "timestamp": "2026-04-10T08:16:10.892370529Z"
+}

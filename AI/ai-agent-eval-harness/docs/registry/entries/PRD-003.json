@@ -1,0 +1,9 @@
+{
+  "prd_id": "PRD-003",
+  "title": "Expose all crate capabilities via web API",
+  "created_at": "2026-04-10",
+  "status": "draft",
+  "spec_ids": [
+    "SPEC-003"
+  ]
+}

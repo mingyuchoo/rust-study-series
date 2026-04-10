@@ -1,0 +1,108 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "탭 기반 상단 네비게이션 (Run/Scenarios/Tools/Agents/Reports/Trajectories/Goldens)",
+      "specs": [
+        "SPEC-006"
+      ],
+      "test_cases": [
+        "SPEC-006/{'id': 'TC-1', 'scenario': '탭 버튼 7개 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "Run 탭: suite/agent/output 선택 후 벤치마크 실행",
+      "specs": [
+        "SPEC-006"
+      ],
+      "test_cases": [
+        "SPEC-006/{'id': 'TC-2', 'scenario': 'run 폼 요소 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "Scenarios 탭: 선택 시 단일 시나리오 실행 버튼",
+      "specs": [
+        "SPEC-006"
+      ],
+      "test_cases": [
+        "SPEC-006/{'id': 'TC-3', 'scenario': 'scenario run 함수 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-4": {
+      "title": "Tools 탭: 선택 후 params JSON 으로 invoke/fault-simulate",
+      "specs": [
+        "SPEC-006"
+      ],
+      "test_cases": [
+        "SPEC-006/{'id': 'TC-4', 'scenario': 'tool invoke 함수 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-5": {
+      "title": "Agents 탭: task 입력 후 에이전트 직접 실행",
+      "specs": [
+        "SPEC-006"
+      ],
+      "test_cases": [
+        "SPEC-006/{'id': 'TC-5', 'scenario': 'agent execute 함수 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-6": {
+      "title": "Reports 탭: 조회 + compare 패널",
+      "specs": [
+        "SPEC-006"
+      ],
+      "test_cases": [
+        "SPEC-006/{'id': 'TC-6', 'scenario': 'compare 폼 요소 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-7": {
+      "title": "Trajectories 탭: 목록/상세 + score 버튼",
+      "specs": [
+        "SPEC-006"
+      ],
+      "test_cases": [
+        "SPEC-006/{'id': 'TC-7', 'scenario': 'trajectories fetch 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-8": {
+      "title": "Goldens 탭: 파일 목록 + 단일 엔트리 조회",
+      "specs": [
+        "SPEC-006"
+      ],
+      "test_cases": [
+        "SPEC-006/{'id': 'TC-8', 'scenario': 'goldens fetch 존재'}"
+      ],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

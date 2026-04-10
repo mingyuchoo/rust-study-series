@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>eval-harness</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, "Segoe UI", sans-serif; margin: 0; background: #121212; color: #e0e0e0; font-size: 13px; }
+    header { padding: 10px 16px; background: #1e1e1e; border-bottom: 1px solid #333; display: flex; align-items: center; gap: 16px; }
+    header h1 { margin: 0; font-size: 16px; color: #f0c419; }
+    header .spacer { flex: 1; }
+    header a.help-btn { background: #2a2a2a; color: #f0c419; border: 1px solid #444; border-radius: 4px; padding: 6px 14px; text-decoration: none; font-size: 13px; font-weight: 600; }
+    header a.help-btn:hover { background: #3a3a3a; border-color: #f0c419; }
+    nav.tabs { display: flex; gap: 2px; background: #1a1a1a; border-bottom: 1px solid #333; padding: 0 12px; }
+    nav.tabs button { background: none; border: none; color: #888; padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; }
+    nav.tabs button:hover { color: #eee; }
+    nav.tabs button.active { color: #f0c419; border-bottom-color: #f0c419; }
+    main { padding: 16px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel h2 { margin-top: 0; color: #f0c419; font-size: 15px; }
+    .row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+    .split { display: grid; grid-template-columns: 280px 1fr; gap: 12px; }
+    label { font-size: 12px; color: #aaa; }
+    select, input, textarea, button {
+      background: #1e1e1e; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; padding: 6px 10px; font-size: 13px; font-family: inherit;
+    }
+    textarea { font-family: "SF Mono", Menlo, monospace; font-size: 12px; width: 100%; min-height: 90px; }
+    button.primary { background: #f0c419; color: #111; border-color: #f0c419; font-weight: 600; cursor: pointer; }
+    button.primary:hover { background: #ffd83a; }
+    button.secondary { background: #2a2a2a; cursor: pointer; }
+    button.secondary:hover { background: #3a3a3a; }
+    .list { border: 1px solid #333; border-radius: 4px; background: #1a1a1a; max-height: 60vh; overflow-y: auto; }
+    .list .item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #262626; font-size: 12px; }
+    .list .item:hover { background: #262626; }
+    .list .item.active { background: #f0c419; color: #111; font-weight: 600; }
+    .list .group { padding: 6px 12px; font-size: 11px; color: #6af; text-transform: uppercase; border-top: 1px solid #262626; }
+    .badge { float: right; font-size: 10px; opacity: 0.7; }
+    pre { background: #0a0a0a; border: 1px solid #222; padding: 12px; border-radius: 4px; overflow: auto; max-height: 60vh; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+    .error { color: #ff6b6b; }
+    .ok { color: #51cf66; }
+    .hint { color: #666; font-size: 11px; margin-top: 4px; }
+    .form-block { background: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+    .form-block h3 { margin: 0 0 10px; font-size: 13px; color: #aaa; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI Agent Eval Harness</h1>
+    <span style="color:#666;font-size:12px;">— single-page client for the REST API</span>
+    <div class="spacer"></div>
+    <a href="/help" target="_blank" class="help-btn" title="사용안내 페이지를 새 탭에서 엽니다">📖 사용안내</a>
+  </header>
+
+  <nav class="tabs" id="tab-bar">
+    <button data-tab="run" class="active">Run</button>
+    <button data-tab="scenarios">Scenarios</button>
+    <button data-tab="tools">Tools</button>
+    <button data-tab="agents">Agents</button>
+    <button data-tab="reports">Reports</button>
+    <button data-tab="trajectories">Trajectories</button>
+    <button data-tab="goldens">Goldens</button>
+  </nav>
+
+  <main>
+    <!-- ============ RUN ============ -->
+    <section id="panel-run" class="panel active">
+      <h2>Run benchmark suite</h2>
+      <form id="run-form" onsubmit="runSuite(event)" class="form-block">
+        <div class="row">
+          <label>Suite <select id="run-suite"><option>all</option><option>customer_service</option><option>financial</option></select></label>
+          <label>Agent <select id="run-agent"></select></label>
+          <label>Output <input id="run-output" placeholder="(optional) my_report.json" size="30"/></label>
+          <button type="submit" class="primary">Run → POST /api/run</button>
+        </div>
+        <div class="hint">Calls <code>POST /api/run</code>. Always saves to reports_dir (default timestamp name if output omitted).</div>
+      </form>
+      <pre id="run-out">waiting…</pre>
+    </section>
+
+    <!-- ============ SCENARIOS ============ -->
+    <section id="panel-scenarios" class="panel">
+      <h2>Scenarios (list + single run)</h2>
+      <div class="split">
+        <div class="list" id="scenarios-list"></div>
+        <div>
+          <div class="form-block" id="scenario-detail"><em>select a scenario</em></div>
+          <div class="form-block">
+            <h3>Run this scenario</h3>
+            <div class="row">
+              <label>Agent <select id="scen-agent"></select></label>
+              <button class="primary" onclick="runScenario()">Run → POST /api/scenarios/:d/:id/run</button>
+            </div>
+          </div>
+          <pre id="scen-out">waiting…</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TOOLS ============ -->
+    <section id="panel-tools" class="panel">
+      <h2>Tools (invoke + fault injection)</h2>
+      <div class="split">
+        <div class="list" id="tools-list"></div>
+        <div>
+          <div class="form-block" id="tool-detail"><em>select a tool</em></div>
+          <div class="form-block">
+            <h3>Parameters (JSON)</h3>
+            <textarea id="tool-params">{}</textarea>
+            <div class="row">
+              <button class="primary" onclick="invokeTool()">Invoke → POST /api/tools/:n/invoke</button>
+              <button class="secondary" onclick="invokeToolFault()">Simulate fault → /simulate-fault</button>
+              <label>seed <input id="tool-seed" type="number" size="6" value=""/></label>
+              <label>rate <input id="tool-rate" type="number" step="0.1" value="0.5" size="4"/></label>
+            </div>
+          </div>
+          <pre id="tool-out">waiting…</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AGENTS ============ -->
+    <section id="panel-agents" class="panel">
+      <h2>Agents (direct execute)</h2>
+      <div class="form-block">
+        <div class="row">
+          <label>Agent <select id="agent-name"></select></label>
+        </div>
+        <h3>Task description</h3>
+        <textarea id="agent-task" placeholder="에이전트에게 전달할 태스크">hello world</textarea>
+        <h3>Environment (JSON, optional)</h3>
+        <textarea id="agent-env">{}</textarea>
+        <div class="row">
+          <button class="primary" onclick="executeAgent()">Execute → POST /api/agents/:n/execute</button>
+        </div>
+      </div>
+      <pre id="agent-out">waiting…</pre>
+    </section>
+
+    <!-- ============ REPORTS ============ -->
+    <section id="panel-reports" class="panel">
+      <h2>Reports (view + compare)</h2>
+      <div class="split">
+        <div class="list" id="reports-list"></div>
+        <div>
+          <div class="form-block">
+            <h3>Compare two reports</h3>
+            <div class="row">
+              <label>Baseline <select id="cmp-base"></select></label>
+              <label>Current <select id="cmp-cur"></select></label>
+              <label>Threshold <input id="cmp-threshold" type="number" step="0.1" value="5.0" size="5"/></label>
+              <label>Output <input id="cmp-output" placeholder="(optional)"/></label>
+              <button class="primary" onclick="compareReports()">Compare → POST /api/compare</button>
+            </div>
+          </div>
+          <pre id="report-out">waiting…</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TRAJECTORIES ============ -->
+    <section id="panel-trajectories" class="panel">
+      <h2>Trajectories (view + score)</h2>
+      <div class="split">
+        <div class="list" id="trajectories-list"></div>
+        <div>
+          <div class="row">
+            <button class="secondary" onclick="refreshTrajectories()">Refresh → GET /api/trajectories</button>
+            <button class="primary" onclick="scoreTrajectory()">Score this trajectory → POST /api/score</button>
+          </div>
+          <pre id="traj-out">select a trajectory</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ GOLDENS ============ -->
+    <section id="panel-goldens" class="panel">
+      <h2>Golden sets</h2>
+      <div class="form-block">
+        <h3>Lookup entry</h3>
+        <div class="row">
+          <label>Domain <input id="gold-domain" placeholder="customer_service"/></label>
+          <label>Scenario ID <input id="gold-sid" placeholder="cs_001"/></label>
+          <button class="primary" onclick="fetchGolden()">Fetch → GET /api/golden-sets/:d/:sid</button>
+          <button class="secondary" onclick="fetchAllGoldens()">All files → /api/golden-sets</button>
+        </div>
+      </div>
+      <pre id="gold-out">waiting…</pre>
+    </section>
+  </main>
+
+  <script>
+    // ---------- utilities ----------
+    const $ = (id) => document.getElementById(id);
+    const API = {
+      get: async (p) => { const r = await fetch(p); if (!r.ok) throw new Error(r.status+' '+await r.text()); return r.json(); },
+      post: async (p, body) => {
+        const r = await fetch(p, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+        if (!r.ok) throw new Error(r.status+' '+await r.text());
+        return r.json();
+      }
+    };
+    const pretty = (o) => JSON.stringify(o, null, 2);
+    const showOk  = (el, data) => { el.className = 'ok'; el.textContent = pretty(data); };
+    const showErr = (el, err)  => { el.className = 'error'; el.textContent = 'ERROR: ' + (err.message || err); };
+
+    // ---------- tabs ----------
+    document.querySelectorAll('#tab-bar button').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('#tab-bar button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const tab = btn.dataset.tab;
+        $('panel-' + tab).classList.add('active');
+        if (!initialized[tab]) { (initFns[tab] || (()=>{}))(); initialized[tab] = true; }
+      };
+    });
+    const initialized = { run: false };
+
+    // ---------- shared agent list fill ----------
+    let AGENTS = [];
+    async function loadAgents() {
+      AGENTS = await API.get('/api/agents');
+      ['run-agent','scen-agent','agent-name'].forEach(id => {
+        const sel = $(id); if (!sel) return;
+        sel.innerHTML = AGENTS.map(a=>`<option>${a}</option>`).join('');
+      });
+    }
+
+    // ---------- RUN ----------
+    async function runSuite(e) {
+      e.preventDefault();
+      const body = { suite: $('run-suite').value, agent: $('run-agent').value };
+      const o = $('run-output').value.trim();
+      if (o) body.output = o;
+      try { showOk($('run-out'), await API.post('/api/run', body)); } catch (err) { showErr($('run-out'), err); }
+    }
+
+    // ---------- SCENARIOS ----------
+    let SELECTED_SCEN = null;  // {domain, scenario}
+    async function initScenarios() {
+      const data = await API.get('/api/list');
+      const el = $('scenarios-list'); el.innerHTML = '';
+      data.domains.forEach(d => {
+        const g = document.createElement('div'); g.className = 'group'; g.textContent = d.name; el.appendChild(g);
+        d.scenarios.forEach(s => {
+          const it = document.createElement('div'); it.className = 'item';
+          it.innerHTML = `${s.id} — ${s.name}<span class="badge">${s.difficulty}</span>`;
+          it.onclick = async () => {
+            document.querySelectorAll('#scenarios-list .item').forEach(x=>x.classList.remove('active'));
+            it.classList.add('active');
+            SELECTED_SCEN = { domain: d.name, id: s.id };
+            try {
+              const full = await API.get(`/api/scenarios/${d.name}/${s.id}`);
+              $('scenario-detail').innerHTML = `<h3>${full.name}</h3>
+                <div><strong>Domain:</strong> ${d.name} · <strong>Difficulty:</strong> ${full.difficulty}</div>
+                <div><strong>ID:</strong> ${full.id}</div>
+                <div style="margin-top:6px"><strong>Task:</strong><br><small>${full.task_description}</small></div>
+                <div style="margin-top:6px"><strong>Expected tools:</strong> ${(full.expected_tools||[]).join(', ') || '—'}</div>`;
+            } catch (err) { $('scenario-detail').innerHTML = `<div class="error">${err.message}</div>`; }
+          };
+          el.appendChild(it);
+        });
+      });
+    }
+    async function runScenario() {
+      if (!SELECTED_SCEN) return showErr($('scen-out'), 'select a scenario first');
+      const body = { agent: $('scen-agent').value };
+      try {
+        showOk($('scen-out'), await API.post(`/api/scenarios/${SELECTED_SCEN.domain}/${SELECTED_SCEN.id}/run`, body));
+      } catch (err) { showErr($('scen-out'), err); }
+    }
+
+    // ---------- TOOLS ----------
+    let SELECTED_TOOL = null;
+    async function initTools() {
+      const tools = await API.get('/api/tools');
+      const el = $('tools-list'); el.innerHTML = '';
+      tools.forEach(t => {
+        const it = document.createElement('div'); it.className = 'item';
+        it.textContent = t.name;
+        it.onclick = () => {
+          document.querySelectorAll('#tools-list .item').forEach(x=>x.classList.remove('active'));
+          it.classList.add('active');
+          SELECTED_TOOL = t.name;
+          $('tool-detail').innerHTML = `<h3>${t.name}</h3><div>${t.description||''}</div><pre style="max-height:200px">${pretty(t.parameters_schema||{})}</pre>`;
+        };
+        el.appendChild(it);
+      });
+    }
+    async function invokeTool() {
+      if (!SELECTED_TOOL) return showErr($('tool-out'), 'select a tool first');
+      let params = {};
+      try { params = JSON.parse($('tool-params').value || '{}'); } catch (e) { return showErr($('tool-out'), 'params is not valid JSON'); }
+      try { showOk($('tool-out'), await API.post(`/api/tools/${SELECTED_TOOL}/invoke`, { params })); } catch (err) { showErr($('tool-out'), err); }
+    }
+    async function invokeToolFault() {
+      if (!SELECTED_TOOL) return showErr($('tool-out'), 'select a tool first');
+      let params = {};
+      try { params = JSON.parse($('tool-params').value || '{}'); } catch (e) { return showErr($('tool-out'), 'params is not valid JSON'); }
+      const seedStr = $('tool-seed').value;
+      const config = {
+        enabled: true,
+        global_failure_rate: parseFloat($('tool-rate').value) || 0.5,
+        tool_specific_rates: {},
+        failure_mode_distribution: { timeout:0.2, partial_result:0.25, incorrect_result:0.2, exception:0.2, network_error:0.1, permission_denied:0.05 },
+        seed: seedStr === '' ? null : parseInt(seedStr)
+      };
+      try { showOk($('tool-out'), await API.post(`/api/tools/${SELECTED_TOOL}/simulate-fault`, { params, config })); } catch (err) { showErr($('tool-out'), err); }
+    }
+
+    // ---------- AGENTS ----------
+    async function initAgentsPanel() {
+      if (AGENTS.length === 0) await loadAgents();
+    }
+    async function executeAgent() {
+      let env = null;
+      const envText = $('agent-env').value.trim();
+      if (envText) { try { env = JSON.parse(envText); } catch (e) { return showErr($('agent-out'), 'environment is not valid JSON'); } }
+      const body = { task: $('agent-task').value };
+      if (env) body.environment = env;
+      try { showOk($('agent-out'), await API.post(`/api/agents/${$('agent-name').value}/execute`, body)); } catch (err) { showErr($('agent-out'), err); }
+    }
+
+    // ---------- REPORTS ----------
+    async function initReports() {
+      const files = await API.get('/api/reports');
+      const el = $('reports-list'); el.innerHTML = '';
+      files.forEach(name => {
+        const it = document.createElement('div'); it.className = 'item'; it.textContent = name;
+        it.onclick = async () => {
+          document.querySelectorAll('#reports-list .item').forEach(x=>x.classList.remove('active'));
+          it.classList.add('active');
+          try { showOk($('report-out'), await API.get(`/api/reports/${encodeURIComponent(name)}`)); } catch (err) { showErr($('report-out'), err); }
+        };
+        el.appendChild(it);
+      });
+      ['cmp-base','cmp-cur'].forEach(id => { $(id).innerHTML = files.map(f=>`<option>${f}</option>`).join(''); });
+    }
+    async function compareReports() {
+      const body = {
+        baseline: $('cmp-base').value,
+        current: $('cmp-cur').value,
+        threshold: parseFloat($('cmp-threshold').value) || 5.0,
+      };
+      const o = $('cmp-output').value.trim(); if (o) body.output = o;
+      try { showOk($('report-out'), await API.post('/api/compare', body)); } catch (err) { showErr($('report-out'), err); }
+    }
+
+    // ---------- TRAJECTORIES ----------
+    let SELECTED_TRAJ_DATA = null;
+    async function initTrajectories() { await refreshTrajectories(); }
+    async function refreshTrajectories() {
+      const files = await API.get('/api/trajectories');
+      const el = $('trajectories-list'); el.innerHTML = '';
+      if (files.length === 0) el.innerHTML = '<div class="item" style="color:#666;font-style:italic">empty</div>';
+      files.forEach(name => {
+        const it = document.createElement('div'); it.className = 'item'; it.textContent = name;
+        it.onclick = async () => {
+          document.querySelectorAll('#trajectories-list .item').forEach(x=>x.classList.remove('active'));
+          it.classList.add('active');
+          try { SELECTED_TRAJ_DATA = await API.get(`/api/trajectories/${encodeURIComponent(name)}`); showOk($('traj-out'), SELECTED_TRAJ_DATA); }
+          catch (err) { showErr($('traj-out'), err); }
+        };
+        el.appendChild(it);
+      });
+    }
+    async function scoreTrajectory() {
+      if (!SELECTED_TRAJ_DATA) return showErr($('traj-out'), 'select a trajectory first');
+      try { showOk($('traj-out'), await API.post('/api/score', { trajectory: SELECTED_TRAJ_DATA })); } catch (err) { showErr($('traj-out'), err); }
+    }
+
+    // ---------- GOLDENS ----------
+    async function initGoldens() { await fetchAllGoldens(); }
+    async function fetchAllGoldens() {
+      try { showOk($('gold-out'), await API.get('/api/golden-sets')); } catch (err) { showErr($('gold-out'), err); }
+    }
+    async function fetchGolden() {
+      const d = $('gold-domain').value.trim(), s = $('gold-sid').value.trim();
+      if (!d || !s) return showErr($('gold-out'), 'domain and scenario_id required');
+      try { showOk($('gold-out'), await API.get(`/api/golden-sets/${d}/${s}`)); } catch (err) { showErr($('gold-out'), err); }
+    }
+
+    // ---------- init dispatcher ----------
+    const initFns = {
+      run: () => loadAgents(),
+      scenarios: () => { loadAgents(); initScenarios(); },
+      tools: initTools,
+      agents: initAgentsPanel,
+      reports: initReports,
+      trajectories: initTrajectories,
+      goldens: initGoldens,
+    };
+
+    // bootstrap: run tab is active by default
+    (async () => { try { await initFns.run(); initialized.run = true; } catch (e) { console.error(e); } })();
+  </script>
+</body>
+</html>

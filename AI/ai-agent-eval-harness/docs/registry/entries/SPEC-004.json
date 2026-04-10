@@ -1,0 +1,8 @@
+{
+  "spec_id": "SPEC-004",
+  "prd_id": "PRD-004",
+  "title": "crates 4-10 실행용 HTTP 엔드포인트",
+  "created_at": "2026-04-10",
+  "status": "draft",
+  "test_status": "pending"
+}

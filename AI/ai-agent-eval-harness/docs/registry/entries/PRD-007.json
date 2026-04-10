@@ -1,0 +1,9 @@
+{
+  "prd_id": "PRD-007",
+  "title": "Help / usage guide page",
+  "created_at": "2026-04-10",
+  "status": "draft",
+  "spec_ids": [
+    "SPEC-007"
+  ]
+}
