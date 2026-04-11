@@ -1,3 +1,9 @@
 [evaluation]
   early_stop_threshold = 1
   max_iterations       = 1
+
+# SPEC-017: SQLite 평가 데이터 저장소. 주석 해제 시 기본 경로를 변경할 수 있다.
+# [data]
+#   db_path         = "eval_data/eval_harness.db"
+#   scenarios_dir   = "eval_data/eval_scenarios"   # seed 소스 (YAML)
+#   golden_sets_dir = "eval_data/golden_sets"      # seed 소스 (JSON)

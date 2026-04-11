@@ -46,7 +46,7 @@
 1. **CLI override** (가장 높음) — `--scenarios-dir`, `--golden-sets-dir`
 2. **환경변수** — `EVAL_HARNESS_SCENARIOS_DIR`, `EVAL_HARNESS_GOLDEN_SETS_DIR`
 3. **TOML 설정 파일** — `eval-harness.toml` (기본은 CWD 또는 명시적으로 지정한 루트)
-4. **내장 기본값** — `eval_data/scenarios`, `eval_data/golden_sets`
+4. **내장 기본값** — `eval_data/eval_scenarios`, `eval_data/golden_sets`
 
 상대 경로 해석 기준은 출처에 따라 다르다:
 - 설정 파일에서 온 값 → 설정 파일이 위치한 디렉토리 기준
@@ -60,7 +60,7 @@
 ```rust
 use std::path::{Path, PathBuf};
 
-pub const DEFAULT_SCENARIOS_DIR: &str = "eval_data/scenarios";
+pub const DEFAULT_SCENARIOS_DIR: &str = "eval_data/eval_scenarios";
 pub const DEFAULT_GOLDEN_SETS_DIR: &str = "eval_data/golden_sets";
 pub const DEFAULT_CONFIG_FILENAME: &str = "eval-harness.toml";
 pub const ENV_SCENARIOS_DIR: &str = "EVAL_HARNESS_SCENARIOS_DIR";
@@ -113,7 +113,7 @@ fn resolve_relative(base: &Path, p: &str) -> PathBuf { ... }
 
 ```toml
 [data]
-scenarios_dir   = "eval_data/scenarios"     # 상대 경로 = 설정 파일 디렉토리 기준
+scenarios_dir   = "eval_data/eval_scenarios"     # 상대 경로 = 설정 파일 디렉토리 기준
 golden_sets_dir = "/var/lib/eval/golden"    # 절대 경로 그대로
 ```
 

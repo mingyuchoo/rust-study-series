@@ -94,7 +94,7 @@ fn main() {
     let port = desktop_helpers::pick_free_port().expect("no free port");
     let addr = format!("127.0.0.1:{port}").parse().unwrap();
 
-    let scen = root.join("eval_data/scenarios");
+    let scen = root.join("eval_data/eval_scenarios");
     let reps = root.join("reporting_logs");
     let gold = root.join("eval_data/golden_sets");
     let traj = root.join("reporting_trajectories");

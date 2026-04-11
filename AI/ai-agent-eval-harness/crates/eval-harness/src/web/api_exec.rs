@@ -372,7 +372,7 @@ mod tests {
             .unwrap()
             .parent()
             .unwrap()
-            .join("eval_data/scenarios")
+            .join("eval_data/eval_scenarios")
     }
 
     /// @trace TC: SPEC-004/TC-1

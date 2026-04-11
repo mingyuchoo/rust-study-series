@@ -17,6 +17,7 @@
 // 웹 SPA(index.html, help.html, i18n, 7-탭) 가 그대로 재사용되므로 Tauri 측에서
 // 별도 IPC 명령을 정의할 필요가 없다.
 
+use data_scenarios::loader::ScenarioLoader;
 use eval_harness::{data_paths::DataPaths, desktop_helpers, web};
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -45,6 +46,19 @@ fn main() {
         eprintln!("[eval-harness-desktop] data path 설정 오류: {e}");
         std::process::exit(1);
     });
+    if let Err(e) = ScenarioLoader::install(
+        &data_paths.db_path,
+        &data_paths.scenarios_dir,
+        &data_paths.golden_sets_dir,
+    ) {
+        eprintln!("[eval-harness-desktop] SQLite 저장소 초기화 실패: {e}");
+    } else {
+        println!(
+            "[eval-harness-desktop] SQLite DB: {}",
+            data_paths.db_path.display()
+        );
+    }
+
     let scenarios_dir = data_paths.scenarios_dir;
     let reports_dir = root.join("reporting_logs");
     let golden_sets_dir = data_paths.golden_sets_dir;

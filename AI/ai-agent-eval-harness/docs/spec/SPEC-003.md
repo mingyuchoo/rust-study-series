@@ -83,7 +83,7 @@ pub fn is_safe_report_path(name: &str) -> bool;  // reuse handlers::is_safe_name
 | TC-1  | registry에 passthrough 등록 | `list_agents_impl` → `["passthrough"]` 포함 | FR-1 |
 | TC-2  | - | `list_tools_impl`이 비어있지 않음 | FR-2 |
 | TC-3  | 임시 dir에 goldenset JSON | `list_golden_sets_impl`이 1개 반환 | FR-3 |
-| TC-4  | 실제 `eval_data/scenarios`, `customer_service`, `cs_001` | Some(scenario) | FR-4 |
+| TC-4  | 실제 `eval_data/eval_scenarios`, `customer_service`, `cs_001` | Some(scenario) | FR-4 |
 | TC-5  | 없는 id | None | FR-4 |
 | TC-6  | `customer_service`, `passthrough`, 실제 dirs | Ok(report) suite_name 일치 | FR-5 |
 | TC-7  | 에이전트 `"unknown"` | Err | FR-5 |

@@ -1,0 +1,149 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "SQLite 단일 DB 에 저장",
+      "specs": [
+        "SPEC-017"
+      ],
+      "test_cases": [
+        "SPEC-017/TC-1"
+      ],
+      "test_files": [
+        "crates/data-scenarios/src/sqlite_store.rs"
+      ],
+      "impl_files": [
+        "crates/data-scenarios/src/sqlite_store.rs"
+      ],
+      "impl_symbols": [
+        "SqliteStore",
+        "SqliteStore::init_schema",
+        "SqliteStore::open"
+      ],
+      "status": "passed"
+    },
+    "FR-2": {
+      "title": "파일 seed idempotent 적재",
+      "specs": [
+        "SPEC-017"
+      ],
+      "test_cases": [
+        "SPEC-017/TC-1",
+        "SPEC-017/TC-2"
+      ],
+      "test_files": [
+        "crates/data-scenarios/src/sqlite_store.rs"
+      ],
+      "impl_files": [
+        "crates/data-scenarios/src/sqlite_store.rs"
+      ],
+      "impl_symbols": [
+        "SqliteStore::seed_from_fs",
+        "SqliteStore::open_and_seed"
+      ],
+      "status": "passed"
+    },
+    "FR-3": {
+      "title": "ScenarioLoader DB 조회 전환",
+      "specs": [
+        "SPEC-017"
+      ],
+      "test_cases": [
+        "SPEC-017/TC-3",
+        "SPEC-017/TC-4"
+      ],
+      "test_files": [
+        "crates/data-scenarios/src/sqlite_store.rs",
+        "crates/data-scenarios/src/loader.rs"
+      ],
+      "impl_files": [
+        "crates/data-scenarios/src/loader.rs",
+        "crates/data-scenarios/src/sqlite_store.rs"
+      ],
+      "impl_symbols": [
+        "ScenarioLoader::load_all_domains",
+        "SqliteStore::load_all_domains"
+      ],
+      "status": "passed"
+    },
+    "FR-4": {
+      "title": "eval-harness.toml db_path 키",
+      "specs": [
+        "SPEC-017"
+      ],
+      "test_cases": [],
+      "test_files": [
+        "crates/eval-harness/src/data_paths.rs"
+      ],
+      "impl_files": [
+        "crates/eval-harness/src/data_paths.rs"
+      ],
+      "impl_symbols": [
+        "DataPaths",
+        "DEFAULT_DB_PATH",
+        "ENV_DB_PATH",
+        "DataPaths::with_db_override"
+      ],
+      "status": "passed"
+    },
+    "FR-5": {
+      "title": "진입점 공통 store 초기화",
+      "specs": [
+        "SPEC-017"
+      ],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [
+        "crates/eval-harness/src/main.rs",
+        "desktop/src/main.rs"
+      ],
+      "impl_symbols": [
+        "install_data_store",
+        "ScenarioLoader::install"
+      ],
+      "status": "passed"
+    },
+    "FR-6": {
+      "title": "sqlx + tokio + 동기 브릿지",
+      "specs": [
+        "SPEC-017"
+      ],
+      "test_cases": [
+        "SPEC-017/TC-1"
+      ],
+      "test_files": [
+        "crates/data-scenarios/src/sqlite_store.rs"
+      ],
+      "impl_files": [
+        "crates/data-scenarios/Cargo.toml",
+        "crates/data-scenarios/src/sqlite_store.rs",
+        "crates/data-scenarios/src/loader.rs"
+      ],
+      "impl_symbols": [
+        "SqliteStore::open",
+        "LoaderInner::new_blocking"
+      ],
+      "status": "passed"
+    },
+    "FR-7": {
+      "title": "동적 필드 JSON TEXT 컬럼",
+      "specs": [
+        "SPEC-017"
+      ],
+      "test_cases": [
+        "SPEC-017/TC-5",
+        "SPEC-017/TC-6"
+      ],
+      "test_files": [
+        "crates/data-scenarios/src/sqlite_store.rs"
+      ],
+      "impl_files": [
+        "crates/data-scenarios/src/sqlite_store.rs"
+      ],
+      "impl_symbols": [
+        "SqliteStore::seed_from_fs",
+        "SqliteStore::load_all_domains"
+      ],
+      "status": "passed"
+    }
+  }
+}

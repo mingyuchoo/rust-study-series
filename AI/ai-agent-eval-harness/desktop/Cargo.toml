@@ -15,4 +15,5 @@
 [dependencies]
   tauri = {features = [], version = "2"}
   # eval-harness 크레이트를 라이브러리로 재사용 (web/desktop_helpers 모듈 접근).
-  eval-harness = {path = "../crates/eval-harness"}
+  eval-harness   = {path = "../crates/eval-harness"}
+  data-scenarios = {path = "../crates/data-scenarios"}

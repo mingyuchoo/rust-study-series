@@ -1,0 +1,67 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "시나리오 REST CRUD",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "골든셋 REST CRUD",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "DB 단독 쓰기",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-4": {
+      "title": "시나리오 삭제 cascade",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-5": {
+      "title": "HTTP 에러 매핑",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-6": {
+      "title": "웹 UI 관리 탭",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-7": {
+      "title": "read-after-write 일관성",
+      "specs": [],
+      "test_cases": [],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

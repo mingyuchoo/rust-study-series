@@ -1,9 +1,10 @@
 // =============================================================================
-// @trace SPEC-015, SPEC-016
-// @trace PRD: PRD-015, PRD-016
+// @trace SPEC-015, SPEC-016, SPEC-017
+// @trace PRD: PRD-015, PRD-016, PRD-017
 // @trace FR: PRD-015/FR-1, PRD-015/FR-2, PRD-015/FR-3, PRD-015/FR-4,
 // PRD-015/FR-5, PRD-015/FR-6 @trace FR: PRD-016/FR-1, PRD-016/FR-2,
-// PRD-016/FR-3 @trace file-type: impl
+// PRD-016/FR-3 @trace FR: PRD-017/FR-4
+// @trace file-type: impl
 // =============================================================================
 //
 // `eval_data/` 계열 디렉토리(시나리오/골든셋)의 경로 해석을 한 곳으로
@@ -13,7 +14,7 @@
 //   1. CLI 인자  (--scenarios-dir / --golden-sets-dir)
 //   2. 환경변수  (EVAL_HARNESS_SCENARIOS_DIR / EVAL_HARNESS_GOLDEN_SETS_DIR)
 //   3. 설정 파일 (eval-harness.toml 의 [data] 섹션)
-//   4. 내장 기본값 (eval_data/scenarios, eval_data/golden_sets)
+//   4. 내장 기본값 (eval_data/eval_scenarios, eval_data/golden_sets)
 //
 // 상대 경로 해석 기준:
 //   - 설정 파일에서 온 값  → 설정 파일이 위치한 디렉토리 기준
@@ -25,16 +26,19 @@ use std::{collections::BTreeMap,
           path::{Path,
                  PathBuf}};
 
-pub const DEFAULT_SCENARIOS_DIR: &str = "eval_data/scenarios";
+pub const DEFAULT_SCENARIOS_DIR: &str = "eval_data/eval_scenarios";
 pub const DEFAULT_GOLDEN_SETS_DIR: &str = "eval_data/golden_sets";
+pub const DEFAULT_DB_PATH: &str = "eval_data/eval_harness.db";
 pub const DEFAULT_CONFIG_FILENAME: &str = "eval-harness.toml";
 pub const ENV_SCENARIOS_DIR: &str = "EVAL_HARNESS_SCENARIOS_DIR";
 pub const ENV_GOLDEN_SETS_DIR: &str = "EVAL_HARNESS_GOLDEN_SETS_DIR";
+pub const ENV_DB_PATH: &str = "EVAL_HARNESS_DB_PATH";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DataPaths {
     pub scenarios_dir: PathBuf,
     pub golden_sets_dir: PathBuf,
+    pub db_path: PathBuf,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -67,6 +71,7 @@ struct ConfigFile {
 struct ConfigData {
     scenarios_dir: Option<String>,
     golden_sets_dir: Option<String>,
+    db_path: Option<String>,
 }
 
 #[derive(Debug, serde::Deserialize, Default)]
@@ -81,6 +86,7 @@ impl Default for DataPaths {
         Self {
             scenarios_dir: PathBuf::from(DEFAULT_SCENARIOS_DIR),
             golden_sets_dir: PathBuf::from(DEFAULT_GOLDEN_SETS_DIR),
+            db_path: PathBuf::from(DEFAULT_DB_PATH),
         }
     }
 }
@@ -107,6 +113,7 @@ impl DataPaths {
         let mut paths = Self {
             scenarios_dir: root.join(DEFAULT_SCENARIOS_DIR),
             golden_sets_dir: root.join(DEFAULT_GOLDEN_SETS_DIR),
+            db_path: root.join(DEFAULT_DB_PATH),
         };
         let cfg_path = root.join(DEFAULT_CONFIG_FILENAME);
         if cfg_path.is_file() {
@@ -120,7 +127,7 @@ impl DataPaths {
     /// 환경변수 값이 있으면 self 의 필드를 덮어쓴다. 환경변수 값은 그대로
     /// `PathBuf` 로 사용한다(상대 경로면 호출자 CWD 기준).
     pub fn apply_env(&mut self) {
-        let env_map: BTreeMap<&str, String> = [ENV_SCENARIOS_DIR, ENV_GOLDEN_SETS_DIR]
+        let env_map: BTreeMap<&str, String> = [ENV_SCENARIOS_DIR, ENV_GOLDEN_SETS_DIR, ENV_DB_PATH]
             .into_iter()
             .filter_map(|k| std::env::var(k).ok().map(|v| (k, v)))
             .collect();
@@ -135,6 +142,9 @@ impl DataPaths {
         if let Some(v) = env.get(ENV_GOLDEN_SETS_DIR) {
             self.golden_sets_dir = PathBuf::from(v);
         }
+        if let Some(v) = env.get(ENV_DB_PATH) {
+            self.db_path = PathBuf::from(v);
+        }
     }
 
     /// CLI 인자가 `Some` 이면 해당 필드를 덮어쓴다.
@@ -144,6 +154,17 @@ impl DataPaths {
         }
         if let Some(v) = golden_sets {
             self.golden_sets_dir = PathBuf::from(v);
+        }
+        self
+    }
+
+    /// db_path 에 대한 CLI override.
+    ///
+    /// @trace SPEC: SPEC-017
+    /// @trace FR: PRD-017/FR-4
+    pub fn with_db_override(mut self, db_path: Option<&str>) -> Self {
+        if let Some(v) = db_path {
+            self.db_path = PathBuf::from(v);
         }
         self
     }
@@ -201,6 +222,9 @@ fn apply_config(paths: &mut DataPaths, cfg: &ConfigFile, base: &Path) {
     }
     if let Some(v) = cfg.data.golden_sets_dir.as_deref() {
         paths.golden_sets_dir = resolve_relative(base, v);
+    }
+    if let Some(v) = cfg.data.db_path.as_deref() {
+        paths.db_path = resolve_relative(base, v);
     }
 }
 

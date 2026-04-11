@@ -220,7 +220,11 @@ pub async fn list_tools() -> Json<Vec<serde_json::Value>> { Json(list_tools_impl
 pub async fn list_golden_sets(State(st): State<AppState>) -> Json<Vec<GoldenSetFile>> { Json(list_golden_sets_impl(&st.golden_sets_dir)) }
 
 pub async fn scenario_detail(State(st): State<AppState>, AxPath((domain, id)): AxPath<(String, String)>) -> Result<Json<ScenarioConfig>, StatusCode> {
-    match scenario_detail_impl(&st.scenarios_dir, &domain, &id) {
+    let scen = st.scenarios_dir.clone();
+    let res = tokio::task::spawn_blocking(move || scenario_detail_impl(&scen, &domain, &id))
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    match res {
         | Some(s) => Ok(Json(s)),
         | None => Err(StatusCode::NOT_FOUND),
     }
@@ -308,7 +312,16 @@ pub async fn compare_reports(State(st): State<AppState>, Json(req): Json<Compare
 /// @trace SPEC: SPEC-005
 /// @trace TC: SPEC-005/TC-7
 /// @trace FR: PRD-005/FR-3
-pub async fn list_all(State(st): State<AppState>) -> Json<ListAllResponse> { Json(list_all_impl(&st.scenarios_dir)) }
+pub async fn list_all(State(st): State<AppState>) -> Json<ListAllResponse> {
+    let scen = st.scenarios_dir.clone();
+    let res = tokio::task::spawn_blocking(move || list_all_impl(&scen))
+        .await
+        .unwrap_or_else(|_| ListAllResponse {
+            domains: Vec::new(),
+            agents: Vec::new(),
+        });
+    Json(res)
+}
 
 // --------------------------------------------------------------------------
 // Tests
@@ -336,7 +349,7 @@ mod tests {
             .unwrap()
             .parent()
             .unwrap()
-            .join("eval_data/scenarios")
+            .join("eval_data/eval_scenarios")
     }
 
     /// @trace TC: SPEC-003/TC-1

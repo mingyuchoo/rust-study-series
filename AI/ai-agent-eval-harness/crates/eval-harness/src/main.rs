@@ -90,6 +90,20 @@ fn resolve_data_paths(scenarios: Option<&str>, golden_sets: Option<&str>) -> Dat
     }
 }
 
+/// SPEC-017: 기동 시 SQLite 저장소를 전역 설치한다. 멱등 — 이미 설치되었으면
+/// 이전 인스턴스를 재사용한다.
+///
+/// @trace SPEC: SPEC-017
+/// @trace FR: PRD-017/FR-5
+fn install_data_store(paths: &DataPaths) {
+    use data_scenarios::loader::ScenarioLoader;
+    if let Err(e) = ScenarioLoader::install(&paths.db_path, &paths.scenarios_dir, &paths.golden_sets_dir) {
+        eprintln!("[warn] SQLite 저장소 초기화 실패: {e} — 파일 fallback 모드");
+    } else {
+        println!("[store] SQLite DB: {}", paths.db_path.display());
+    }
+}
+
 /// @trace SPEC: SPEC-016
 /// @trace FR: PRD-016/FR-3
 fn build_registry() -> AgentRegistry {
@@ -142,6 +156,7 @@ fn main() {
             };
 
             let paths = resolve_data_paths(scenarios_dir.as_deref(), None);
+            install_data_store(&paths);
             let scenarios_dir = paths.scenarios_dir.to_string_lossy().into_owned();
             let mut runner = HarnessRunner::new(&output_dir);
             let report = match runner.run_eval_scenario(&eval_scenario, agent_impl.as_ref(), &scenarios_dir) {
@@ -187,6 +202,7 @@ fn main() {
             use data_scenarios::loader::ScenarioLoader;
 
             let paths = resolve_data_paths(scenarios_dir.as_deref(), None);
+            install_data_store(&paths);
             let scenarios_dir = paths.scenarios_dir.to_string_lossy().into_owned();
             let loader = ScenarioLoader::new();
             if !std::path::Path::new(&scenarios_dir).exists() {
@@ -222,6 +238,7 @@ fn main() {
             reports_dir,
         } => {
             let paths = resolve_data_paths(scenarios_dir.as_deref(), None);
+            install_data_store(&paths);
             if let Err(e) = tui::run_tui(&paths.scenarios_dir, Path::new(&reports_dir)) {
                 eprintln!("TUI 오류: {}", e);
                 std::process::exit(1);
@@ -243,6 +260,7 @@ fn main() {
                 },
             };
             let paths = resolve_data_paths(scenarios_dir.as_deref(), golden_sets_dir.as_deref());
+            install_data_store(&paths);
             if let Err(e) = web::run_server(socket, paths.scenarios_dir, reports_dir.into(), paths.golden_sets_dir, trajectories_dir.into()) {
                 eprintln!("서버 오류: {}", e);
                 std::process::exit(1);

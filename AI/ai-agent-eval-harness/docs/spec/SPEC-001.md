@@ -81,7 +81,7 @@ pub struct TuiState {
 | TC ID | 시나리오 | 입력 | 기대 결과 | 유형 | 검증 대상 FR |
 |-------|---------|------|----------|------|-------------|
 | TC-1  | tui 서브커맨드 파싱 | `Cli::parse_from(["eval-harness","tui"])` | `Commands::Tui` 분기 | unit | FR-1 |
-| TC-2  | 시나리오 목록 로딩 | eval_data/scenarios 디렉토리 | scenarios가 비어있지 않음 | unit | FR-2 |
+| TC-2  | 시나리오 목록 로딩 | eval_data/eval_scenarios 디렉토리 | scenarios가 비어있지 않음 | unit | FR-2 |
 | TC-3  | 선택 인덱스 이동 | next() 호출 | scenario_idx가 1 증가 | unit | FR-2 |
 | TC-4  | 리포트 파일 목록 로딩 | 임시 dir에 .json 파일 배치 | reports 목록에 포함 | unit | FR-3 |
 | TC-5  | Tab으로 포커스 전환 | handle_key(Tab) | focus가 Reports로 바뀜 | unit | FR-3 |

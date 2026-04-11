@@ -135,30 +135,36 @@ AZURE_OPENAI_MAX_TOKENS=4096
 
 ### 데이터 경로 설정 (`eval-harness.toml`)
 
-`eval_data/` 계열 디렉토리(시나리오, 골든셋)는 다음 4단계 우선순위로 해석됩니다 (높음 → 낮음):
+평가 데이터는 **SQLite 단일 파일**(`eval_data/eval_harness.db`)에 저장되며, `eval_data/eval_scenarios/*.yaml`, `eval_data/golden_sets/*.json` 파일은 DB 가 비어 있을 때 자동으로 적재되는 **seed 소스**로 남아 있습니다(SPEC-017). 최초 기동 시 DB 가 없으면 파일에서 읽어 적재하고, 이후 실행은 DB 를 재사용합니다. YAML/JSON 파일은 깃 diff 로 변경을 리뷰할 수 있도록 저장소에 유지됩니다.
+
+경로는 다음 4단계 우선순위로 해석됩니다 (높음 → 낮음):
 
 1. **CLI 인자** — `--scenarios-dir`, `--golden-sets-dir`
-2. **환경변수** — `EVAL_HARNESS_SCENARIOS_DIR`, `EVAL_HARNESS_GOLDEN_SETS_DIR`
+2. **환경변수** — `EVAL_HARNESS_SCENARIOS_DIR`, `EVAL_HARNESS_GOLDEN_SETS_DIR`, `EVAL_HARNESS_DB_PATH`
 3. **설정 파일** — 프로젝트 루트의 `eval-harness.toml`
-4. **내장 기본값** — `eval_data/scenarios`, `eval_data/golden_sets`
+4. **내장 기본값** — `eval_data/eval_harness.db`, `eval_data/eval_scenarios`, `eval_data/golden_sets`
 
 설정 파일 예시 (`eval-harness.toml`):
 
 ```toml
 [data]
-# 상대 경로는 이 설정 파일이 위치한 디렉토리를 기준으로 해석됩니다.
-scenarios_dir   = "eval_data/scenarios"
-# 절대 경로도 가능합니다.
+# SQLite DB 파일 경로. 상대 경로는 이 설정 파일이 위치한 디렉토리 기준.
+db_path         = "eval_data/eval_harness.db"
+# seed 소스 디렉토리 (DB 가 비어 있을 때만 사용).
+scenarios_dir   = "eval_data/eval_scenarios"
 golden_sets_dir = "/var/lib/eval/golden"
 
 # PPA 에이전트 루프 파라미터 (SPEC-016).
-# 섹션 또는 개별 키 누락 시 기본값(각 3)이 사용됩니다. 값은 1 이상이어야 합니다.
 [evaluation]
-max_iterations       = 5  # Perceive-Policy-Action 루프 최대 반복 횟수
-early_stop_threshold = 3  # 동일 행동 N회 연속 시 조기 종료
+max_iterations       = 5
+early_stop_threshold = 3
 ```
 
-설정 파일이 없으면 기존 동작과 동일하게 내장 기본값(CWD 기준)이 사용됩니다. desktop 앱은 워크스페이스 루트에서 동일한 설정 파일을 검색합니다. 자세한 명세는 `docs/spec/SPEC-015.md`, `docs/spec/SPEC-016.md` 참조.
+설정 파일이 없으면 기존 동작과 동일하게 내장 기본값(CWD 기준)이 사용됩니다. desktop 앱은 워크스페이스 루트에서 동일한 설정 파일을 검색합니다.
+
+**DB 재빌드**: seed 소스(YAML/JSON)를 수정한 뒤 DB 에 반영하려면 `eval_data/eval_harness.db` 파일을 삭제하세요. 다음 실행 시 최신 파일 내용으로 자동 재생성됩니다. (DB 파일은 `.gitignore` 에 포함되어 있습니다.)
+
+자세한 명세는 `docs/spec/SPEC-015.md`, `docs/spec/SPEC-016.md`, `docs/spec/SPEC-017.md` 참조.
 
 ### 시나리오 목록 조회
 
@@ -166,7 +172,7 @@ early_stop_threshold = 3  # 동일 행동 N회 연속 시 조기 종료
 cargo run -- list
 
 # 시나리오 디렉토리 직접 지정
-cargo run -- list --scenarios-dir eval_data/scenarios
+cargo run -- list --scenarios-dir eval_data/eval_scenarios
 ```
 
 ### 벤치마크 실행
@@ -212,7 +218,7 @@ cargo run -- compare baseline.json current.json --output comparison.json
 cargo run -- tui
 
 # 디렉토리 직접 지정
-cargo run -- tui --scenarios-dir eval_data/scenarios --reports-dir reporting_logs
+cargo run -- tui --scenarios-dir eval_data/eval_scenarios --reports-dir reporting_logs
 ```
 
 **키 바인딩**
@@ -247,7 +253,7 @@ cargo run -- serve
 
 # 옵션 지정 (모든 기본값 명시)
 cargo run -- serve --addr 127.0.0.1:8080 \
-                   --scenarios-dir eval_data/scenarios \
+                   --scenarios-dir eval_data/eval_scenarios \
                    --reports-dir reporting_logs \
                    --golden-sets-dir eval_data/golden_sets \
                    --trajectories-dir reporting_trajectories
@@ -445,7 +451,7 @@ cargo make desktop-release-all
 
 ## 커스텀 시나리오 추가
 
-`eval_data/scenarios/` 디렉토리에 YAML 파일을 추가하세요:
+`eval_data/eval_scenarios/` 디렉토리에 YAML 파일을 추가하세요:
 
 ```yaml
 name: my_domain

@@ -117,7 +117,13 @@ pub async fn index() -> Html<&'static str> { Html(INDEX_HTML) }
 /// @trace FR: PRD-007/FR-1
 pub async fn help() -> Html<&'static str> { Html(HELP_HTML) }
 
-pub async fn list_scenarios(State(st): State<AppState>) -> Json<Vec<DomainSummary>> { Json(list_scenarios_impl(&st.scenarios_dir)) }
+pub async fn list_scenarios(State(st): State<AppState>) -> Json<Vec<DomainSummary>> {
+    let scen = st.scenarios_dir.clone();
+    let out = tokio::task::spawn_blocking(move || list_scenarios_impl(&scen))
+        .await
+        .unwrap_or_default();
+    Json(out)
+}
 
 pub async fn list_reports(State(st): State<AppState>) -> Json<Vec<String>> { Json(list_reports_impl(&st.reports_dir)) }
 
