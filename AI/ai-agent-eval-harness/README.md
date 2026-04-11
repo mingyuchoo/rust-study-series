@@ -166,6 +166,37 @@ early_stop_threshold = 3
 
 자세한 명세는 `docs/spec/SPEC-015.md`, `docs/spec/SPEC-016.md`, `docs/spec/SPEC-017.md` 참조.
 
+### 시나리오/골든셋 CRUD (SPEC-019)
+
+DB 로 전환된 저장소 위에서 **시나리오·골든셋을 REST API 로 직접 관리**할 수 있습니다. 모든 쓰기는 `eval_data/eval_harness.db` 에만 반영되며 YAML/JSON 파일은 건드리지 않습니다 (seed 소스로만 의미).
+
+**REST 엔드포인트**:
+
+```
+POST   /api/eval-scenarios/:domain               시나리오 생성
+PUT    /api/eval-scenarios/:domain/:id           시나리오 수정
+DELETE /api/eval-scenarios/:domain/:id           시나리오 삭제 (연결된 골든셋도 cascade 삭제)
+
+POST   /api/golden-sets/:domain                  골든셋 엔트리 생성
+PUT    /api/golden-sets/:domain/:scenario_id     골든셋 엔트리 수정
+DELETE /api/golden-sets/:domain/:scenario_id     골든셋 엔트리 삭제
+```
+
+**HTTP 에러 매핑**:
+- `409 Conflict` — 동일 `(domain, id)` 중복 생성
+- `404 Not Found` — 존재하지 않는 엔트리 수정/삭제
+- `400 Bad Request` — 필수 필드 누락, 잘못된 ID 포맷 (`^[A-Za-z0-9_-]+$`, 1~64자)
+- `500 Internal` — DB 오류
+
+**웹 UI 관리 탭**: 웹 클라이언트(`cargo run -- serve`)에 "관리" 탭이 추가되었습니다. 도메인별 시나리오/골든셋 목록을 조회하고 JSON 편집기로 생성/수정/삭제할 수 있습니다.
+
+**주의사항**:
+- SQLite 의 `PRAGMA foreign_keys = ON` 이 모든 커넥션에서 활성화되어 시나리오 삭제 시 골든셋이 FK cascade 로 자동 삭제됩니다.
+- v1 DB 는 기동 시 자동으로 v2 스키마(FK 추가) 로 마이그레이션됩니다 (무손실 table-rename).
+- YAML/JSON 파일로의 역동기화(export)는 지원하지 않습니다. DB 가 유일한 Source of Truth 입니다.
+
+자세한 명세는 `docs/prd/PRD-019.md`, `docs/spec/SPEC-019.md` 참조.
+
 ### 시나리오 목록 조회
 
 ```bash

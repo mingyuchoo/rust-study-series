@@ -1,33 +1,88 @@
 # 추적성 매트릭스
 
-최종 갱신: 2026-04-10 18:54
+최종 갱신: 2026-04-11 11:34
 
 ## 정방향 추적 (요구사항 -> 구현)
 
 | PRD | FR ID | FR 제목 | SPEC | TC | 테스트 파일 | 구현 파일 | 구현 심볼 | 상태 |
 |-----|-------|--------|------|-----|-----------|----------|----------|------|
-| PRD-014 | FR-1 | 상단 헤더 우측(언어 전환 옆)에 라이트/다크 테마 토 | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-1, TC-1, TC-1, TC-1, TC-2, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-2, TC-1, TC-1, TC-1, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
-| PRD-014 | FR-2 | 토글 클릭 시 `index.html` 및 `help.h | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-2, TC-3, TC-2, TC-2, TC-3, TC-4, TC-5, TC-6, TC-2, TC-3, TC-3, TC-4, TC-2, TC-3, TC-4, TC-2, TC-2, TC-4, TC-2, TC-5, TC-3, TC-4, TC-9 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
-| PRD-014 | FR-3 | 선택된 테마는 `localStorage` 의 `them | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-4, TC-5, TC-3, TC-3, TC-4, TC-5, TC-7, TC-3, TC-5, TC-5, TC-3, TC-3, TC-1, TC-2, TC-3, TC-3, TC-4, TC-5 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
-| PRD-015 | FR-1 | 프로젝트 루트(또는 사용자가 지정한 위치)의 `eval | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-1, TC-1, TC-1, TC-1, TC-2, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-2, TC-1, TC-1, TC-1, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | write_cfg, test_tc_1_load_full_config | PASS |
-| PRD-015 | FR-2 | 설정 파일의 경로 값이 절대 경로(`/`/`C:\\`  | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-2, TC-3, TC-2, TC-2, TC-3, TC-4, TC-5, TC-6, TC-2, TC-3, TC-3, TC-4, TC-2, TC-3, TC-4, TC-2, TC-2, TC-4, TC-2, TC-5, TC-3, TC-4, TC-9 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | test_tc_2_partial_config_fallback, test_tc_3_relative_path_uses_config_dir | PASS |
-| PRD-015 | FR-3 | 환경변수 `EVAL_HARNESS_SCENARIOS_D | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015 | TC-4, TC-5, TC-3, TC-3, TC-4, TC-5, TC-7, TC-3, TC-5, TC-5, TC-3, TC-3, TC-1, TC-2, TC-3, TC-3, TC-4, TC-5 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | test_tc_4_absolute_path_kept_as_is | PASS |
-| PRD-015 | FR-4 | CLI 의 `--scenarios-dir`, `--go | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-006, SPEC-009, SPEC-015 | TC-6, TC-4, TC-5, TC-4, TC-5, TC-6, TC-7, TC-4, TC-6, TC-6 | - | crates/eval-harness/src/data_paths.rs | test_tc_5_env_overrides_config | PASS |
-| PRD-015 | FR-5 | 설정 파일/환경변수/CLI 인자가 모두 없으면 기존 동 | SPEC-002, SPEC-003, SPEC-004, SPEC-006, SPEC-009, SPEC-015 | TC-6, TC-6, TC-7, TC-8, TC-5, TC-7, TC-2, TC-7 | - | crates/eval-harness/src/data_paths.rs | test_tc_1_load_full_config, test_tc_6_cli_overrides_all | PASS |
-| PRD-015 | FR-6 | `desktop/src/main.rs` 도 `crate | SPEC-003, SPEC-004, SPEC-006, SPEC-015 | TC-8, TC-9, TC-9, TC-6, TC-8 | - | crates/eval-harness/src/data_paths.rs | test_tc_7_builtin_defaults_when_nothing_set | PASS |
+| PRD-014 | FR-1 | 상단 헤더 우측(언어 전환 옆)에 라이트/다크 테마 토 | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015, SPEC-016, SPEC-017, SPEC-019 | TC-1, TC-1, TC-1, TC-1, TC-2, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-2, TC-1, TC-1, TC-1, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-3, TC-4, TC-1, TC-1, TC-3, TC-9, TC-10, TC-11 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-014 | FR-2 | 토글 클릭 시 `index.html` 및 `help.h | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015, SPEC-016, SPEC-017, SPEC-019 | TC-2, TC-3, TC-2, TC-2, TC-3, TC-4, TC-5, TC-6, TC-2, TC-3, TC-3, TC-4, TC-2, TC-3, TC-4, TC-2, TC-2, TC-4, TC-2, TC-5, TC-3, TC-4, TC-9, TC-2, TC-3, TC-1, TC-2, TC-6, TC-7, TC-12 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-014 | FR-3 | 선택된 테마는 `localStorage` 의 `them | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015, SPEC-016, SPEC-017, SPEC-019 | TC-4, TC-5, TC-3, TC-3, TC-4, TC-5, TC-7, TC-3, TC-5, TC-5, TC-3, TC-3, TC-1, TC-2, TC-3, TC-3, TC-4, TC-5, TC-3, TC-4, TC-8, TC-13 | crates/eval-harness/src/web_theme.rs | - | - | INCOMPLETE |
+| PRD-015 | FR-1 | 프로젝트 루트(또는 사용자가 지정한 위치)의 `eval | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015, SPEC-016, SPEC-017, SPEC-019 | TC-1, TC-1, TC-1, TC-1, TC-2, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-2, TC-1, TC-1, TC-1, TC-1, TC-2, TC-3, TC-1, TC-1, TC-2, TC-1, TC-3, TC-4, TC-1, TC-1, TC-3, TC-9, TC-10, TC-11 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | write_cfg, test_tc_1_load_full_config | PASS |
+| PRD-015 | FR-2 | 설정 파일의 경로 값이 절대 경로(`/`/`C:\\`  | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-007, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015, SPEC-016, SPEC-017, SPEC-019 | TC-2, TC-3, TC-2, TC-2, TC-3, TC-4, TC-5, TC-6, TC-2, TC-3, TC-3, TC-4, TC-2, TC-3, TC-4, TC-2, TC-2, TC-4, TC-2, TC-5, TC-3, TC-4, TC-9, TC-2, TC-3, TC-1, TC-2, TC-6, TC-7, TC-12 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | test_tc_2_partial_config_fallback, test_tc_3_relative_path_uses_config_dir | PASS |
+| PRD-015 | FR-3 | 환경변수 `EVAL_HARNESS_SCENARIOS_D | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-005, SPEC-006, SPEC-008, SPEC-009, SPEC-010, SPEC-011, SPEC-012, SPEC-014, SPEC-015, SPEC-016, SPEC-017, SPEC-019 | TC-4, TC-5, TC-3, TC-3, TC-4, TC-5, TC-7, TC-3, TC-5, TC-5, TC-3, TC-3, TC-1, TC-2, TC-3, TC-3, TC-4, TC-5, TC-3, TC-4, TC-8, TC-13 | crates/eval-harness/src/web_theme.rs | crates/eval-harness/src/data_paths.rs | test_tc_4_absolute_path_kept_as_is | PASS |
+| PRD-015 | FR-4 | CLI 의 `--scenarios-dir`, `--go | SPEC-001, SPEC-002, SPEC-003, SPEC-004, SPEC-006, SPEC-009, SPEC-015, SPEC-017, SPEC-019 | TC-6, TC-4, TC-5, TC-4, TC-5, TC-6, TC-7, TC-4, TC-6, TC-6, TC-7, TC-5, TC-8, TC-11 | - | crates/eval-harness/src/data_paths.rs | test_tc_5_env_overrides_config | PASS |
+| PRD-015 | FR-5 | 설정 파일/환경변수/CLI 인자가 모두 없으면 기존 동 | SPEC-002, SPEC-003, SPEC-004, SPEC-006, SPEC-009, SPEC-015, SPEC-017, SPEC-019 | TC-6, TC-6, TC-7, TC-8, TC-5, TC-7, TC-2, TC-7, TC-2, TC-4, TC-7, TC-9, TC-10, TC-12, TC-14 | - | crates/eval-harness/src/data_paths.rs | test_tc_1_load_full_config, test_tc_6_cli_overrides_all | PASS |
+| PRD-015 | FR-6 | `desktop/src/main.rs` 도 `crate | SPEC-003, SPEC-004, SPEC-006, SPEC-015, SPEC-017, SPEC-019 | TC-8, TC-9, TC-9, TC-6, TC-8 | - | crates/eval-harness/src/data_paths.rs | test_tc_7_builtin_defaults_when_nothing_set | PASS |
 
 ## 역방향 추적 (구현 -> 요구사항)
 
 | 구현 파일 | 심볼 | SPEC | TC | FR | PRD | 상태 |
 |----------|------|------|-----|-----|-----|------|
+| crates/data-scenarios/src/loader.rs | default | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/loader.rs | derive_golden_dir | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/loader.rs | install | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/loader.rs | load_all_domains | SPEC-019 | - | PRD-019/FR-7 | PRD-019 | OK |
+| crates/data-scenarios/src/loader.rs | load_all_golden_sets | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/loader.rs | load_domain_config | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/loader.rs | load_golden_sets | SPEC-019 | - | PRD-019/FR-7 | PRD-019 | OK |
+| crates/data-scenarios/src/loader.rs | new | SPEC-017 | - | PRD-017/FR-5 | PRD-017 | OK |
+| crates/data-scenarios/src/loader.rs | new_blocking | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/loader.rs | new_in_memory_blocking | SPEC-017 | - | PRD-017/FR-3 | PRD-017 | OK |
+| crates/data-scenarios/src/loader.rs | resolve | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | delete_golden_entry | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | delete_scenario | SPEC-019 | - | PRD-019/FR-2 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | init_schema | SPEC-019 | - | PRD-019/FR-4 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | insert_golden_entry | SPEC-019 | - | PRD-019/FR-2, PRD-019/FR-5 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | insert_scenario | SPEC-019 | - | PRD-019/FR-1, PRD-019/FR-5 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | is_empty | SPEC-017 | - | PRD-017/FR-2, PRD-017/FR-7 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | load_all_domains | SPEC-017 | - | PRD-017/FR-3, PRD-017/FR-7 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | load_all_golden_sets | - | SPEC-017/TC-1, TC-2, TC-3, TC-4, TC-5, TC-6 | - | - | NO_FR |
+| crates/data-scenarios/src/sqlite_store.rs | load_golden_sets_by_domain | SPEC-019, SPEC-019 | - | PRD-019/FR-1, PRD-019/FR-2, PRD-019/FR-3, PRD-019/FR-4, PRD-019/FR-1, PRD-019/FR-5 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | map_unique_violation | SPEC-017, SPEC-017 | - | PRD-017/FR-1, PRD-017/FR-6, PRD-017/FR-1, PRD-017/FR-6 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | migrate_v2_cascade | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | open | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | open_and_seed | SPEC-017 | - | PRD-017/FR-3, PRD-017/FR-7 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | open_and_seed_is_idempotent_across_opens | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | open_in_memory | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | open_in_memory_for_loader | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | pool | SPEC-017, SPEC-019 | - | PRD-017/FR-1, PRD-019/FR-4 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | sample_entry | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | sample_scenario | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | seed_from_fs | - | - | - | - | UNTRACED |
+| crates/data-scenarios/src/sqlite_store.rs | seeded_store | - | SPEC-019/TC-1 | PRD-019/FR-1 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_15_loader_golden_sets_via_db | - | SPEC-017/TC-1, SPEC-017/TC-2 | PRD-017/FR-2 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_1_insert_scenario_appears_in_load_all | - | SPEC-019/TC-2 | PRD-019/FR-5 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_2_insert_scenario_duplicate_returns_conflict | - | SPEC-019/TC-3 | PRD-019/FR-1 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_3_update_scenario_changes_task | - | SPEC-019/TC-4 | PRD-019/FR-5 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_4_update_scenario_missing_returns_not_found | - | SPEC-019/TC-5 | PRD-019/FR-4 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_5_delete_scenario_cascades_golden_set | - | SPEC-019/TC-6 | PRD-019/FR-2 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_6_insert_golden_entry_appears_in_load | - | SPEC-019/TC-7 | PRD-019/FR-2, PRD-019/FR-5 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_7_golden_entry_update_delete_cycle | - | SPEC-019/TC-8 | PRD-019/FR-4 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | spec019_tc_8_migration_v2_preserves_data | - | SPEC-019/TC-15 | PRD-019/FR-7 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | tc_1_seed_empty_db_inserts_all | - | SPEC-017/TC-2 | PRD-017/FR-2 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | tc_2_seed_is_idempotent | - | SPEC-017/TC-3 | PRD-017/FR-3 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | tc_3_load_all_domains_returns_both | - | SPEC-017/TC-4 | PRD-017/FR-3, PRD-017/FR-7 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | tc_4_load_golden_sets_by_domain | - | SPEC-017/TC-5 | PRD-017/FR-7 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | tc_5_scenario_environment_roundtrip | - | SPEC-017/TC-6 | PRD-017/FR-7 | PRD-017 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | tc_6_golden_set_tool_results_roundtrip | - | SPEC-019/TC-1, TC-2, TC-3, TC-4, TC-5, TC-6, TC-7, TC-8, TC-15 | - | - | NO_FR |
+| crates/data-scenarios/src/sqlite_store.rs | update_golden_entry | SPEC-019 | - | PRD-019/FR-2, PRD-019/FR-5 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | update_scenario | SPEC-019 | - | PRD-019/FR-1, PRD-019/FR-4 | PRD-019 | OK |
+| crates/data-scenarios/src/sqlite_store.rs | write_sample_dataset | - | SPEC-017/TC-1 | PRD-017/FR-1, PRD-017/FR-2 | PRD-017 | OK |
 | crates/eval-harness/src/data_paths.rs | apply_config | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/data_paths.rs | apply_env | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/data_paths.rs | apply_env_from | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/data_paths.rs | default | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/data_paths.rs | load | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | load_evaluation_config | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/data_paths.rs | read_config | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/data_paths.rs | resolve_for_root | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/data_paths.rs | resolve_relative | - | - | FR-1, FR-2, FR-3, FR-4, FR-5, FR-6 | - | OK |
+| crates/eval-harness/src/data_paths.rs | test_spec016_tc_1_load_evaluation_full | - | SPEC-016/TC-2 | PRD-016/FR-2 | PRD-016 | OK |
+| crates/eval-harness/src/data_paths.rs | test_spec016_tc_2_missing_section_defaults | - | SPEC-016/TC-3 | PRD-016/FR-1, PRD-016/FR-2 | PRD-016 | OK |
+| crates/eval-harness/src/data_paths.rs | test_spec016_tc_3_partial_key_override | - | SPEC-016/TC-4 | PRD-016/NFR-1 | PRD-016 | OK |
+| crates/eval-harness/src/data_paths.rs | test_spec016_tc_4_zero_rejected | - | SPEC-015/TC-9 | PRD-015/NFR-2 | PRD-015 | OK |
 | crates/eval-harness/src/data_paths.rs | test_tc_1_load_full_config | - | SPEC-015/TC-2 | PRD-015/FR-1, PRD-015/FR-5 | PRD-015 | OK |
 | crates/eval-harness/src/data_paths.rs | test_tc_2_partial_config_fallback | - | SPEC-015/TC-3 | PRD-015/FR-2 | PRD-015 | OK |
 | crates/eval-harness/src/data_paths.rs | test_tc_3_relative_path_uses_config_dir | - | SPEC-015/TC-4 | PRD-015/FR-2 | PRD-015 | OK |
@@ -35,9 +90,10 @@
 | crates/eval-harness/src/data_paths.rs | test_tc_5_env_overrides_config | - | SPEC-015/TC-6 | PRD-015/FR-4 | PRD-015 | OK |
 | crates/eval-harness/src/data_paths.rs | test_tc_6_cli_overrides_all | - | SPEC-015/TC-7 | PRD-015/FR-5 | PRD-015 | OK |
 | crates/eval-harness/src/data_paths.rs | test_tc_7_builtin_defaults_when_nothing_set | - | SPEC-015/TC-8 | PRD-015/FR-6 | PRD-015 | OK |
-| crates/eval-harness/src/data_paths.rs | test_tc_8_resolve_for_root_joins_root | - | SPEC-015/TC-9 | PRD-015/NFR-2 | PRD-015 | OK |
+| crates/eval-harness/src/data_paths.rs | test_tc_8_resolve_for_root_joins_root | - | SPEC-016/TC-1 | PRD-016/FR-1 | PRD-016 | OK |
 | crates/eval-harness/src/data_paths.rs | test_tc_9_invalid_toml_returns_parse_error | - | - | - | - | UNTRACED |
-| crates/eval-harness/src/data_paths.rs | with_overrides | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/data_paths.rs | with_db_override | SPEC-016 | SPEC-016/TC-1, SPEC-016/TC-2, SPEC-016/TC-3, SPEC-016/TC-4 | PRD-016/FR-1, PRD-016/FR-2 | PRD-016 | OK |
+| crates/eval-harness/src/data_paths.rs | with_overrides | SPEC-017 | - | PRD-017/FR-4 | PRD-017 | OK |
 | crates/eval-harness/src/data_paths.rs | write_cfg | - | SPEC-015/TC-1 | PRD-015/FR-1 | PRD-015 | OK |
 | crates/eval-harness/src/build_release.rs | read_root_makefile | - | SPEC-012/TC-1 | PRD-012/FR-1, PRD-012/FR-3 | PRD-012 | OK |
 | crates/eval-harness/src/build_release.rs | test_tc_1_makefile_has_desktop_release_windows | - | SPEC-012/TC-2 | PRD-012/FR-1, PRD-012/FR-3 | PRD-012 | OK |
@@ -51,31 +107,65 @@
 | crates/eval-harness/src/desktop_helpers.rs | test_tc_4_wait_for_port_detects_listener | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/desktop_helpers.rs | wait_for_port | - | SPEC-009/TC-1 | FR-1, FR-2, PRD-009/FR-1 | PRD-009 | OK |
 | crates/eval-harness/src/main.rs | build_registry | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/main.rs | install_data_store | SPEC-016 | - | PRD-016/FR-3 | PRD-016 | OK |
 | crates/eval-harness/src/main.rs | main | - | - | - | - | UNTRACED |
-| crates/eval-harness/src/main.rs | resolve_data_paths | - | - | - | - | UNTRACED |
-| crates/eval-harness/src/web/mod.rs | build_router | SPEC-002 | SPEC-002/TC-1 | PRD-002/FR-1 | PRD-002 | OK |
+| crates/eval-harness/src/main.rs | resolve_data_paths | SPEC-017 | - | PRD-017/FR-5 | PRD-017 | OK |
+| crates/eval-harness/src/web/api_crud.rs | _unused_anchor | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | create_golden_entry | SPEC-019 | - | PRD-019/FR-2 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | create_golden_entry_impl | SPEC-019 | - | PRD-019/FR-2, PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | create_scenario | SPEC-019 | - | PRD-019/FR-1 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | create_scenario_impl | SPEC-019 | - | PRD-019/FR-1, PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | default_difficulty | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | default_tolerance | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | default_version | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | delete_golden_entry_handler | - | SPEC-019/TC-9, TC-10, TC-11, TC-12, TC-13, TC-14 | - | - | NO_FR |
+| crates/eval-harness/src/web/api_crud.rs | delete_golden_entry_impl | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | delete_scenario_handler | SPEC-019 | - | PRD-019/FR-2 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | delete_scenario_impl | SPEC-019 | - | PRD-019/FR-2, PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | from | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | golden_body | - | SPEC-019/TC-9 | PRD-019/FR-1, PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | into_response | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | make_store | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | status_and_kind | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | store_from | SPEC-019 | - | PRD-019/FR-1 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | tc_10_update_scenario_ok_and_not_found | - | SPEC-019/TC-11 | PRD-019/FR-1, PRD-019/FR-4 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | tc_11_delete_scenario_cascades_golden | - | SPEC-019/TC-12 | PRD-019/FR-2, PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | tc_12_golden_crud_cycle | - | SPEC-019/TC-13 | PRD-019/FR-3 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | tc_13_files_mtime_unchanged_after_crud | - | SPEC-019/TC-14 | PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | tc_14_bad_request_on_invalid_input | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | tc_9_create_scenario_then_conflict | - | SPEC-019/TC-10 | PRD-019/FR-1, PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | update_golden_entry_handler | SPEC-019 | - | PRD-019/FR-2 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | update_golden_entry_impl | SPEC-019 | - | PRD-019/FR-2, PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | update_scenario_handler | SPEC-019 | - | PRD-019/FR-1, PRD-019/FR-4 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | update_scenario_impl | SPEC-019 | - | PRD-019/FR-1, PRD-019/FR-4 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | upsert_body | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | validate_id | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_crud.rs | validate_non_empty | SPEC-019 | - | PRD-019/FR-1, PRD-019/FR-5 | PRD-019 | OK |
+| crates/eval-harness/src/web/api_crud.rs | write_seed | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/mod.rs | build_router | SPEC-002, SPEC-019 | SPEC-002/TC-1 | PRD-002/FR-1, PRD-019/FR-7 | PRD-002 | OK |
 | crates/eval-harness/src/web/mod.rs | run_server | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api_exec.rs | agent_execute | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api_exec.rs | agent_execute_impl | SPEC-004 | SPEC-004/TC-4, SPEC-004/TC-5 | PRD-004/FR-3 | PRD-004 | OK |
-| crates/eval-harness/src/web/api_exec.rs | build_full_tool_registry | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_exec.rs | build_full_tool_registry | SPEC-004 | SPEC-004/TC-1, SPEC-004/TC-2 | PRD-004/FR-1 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | fault_sim | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api_exec.rs | fault_sim_impl | SPEC-004 | SPEC-004/TC-10 | PRD-004/FR-7 | PRD-004 | OK |
-| crates/eval-harness/src/web/api_exec.rs | get_trajectory | - | - | FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7 | - | OK |
+| crates/eval-harness/src/web/api_exec.rs | get_trajectory | - | - | FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8 | - | OK |
 | crates/eval-harness/src/web/api_exec.rs | get_trajectory_impl | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api_exec.rs | golden_entry | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api_exec.rs | golden_entry_impl | SPEC-004 | SPEC-004/TC-8 | PRD-004/FR-5 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | list_trajectories | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api_exec.rs | list_trajectories_impl | SPEC-004 | SPEC-004/TC-11 | PRD-004/FR-7 | PRD-004 | OK |
-| crates/eval-harness/src/web/api_exec.rs | load_domain_scenarios | SPEC-004 | SPEC-004/TC-1, SPEC-004/TC-2 | PRD-004/FR-1 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | run_scenario | - | - | - | - | UNTRACED |
-| crates/eval-harness/src/web/api_exec.rs | run_scenario_impl | SPEC-004 | SPEC-004/TC-3 | PRD-004/FR-2 | PRD-004 | OK |
+| crates/eval-harness/src/web/api_exec.rs | run_scenario_impl | SPEC-004 | SPEC-004/TC-3, SPEC-004/TC-12, SPEC-004/TC-13 | PRD-004/FR-2, PRD-004/FR-8 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | score | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api_exec.rs | score_impl | SPEC-004 | SPEC-004/TC-9 | PRD-004/FR-6 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | test_tc_10_list_trajectories | - | SPEC-004/TC-11 | PRD-004/FR-7 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | test_tc_11_get_trajectory_traversal_rejected | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api_exec.rs | test_tc_12_agent_execute_with_domain_loads_tools | - | SPEC-004/TC-13 | PRD-004/FR-8 | PRD-004 | OK |
+| crates/eval-harness/src/web/api_exec.rs | test_tc_13_agent_execute_unknown_domain | - | SPEC-004/TC-4 | PRD-004/FR-3 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | test_tc_1_run_scenario_ok | - | SPEC-004/TC-2 | PRD-004/FR-1 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | test_tc_2_run_scenario_missing | - | SPEC-004/TC-3 | PRD-004/FR-2 | PRD-004 | OK |
-| crates/eval-harness/src/web/api_exec.rs | test_tc_3_agent_execute_passthrough | - | SPEC-004/TC-4 | PRD-004/FR-3 | PRD-004 | OK |
+| crates/eval-harness/src/web/api_exec.rs | test_tc_3_agent_execute_passthrough | - | SPEC-004/TC-12 | PRD-004/FR-8 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | test_tc_4_tool_invoke_ok | - | SPEC-004/TC-5 | PRD-004/FR-3 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | test_tc_5_unknown_tool | - | SPEC-004/TC-6 | PRD-004/FR-4 | PRD-004 | OK |
 | crates/eval-harness/src/web/api_exec.rs | test_tc_6_golden_entry_found | - | SPEC-004/TC-7 | PRD-004/FR-4 | PRD-004 | OK |
@@ -98,9 +188,9 @@
 | crates/eval-harness/src/web/api.rs | list_golden_sets_impl | SPEC-003 | SPEC-003/TC-4, SPEC-003/TC-5 | PRD-003/FR-4 | PRD-003 | OK |
 | crates/eval-harness/src/web/api.rs | list_tools | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api.rs | list_tools_impl | SPEC-003 | SPEC-003/TC-3 | PRD-003/FR-3 | PRD-003 | OK |
-| crates/eval-harness/src/web/api.rs | run_suite | - | - | - | - | UNTRACED |
-| crates/eval-harness/src/web/api.rs | run_suite_impl | SPEC-005 | SPEC-005/TC-1, SPEC-005/TC-2, SPEC-005/TC-3 | PRD-005/FR-1 | PRD-005 | OK |
-| crates/eval-harness/src/web/api.rs | run_suite_with_save_impl | SPEC-003 | SPEC-003/TC-8, SPEC-003/TC-9 | PRD-003/FR-6 | PRD-003 | OK |
+| crates/eval-harness/src/web/api.rs | run_eval_scenario | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/web/api.rs | run_eval_scenario_impl | SPEC-005 | SPEC-005/TC-1, SPEC-005/TC-2, SPEC-005/TC-3 | PRD-005/FR-1 | PRD-005 | OK |
+| crates/eval-harness/src/web/api.rs | run_eval_scenario_with_save_impl | SPEC-003 | SPEC-003/TC-8, SPEC-003/TC-9 | PRD-003/FR-6 | PRD-003 | OK |
 | crates/eval-harness/src/web/api.rs | scenario_detail | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/web/api.rs | scenario_detail_impl | SPEC-003 | SPEC-003/TC-6, SPEC-003/TC-7 | PRD-003/FR-5 | PRD-003 | OK |
 | crates/eval-harness/src/web/api.rs | test_spec005_tc_1_run_with_default_save | - | SPEC-005/TC-2 | PRD-005/FR-1 | PRD-005 | OK |
@@ -115,7 +205,7 @@
 | crates/eval-harness/src/web/api.rs | test_tc_3_load_golden_sets | - | SPEC-003/TC-4 | PRD-003/FR-4 | PRD-003 | OK |
 | crates/eval-harness/src/web/api.rs | test_tc_4_scenario_detail_found | - | SPEC-003/TC-5 | PRD-003/FR-4 | PRD-003 | OK |
 | crates/eval-harness/src/web/api.rs | test_tc_5_scenario_detail_missing | - | SPEC-003/TC-6 | PRD-003/FR-5 | PRD-003 | OK |
-| crates/eval-harness/src/web/api.rs | test_tc_6_run_suite_passthrough | - | SPEC-003/TC-7 | PRD-003/FR-5 | PRD-003 | OK |
+| crates/eval-harness/src/web/api.rs | test_tc_6_run_eval_scenario_passthrough | - | SPEC-003/TC-7 | PRD-003/FR-5 | PRD-003 | OK |
 | crates/eval-harness/src/web/api.rs | test_tc_7_unknown_agent_rejected | - | SPEC-003/TC-8 | PRD-003/FR-6 | PRD-003 | OK |
 | crates/eval-harness/src/web/api.rs | test_tc_8_compare_identical_passes | - | SPEC-003/TC-9 | PRD-003/FR-6 | PRD-003 | OK |
 | crates/eval-harness/src/web/api.rs | test_tc_9_compare_rejects_traversal | - | SPEC-005/TC-1 | PRD-005/FR-1 | PRD-005 | OK |
@@ -159,7 +249,7 @@
 | crates/eval-harness/src/web/handlers.rs | test_tc_5_path_traversal_rejected | - | SPEC-002/TC-6 | PRD-002/FR-5 | PRD-002 | OK |
 | crates/eval-harness/src/web/handlers.rs | test_tc_6_index_html_embedded | - | SPEC-006/TC-1 | PRD-006/FR-1 | PRD-006 | OK |
 | crates/eval-harness/src/web/handlers.rs | to_summary | SPEC-002 | SPEC-002/TC-3 | PRD-002/FR-3 | PRD-002 | OK |
-| crates/eval-harness/src/tui/mod.rs | event_loop | - | - | - | - | UNTRACED |
+| crates/eval-harness/src/tui/mod.rs | event_loop<B | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/tui/mod.rs | run_tui | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/tui/view.rs | draw | - | - | - | - | UNTRACED |
 | crates/eval-harness/src/tui/view.rs | render_list | - | - | - | - | UNTRACED |
@@ -180,27 +270,54 @@
 
 | PRD | 전체 FR | 커버된 FR | SPEC 수 | TC 수 | 통과 | 실패 | 커버리지 |
 |-----|--------|----------|--------|-------|------|------|---------|
-| PRD-014 | 3 | 0 | 14 | 63 | 0 | 63 | 0% |
-| PRD-015 | 6 | 6 | 14 | 86 | 86 | 0 | 100% |
+| PRD-014 | 3 | 0 | 17 | 83 | 0 | 83 | 0% |
+| PRD-015 | 6 | 6 | 17 | 117 | 117 | 0 | 100% |
 
 ## 미추적 항목 (경고)
 
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/loader.rs::new_blocking
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/loader.rs::install
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/loader.rs::resolve
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/loader.rs::load_domain_config
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/loader.rs::load_all_golden_sets
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/loader.rs::default
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/loader.rs::derive_golden_dir
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::open
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::open_in_memory
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::open_in_memory_for_loader
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::migrate_v2_cascade
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::seed_from_fs
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::delete_golden_entry
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::sample_scenario
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::sample_entry
+- WARN: 추적태그 없는 구현 함수: crates/data-scenarios/src/sqlite_store.rs::open_and_seed_is_idempotent_across_opens
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::default
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::load
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::resolve_for_root
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::apply_env
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::apply_env_from
-- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::with_overrides
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::load_evaluation_config
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::read_config
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::apply_config
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/data_paths.rs::test_tc_9_invalid_toml_returns_parse_error
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/build_release.rs::test_tc_4_makefile_has_desktop_release_all_aggregate
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/desktop_helpers.rs::test_tc_4_wait_for_port_detects_listener
-- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/main.rs::resolve_data_paths
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/main.rs::build_registry
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/main.rs::main
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::default_difficulty
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::default_version
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::default_tolerance
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::status_and_kind
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::from
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::into_response
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::validate_id
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::delete_golden_entry_impl
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::write_seed
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::make_store
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::upsert_body
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::tc_14_bad_request_on_invalid_input
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_crud.rs::_unused_anchor
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/mod.rs::run_server
-- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_exec.rs::build_full_tool_registry
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_exec.rs::get_trajectory_impl
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_exec.rs::run_scenario
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api_exec.rs::agent_execute
@@ -215,7 +332,7 @@
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api.rs::list_tools
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api.rs::list_golden_sets
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api.rs::scenario_detail
-- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api.rs::run_suite
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api.rs::run_eval_scenario
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api.rs::default_threshold
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/api.rs::test_spec005_tc_7_list_all
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::list_scenarios_impl
@@ -227,7 +344,7 @@
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::index_html_body
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/web/handlers.rs::test_spec011_tc_3_custom_select_appearance
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/mod.rs::run_tui
-- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/mod.rs::event_loop
+- WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/mod.rs::event_loop<B
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/view.rs::draw
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/view.rs::render_list
 - WARN: 추적태그 없는 구현 함수: crates/eval-harness/src/tui/state.rs::handle_key

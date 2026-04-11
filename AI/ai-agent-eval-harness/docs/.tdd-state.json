@@ -1,0 +1,52 @@
+{
+  "spec_id": "PRD-019",
+  "prd_id": null,
+  "mode": null,
+  "phase": 5,
+  "last_step": "phase5-end",
+  "failed_tcs": [],
+  "retry_count": 0,
+  "started_at": "2026-04-11T11:13:34",
+  "branch": "tdd/PRD-019",
+  "base_sha": "d6b658ec2f48fe6a619d6526e274323c2a708134",
+  "base_branch": "main",
+  "checkpoints": [
+    {
+      "phase": 1,
+      "sha": "b28fc2bcc6012c8270e656574b031f4a12150c5c",
+      "message": "Phase 1: PRD-019 초안 작성",
+      "at": "2026-04-11T11:17:26"
+    },
+    {
+      "phase": 2,
+      "sha": "05d7388d2320b65a75c5bf4c7ec1d5df98fa3487",
+      "message": "Phase 2: SPEC-019 작성",
+      "at": "2026-04-11T11:19:34"
+    },
+    {
+      "phase": 3,
+      "sha": "ce1772ce7781fae195a224c0c0f86cdeb383d047",
+      "message": "Phase 3: RED tests for SPEC-019 CRUD",
+      "at": "2026-04-11T11:28:10"
+    },
+    {
+      "phase": 4,
+      "sha": "6c4f80df3a4490416f99aab2f7157c3164c8495b",
+      "message": "Phase 4: SPEC-019 GREEN impl",
+      "at": "2026-04-11T11:34:04"
+    }
+  ],
+  "squashed_sha": null,
+  "phase_tags": {
+    "1": "tdd-phase-PRD-019-1",
+    "2": "tdd-phase-PRD-019-2",
+    "3": "tdd-phase-PRD-019-3",
+    "4": "tdd-phase-PRD-019-4",
+    "5": "tdd-phase-PRD-019-5"
+  },
+  "_meta": {
+    "schema_version": 2,
+    "updated_at": "2026-04-11T11:34:25",
+    "checksum": "ce2fb1919e9bf6bff7661e478d8575edd6e8410f605fec19bd3bb4a22e22c810"
+  }
+}
