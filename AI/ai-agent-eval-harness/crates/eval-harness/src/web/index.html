@@ -318,6 +318,7 @@
             <button class="secondary" onclick="refreshTrajectories()" data-i18n="traj.refresh">Refresh → GET /api/trajectories</button>
             <button class="primary" onclick="scoreTrajectory()" data-i18n="traj.score">Score this trajectory → POST /api/score</button>
           </div>
+          <div id="traj-badge" style="margin:6px 0;font-size:11px;color:var(--fg-subtle)"></div>
           <pre id="traj-out" data-i18n="traj.selectHint">select a trajectory</pre>
         </div>
       </div>
@@ -391,6 +392,33 @@
               <button class="secondary" onclick="clearExternalToolForm()" data-i18n="extools.clear">Clear</button>
             </div>
             <pre id="extool-out" data-i18n="common.idle">Ready</pre>
+          </div>
+
+          <!-- SPEC-025: PromptSet 버전관리 -->
+          <div class="form-block" id="prompts-section">
+            <h3 data-i18n="prompts.title">Prompt sets</h3>
+            <div class="hint" data-i18n="prompts.hint">선택된 도메인의 system/user 프롬프트 4종을 번들로 버전관리합니다. 편집 = "새 버전으로 저장". 활성/bootstrap 버전은 삭제 불가.</div>
+            <div class="list" id="prompts-list" style="margin-top:8px;margin-bottom:10px"></div>
+            <label><span>perceive_system &nbsp;<small style="color:var(--fg-subtle)">slots: {domain_name}</small></span>
+              <textarea id="ps-perc-sys" rows="4"></textarea>
+            </label>
+            <label><span>perceive_user &nbsp;<small style="color:var(--fg-subtle)">required: {task_description} {environment_state} · optional: {context}</small></span>
+              <textarea id="ps-perc-user" rows="4"></textarea>
+            </label>
+            <label><span>policy_system &nbsp;<small style="color:var(--fg-subtle)">slots: {domain_name}</small></span>
+              <textarea id="ps-pol-sys" rows="6"></textarea>
+            </label>
+            <label><span>policy_user &nbsp;<small style="color:var(--fg-subtle)">required: {task_description} {perceived_info} {tools} · optional: {context}</small></span>
+              <textarea id="ps-pol-user" rows="6"></textarea>
+            </label>
+            <label><span data-i18n="prompts.notes">notes</span><input type="text" id="ps-notes" /></label>
+            <div class="row">
+              <button class="primary" onclick="savePromptSetNewVersion()" data-i18n="prompts.saveNew">새 버전으로 저장</button>
+              <button class="secondary" onclick="activateSelectedPromptSet()" data-i18n="prompts.activate">이 버전 활성화</button>
+              <button class="danger" onclick="deleteSelectedPromptSet()" data-i18n="prompts.delete">삭제</button>
+              <button class="secondary" onclick="clearPromptSetEditor()" data-i18n="prompts.clear">초기화</button>
+            </div>
+            <pre id="ps-out" data-i18n="common.idle">Ready</pre>
           </div>
         </div>
       </div>
@@ -478,6 +506,15 @@
         "domains.error": "오류: ",
         "extools.title": "외부 HTTP 도구",
         "extools.hint": "선택된 도메인의 외부 HTTP 도구를 등록/관리합니다. 사용자가 띄운 외부 서비스를 LLM 도구로 노출.",
+        "prompts.title": "프롬프트 세트 (PromptSet)",
+        "prompts.hint": "선택된 도메인의 system/user 프롬프트 4종을 번들로 버전관리합니다. 편집 = 새 버전 저장.",
+        "prompts.notes": "메모",
+        "prompts.saveNew": "새 버전으로 저장",
+        "prompts.activate": "이 버전 활성화",
+        "prompts.delete": "삭제",
+        "prompts.clear": "초기화",
+        "prompts.selectFirst": "먼저 도메인을 선택하세요",
+        "prompts.selectVersionFirst": "먼저 버전을 선택하세요",
         "extools.name": "이름",
         "extools.desc": "설명",
         "extools.method": "메서드",
@@ -583,6 +620,15 @@
         "domains.error": "error: ",
         "extools.title": "External HTTP Tools",
         "extools.hint": "Register/manage external HTTP tools for the selected domain. Exposes user-hosted services as LLM tools.",
+        "prompts.title": "Prompt sets",
+        "prompts.hint": "Bundle of 4 system/user templates per domain, versioned. Editing always creates a new version.",
+        "prompts.notes": "notes",
+        "prompts.saveNew": "Save as new version",
+        "prompts.activate": "Activate this version",
+        "prompts.delete": "Delete",
+        "prompts.clear": "Clear",
+        "prompts.selectFirst": "Select a domain first",
+        "prompts.selectVersionFirst": "Select a version first",
         "extools.name": "name",
         "extools.desc": "description",
         "extools.method": "method",
@@ -914,8 +960,12 @@
           document.querySelectorAll('#trajectories-list .item').forEach(x=>x.classList.remove('active'));
           it.classList.add('active');
           showPending($('traj-out'));
-          try { SELECTED_TRAJ_DATA = await API.get(`/api/trajectories/${encodeURIComponent(name)}`); showOk($('traj-out'), SELECTED_TRAJ_DATA); }
-          catch (err) { showErr($('traj-out'), err); }
+          $('traj-badge').textContent = '';
+          try {
+            SELECTED_TRAJ_DATA = await API.get(`/api/trajectories/${encodeURIComponent(name)}`);
+            showOk($('traj-out'), SELECTED_TRAJ_DATA);
+            renderTrajBadge(SELECTED_TRAJ_DATA);
+          } catch (err) { showErr($('traj-out'), err); }
         };
         el.appendChild(it);
       });
@@ -923,7 +973,22 @@
     async function scoreTrajectory() {
       if (!SELECTED_TRAJ_DATA) return showErr($('traj-out'), 'select a trajectory first');
       showPending($('traj-out'));
-      try { showOk($('traj-out'), await API.post('/api/score', { trajectory: SELECTED_TRAJ_DATA })); } catch (err) { showErr($('traj-out'), err); }
+      try {
+        const res = await API.post('/api/score', { trajectory: SELECTED_TRAJ_DATA });
+        showOk($('traj-out'), res);
+        renderTrajBadge(SELECTED_TRAJ_DATA);
+      } catch (err) { showErr($('traj-out'), err); }
+    }
+
+    // 선택된 궤적의 prompt_set_id 가 있으면 Domains 탭 배지 형식으로 표시.
+    function renderTrajBadge(data) {
+      const el = $('traj-badge');
+      if (!el) return;
+      const traj = (data && data.trajectory) || data || {};
+      const psid = traj.prompt_set_id;
+      if (psid == null) { el.textContent = ''; return; }
+      const domain = traj.domain || '';
+      el.textContent = `prompt_set #${psid}` + (domain ? ` · domain=${domain}` : '');
     }
 
     // ---------- MANAGE (CRUD — SPEC-019) ----------
@@ -1217,6 +1282,7 @@
       Array.from(sel.options).forEach(o => o.selected = d.tool_class_names.includes(o.value));
       $('domain-keywords-input').value = (d.keywords || []).join(', ');
       refreshExternalTools(d.name);
+      refreshPromptSets(d.name);
     }
 
     // ---------- SPEC-023 external tools ----------
@@ -1348,6 +1414,96 @@
         clearDomainEditor();
         await refreshDomains();
       } catch (e) { $('domain-out').textContent = t('domains.error') + e; }
+    }
+
+    // ---------- SPEC-025: PromptSet CRUD ----------
+    let PROMPT_EDITOR = { domain: null, selectedVersion: null };
+
+    async function refreshPromptSets(domain) {
+      PROMPT_EDITOR.domain = domain;
+      PROMPT_EDITOR.selectedVersion = null;
+      const list = $('prompts-list');
+      if (!list) return;
+      list.innerHTML = '';
+      let rows = [];
+      try { rows = await API.get('/api/domains/' + encodeURIComponent(domain) + '/prompts'); }
+      catch (e) { list.textContent = 'load error: ' + e; return; }
+      rows.forEach(r => {
+        const it = document.createElement('div');
+        it.className = 'item';
+        const badges = (r.is_active ? ' [active]' : '') + (r.is_bootstrap ? ' [bootstrap]' : '');
+        it.innerHTML = `<span class="name">v${r.version}${badges}</span><span class="meta">${r.created_at || ''}</span>`;
+        it.onclick = () => {
+          document.querySelectorAll('#prompts-list .item').forEach(x => x.classList.remove('active'));
+          it.classList.add('active');
+          loadPromptSetIntoEditor(r);
+        };
+        list.appendChild(it);
+      });
+    }
+
+    function loadPromptSetIntoEditor(row) {
+      PROMPT_EDITOR.selectedVersion = row.version;
+      $('ps-perc-sys').value  = row.perceive_system || '';
+      $('ps-perc-user').value = row.perceive_user  || '';
+      $('ps-pol-sys').value   = row.policy_system  || '';
+      $('ps-pol-user').value  = row.policy_user    || '';
+      $('ps-notes').value     = row.notes          || '';
+      $('ps-out').textContent = `v${row.version}${row.is_active ? ' [active]' : ''}${row.is_bootstrap ? ' [bootstrap]' : ''}`;
+    }
+
+    function clearPromptSetEditor() {
+      PROMPT_EDITOR.selectedVersion = null;
+      $('ps-perc-sys').value = '';
+      $('ps-perc-user').value = '';
+      $('ps-pol-sys').value = '';
+      $('ps-pol-user').value = '';
+      $('ps-notes').value = '';
+      $('ps-out').textContent = t('common.idle');
+      document.querySelectorAll('#prompts-list .item').forEach(x => x.classList.remove('active'));
+    }
+
+    async function savePromptSetNewVersion() {
+      if (!PROMPT_EDITOR.domain) { $('ps-out').textContent = t('prompts.selectFirst'); return; }
+      const body = {
+        perceive_system: $('ps-perc-sys').value,
+        perceive_user:   $('ps-perc-user').value,
+        policy_system:   $('ps-pol-sys').value,
+        policy_user:     $('ps-pol-user').value,
+        notes:           $('ps-notes').value || null,
+      };
+      showPending($('ps-out'));
+      try {
+        const res = await API.post('/api/domains/' + encodeURIComponent(PROMPT_EDITOR.domain) + '/prompts', body);
+        showOk($('ps-out'), res);
+        await refreshPromptSets(PROMPT_EDITOR.domain);
+      } catch (e) { showErr($('ps-out'), e); }
+    }
+
+    async function activateSelectedPromptSet() {
+      if (!PROMPT_EDITOR.domain || PROMPT_EDITOR.selectedVersion == null) {
+        $('ps-out').textContent = t('prompts.selectVersionFirst'); return;
+      }
+      showPending($('ps-out'));
+      try {
+        const res = await API.put(`/api/domains/${encodeURIComponent(PROMPT_EDITOR.domain)}/prompts/${PROMPT_EDITOR.selectedVersion}/activate`, {});
+        showOk($('ps-out'), res);
+        await refreshPromptSets(PROMPT_EDITOR.domain);
+      } catch (e) { showErr($('ps-out'), e); }
+    }
+
+    async function deleteSelectedPromptSet() {
+      if (!PROMPT_EDITOR.domain || PROMPT_EDITOR.selectedVersion == null) {
+        $('ps-out').textContent = t('prompts.selectVersionFirst'); return;
+      }
+      if (!confirm(`정말 삭제? v${PROMPT_EDITOR.selectedVersion}`)) return;
+      showPending($('ps-out'));
+      try {
+        await API.del(`/api/domains/${encodeURIComponent(PROMPT_EDITOR.domain)}/prompts/${PROMPT_EDITOR.selectedVersion}`);
+        $('ps-out').textContent = 'deleted';
+        clearPromptSetEditor();
+        await refreshPromptSets(PROMPT_EDITOR.domain);
+      } catch (e) { showErr($('ps-out'), e); }
     }
 
     // ---------- init dispatcher ----------

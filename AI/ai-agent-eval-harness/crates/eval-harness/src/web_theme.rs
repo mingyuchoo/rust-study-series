@@ -97,4 +97,30 @@ mod tests {
             "help.html 도 localStorage 에 테마를 저장해야 함"
         );
     }
+
+    /// @trace TC: SPEC-025/TC-18
+    /// @trace FR: PRD-025/FR-9
+    /// @trace scenario: index.html Domains 탭에 Prompts 서브 섹션 + 궤적 배지 존재
+    #[test]
+    fn spec025_tc_18_index_has_prompts_section_and_badge() {
+        for token in [
+            r#"id="prompts-section""#,
+            r#"id="prompts-list""#,
+            r#"id="ps-perc-sys""#,
+            r#"id="ps-perc-user""#,
+            r#"id="ps-pol-sys""#,
+            r#"id="ps-pol-user""#,
+            "savePromptSetNewVersion",
+            "activateSelectedPromptSet",
+            "deleteSelectedPromptSet",
+            "refreshPromptSets",
+            r#"id="traj-badge""#,
+            "renderTrajBadge",
+        ] {
+            assert!(
+                WEB_INDEX_HTML.contains(token),
+                "index.html 은 SPEC-025 Prompts 섹션 토큰 `{token}` 을 포함해야 함"
+            );
+        }
+    }
 }

@@ -656,6 +656,178 @@ pub async fn delete_external_tool_handler(State(st): State<AppState>, AxPath((do
 }
 
 // =============================================================================
+// SPEC-025: PromptSet REST CRUD
+//
+// @trace SPEC: SPEC-025
+// @trace FR: PRD-025/FR-5, PRD-025/FR-6, PRD-025/FR-7
+// =============================================================================
+
+/// PromptSet 응답 DTO. SqliteStore 의 row 를 그대로 노출.
+#[derive(Debug, Serialize)]
+pub struct PromptSetDto {
+    pub id:              i64,
+    pub domain_name:     String,
+    pub version:         i64,
+    pub perceive_system: String,
+    pub perceive_user:   String,
+    pub policy_system:   String,
+    pub policy_user:     String,
+    pub notes:           Option<String>,
+    pub is_active:       bool,
+    pub is_bootstrap:    bool,
+    pub created_at:      String,
+}
+
+impl From<data_scenarios::sqlite_store::PromptSetRow> for PromptSetDto {
+    fn from(r: data_scenarios::sqlite_store::PromptSetRow) -> Self {
+        Self {
+            id:              r.id,
+            domain_name:     r.domain_name,
+            version:         r.version,
+            perceive_system: r.perceive_system,
+            perceive_user:   r.perceive_user,
+            policy_system:   r.policy_system,
+            policy_user:     r.policy_user,
+            notes:           r.notes,
+            is_active:       r.is_active,
+            is_bootstrap:    r.is_bootstrap,
+            created_at:      r.created_at,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PromptSetCreatePayload {
+    pub perceive_system: String,
+    pub perceive_user:   String,
+    pub policy_system:   String,
+    pub policy_user:     String,
+    #[serde(default)]
+    pub notes:           Option<String>,
+}
+
+/// 새 버전 생성 시 필수 슬롯 검증. 누락된 슬롯이 있으면
+/// `BadRequest` 에 어느 필드의 어느 슬롯이 빠졌는지 포함.
+///
+/// @trace SPEC: SPEC-025
+/// @trace FR: PRD-025/FR-5
+fn validate_prompt_set_payload(p: &PromptSetCreatePayload) -> Result<(), CrudFailure> {
+    let mut missing: Vec<String> = Vec::new();
+    for (field, tmpl) in [
+        ("perceive_system", &p.perceive_system),
+        ("perceive_user", &p.perceive_user),
+        ("policy_system", &p.policy_system),
+        ("policy_user", &p.policy_user),
+    ] {
+        let m = agent_core::llm_client::validate_required_slots(field, tmpl);
+        for slot in m {
+            missing.push(format!("{field}:{slot}"));
+        }
+    }
+    if !missing.is_empty() {
+        return Err(CrudFailure::BadRequest(format!("missing slots: {}", missing.join(", "))));
+    }
+    Ok(())
+}
+
+pub async fn list_prompt_sets_impl(store: &SqliteStore, domain: &str) -> Result<Vec<PromptSetDto>, CrudFailure> {
+    validate_id("domain", domain)?;
+    let rows = store.list_prompt_sets(domain).await?;
+    Ok(rows.into_iter().map(PromptSetDto::from).collect())
+}
+
+pub async fn get_prompt_set_impl(store: &SqliteStore, domain: &str, version: i64) -> Result<PromptSetDto, CrudFailure> {
+    validate_id("domain", domain)?;
+    let row = store
+        .get_prompt_set(domain, version)
+        .await?
+        .ok_or_else(|| CrudFailure::NotFound(format!("prompt_set {domain}/v{version}")))?;
+    Ok(PromptSetDto::from(row))
+}
+
+pub async fn create_prompt_set_impl(
+    store: &SqliteStore,
+    domain: &str,
+    payload: PromptSetCreatePayload,
+) -> Result<PromptSetDto, CrudFailure> {
+    validate_id("domain", domain)?;
+    validate_prompt_set_payload(&payload)?;
+    let row = store
+        .insert_prompt_set(data_scenarios::sqlite_store::PromptSetInsert {
+            domain_name:     domain,
+            perceive_system: &payload.perceive_system,
+            perceive_user:   &payload.perceive_user,
+            policy_system:   &payload.policy_system,
+            policy_user:     &payload.policy_user,
+            notes:           payload.notes.as_deref(),
+            is_bootstrap:    false,
+        })
+        .await?;
+    Ok(PromptSetDto::from(row))
+}
+
+pub async fn activate_prompt_set_impl(store: &SqliteStore, domain: &str, version: i64) -> Result<PromptSetDto, CrudFailure> {
+    validate_id("domain", domain)?;
+    store.activate_prompt_set(domain, version).await?;
+    let row = store
+        .get_prompt_set(domain, version)
+        .await?
+        .ok_or_else(|| CrudFailure::NotFound(format!("prompt_set {domain}/v{version}")))?;
+    Ok(PromptSetDto::from(row))
+}
+
+pub async fn delete_prompt_set_impl(store: &SqliteStore, domain: &str, version: i64) -> Result<(), CrudFailure> {
+    validate_id("domain", domain)?;
+    store.delete_prompt_set(domain, version).await?;
+    Ok(())
+}
+
+// ----- axum handlers -----
+
+pub async fn list_prompt_sets_handler(State(st): State<AppState>, AxPath(domain): AxPath<String>) -> Result<JsonOut<Vec<PromptSetDto>>, CrudFailure> {
+    let store = store_from(&st)?;
+    let dtos = list_prompt_sets_impl(store.as_ref(), &domain).await?;
+    Ok(JsonOut(dtos))
+}
+
+pub async fn get_prompt_set_handler(
+    State(st): State<AppState>,
+    AxPath((domain, version)): AxPath<(String, i64)>,
+) -> Result<JsonOut<PromptSetDto>, CrudFailure> {
+    let store = store_from(&st)?;
+    let dto = get_prompt_set_impl(store.as_ref(), &domain, version).await?;
+    Ok(JsonOut(dto))
+}
+
+pub async fn create_prompt_set_handler(
+    State(st): State<AppState>,
+    AxPath(domain): AxPath<String>,
+    JsonExt(payload): JsonExt<PromptSetCreatePayload>,
+) -> Result<(StatusCode, JsonOut<PromptSetDto>), CrudFailure> {
+    let store = store_from(&st)?;
+    let dto = create_prompt_set_impl(store.as_ref(), &domain, payload).await?;
+    Ok((StatusCode::CREATED, JsonOut(dto)))
+}
+
+pub async fn activate_prompt_set_handler(
+    State(st): State<AppState>,
+    AxPath((domain, version)): AxPath<(String, i64)>,
+) -> Result<JsonOut<PromptSetDto>, CrudFailure> {
+    let store = store_from(&st)?;
+    let dto = activate_prompt_set_impl(store.as_ref(), &domain, version).await?;
+    Ok(JsonOut(dto))
+}
+
+pub async fn delete_prompt_set_handler(
+    State(st): State<AppState>,
+    AxPath((domain, version)): AxPath<(String, i64)>,
+) -> Result<StatusCode, CrudFailure> {
+    let store = store_from(&st)?;
+    delete_prompt_set_impl(store.as_ref(), &domain, version).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// =============================================================================
 // Tests
 //
 // @trace SPEC-019
@@ -907,5 +1079,146 @@ scenarios:
         }
         assert!(url_allowed("http://anything"));
         assert!(url_allowed("https://anything"));
+    }
+
+    // -------- SPEC-025 --------
+
+    fn valid_payload(label: &str) -> PromptSetCreatePayload {
+        PromptSetCreatePayload {
+            perceive_system: format!("PER-SYS {label}"),
+            perceive_user:   "작업: {task_description}\n환경: {environment_state}{context}".into(),
+            policy_system:   format!("POL-SYS {label}"),
+            policy_user:     "작업: {task_description}\n인지: {perceived_info}\n도구: {tools}{context}".into(),
+            notes:           Some("test".into()),
+        }
+    }
+
+    async fn store_with_domain(name: &str) -> SqliteStore {
+        let store = SqliteStore::open_in_memory_for_loader().await.unwrap();
+        store.insert_domain(name, "").await.unwrap();
+        // bootstrap v1 시드 (CRUD 가 v2 부터 만들도록)
+        store
+            .seed_bootstrap_prompt_sets(&data_scenarios::sqlite_store::BootstrapBundleRef {
+                perceive_system: agent_core::llm_client::BOOTSTRAP_PERCEIVE_SYSTEM,
+                perceive_user:   agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
+                policy_system:   agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
+                policy_user:     agent_core::llm_client::BOOTSTRAP_POLICY_USER,
+            })
+            .await
+            .unwrap();
+        store
+    }
+
+    /// @trace TC: SPEC-025/TC-6
+    /// @trace FR: PRD-025/FR-1, PRD-025/FR-6
+    #[tokio::test]
+    async fn spec025_tc_6_create_returns_v2_after_bootstrap() {
+        let store = store_with_domain("customer_service").await;
+        let dto = create_prompt_set_impl(&store, "customer_service", valid_payload("v2")).await.expect("create ok");
+        assert_eq!(dto.version, 2);
+        assert!(!dto.is_active, "새 버전은 비활성으로 생성");
+        assert!(!dto.is_bootstrap);
+        let list = list_prompt_sets_impl(&store, "customer_service").await.unwrap();
+        // version DESC: [v2, v1]
+        assert_eq!(list.iter().map(|d| d.version).collect::<Vec<_>>(), vec![2, 1]);
+    }
+
+    /// @trace TC: SPEC-025/TC-5
+    /// @trace FR: PRD-025/FR-5
+    #[tokio::test]
+    async fn spec025_tc_5_handler_rejects_missing_slots() {
+        let store = store_with_domain("customer_service").await;
+        let mut bad = valid_payload("bad");
+        // policy_user 에서 {tools} 제거
+        bad.policy_user = "작업: {task_description}\n인지: {perceived_info}\n도구 없음".into();
+        let err = create_prompt_set_impl(&store, "customer_service", bad).await.unwrap_err();
+        let (status, kind) = err.status_and_kind();
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+        assert_eq!(kind, "bad_request");
+        assert!(err.to_string().contains("{tools}"));
+        assert!(err.to_string().contains("policy_user"));
+    }
+
+    /// @trace TC: SPEC-025/TC-7
+    /// @trace FR: PRD-025/FR-3, PRD-025/FR-7
+    #[tokio::test]
+    async fn spec025_tc_7_activate_handler_toggles() {
+        let store = store_with_domain("customer_service").await;
+        let v2 = create_prompt_set_impl(&store, "customer_service", valid_payload("v2")).await.unwrap();
+        assert!(!v2.is_active);
+        let activated = activate_prompt_set_impl(&store, "customer_service", v2.version).await.unwrap();
+        assert!(activated.is_active);
+        assert_eq!(activated.version, 2);
+        // v1 은 비활성
+        let v1 = get_prompt_set_impl(&store, "customer_service", 1).await.unwrap();
+        assert!(!v1.is_active);
+    }
+
+    /// @trace TC: SPEC-025/TC-8
+    /// @trace FR: PRD-025/FR-7
+    #[tokio::test]
+    async fn spec025_tc_8_delete_active_returns_409() {
+        let store = store_with_domain("customer_service").await;
+        // v1 (bootstrap, active) 을 그대로 두고 v2 만들고 활성화 후 삭제 시도
+        let v2 = create_prompt_set_impl(&store, "customer_service", valid_payload("v2")).await.unwrap();
+        activate_prompt_set_impl(&store, "customer_service", v2.version).await.unwrap();
+        let err = delete_prompt_set_impl(&store, "customer_service", v2.version).await.unwrap_err();
+        let (status, _) = err.status_and_kind();
+        assert_eq!(status, StatusCode::CONFLICT);
+        assert!(err.to_string().to_lowercase().contains("active"));
+    }
+
+    /// @trace TC: SPEC-025/TC-9
+    /// @trace FR: PRD-025/FR-7
+    #[tokio::test]
+    async fn spec025_tc_9_delete_bootstrap_returns_409() {
+        let store = store_with_domain("customer_service").await;
+        // bootstrap v1 을 비활성 상태로 만든 뒤 (v2 활성화 후) 삭제 시도
+        let v2 = create_prompt_set_impl(&store, "customer_service", valid_payload("v2")).await.unwrap();
+        activate_prompt_set_impl(&store, "customer_service", v2.version).await.unwrap();
+        let err = delete_prompt_set_impl(&store, "customer_service", 1).await.unwrap_err();
+        let (status, _) = err.status_and_kind();
+        assert_eq!(status, StatusCode::CONFLICT);
+        assert!(err.to_string().to_lowercase().contains("bootstrap"));
+    }
+
+    #[tokio::test]
+    async fn spec025_get_unknown_version_404() {
+        let store = store_with_domain("customer_service").await;
+        let err = get_prompt_set_impl(&store, "customer_service", 99).await.unwrap_err();
+        let (status, _) = err.status_and_kind();
+        assert_eq!(status, StatusCode::NOT_FOUND);
+    }
+
+    /// @trace TC: SPEC-025/TC-17
+    /// @trace FR: PRD-025/FR-2
+    /// 회귀 계약: bootstrap 시드가 현재 하드코딩 상수와 "바이트 동등" 이어야
+    /// 한다. 이 조건이 유지되는 한, DB 해석 경로(SPEC-025 이후)와 컴파일
+    /// 상수 폴백 경로는 동일한 LLM 메시지를 생성하므로 기존 시나리오
+    /// 실행 결과가 변하지 않는다.
+    #[tokio::test]
+    async fn spec025_tc_17_bootstrap_byte_equivalence_with_constants() {
+        let store = SqliteStore::open_in_memory_for_loader().await.unwrap();
+        for d in ["customer_service", "financial", "general"] {
+            store.insert_domain(d, "").await.unwrap();
+        }
+        store
+            .seed_bootstrap_prompt_sets(&data_scenarios::sqlite_store::BootstrapBundleRef {
+                perceive_system: agent_core::llm_client::BOOTSTRAP_PERCEIVE_SYSTEM,
+                perceive_user:   agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
+                policy_system:   agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
+                policy_user:     agent_core::llm_client::BOOTSTRAP_POLICY_USER,
+            })
+            .await
+            .unwrap();
+        for d in ["customer_service", "financial", "general"] {
+            let row = store.get_active_prompt_set(d).await.unwrap().expect("active exists");
+            assert_eq!(row.version, 1);
+            assert!(row.is_bootstrap);
+            assert_eq!(row.perceive_system, agent_core::llm_client::BOOTSTRAP_PERCEIVE_SYSTEM);
+            assert_eq!(row.perceive_user, agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER);
+            assert_eq!(row.policy_system, agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM);
+            assert_eq!(row.policy_user, agent_core::llm_client::BOOTSTRAP_POLICY_USER);
+        }
     }
 }

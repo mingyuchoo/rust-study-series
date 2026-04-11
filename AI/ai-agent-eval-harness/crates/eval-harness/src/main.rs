@@ -159,6 +159,37 @@ fn install_data_store(paths: &DataPaths) {
             | Ok(_) => {},
             | Err(e) => eprintln!("[warn] 키워드 시드 실패: {e}"),
         }
+
+        // SPEC-025: 각 도메인에 v1 bootstrap PromptSet 시드 (멱등).
+        // 기존 하드코딩된 Perceive/Policy 문구를 그대로 DB 에 주입해 기존
+        // 실행 결과와 바이트 동등성을 유지한다.
+        //
+        // @trace SPEC: SPEC-025
+        // @trace FR: PRD-025/FR-2
+        let store = data_scenarios::loader::try_installed_store();
+        if let Some(store) = store {
+            let store_clone = store.clone();
+            let bundle = data_scenarios::sqlite_store::BootstrapBundleRef {
+                perceive_system: agent_core::llm_client::BOOTSTRAP_PERCEIVE_SYSTEM,
+                perceive_user:   agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
+                policy_system:   agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
+                policy_user:     agent_core::llm_client::BOOTSTRAP_POLICY_USER,
+            };
+            let result = match tokio::runtime::Handle::try_current() {
+                | Ok(handle) => tokio::task::block_in_place(|| handle.block_on(async move { store_clone.seed_bootstrap_prompt_sets(&bundle).await })),
+                | Err(_) => tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .ok()
+                    .map(|rt| rt.block_on(async move { store_clone.seed_bootstrap_prompt_sets(&bundle).await }))
+                    .unwrap_or(Ok(0)),
+            };
+            match result {
+                | Ok(n) if n > 0 => println!("[store] 부트스트랩 PromptSet {n}개 시드"),
+                | Ok(_) => {},
+                | Err(e) => eprintln!("[warn] PromptSet 시드 실패: {e}"),
+            }
+        }
     }
 }
 

@@ -76,6 +76,16 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/external-tools", get(api_crud::list_external_tools))
         .route("/api/external-tools/:domain", get(api_crud::list_external_tools_by_domain).post(api_crud::create_external_tool))
         .route("/api/external-tools/:domain/:name", put(api_crud::update_external_tool_handler).delete(api_crud::delete_external_tool_handler))
+        // -------- SPEC-025: prompt_sets CRUD --------
+        .route(
+            "/api/domains/:name/prompts",
+            get(api_crud::list_prompt_sets_handler).post(api_crud::create_prompt_set_handler),
+        )
+        .route(
+            "/api/domains/:name/prompts/:version",
+            get(api_crud::get_prompt_set_handler).delete(api_crud::delete_prompt_set_handler),
+        )
+        .route("/api/domains/:name/prompts/:version/activate", put(api_crud::activate_prompt_set_handler))
         .with_state(state)
 }
 
