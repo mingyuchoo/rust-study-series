@@ -201,9 +201,9 @@ pub fn compare_with_save_impl(
 /// 이름(파일명 형식)으로 `EvaluationReport` 를 로드한다.
 /// 1) `reports_dir/<name>` 파일을 먼저 시도하고,
 /// 2) 실패하면 파일명에서 task_id 를 추출해 DB 행을 1-시나리오
-///    `EvaluationReport` 로 합성한다. DB 스키마(`trajectory/metrics/scores`)
-///    와 집계 리포트 스키마(`timestamp/average_metrics/scenarios`)는 다르므로
-///    필드 매핑이 필요하다.
+///    `EvaluationReport` 로 합성한다. DB 스키마(`trajectory/metrics/scores`) 와
+///    집계 리포트 스키마(`timestamp/average_metrics/scenarios`)는 다르므로 필드
+///    매핑이 필요하다.
 ///
 /// @trace SPEC: SPEC-021
 /// @trace FR: PRD-021/FR-4
@@ -217,7 +217,8 @@ fn load_report_by_name(reports_dir: &Path, name: &str) -> Result<EvaluationRepor
     db_row_to_report(name, &v)
 }
 
-/// DB `get_evaluation_json` 의 JSON (trajectory/metrics/scores/golden_set_result)
+/// DB `get_evaluation_json` 의 JSON
+/// (trajectory/metrics/scores/golden_set_result)
 /// 을 1-시나리오 `EvaluationReport` 로 매핑한다. 비교기는 `average_metrics`
 /// 만 보므로 scores + metrics 의 숫자 값을 모두 편입한다.
 fn db_row_to_report(name: &str, v: &serde_json::Value) -> Result<EvaluationReport, String> {

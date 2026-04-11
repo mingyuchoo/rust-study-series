@@ -172,7 +172,7 @@
 <body>
   <header>
     <h1>AI Agent Eval Harness</h1>
-    <span style="color:#666;font-size:12px;" data-i18n="header.sub">— single-page client for the REST API</span>
+    <span style="color:#666;font-size:12px;" data-i18n="header.sub">— PPA 루프 에이전트 시나리오 실행·궤적 기록·골든셋 채점 하네스</span>
     <div class="spacer"></div>
     <div class="theme-switch" id="theme-switch">
       <button class="theme-btn" data-theme="light" title="Light">☀</button>
@@ -440,7 +440,7 @@
     // ---------- i18n ----------
     const I18N = {
       ko: {
-        "header.sub": "— REST API 싱글 페이지 클라이언트",
+        "header.sub": "— PPA 루프 에이전트 시나리오 실행·궤적 기록·골든셋 채점 하네스",
         "header.help": "📖 사용안내",
         "nav.execute": "실행",
         "execute.single": "단일",
@@ -515,6 +515,7 @@
         "run.button": "실행 → POST /api/run",
         "run.hint": "POST /api/run 을 호출합니다. reports_dir 에 항상 저장됩니다 (output 생략 시 기본 파일명 사용).",
         "common.idle": "준비됨",
+        "common.running": "실행 중...",
         "common.requesting": "요청 중…",
         "common.optional": "(선택)",
         "scenarios.title": "시나리오 (탐색 + 단일 실행)",
@@ -544,7 +545,7 @@
         "traj.selectHint": "궤적을 선택하세요",
       },
       en: {
-        "header.sub": "— single-page client for the REST API",
+        "header.sub": "— Harness for running PPA-loop agents: scenarios, trajectory logging, and golden-set scoring",
         "header.help": "📖 Help",
         "nav.execute": "Execute",
         "execute.single": "Single",
@@ -607,6 +608,7 @@
         "run.button": "Run → POST /api/run",
         "run.hint": "Calls POST /api/run. Always saves to reports_dir (default timestamp name if output omitted).",
         "common.idle": "Ready",
+        "common.running": "running...",
         "common.requesting": "Requesting…",
         "common.optional": "(optional)",
         "scenarios.title": "Scenarios (list + single run)",
@@ -682,6 +684,7 @@
     const pretty = (o) => JSON.stringify(o, null, 2);
     const showOk  = (el, data) => { el.className = 'ok'; el.textContent = pretty(data); };
     const showErr = (el, err)  => { el.className = 'error'; el.textContent = 'ERROR: ' + (err.message || err); };
+    const showPending = (el, label) => { el.className = ''; el.textContent = (label || t('common.running') || 'running...'); };
 
     // ---------- tabs ----------
     document.querySelectorAll('#tab-bar button').forEach(btn => {
@@ -712,6 +715,7 @@
       const body = { eval_scenario: $('run-eval-scenario').value, agent: $('run-agent').value };
       const o = $('run-output').value.trim();
       if (o) body.output = o;
+      showPending($('run-out'));
       try { showOk($('run-out'), await API.post('/api/run', body)); } catch (err) { showErr($('run-out'), err); }
     }
 
@@ -745,6 +749,7 @@
     async function runScenario() {
       if (!SELECTED_SCEN) return showErr($('scen-out'), 'select a scenario first');
       const body = { agent: $('scen-agent').value };
+      showPending($('scen-out'));
       try {
         showOk($('scen-out'), await API.post(`/api/scenarios/${SELECTED_SCEN.domain}/${SELECTED_SCEN.id}/run`, body));
       } catch (err) { showErr($('scen-out'), err); }
@@ -771,12 +776,14 @@
       if (!SELECTED_TOOL) return showErr($('tool-out'), 'select a tool first');
       let params = {};
       try { params = JSON.parse($('tool-params').value || '{}'); } catch (e) { return showErr($('tool-out'), 'params is not valid JSON'); }
+      showPending($('tool-out'));
       try { showOk($('tool-out'), await API.post(`/api/tools/${SELECTED_TOOL}/invoke`, { params })); } catch (err) { showErr($('tool-out'), err); }
     }
     async function invokeToolFault() {
       if (!SELECTED_TOOL) return showErr($('tool-out'), 'select a tool first');
       let params = {};
       try { params = JSON.parse($('tool-params').value || '{}'); } catch (e) { return showErr($('tool-out'), 'params is not valid JSON'); }
+      showPending($('tool-out'));
       const seedStr = $('tool-seed').value;
       const config = {
         enabled: true,
@@ -863,6 +870,7 @@
       if (env) body.environment = env;
       const dom = $('agent-domain').value;
       if (dom) body.domain = dom;
+      showPending($('agent-out'));
       try { showOk($('agent-out'), await API.post(`/api/agents/${$('agent-name').value}/execute`, body)); } catch (err) { showErr($('agent-out'), err); }
     }
 
@@ -875,6 +883,7 @@
         it.onclick = async () => {
           document.querySelectorAll('#reports-list .item').forEach(x=>x.classList.remove('active'));
           it.classList.add('active');
+          showPending($('report-out'));
           try { showOk($('report-out'), await API.get(`/api/reports/${encodeURIComponent(name)}`)); } catch (err) { showErr($('report-out'), err); }
         };
         el.appendChild(it);
@@ -888,6 +897,7 @@
         threshold: parseFloat($('cmp-threshold').value) || 5.0,
       };
       const o = $('cmp-output').value.trim(); if (o) body.output = o;
+      showPending($('report-out'));
       try { showOk($('report-out'), await API.post('/api/compare', body)); } catch (err) { showErr($('report-out'), err); }
     }
 
@@ -903,6 +913,7 @@
         it.onclick = async () => {
           document.querySelectorAll('#trajectories-list .item').forEach(x=>x.classList.remove('active'));
           it.classList.add('active');
+          showPending($('traj-out'));
           try { SELECTED_TRAJ_DATA = await API.get(`/api/trajectories/${encodeURIComponent(name)}`); showOk($('traj-out'), SELECTED_TRAJ_DATA); }
           catch (err) { showErr($('traj-out'), err); }
         };
@@ -911,6 +922,7 @@
     }
     async function scoreTrajectory() {
       if (!SELECTED_TRAJ_DATA) return showErr($('traj-out'), 'select a trajectory first');
+      showPending($('traj-out'));
       try { showOk($('traj-out'), await API.post('/api/score', { trajectory: SELECTED_TRAJ_DATA })); } catch (err) { showErr($('traj-out'), err); }
     }
 
@@ -1082,6 +1094,7 @@
         body.scenario_id = sid;
       }
       const base = kind === 'scenario' ? '/api/eval-scenarios' : '/api/golden-sets';
+      showPending($('manage-out'));
       try {
         let res;
         if (mode === 'new') {
@@ -1104,6 +1117,7 @@
       if (!confirm('정말 삭제하시겠습니까?')) return;
       const {kind, domain, id} = MANAGE_STATE;
       const base = kind === 'scenario' ? '/api/eval-scenarios' : '/api/golden-sets';
+      showPending($('manage-out'));
       try {
         const r = await fetch(`${base}/${domain}/${encodeURIComponent(id)}`, {method: 'DELETE'});
         if (!r.ok) { const j = await r.json().catch(() => ({error: r.statusText})); throw j; }
@@ -1272,6 +1286,7 @@
         params_schema: $('extool-schema').value || '{}',
         timeout_ms: parseInt($('extool-timeout').value || '10000', 10),
       };
+      showPending(out);
       try {
         let res;
         if (EXTOOL_EDITOR.mode === 'new') {
@@ -1286,6 +1301,7 @@
     async function deleteExternalTool() {
       if (EXTOOL_EDITOR.mode !== 'edit') { $('extool-out').textContent = t('extools.selectToolFirst'); return; }
       if (!confirm(t('extools.confirmDelete') + ' ' + EXTOOL_EDITOR.name)) return;
+      showPending($('extool-out'));
       try {
         await API.del('/api/external-tools/' + EXTOOL_EDITOR.domain + '/' + EXTOOL_EDITOR.name);
         $('extool-out').textContent = t('extools.deleted') + EXTOOL_EDITOR.name;
@@ -1302,6 +1318,7 @@
       const description = $('domain-desc-input').value;
       const tool_class_names = Array.from($('domain-tools-input').selectedOptions).map(o => o.value);
       const keywords = $('domain-keywords-input').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      showPending(out);
       try {
         let res;
         if (DOMAIN_EDITOR.mode === 'new') {
@@ -1324,6 +1341,7 @@
         return;
       }
       if (!confirm(t('domains.confirmDelete') + ' ' + DOMAIN_EDITOR.name)) return;
+      showPending($('domain-out'));
       try {
         await API.del('/api/domains/' + DOMAIN_EDITOR.name);
         $('domain-out').textContent = t('domains.deleted') + DOMAIN_EDITOR.name;

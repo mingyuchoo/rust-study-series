@@ -1,0 +1,85 @@
+{
+  "fr": {
+    "FR-1": {
+      "title": "prompt_sets 테이블 (도메인×버전 번들, 불변 편집)",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-6", "SPEC-025/TC-10", "SPEC-025/TC-16"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-2": {
+      "title": "bootstrap 시드 (v1 = 기존 하드코딩과 바이트 동등)",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-2", "SPEC-025/TC-3", "SPEC-025/TC-17"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-3": {
+      "title": "런타임 LlmClient 활성 PromptSet 조회 + 폴백 체인",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-7", "SPEC-025/TC-11", "SPEC-025/TC-12", "SPEC-025/TC-13"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-4": {
+      "title": "슬롯 규약 및 str::replace 렌더러",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-4", "SPEC-025/TC-12"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-5": {
+      "title": "저장 시 필수 슬롯 검증 (400 + missing 목록)",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-5"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-6": {
+      "title": "REST CRUD 엔드포인트 5종",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-6", "SPEC-025/TC-16"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-7": {
+      "title": "활성/bootstrap 삭제 금지 + 활성 전환 원자성",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-7", "SPEC-025/TC-8", "SPEC-025/TC-9"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-8": {
+      "title": "Trajectory.prompt_set_id 기록 + 테이블 컬럼",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-14", "SPEC-025/TC-15"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    },
+    "FR-9": {
+      "title": "Web UI Domains 탭 Prompts 서브 섹션 + 궤적 배지",
+      "specs": ["SPEC-025"],
+      "test_cases": ["SPEC-025/TC-18"],
+      "test_files": [],
+      "impl_files": [],
+      "impl_symbols": [],
+      "status": "draft"
+    }
+  }
+}

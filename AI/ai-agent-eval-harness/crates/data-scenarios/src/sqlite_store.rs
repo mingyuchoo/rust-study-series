@@ -25,7 +25,7 @@ use std::{collections::HashMap,
                  PathBuf}};
 use thiserror::Error;
 
-const SCHEMA_VERSION: i64 = 6;
+const SCHEMA_VERSION: i64 = 7;
 
 /// sqlx UNIQUE 제약 위반을 `StoreError::Conflict` 로 매핑.
 fn map_unique_violation(err: sqlx::Error, subject: String) -> StoreError {
@@ -258,6 +258,25 @@ impl SqliteStore {
                 FOREIGN KEY (domain) REFERENCES domains(name) ON DELETE CASCADE
             )",
             "CREATE INDEX IF NOT EXISTS idx_external_tools_domain ON external_tools(domain)",
+            // SPEC-025 v7: 도메인별 PromptSet 번들 (4 템플릿 x N 버전). 불변 편집.
+            "CREATE TABLE IF NOT EXISTS prompt_sets (
+                id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                domain_name     TEXT NOT NULL,
+                version         INTEGER NOT NULL,
+                perceive_system TEXT NOT NULL,
+                perceive_user   TEXT NOT NULL,
+                policy_system   TEXT NOT NULL,
+                policy_user     TEXT NOT NULL,
+                notes           TEXT,
+                is_active       INTEGER NOT NULL DEFAULT 0,
+                is_bootstrap    INTEGER NOT NULL DEFAULT 0,
+                created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+                UNIQUE (domain_name, version),
+                FOREIGN KEY (domain_name) REFERENCES domains(name) ON DELETE CASCADE
+            )",
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_prompt_sets_active_per_domain
+                ON prompt_sets(domain_name) WHERE is_active = 1",
+            "CREATE INDEX IF NOT EXISTS idx_prompt_sets_domain ON prompt_sets(domain_name)",
         ];
         for sql in stmts.iter() {
             sqlx::query(sql).execute(&self.pool).await?;
@@ -274,6 +293,9 @@ impl SqliteStore {
         if current < 3 {
             self.migrate_v3_expected_domain().await?;
         }
+        // SPEC-025 v7: trajectories / evaluations 에 prompt_set_id 컬럼 추가.
+        // ALTER TABLE ADD COLUMN 은 IF NOT EXISTS 미지원 → PRAGMA 사전 검사.
+        self.migrate_v7_prompt_set_id().await?;
 
         sqlx::query("INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, datetime('now'))")
             .bind(SCHEMA_VERSION)
@@ -338,6 +360,27 @@ impl SqliteStore {
         sqlx::query("ALTER TABLE golden_sets ADD COLUMN expected_domain TEXT")
             .execute(&self.pool)
             .await?;
+        Ok(())
+    }
+
+    /// SPEC-025 v7: `trajectories` / `evaluations` 에 `prompt_set_id INTEGER NULL` 추가.
+    /// `ALTER TABLE ADD COLUMN` 은 IF NOT EXISTS 미지원이므로 PRAGMA 로 사전 검사.
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-8
+    async fn migrate_v7_prompt_set_id(&self) -> Result<(), StoreError> {
+        for table in ["trajectories", "evaluations"] {
+            let cols = sqlx::query(&format!("PRAGMA table_info('{table}')")).fetch_all(&self.pool).await?;
+            let has = cols.iter().any(|r| {
+                let n: String = r.get("name");
+                n == "prompt_set_id"
+            });
+            if !has {
+                sqlx::query(&format!("ALTER TABLE {table} ADD COLUMN prompt_set_id INTEGER"))
+                    .execute(&self.pool)
+                    .await?;
+            }
+        }
         Ok(())
     }
 
@@ -1351,6 +1394,237 @@ impl SqliteStore {
         }
         Ok(())
     }
+
+    // =========================================================================
+    // SPEC-025: prompt_sets CRUD (도메인별 프롬프트 번들 + 불변 버전관리)
+    // =========================================================================
+
+    /// 도메인의 모든 PromptSet 버전을 `version DESC` 정렬로 반환.
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-6
+    pub async fn list_prompt_sets(&self, domain: &str) -> Result<Vec<PromptSetRow>, StoreError> {
+        let rows = sqlx::query(PROMPT_SET_SELECT_COLS)
+            .bind(domain)
+            .fetch_all(&self.pool)
+            .await?;
+        Ok(rows.into_iter().map(row_to_prompt_set).collect())
+    }
+
+    /// 단일 버전 조회.
+    pub async fn get_prompt_set(&self, domain: &str, version: i64) -> Result<Option<PromptSetRow>, StoreError> {
+        let row = sqlx::query(
+            "SELECT id, domain_name, version, perceive_system, perceive_user, policy_system, policy_user,
+                    notes, is_active, is_bootstrap, created_at
+             FROM prompt_sets WHERE domain_name = ? AND version = ?",
+        )
+        .bind(domain)
+        .bind(version)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(row.map(row_to_prompt_set))
+    }
+
+    /// 도메인의 활성 PromptSet (없으면 None).
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-3
+    pub async fn get_active_prompt_set(&self, domain: &str) -> Result<Option<PromptSetRow>, StoreError> {
+        let row = sqlx::query(
+            "SELECT id, domain_name, version, perceive_system, perceive_user, policy_system, policy_user,
+                    notes, is_active, is_bootstrap, created_at
+             FROM prompt_sets WHERE domain_name = ? AND is_active = 1 LIMIT 1",
+        )
+        .bind(domain)
+        .fetch_optional(&self.pool)
+        .await?;
+        Ok(row.map(row_to_prompt_set))
+    }
+
+    /// 새 버전 삽입. version 은 `MAX(version)+1` 로 자동 증가. 도메인의 첫
+    /// 삽입이면 자동으로 `is_active=1` 부여.
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-1, PRD-025/FR-6
+    pub async fn insert_prompt_set(&self, row: PromptSetInsert<'_>) -> Result<PromptSetRow, StoreError> {
+        let mut tx = self.pool.begin().await?;
+        let next_version: i64 =
+            sqlx::query_scalar("SELECT COALESCE(MAX(version), 0) + 1 FROM prompt_sets WHERE domain_name = ?")
+                .bind(row.domain_name)
+                .fetch_one(&mut *tx)
+                .await?;
+        let any_existing: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM prompt_sets WHERE domain_name = ?")
+            .bind(row.domain_name)
+            .fetch_one(&mut *tx)
+            .await?;
+        let is_active = if any_existing == 0 { 1_i64 } else { 0_i64 };
+        let is_bootstrap = if row.is_bootstrap { 1_i64 } else { 0_i64 };
+        sqlx::query(
+            "INSERT INTO prompt_sets
+             (domain_name, version, perceive_system, perceive_user, policy_system, policy_user,
+              notes, is_active, is_bootstrap, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+        )
+        .bind(row.domain_name)
+        .bind(next_version)
+        .bind(row.perceive_system)
+        .bind(row.perceive_user)
+        .bind(row.policy_system)
+        .bind(row.policy_user)
+        .bind(row.notes)
+        .bind(is_active)
+        .bind(is_bootstrap)
+        .execute(&mut *tx)
+        .await?;
+        tx.commit().await?;
+        // 삽입된 행을 다시 읽어 반환 (id 포함)
+        self.get_prompt_set(row.domain_name, next_version)
+            .await?
+            .ok_or_else(|| StoreError::NotFound(format!("prompt_set just inserted: {}/v{}", row.domain_name, next_version)))
+    }
+
+    /// 활성 버전 전환: 기존 활성 해제 + 새 활성 설정을 단일 트랜잭션으로.
+    /// 대상 버전이 없으면 NotFound.
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-3, PRD-025/FR-7
+    pub async fn activate_prompt_set(&self, domain: &str, version: i64) -> Result<(), StoreError> {
+        let mut tx = self.pool.begin().await?;
+        // 존재 확인
+        let exists: Option<i64> = sqlx::query_scalar("SELECT id FROM prompt_sets WHERE domain_name = ? AND version = ?")
+            .bind(domain)
+            .bind(version)
+            .fetch_optional(&mut *tx)
+            .await?;
+        if exists.is_none() {
+            return Err(StoreError::NotFound(format!("prompt_set {domain}/v{version}")));
+        }
+        sqlx::query("UPDATE prompt_sets SET is_active = 0 WHERE domain_name = ? AND is_active = 1")
+            .bind(domain)
+            .execute(&mut *tx)
+            .await?;
+        sqlx::query("UPDATE prompt_sets SET is_active = 1 WHERE domain_name = ? AND version = ?")
+            .bind(domain)
+            .bind(version)
+            .execute(&mut *tx)
+            .await?;
+        tx.commit().await?;
+        Ok(())
+    }
+
+    /// 삭제. 활성/bootstrap 은 Conflict.
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-7
+    pub async fn delete_prompt_set(&self, domain: &str, version: i64) -> Result<(), StoreError> {
+        let row = self.get_prompt_set(domain, version).await?;
+        let Some(row) = row else {
+            return Err(StoreError::NotFound(format!("prompt_set {domain}/v{version}")));
+        };
+        if row.is_active {
+            return Err(StoreError::Conflict("cannot delete active version".into()));
+        }
+        if row.is_bootstrap {
+            return Err(StoreError::Conflict("cannot delete bootstrap version".into()));
+        }
+        sqlx::query("DELETE FROM prompt_sets WHERE domain_name = ? AND version = ?")
+            .bind(domain)
+            .bind(version)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
+    /// 모든 도메인에 대해 PromptSet 이 하나도 없으면 주어진 bootstrap 번들을 v1 로 삽입.
+    /// 기존 PromptSet 이 이미 있으면 해당 도메인은 skip (NFR-2 재시드 금지).
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-2
+    pub async fn seed_bootstrap_prompt_sets(&self, bundle: &BootstrapBundleRef<'_>) -> Result<usize, StoreError> {
+        let domains: Vec<String> = sqlx::query_scalar("SELECT name FROM domains ORDER BY name")
+            .fetch_all(&self.pool)
+            .await?;
+        let mut inserted = 0usize;
+        for d in domains {
+            let cnt: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM prompt_sets WHERE domain_name = ?")
+                .bind(&d)
+                .fetch_one(&self.pool)
+                .await?;
+            if cnt > 0 {
+                continue;
+            }
+            self.insert_prompt_set(PromptSetInsert {
+                domain_name: &d,
+                perceive_system: bundle.perceive_system,
+                perceive_user: bundle.perceive_user,
+                policy_system: bundle.policy_system,
+                policy_user: bundle.policy_user,
+                notes: Some("bootstrap seed"),
+                is_bootstrap: true,
+            })
+            .await?;
+            inserted += 1;
+        }
+        Ok(inserted)
+    }
+}
+
+const PROMPT_SET_SELECT_COLS: &str = "SELECT id, domain_name, version, perceive_system, perceive_user, policy_system, policy_user,
+        notes, is_active, is_bootstrap, created_at
+ FROM prompt_sets WHERE domain_name = ? ORDER BY version DESC";
+
+fn row_to_prompt_set(r: sqlx::sqlite::SqliteRow) -> PromptSetRow {
+    PromptSetRow {
+        id: r.get("id"),
+        domain_name: r.get("domain_name"),
+        version: r.get("version"),
+        perceive_system: r.get("perceive_system"),
+        perceive_user: r.get("perceive_user"),
+        policy_system: r.get("policy_system"),
+        policy_user: r.get("policy_user"),
+        notes: r.try_get("notes").ok(),
+        is_active: { let v: i64 = r.get("is_active"); v != 0 },
+        is_bootstrap: { let v: i64 = r.get("is_bootstrap"); v != 0 },
+        created_at: r.get("created_at"),
+    }
+}
+
+/// SPEC-025: PromptSet 행(DB 표현).
+#[derive(Debug, Clone)]
+pub struct PromptSetRow {
+    pub id: i64,
+    pub domain_name: String,
+    pub version: i64,
+    pub perceive_system: String,
+    pub perceive_user: String,
+    pub policy_system: String,
+    pub policy_user: String,
+    pub notes: Option<String>,
+    pub is_active: bool,
+    pub is_bootstrap: bool,
+    pub created_at: String,
+}
+
+/// SPEC-025: PromptSet 삽입 페이로드.
+#[derive(Debug, Clone, Copy)]
+pub struct PromptSetInsert<'a> {
+    pub domain_name: &'a str,
+    pub perceive_system: &'a str,
+    pub perceive_user: &'a str,
+    pub policy_system: &'a str,
+    pub policy_user: &'a str,
+    pub notes: Option<&'a str>,
+    pub is_bootstrap: bool,
+}
+
+/// SPEC-025: 기동 시점 bootstrap 번들 주입용. `agent-core` 의 상수를 참조하여
+/// `data-scenarios` → `agent-core` 순환 의존을 피한다.
+#[derive(Debug, Clone, Copy)]
+pub struct BootstrapBundleRef<'a> {
+    pub perceive_system: &'a str,
+    pub perceive_user: &'a str,
+    pub policy_system: &'a str,
+    pub policy_user: &'a str,
 }
 
 fn row_to_external_tool(r: sqlx::sqlite::SqliteRow) -> ExternalToolRow {
@@ -2187,6 +2461,208 @@ scenarios:
         let store = SqliteStore::open_in_memory().await.unwrap();
         store.insert_domain("healthcare", "").await.unwrap();
         let err = store.delete_external_tool("healthcare", "nope").await.unwrap_err();
+        assert!(matches!(err, StoreError::NotFound(_)));
+    }
+
+    // -------- SPEC-025 --------
+
+    fn sample_bundle() -> BootstrapBundleRef<'static> {
+        BootstrapBundleRef {
+            perceive_system: "SYS-PER {domain_name}",
+            perceive_user:   "작업: {task_description}\n환경: {environment_state}{context}",
+            policy_system:   "SYS-POL",
+            policy_user:     "작업: {task_description}\n인지: {perceived_info}\n도구: {tools}{context}",
+        }
+    }
+
+    /// @trace TC: SPEC-025/TC-1
+    /// @trace FR: PRD-025/NFR-1
+    #[tokio::test]
+    async fn spec025_tc_1_migration_idempotent() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        // 재호출 멱등
+        store.init_schema().await.unwrap();
+        // prompt_sets 테이블 존재
+        let tbl: Option<String> = sqlx::query_scalar("SELECT name FROM sqlite_master WHERE type='table' AND name='prompt_sets'")
+            .fetch_optional(&store.pool).await.unwrap();
+        assert_eq!(tbl.as_deref(), Some("prompt_sets"));
+        // trajectories/evaluations 에 prompt_set_id 컬럼 존재
+        for t in ["trajectories", "evaluations"] {
+            let cols = sqlx::query(&format!("PRAGMA table_info('{t}')")).fetch_all(&store.pool).await.unwrap();
+            let has = cols.iter().any(|r| { let n: String = r.get("name"); n == "prompt_set_id" });
+            assert!(has, "{t} 에 prompt_set_id 컬럼 필요");
+        }
+    }
+
+    /// @trace TC: SPEC-025/TC-2
+    /// @trace FR: PRD-025/FR-2
+    #[tokio::test]
+    async fn spec025_tc_2_bootstrap_seed_matches_bundle() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        store.insert_domain("financial", "").await.unwrap();
+        let b = sample_bundle();
+        let n = store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+        assert_eq!(n, 2);
+        let active = store.get_active_prompt_set("customer_service").await.unwrap().unwrap();
+        assert_eq!(active.version, 1);
+        assert!(active.is_bootstrap);
+        assert!(active.is_active);
+        assert_eq!(active.perceive_system, b.perceive_system);
+        assert_eq!(active.perceive_user, b.perceive_user);
+        assert_eq!(active.policy_system, b.policy_system);
+        assert_eq!(active.policy_user, b.policy_user);
+    }
+
+    /// @trace TC: SPEC-025/TC-3
+    /// @trace FR: PRD-025/NFR-2
+    #[tokio::test]
+    async fn spec025_tc_3_bootstrap_seed_idempotent() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        let b = sample_bundle();
+        assert_eq!(store.seed_bootstrap_prompt_sets(&b).await.unwrap(), 1);
+        assert_eq!(store.seed_bootstrap_prompt_sets(&b).await.unwrap(), 0, "재호출은 도메인당 행이 이미 있어 skip");
+        let all = store.list_prompt_sets("customer_service").await.unwrap();
+        assert_eq!(all.len(), 1);
+    }
+
+    /// @trace TC: SPEC-025/TC-6, SPEC-025/TC-16
+    /// @trace FR: PRD-025/FR-1, PRD-025/FR-6
+    #[tokio::test]
+    async fn spec025_tc_6_insert_auto_version_and_list_desc() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        let b = sample_bundle();
+        store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+        // v2 생성
+        let v2 = store
+            .insert_prompt_set(PromptSetInsert {
+                domain_name: "customer_service",
+                perceive_system: "v2 per sys",
+                perceive_user: "{task_description} / {environment_state}",
+                policy_system: "v2 pol sys",
+                policy_user: "{task_description} / {perceived_info} / {tools}",
+                notes: Some("second"),
+                is_bootstrap: false,
+            })
+            .await
+            .unwrap();
+        assert_eq!(v2.version, 2);
+        assert!(!v2.is_active, "새 버전은 기본적으로 비활성");
+        assert!(!v2.is_bootstrap);
+        // list 는 version DESC
+        let list = store.list_prompt_sets("customer_service").await.unwrap();
+        assert_eq!(list.iter().map(|r| r.version).collect::<Vec<_>>(), vec![2, 1]);
+    }
+
+    /// @trace TC: SPEC-025/TC-7
+    /// @trace FR: PRD-025/FR-3, PRD-025/FR-7, PRD-025/NFR-4
+    #[tokio::test]
+    async fn spec025_tc_7_activate_atomic_toggle() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        let b = sample_bundle();
+        store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+        store
+            .insert_prompt_set(PromptSetInsert {
+                domain_name: "customer_service",
+                perceive_system: "v2",
+                perceive_user: "{task_description} {environment_state}",
+                policy_system: "v2",
+                policy_user: "{task_description} {perceived_info} {tools}",
+                notes: None,
+                is_bootstrap: false,
+            })
+            .await
+            .unwrap();
+        // 활성 전환
+        store.activate_prompt_set("customer_service", 2).await.unwrap();
+        let active = store.get_active_prompt_set("customer_service").await.unwrap().unwrap();
+        assert_eq!(active.version, 2);
+        // 기존 v1 은 비활성
+        let v1 = store.get_prompt_set("customer_service", 1).await.unwrap().unwrap();
+        assert!(!v1.is_active);
+        // partial unique index 확인: 활성 행이 정확히 1개
+        let active_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM prompt_sets WHERE domain_name='customer_service' AND is_active=1")
+                .fetch_one(&store.pool)
+                .await
+                .unwrap();
+        assert_eq!(active_count, 1);
+    }
+
+    /// @trace TC: SPEC-025/TC-8
+    /// @trace FR: PRD-025/FR-7
+    #[tokio::test]
+    async fn spec025_tc_8_cannot_delete_active_version() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        let b = sample_bundle();
+        store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+        // v2 생성 후 활성화
+        store
+            .insert_prompt_set(PromptSetInsert {
+                domain_name: "customer_service",
+                perceive_system: "v2",
+                perceive_user: "{task_description} {environment_state}",
+                policy_system: "v2",
+                policy_user: "{task_description} {perceived_info} {tools}",
+                notes: None,
+                is_bootstrap: false,
+            })
+            .await
+            .unwrap();
+        store.activate_prompt_set("customer_service", 2).await.unwrap();
+        let err = store.delete_prompt_set("customer_service", 2).await.unwrap_err();
+        assert!(matches!(err, StoreError::Conflict(msg) if msg.contains("active")));
+    }
+
+    /// @trace TC: SPEC-025/TC-9
+    /// @trace FR: PRD-025/FR-7
+    #[tokio::test]
+    async fn spec025_tc_9_cannot_delete_bootstrap_version() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        let b = sample_bundle();
+        store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+        // v2 생성해 v1 을 비활성 상태로 만든 뒤 v1(bootstrap) 삭제 시도
+        store
+            .insert_prompt_set(PromptSetInsert {
+                domain_name: "customer_service",
+                perceive_system: "v2",
+                perceive_user: "{task_description} {environment_state}",
+                policy_system: "v2",
+                policy_user: "{task_description} {perceived_info} {tools}",
+                notes: None,
+                is_bootstrap: false,
+            })
+            .await
+            .unwrap();
+        store.activate_prompt_set("customer_service", 2).await.unwrap();
+        let err = store.delete_prompt_set("customer_service", 1).await.unwrap_err();
+        assert!(matches!(err, StoreError::Conflict(msg) if msg.contains("bootstrap")));
+    }
+
+    /// @trace TC: SPEC-025/TC-10
+    /// @trace FR: PRD-025/FR-1
+    #[tokio::test]
+    async fn spec025_tc_10_domain_cascade_drops_prompt_sets() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        let b = sample_bundle();
+        store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+        assert_eq!(store.list_prompt_sets("customer_service").await.unwrap().len(), 1);
+        store.delete_domain("customer_service").await.unwrap();
+        let rows = store.list_prompt_sets("customer_service").await.unwrap();
+        assert!(rows.is_empty(), "도메인 CASCADE 로 prompt_sets 도 삭제");
+    }
+
+    #[tokio::test]
+    async fn spec025_activate_nonexistent_version_not_found() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        let err = store.activate_prompt_set("customer_service", 99).await.unwrap_err();
         assert!(matches!(err, StoreError::NotFound(_)));
     }
 }
