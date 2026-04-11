@@ -1,6 +1,6 @@
 {
-  "spec_id": "PRD-019",
-  "prd_id": null,
+  "spec_id": "SPEC-019",
+  "prd_id": "PRD-019",
   "mode": null,
   "phase": 5,
   "last_step": "phase5-end",
@@ -46,7 +46,7 @@
   },
   "_meta": {
     "schema_version": 2,
-    "updated_at": "2026-04-11T11:34:25",
+    "updated_at": "2026-04-11T11:35:17",
     "checksum": "ce2fb1919e9bf6bff7661e478d8575edd6e8410f605fec19bd3bb4a22e22c810"
   }
 }
