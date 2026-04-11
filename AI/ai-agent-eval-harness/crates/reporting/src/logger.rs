@@ -288,15 +288,18 @@ fn try_global_store() -> Option<Arc<SqliteStore>> { data_scenarios::loader::try_
 #[cfg(test)]
 mod spec025_tests {
     use super::*;
-    use agent_models::models::{AgentState, PpaStage, PpaStep, Trajectory};
+    use agent_models::models::{AgentState,
+                               PpaStage,
+                               PpaStep,
+                               Trajectory};
     use std::collections::HashMap;
 
     fn v1_bundle() -> data_scenarios::sqlite_store::BootstrapBundleRef<'static> {
         data_scenarios::sqlite_store::BootstrapBundleRef {
             perceive_system: "PSYS",
-            perceive_user:   "{task_description} {environment_state}",
-            policy_system:   "OSYS",
-            policy_user:     "{task_description} {perceived_info} {tools}",
+            perceive_user: "{task_description} {environment_state}",
+            policy_system: "OSYS",
+            policy_user: "{task_description} {perceived_info} {tools}",
         }
     }
 
@@ -312,9 +315,7 @@ mod spec025_tests {
             duration_ms: Some(1.0),
         };
         let mut final_state = AgentState::new("e2e-test".into());
-        final_state
-            .perceived_info
-            .insert("domain".into(), serde_json::Value::String(domain.into()));
+        final_state.perceived_info.insert("domain".into(), serde_json::Value::String(domain.into()));
         final_state.is_complete = true;
         Trajectory {
             task_id: task_id.into(),

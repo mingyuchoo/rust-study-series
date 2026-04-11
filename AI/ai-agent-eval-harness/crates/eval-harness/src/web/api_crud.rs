@@ -665,33 +665,33 @@ pub async fn delete_external_tool_handler(State(st): State<AppState>, AxPath((do
 /// PromptSet 응답 DTO. SqliteStore 의 row 를 그대로 노출.
 #[derive(Debug, Serialize)]
 pub struct PromptSetDto {
-    pub id:              i64,
-    pub domain_name:     String,
-    pub version:         i64,
+    pub id: i64,
+    pub domain_name: String,
+    pub version: i64,
     pub perceive_system: String,
-    pub perceive_user:   String,
-    pub policy_system:   String,
-    pub policy_user:     String,
-    pub notes:           Option<String>,
-    pub is_active:       bool,
-    pub is_bootstrap:    bool,
-    pub created_at:      String,
+    pub perceive_user: String,
+    pub policy_system: String,
+    pub policy_user: String,
+    pub notes: Option<String>,
+    pub is_active: bool,
+    pub is_bootstrap: bool,
+    pub created_at: String,
 }
 
 impl From<data_scenarios::sqlite_store::PromptSetRow> for PromptSetDto {
     fn from(r: data_scenarios::sqlite_store::PromptSetRow) -> Self {
         Self {
-            id:              r.id,
-            domain_name:     r.domain_name,
-            version:         r.version,
+            id: r.id,
+            domain_name: r.domain_name,
+            version: r.version,
             perceive_system: r.perceive_system,
-            perceive_user:   r.perceive_user,
-            policy_system:   r.policy_system,
-            policy_user:     r.policy_user,
-            notes:           r.notes,
-            is_active:       r.is_active,
-            is_bootstrap:    r.is_bootstrap,
-            created_at:      r.created_at,
+            perceive_user: r.perceive_user,
+            policy_system: r.policy_system,
+            policy_user: r.policy_user,
+            notes: r.notes,
+            is_active: r.is_active,
+            is_bootstrap: r.is_bootstrap,
+            created_at: r.created_at,
         }
     }
 }
@@ -699,11 +699,11 @@ impl From<data_scenarios::sqlite_store::PromptSetRow> for PromptSetDto {
 #[derive(Debug, Deserialize)]
 pub struct PromptSetCreatePayload {
     pub perceive_system: String,
-    pub perceive_user:   String,
-    pub policy_system:   String,
-    pub policy_user:     String,
+    pub perceive_user: String,
+    pub policy_system: String,
+    pub policy_user: String,
     #[serde(default)]
-    pub notes:           Option<String>,
+    pub notes: Option<String>,
 }
 
 /// 새 버전 생성 시 필수 슬롯 검증. 누락된 슬롯이 있으면
@@ -745,22 +745,18 @@ pub async fn get_prompt_set_impl(store: &SqliteStore, domain: &str, version: i64
     Ok(PromptSetDto::from(row))
 }
 
-pub async fn create_prompt_set_impl(
-    store: &SqliteStore,
-    domain: &str,
-    payload: PromptSetCreatePayload,
-) -> Result<PromptSetDto, CrudFailure> {
+pub async fn create_prompt_set_impl(store: &SqliteStore, domain: &str, payload: PromptSetCreatePayload) -> Result<PromptSetDto, CrudFailure> {
     validate_id("domain", domain)?;
     validate_prompt_set_payload(&payload)?;
     let row = store
         .insert_prompt_set(data_scenarios::sqlite_store::PromptSetInsert {
-            domain_name:     domain,
+            domain_name: domain,
             perceive_system: &payload.perceive_system,
-            perceive_user:   &payload.perceive_user,
-            policy_system:   &payload.policy_system,
-            policy_user:     &payload.policy_user,
-            notes:           payload.notes.as_deref(),
-            is_bootstrap:    false,
+            perceive_user: &payload.perceive_user,
+            policy_system: &payload.policy_system,
+            policy_user: &payload.policy_user,
+            notes: payload.notes.as_deref(),
+            is_bootstrap: false,
         })
         .await?;
     Ok(PromptSetDto::from(row))
@@ -818,10 +814,7 @@ pub async fn activate_prompt_set_handler(
     Ok(JsonOut(dto))
 }
 
-pub async fn delete_prompt_set_handler(
-    State(st): State<AppState>,
-    AxPath((domain, version)): AxPath<(String, i64)>,
-) -> Result<StatusCode, CrudFailure> {
+pub async fn delete_prompt_set_handler(State(st): State<AppState>, AxPath((domain, version)): AxPath<(String, i64)>) -> Result<StatusCode, CrudFailure> {
     let store = store_from(&st)?;
     delete_prompt_set_impl(store.as_ref(), &domain, version).await?;
     Ok(StatusCode::NO_CONTENT)
@@ -1086,10 +1079,10 @@ scenarios:
     fn valid_payload(label: &str) -> PromptSetCreatePayload {
         PromptSetCreatePayload {
             perceive_system: format!("PER-SYS {label}"),
-            perceive_user:   "작업: {task_description}\n환경: {environment_state}{context}".into(),
-            policy_system:   format!("POL-SYS {label}"),
-            policy_user:     "작업: {task_description}\n인지: {perceived_info}\n도구: {tools}{context}".into(),
-            notes:           Some("test".into()),
+            perceive_user: "작업: {task_description}\n환경: {environment_state}{context}".into(),
+            policy_system: format!("POL-SYS {label}"),
+            policy_user: "작업: {task_description}\n인지: {perceived_info}\n도구: {tools}{context}".into(),
+            notes: Some("test".into()),
         }
     }
 
@@ -1100,9 +1093,9 @@ scenarios:
         store
             .seed_bootstrap_prompt_sets(&data_scenarios::sqlite_store::BootstrapBundleRef {
                 perceive_system: agent_core::llm_client::BOOTSTRAP_PERCEIVE_SYSTEM,
-                perceive_user:   agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
-                policy_system:   agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
-                policy_user:     agent_core::llm_client::BOOTSTRAP_POLICY_USER,
+                perceive_user: agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
+                policy_system: agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
+                policy_user: agent_core::llm_client::BOOTSTRAP_POLICY_USER,
             })
             .await
             .unwrap();
@@ -1114,7 +1107,9 @@ scenarios:
     #[tokio::test]
     async fn spec025_tc_6_create_returns_v2_after_bootstrap() {
         let store = store_with_domain("customer_service").await;
-        let dto = create_prompt_set_impl(&store, "customer_service", valid_payload("v2")).await.expect("create ok");
+        let dto = create_prompt_set_impl(&store, "customer_service", valid_payload("v2"))
+            .await
+            .expect("create ok");
         assert_eq!(dto.version, 2);
         assert!(!dto.is_active, "새 버전은 비활성으로 생성");
         assert!(!dto.is_bootstrap);
@@ -1205,9 +1200,9 @@ scenarios:
         store
             .seed_bootstrap_prompt_sets(&data_scenarios::sqlite_store::BootstrapBundleRef {
                 perceive_system: agent_core::llm_client::BOOTSTRAP_PERCEIVE_SYSTEM,
-                perceive_user:   agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
-                policy_system:   agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
-                policy_user:     agent_core::llm_client::BOOTSTRAP_POLICY_USER,
+                perceive_user: agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
+                policy_system: agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
+                policy_user: agent_core::llm_client::BOOTSTRAP_POLICY_USER,
             })
             .await
             .unwrap();

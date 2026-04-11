@@ -171,9 +171,9 @@ fn install_data_store(paths: &DataPaths) {
             let store_clone = store.clone();
             let bundle = data_scenarios::sqlite_store::BootstrapBundleRef {
                 perceive_system: agent_core::llm_client::BOOTSTRAP_PERCEIVE_SYSTEM,
-                perceive_user:   agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
-                policy_system:   agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
-                policy_user:     agent_core::llm_client::BOOTSTRAP_POLICY_USER,
+                perceive_user: agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
+                policy_system: agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
+                policy_user: agent_core::llm_client::BOOTSTRAP_POLICY_USER,
             };
             let result = match tokio::runtime::Handle::try_current() {
                 | Ok(handle) => tokio::task::block_in_place(|| handle.block_on(async move { store_clone.seed_bootstrap_prompt_sets(&bundle).await })),

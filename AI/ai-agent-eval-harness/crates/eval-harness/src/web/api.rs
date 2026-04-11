@@ -210,6 +210,18 @@ pub fn compare_with_save_impl(
 fn load_report_by_name(reports_dir: &Path, name: &str) -> Result<EvaluationReport, String> {
     let path = reports_dir.join(name);
     if let Ok(s) = std::fs::read_to_string(&path) {
+        // 1) 집계 보고서(`evaluation_report_*`) 포맷
+        if let Ok(rep) = serde_json::from_str::<EvaluationReport>(&s) {
+            return Ok(rep);
+        }
+        // 2) 개별 평가 로그(`evaluation_<task_id>_*`) 포맷: DB 행과 동일 shape
+        //    (trajectory/metrics/...) 이므로 `db_row_to_report` 로 합성한다.
+        //    SPEC-021 이후 DB 우선이지만, 파일만 남아 있는 구 환경 호환.
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&s) {
+            if v.get("trajectory").is_some() {
+                return db_row_to_report(name, &v);
+            }
+        }
         return serde_json::from_str::<EvaluationReport>(&s).map_err(|e| format!("parse {name}: {e}"));
     }
     let task_id = super::db_query::parse_task_id_from_filename(name).ok_or_else(|| format!("report not found: {name}"))?;

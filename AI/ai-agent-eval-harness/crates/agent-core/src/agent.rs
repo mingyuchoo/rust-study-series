@@ -45,20 +45,13 @@ impl PpaAgent {
         }
     }
 
-    fn perceive_step(
-        &self,
-        bundle: &ResolvedPromptSet,
-        domain: &str,
-        state: &mut AgentState,
-        trajectory: &mut Trajectory,
-    ) {
+    fn perceive_step(&self, bundle: &ResolvedPromptSet, domain: &str, state: &mut AgentState, trajectory: &mut Trajectory) {
         let start = std::time::Instant::now();
 
         let mut ctx_map = HashMap::new();
         ctx_map.insert("iteration".into(), serde_json::json!(state.iteration));
 
-        let (messages, prompt_set_id) =
-            LlmClient::create_perceive_prompt(bundle, domain, &state.task_description, &state.perceived_info, Some(&ctx_map));
+        let (messages, prompt_set_id) = LlmClient::create_perceive_prompt(bundle, domain, &state.task_description, &state.perceived_info, Some(&ctx_map));
         // 첫 번째 스텝에서만 Trajectory 에 prompt_set_id 를 한 번 기록한다.
         if trajectory.prompt_set_id.is_none() {
             trajectory.prompt_set_id = prompt_set_id;
@@ -95,27 +88,15 @@ impl PpaAgent {
         }
     }
 
-    fn policy_step(
-        &self,
-        bundle: &ResolvedPromptSet,
-        domain: &str,
-        state: &mut AgentState,
-        trajectory: &mut Trajectory,
-    ) {
+    fn policy_step(&self, bundle: &ResolvedPromptSet, domain: &str, state: &mut AgentState, trajectory: &mut Trajectory) {
         let start = std::time::Instant::now();
 
         let tools_meta = self.tools.lock().unwrap().get_tools_metadata();
         let mut ctx_map = HashMap::new();
         ctx_map.insert("iteration".into(), serde_json::json!(state.iteration));
 
-        let (messages, prompt_set_id) = LlmClient::create_policy_prompt(
-            bundle,
-            domain,
-            &state.task_description,
-            &state.perceived_info,
-            &tools_meta,
-            Some(&ctx_map),
-        );
+        let (messages, prompt_set_id) =
+            LlmClient::create_policy_prompt(bundle, domain, &state.task_description, &state.perceived_info, &tools_meta, Some(&ctx_map));
         if trajectory.prompt_set_id.is_none() {
             trajectory.prompt_set_id = prompt_set_id;
         }

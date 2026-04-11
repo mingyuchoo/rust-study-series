@@ -363,8 +363,9 @@ impl SqliteStore {
         Ok(())
     }
 
-    /// SPEC-025 v7: `trajectories` / `evaluations` 에 `prompt_set_id INTEGER NULL` 추가.
-    /// `ALTER TABLE ADD COLUMN` 은 IF NOT EXISTS 미지원이므로 PRAGMA 로 사전 검사.
+    /// SPEC-025 v7: `trajectories` / `evaluations` 에 `prompt_set_id INTEGER
+    /// NULL` 추가. `ALTER TABLE ADD COLUMN` 은 IF NOT EXISTS 미지원이므로
+    /// PRAGMA 로 사전 검사.
     ///
     /// @trace SPEC: SPEC-025
     /// @trace FR: PRD-025/FR-8
@@ -1407,10 +1408,7 @@ impl SqliteStore {
     /// @trace SPEC: SPEC-025
     /// @trace FR: PRD-025/FR-6
     pub async fn list_prompt_sets(&self, domain: &str) -> Result<Vec<PromptSetRow>, StoreError> {
-        let rows = sqlx::query(PROMPT_SET_SELECT_COLS)
-            .bind(domain)
-            .fetch_all(&self.pool)
-            .await?;
+        let rows = sqlx::query(PROMPT_SET_SELECT_COLS).bind(domain).fetch_all(&self.pool).await?;
         Ok(rows.into_iter().map(row_to_prompt_set).collect())
     }
 
@@ -1451,11 +1449,10 @@ impl SqliteStore {
     /// @trace FR: PRD-025/FR-1, PRD-025/FR-6
     pub async fn insert_prompt_set(&self, row: PromptSetInsert<'_>) -> Result<PromptSetRow, StoreError> {
         let mut tx = self.pool.begin().await?;
-        let next_version: i64 =
-            sqlx::query_scalar("SELECT COALESCE(MAX(version), 0) + 1 FROM prompt_sets WHERE domain_name = ?")
-                .bind(row.domain_name)
-                .fetch_one(&mut *tx)
-                .await?;
+        let next_version: i64 = sqlx::query_scalar("SELECT COALESCE(MAX(version), 0) + 1 FROM prompt_sets WHERE domain_name = ?")
+            .bind(row.domain_name)
+            .fetch_one(&mut *tx)
+            .await?;
         let any_existing: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM prompt_sets WHERE domain_name = ?")
             .bind(row.domain_name)
             .fetch_one(&mut *tx)
@@ -1538,15 +1535,14 @@ impl SqliteStore {
         Ok(())
     }
 
-    /// 모든 도메인에 대해 PromptSet 이 하나도 없으면 주어진 bootstrap 번들을 v1 로 삽입.
-    /// 기존 PromptSet 이 이미 있으면 해당 도메인은 skip (NFR-2 재시드 금지).
+    /// 모든 도메인에 대해 PromptSet 이 하나도 없으면 주어진 bootstrap 번들을 v1
+    /// 로 삽입. 기존 PromptSet 이 이미 있으면 해당 도메인은 skip (NFR-2
+    /// 재시드 금지).
     ///
     /// @trace SPEC: SPEC-025
     /// @trace FR: PRD-025/FR-2
     pub async fn seed_bootstrap_prompt_sets(&self, bundle: &BootstrapBundleRef<'_>) -> Result<usize, StoreError> {
-        let domains: Vec<String> = sqlx::query_scalar("SELECT name FROM domains ORDER BY name")
-            .fetch_all(&self.pool)
-            .await?;
+        let domains: Vec<String> = sqlx::query_scalar("SELECT name FROM domains ORDER BY name").fetch_all(&self.pool).await?;
         let mut inserted = 0usize;
         for d in domains {
             let cnt: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM prompt_sets WHERE domain_name = ?")
@@ -1586,8 +1582,14 @@ fn row_to_prompt_set(r: sqlx::sqlite::SqliteRow) -> PromptSetRow {
         policy_system: r.get("policy_system"),
         policy_user: r.get("policy_user"),
         notes: r.try_get("notes").ok(),
-        is_active: { let v: i64 = r.get("is_active"); v != 0 },
-        is_bootstrap: { let v: i64 = r.get("is_bootstrap"); v != 0 },
+        is_active: {
+            let v: i64 = r.get("is_active");
+            v != 0
+        },
+        is_bootstrap: {
+            let v: i64 = r.get("is_bootstrap");
+            v != 0
+        },
         created_at: r.get("created_at"),
     }
 }
@@ -2279,7 +2281,20 @@ scenarios:
         for (i, score) in [0.6_f64, 0.8, 1.0].iter().enumerate() {
             let task_id = format!("550e8400-e29b-41d4-a716-44665544000{i}");
             store
-                .upsert_trajectory(&task_id, "t", "ppa", Some("financial"), None, true, 1, "2026-04-11T10:00:00Z", None, "[]", None, None)
+                .upsert_trajectory(
+                    &task_id,
+                    "t",
+                    "ppa",
+                    Some("financial"),
+                    None,
+                    true,
+                    1,
+                    "2026-04-11T10:00:00Z",
+                    None,
+                    "[]",
+                    None,
+                    None,
+                )
                 .await
                 .unwrap();
             store
@@ -2475,9 +2490,9 @@ scenarios:
     fn sample_bundle() -> BootstrapBundleRef<'static> {
         BootstrapBundleRef {
             perceive_system: "SYS-PER {domain_name}",
-            perceive_user:   "작업: {task_description}\n환경: {environment_state}{context}",
-            policy_system:   "SYS-POL",
-            policy_user:     "작업: {task_description}\n인지: {perceived_info}\n도구: {tools}{context}",
+            perceive_user: "작업: {task_description}\n환경: {environment_state}{context}",
+            policy_system: "SYS-POL",
+            policy_user: "작업: {task_description}\n인지: {perceived_info}\n도구: {tools}{context}",
         }
     }
 
@@ -2490,12 +2505,17 @@ scenarios:
         store.init_schema().await.unwrap();
         // prompt_sets 테이블 존재
         let tbl: Option<String> = sqlx::query_scalar("SELECT name FROM sqlite_master WHERE type='table' AND name='prompt_sets'")
-            .fetch_optional(&store.pool).await.unwrap();
+            .fetch_optional(&store.pool)
+            .await
+            .unwrap();
         assert_eq!(tbl.as_deref(), Some("prompt_sets"));
         // trajectories/evaluations 에 prompt_set_id 컬럼 존재
         for t in ["trajectories", "evaluations"] {
             let cols = sqlx::query(&format!("PRAGMA table_info('{t}')")).fetch_all(&store.pool).await.unwrap();
-            let has = cols.iter().any(|r| { let n: String = r.get("name"); n == "prompt_set_id" });
+            let has = cols.iter().any(|r| {
+                let n: String = r.get("name");
+                n == "prompt_set_id"
+            });
             assert!(has, "{t} 에 prompt_set_id 컬럼 필요");
         }
     }
@@ -2590,11 +2610,10 @@ scenarios:
         let v1 = store.get_prompt_set("customer_service", 1).await.unwrap().unwrap();
         assert!(!v1.is_active);
         // partial unique index 확인: 활성 행이 정확히 1개
-        let active_count: i64 =
-            sqlx::query_scalar("SELECT COUNT(*) FROM prompt_sets WHERE domain_name='customer_service' AND is_active=1")
-                .fetch_one(&store.pool)
-                .await
-                .unwrap();
+        let active_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM prompt_sets WHERE domain_name='customer_service' AND is_active=1")
+            .fetch_one(&store.pool)
+            .await
+            .unwrap();
         assert_eq!(active_count, 1);
     }
 
