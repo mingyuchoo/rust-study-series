@@ -219,7 +219,7 @@
                 <button class="primary" onclick="runScenario()" data-i18n="scenarios.runBtn">Run → POST /api/scenarios/:d/:id/run</button>
               </div>
             </div>
-            <pre id="scen-out" data-i18n="common.waiting">waiting…</pre>
+            <pre id="scen-out" data-i18n="common.idle">Ready</pre>
           </div>
         </div>
       </div>
@@ -236,7 +236,7 @@
           </div>
           <div class="hint" data-i18n="run.hint">Calls POST /api/run. Always saves to reports_dir.</div>
         </form>
-        <pre id="run-out" data-i18n="common.waiting">waiting…</pre>
+        <pre id="run-out" data-i18n="common.idle">Ready</pre>
       </div>
     </section>
 
@@ -257,7 +257,7 @@
               <label>rate <input id="tool-rate" type="number" step="0.1" value="0.5" size="4"/></label>
             </div>
           </div>
-          <pre id="tool-out" data-i18n="common.waiting">waiting…</pre>
+          <pre id="tool-out" data-i18n="common.idle">Ready</pre>
         </div>
       </div>
     </section>
@@ -280,9 +280,11 @@
         <textarea id="agent-env">{}</textarea>
         <div class="row">
           <button class="primary" onclick="executeAgent()" data-i18n="agents.execute">Execute → POST /api/agents/:n/execute</button>
+          <button class="secondary" onclick="loadAgentExample()" data-i18n="agents.loadExample">예시 불러오기</button>
+          <select id="agent-example-select" onchange="loadAgentExample()"></select>
         </div>
       </div>
-      <pre id="agent-out" data-i18n="common.waiting">waiting…</pre>
+      <pre id="agent-out" data-i18n="common.idle">Ready</pre>
     </section>
 
     <!-- ============ REPORTS ============ -->
@@ -301,7 +303,7 @@
               <button class="primary" onclick="compareReports()" data-i18n="reports.compareBtn">Compare → POST /api/compare</button>
             </div>
           </div>
-          <pre id="report-out" data-i18n="common.waiting">waiting…</pre>
+          <pre id="report-out" data-i18n="common.idle">Ready</pre>
         </div>
       </div>
     </section>
@@ -361,7 +363,7 @@
               <button class="danger" onclick="deleteDomain()" data-i18n="domains.delete">Delete</button>
               <button class="secondary" onclick="clearDomainEditor()" data-i18n="domains.clear">Clear</button>
             </div>
-            <pre id="domain-out" data-i18n="common.waiting">waiting…</pre>
+            <pre id="domain-out" data-i18n="common.idle">Ready</pre>
           </div>
 
           <!-- SPEC-023: external HTTP tools -->
@@ -388,7 +390,7 @@
               <button class="danger" onclick="deleteExternalTool()" data-i18n="extools.delete">Delete</button>
               <button class="secondary" onclick="clearExternalToolForm()" data-i18n="extools.clear">Clear</button>
             </div>
-            <pre id="extool-out" data-i18n="common.waiting">waiting…</pre>
+            <pre id="extool-out" data-i18n="common.idle">Ready</pre>
           </div>
         </div>
       </div>
@@ -428,7 +430,7 @@
             <button class="danger" onclick="deleteEditor()" data-i18n="manage.delete">Delete</button>
             <button class="secondary" onclick="clearEditor()" data-i18n="manage.clear">Clear</button>
           </div>
-          <pre id="manage-out" data-i18n="common.waiting">waiting…</pre>
+          <pre id="manage-out" data-i18n="common.idle">Ready</pre>
         </div>
       </div>
     </section>
@@ -512,7 +514,8 @@
         "run.outputPh": "(선택) my_report.json",
         "run.button": "실행 → POST /api/run",
         "run.hint": "POST /api/run 을 호출합니다. reports_dir 에 항상 저장됩니다 (output 생략 시 기본 파일명 사용).",
-        "common.waiting": "대기 중…",
+        "common.idle": "준비됨",
+        "common.requesting": "요청 중…",
         "common.optional": "(선택)",
         "scenarios.title": "시나리오 (탐색 + 단일 실행)",
         "scenarios.empty": "시나리오를 선택하세요",
@@ -528,6 +531,7 @@
         "agents.env": "환경 (JSON, 선택)",
         "agents.domain": "도메인 (선택)",
         "agents.execute": "실행 → POST /api/agents/:n/execute",
+        "agents.loadExample": "예시 불러오기",
         "reports.title": "리포트 (조회 + 비교)",
         "reports.compareTitle": "두 리포트 비교",
         "reports.baseline": "기준",
@@ -602,7 +606,8 @@
         "run.outputPh": "(optional) my_report.json",
         "run.button": "Run → POST /api/run",
         "run.hint": "Calls POST /api/run. Always saves to reports_dir (default timestamp name if output omitted).",
-        "common.waiting": "waiting…",
+        "common.idle": "Ready",
+        "common.requesting": "Requesting…",
         "common.optional": "(optional)",
         "scenarios.title": "Scenarios (list + single run)",
         "scenarios.empty": "select a scenario",
@@ -618,6 +623,7 @@
         "agents.env": "Environment (JSON, optional)",
         "agents.domain": "Domain (optional)",
         "agents.execute": "Execute → POST /api/agents/:n/execute",
+        "agents.loadExample": "Load example",
         "reports.title": "Reports (view + compare)",
         "reports.compareTitle": "Compare two reports",
         "reports.baseline": "Baseline",
@@ -783,6 +789,51 @@
     }
 
     // ---------- AGENTS ----------
+    // key: domain name ("" = no domain). Each entry: array of {label, task, env}.
+    const AGENT_EXAMPLES = {
+      "": [
+        { label: "hello world",
+          task: "hello world",
+          env: {} },
+      ],
+      customer_service: [
+        { label: "cs_001 · 고객 문의 분류",
+          task: "고객으로부터 '주문한 상품이 불량이라 환불받고 싶습니다'라는 문의가 접수되었습니다. 문의를 적절한 카테고리로 분류하고 우선순위를 결정해주세요.",
+          env: { inquiry_text: "주문한 상품이 불량이라 환불받고 싶습니다", customer_id: "C001" } },
+        { label: "cs_002 · 환불 요청 처리",
+          task: "고객이 주문번호 ORD-101의 상품에 대해 불량을 사유로 50,000원 환불을 요청했습니다. 문의를 분류한 후 환불을 처리해주세요.",
+          env: { inquiry_text: "상품이 불량이라 환불 요청합니다", customer_id: "C010", order_id: "ORD-101", amount: 50000, reason: "상품 불량" } },
+        { label: "cs_003 · 불만 에스컬레이션",
+          task: "고객이 '도대체 왜 이렇게 서비스가 엉망인가요!'라며 강하게 불만을 표현하고 있습니다. 문의를 분류하고 심각도가 높으므로 상위 담당자에게 에스컬레이션해주세요.",
+          env: { inquiry_text: "도대체 왜 이렇게 서비스가 엉망인가요! 화가 납니다!", customer_id: "C020", issue_id: "ISS-201", severity: "high", current_agent: "agent_01" } },
+      ],
+      financial: [
+        { label: "fin_001 · 단리 이자 계산",
+          task: "고객이 1,000,000원을 연 5% 금리로 2년간 예금했습니다. 단리 방식으로 이자를 계산하고 총 금액을 알려주세요.",
+          env: { customer_id: "C001", deposit_amount: 1000000, interest_rate: 0.05, period_years: 2, calculation_method: "simple" } },
+        { label: "fin_002 · 복리 이자 계산",
+          task: "고객이 1,000,000원을 연 5% 금리로 2년간 예금했습니다. 월복리 방식으로 이자를 계산하고, 단리와 비교하여 어느 것이 더 유리한지 분석해주세요.",
+          env: { customer_id: "C002", deposit_amount: 1000000, interest_rate: 0.05, period_years: 2, compounding_frequency: 12, calculation_method: "compound" } },
+      ],
+    };
+
+    function rebuildAgentExampleSelect() {
+      const domain = $('agent-domain').value || "";
+      const list = AGENT_EXAMPLES[domain] || AGENT_EXAMPLES[""];
+      const sel = $('agent-example-select');
+      sel.innerHTML = list.map((ex, i) => `<option value="${i}">${ex.label}</option>`).join('');
+    }
+
+    function loadAgentExample() {
+      const domain = $('agent-domain').value || "";
+      const list = AGENT_EXAMPLES[domain] || AGENT_EXAMPLES[""];
+      const idx = parseInt($('agent-example-select').value) || 0;
+      const ex = list[idx] || list[0];
+      if (!ex) return;
+      $('agent-task').value = ex.task;
+      $('agent-env').value = JSON.stringify(ex.env, null, 2);
+    }
+
     async function initAgentsPanel() {
       if (AGENTS.length === 0) await loadAgents();
       try {
@@ -796,7 +847,13 @@
           opt.value = d.name; opt.textContent = d.name;
           sel.appendChild(opt);
         });
+        sel.onchange = () => { rebuildAgentExampleSelect(); loadAgentExample(); };
+        // preselect first real domain if available
+        const firstDomain = (data.domains || [])[0];
+        if (firstDomain) sel.value = firstDomain.name;
       } catch (e) { /* domain list optional */ }
+      rebuildAgentExampleSelect();
+      loadAgentExample();
     }
     async function executeAgent() {
       let env = null;
@@ -1114,7 +1171,11 @@
         meta.textContent = `scen ${d.scenario_count} · tools ${d.tool_class_names.length} · kw ${d.keywords.length}`;
         it.appendChild(name);
         it.appendChild(meta);
-        it.onclick = () => editDomain(d);
+        it.onclick = () => {
+          document.querySelectorAll('#domains-list .item').forEach(x => x.classList.remove('active'));
+          it.classList.add('active');
+          editDomain(d);
+        };
         list.appendChild(it);
       });
     }
@@ -1128,7 +1189,7 @@
       $('domain-desc-input').value = '';
       Array.from($('domain-tools-input').options).forEach(o => o.selected = false);
       $('domain-keywords-input').value = '';
-      $('domain-out').textContent = t('common.waiting');
+      $('domain-out').textContent = t('common.idle');
     }
 
     function editDomain(d) {
@@ -1164,7 +1225,11 @@
           meta.textContent = `${r.method} ${r.url}`;
           it.appendChild(name);
           it.appendChild(meta);
-          it.onclick = () => loadExternalTool(r);
+          it.onclick = () => {
+            document.querySelectorAll('#extools-list .item').forEach(x => x.classList.remove('active'));
+            it.classList.add('active');
+            loadExternalTool(r);
+          };
           list.appendChild(it);
         });
       } catch (e) { list.textContent = t('extools.loadError') + e; }
@@ -1192,7 +1257,7 @@
       $('extool-body').value = '';
       $('extool-schema').value = '';
       $('extool-timeout').value = '10000';
-      $('extool-out').textContent = t('common.waiting');
+      $('extool-out').textContent = t('common.idle');
     }
     async function saveExternalTool() {
       const out = $('extool-out');

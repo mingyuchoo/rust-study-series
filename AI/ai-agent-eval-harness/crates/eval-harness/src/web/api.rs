@@ -19,7 +19,8 @@ use execution::{agent_registry::AgentRegistry,
                 base_agent::PassthroughAgent,
                 comparator::ReportComparator,
                 models::{ComparisonResult,
-                         EvaluationReport},
+                         EvaluationReport,
+                         ScenarioResult},
                 runner::HarnessRunner};
 use execution_tools::registry::ToolRegistry;
 use serde::{Deserialize,
@@ -160,9 +161,13 @@ pub fn compare_impl(baseline: &str, current: &str, threshold: f64, reports_dir: 
 
 /// SPEC-005: 비교 결과를 선택적으로 디스크에 저장한다.
 ///
-/// @trace SPEC: SPEC-005
+/// SPEC-021 이후 평가 로그(`evaluation_<task_id>_*.json`)는 DB 에만 존재할
+/// 수 있다. 따라서 디스크에 파일이 없으면 `db_query::get_evaluation` 으로
+/// 폴백하여 `EvaluationReport` 를 복원한 뒤 in-memory 비교를 수행한다.
+///
+/// @trace SPEC: SPEC-005, SPEC-021
 /// @trace TC: SPEC-005/TC-4, SPEC-005/TC-5, SPEC-005/TC-6
-/// @trace FR: PRD-005/FR-2
+/// @trace FR: PRD-005/FR-2, PRD-021/FR-4
 pub fn compare_with_save_impl(
     baseline: &str,
     current: &str,
@@ -178,12 +183,10 @@ pub fn compare_with_save_impl(
             return Err("invalid output name".into());
         }
     }
-    let base_path: PathBuf = reports_dir.join(baseline);
-    let cur_path: PathBuf = reports_dir.join(current);
+    let base_report = load_report_by_name(reports_dir, baseline)?;
+    let cur_report = load_report_by_name(reports_dir, current)?;
     let comparator = ReportComparator::new(threshold);
-    let result = comparator
-        .compare_files(base_path.to_str().ok_or("invalid path")?, cur_path.to_str().ok_or("invalid path")?)
-        .map_err(|e| e.to_string())?;
+    let result = comparator.compare(&base_report, &cur_report);
     let saved_to = if let Some(name) = output {
         let p: PathBuf = reports_dir.join(name);
         let s = p.to_str().ok_or("invalid save path")?.to_string();
@@ -193,6 +196,104 @@ pub fn compare_with_save_impl(
         None
     };
     Ok((result, saved_to))
+}
+
+/// 이름(파일명 형식)으로 `EvaluationReport` 를 로드한다.
+/// 1) `reports_dir/<name>` 파일을 먼저 시도하고,
+/// 2) 실패하면 파일명에서 task_id 를 추출해 DB 행을 1-시나리오
+///    `EvaluationReport` 로 합성한다. DB 스키마(`trajectory/metrics/scores`)
+///    와 집계 리포트 스키마(`timestamp/average_metrics/scenarios`)는 다르므로
+///    필드 매핑이 필요하다.
+///
+/// @trace SPEC: SPEC-021
+/// @trace FR: PRD-021/FR-4
+fn load_report_by_name(reports_dir: &Path, name: &str) -> Result<EvaluationReport, String> {
+    let path = reports_dir.join(name);
+    if let Ok(s) = std::fs::read_to_string(&path) {
+        return serde_json::from_str::<EvaluationReport>(&s).map_err(|e| format!("parse {name}: {e}"));
+    }
+    let task_id = super::db_query::parse_task_id_from_filename(name).ok_or_else(|| format!("report not found: {name}"))?;
+    let v = super::db_query::get_evaluation(&task_id).ok_or_else(|| format!("report not found in DB: {name}"))?;
+    db_row_to_report(name, &v)
+}
+
+/// DB `get_evaluation_json` 의 JSON (trajectory/metrics/scores/golden_set_result)
+/// 을 1-시나리오 `EvaluationReport` 로 매핑한다. 비교기는 `average_metrics`
+/// 만 보므로 scores + metrics 의 숫자 값을 모두 편입한다.
+fn db_row_to_report(name: &str, v: &serde_json::Value) -> Result<EvaluationReport, String> {
+    use std::collections::HashMap;
+    let traj = v.get("trajectory").ok_or_else(|| format!("DB row missing 'trajectory': {name}"))?;
+    let task_id = traj.get("task_id").and_then(|x| x.as_str()).unwrap_or("").to_string();
+    let task_description = traj.get("task_description").and_then(|x| x.as_str()).unwrap_or("").to_string();
+    let agent_name = traj.get("agent_name").and_then(|x| x.as_str()).unwrap_or("ppa").to_string();
+    let success = traj.get("success").and_then(|x| x.as_bool()).unwrap_or(false);
+    let total_iterations = traj.get("total_iterations").and_then(|x| x.as_u64()).unwrap_or(0) as u32;
+    // trajectory 페이로드에는 domain/scenario_id 가 없을 수 있음 → 기본값.
+    let domain = traj.get("domain").and_then(|x| x.as_str()).unwrap_or("general").to_string();
+    let scenario_id = traj.get("scenario_id").and_then(|x| x.as_str()).unwrap_or("").to_string();
+
+    let mut average_metrics: HashMap<String, f64> = HashMap::new();
+    if let Some(obj) = v.get("scores").and_then(|x| x.as_object()) {
+        for (k, val) in obj {
+            if let Some(f) = val.as_f64() {
+                average_metrics.insert(k.clone(), f);
+            }
+        }
+    }
+    let mut scen_metrics: HashMap<String, Option<f64>> = HashMap::new();
+    if let Some(obj) = v.get("metrics").and_then(|x| x.as_object()) {
+        for (k, val) in obj {
+            let f = val.as_f64();
+            if let Some(x) = f {
+                average_metrics.entry(k.clone()).or_insert(x);
+            }
+            scen_metrics.insert(k.clone(), f);
+        }
+    }
+
+    let timestamp = timestamp_from_filename(name).unwrap_or_else(|| chrono::Utc::now().to_rfc3339());
+
+    Ok(EvaluationReport {
+        version: "1.0".into(),
+        timestamp,
+        agent_name,
+        eval_scenario: "all".into(),
+        total_scenarios: 1,
+        success_count: if success { 1 } else { 0 },
+        success_rate: if success { 1.0 } else { 0.0 },
+        average_metrics,
+        scenarios: vec![ScenarioResult {
+            task_id,
+            task_description,
+            success,
+            total_iterations,
+            metrics: scen_metrics,
+            domain,
+            scenario_id,
+        }],
+    })
+}
+
+/// `<prefix>_<uuid>_YYYYMMDD_HHMMSS.json` 에서 timestamp 를 RFC3339 로 복원.
+fn timestamp_from_filename(name: &str) -> Option<String> {
+    let stripped = name.strip_suffix(".json")?;
+    let (rest, hhmmss) = stripped.rsplit_once('_')?;
+    let (_, yyyymmdd) = rest.rsplit_once('_')?;
+    if yyyymmdd.len() != 8 || hhmmss.len() != 6 {
+        return None;
+    }
+    if !yyyymmdd.chars().all(|c| c.is_ascii_digit()) || !hhmmss.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    Some(format!(
+        "{}-{}-{}T{}:{}:{}Z",
+        &yyyymmdd[.. 4],
+        &yyyymmdd[4 .. 6],
+        &yyyymmdd[6 .. 8],
+        &hhmmss[.. 2],
+        &hhmmss[2 .. 4],
+        &hhmmss[4 .. 6]
+    ))
 }
 
 /// SPEC-005: 도메인/시나리오와 에이전트 목록을 단일 페이로드로 집계.
