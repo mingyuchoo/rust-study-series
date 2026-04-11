@@ -2,8 +2,16 @@
   "fr": {
     "FR-1": {
       "title": "시나리오 REST CRUD",
-      "specs": [],
-      "test_cases": [],
+      "specs": [
+        "SPEC-019"
+      ],
+      "test_cases": [
+        "SPEC-019/TC-1",
+        "SPEC-019/TC-3",
+        "SPEC-019/TC-9",
+        "SPEC-019/TC-10",
+        "SPEC-019/TC-11"
+      ],
       "test_files": [],
       "impl_files": [],
       "impl_symbols": [],
@@ -11,8 +19,14 @@
     },
     "FR-2": {
       "title": "골든셋 REST CRUD",
-      "specs": [],
-      "test_cases": [],
+      "specs": [
+        "SPEC-019"
+      ],
+      "test_cases": [
+        "SPEC-019/TC-6",
+        "SPEC-019/TC-7",
+        "SPEC-019/TC-12"
+      ],
       "test_files": [],
       "impl_files": [],
       "impl_symbols": [],
@@ -20,8 +34,12 @@
     },
     "FR-3": {
       "title": "DB 단독 쓰기",
-      "specs": [],
-      "test_cases": [],
+      "specs": [
+        "SPEC-019"
+      ],
+      "test_cases": [
+        "SPEC-019/TC-13"
+      ],
       "test_files": [],
       "impl_files": [],
       "impl_symbols": [],
@@ -29,8 +47,14 @@
     },
     "FR-4": {
       "title": "시나리오 삭제 cascade",
-      "specs": [],
-      "test_cases": [],
+      "specs": [
+        "SPEC-019"
+      ],
+      "test_cases": [
+        "SPEC-019/TC-5",
+        "SPEC-019/TC-8",
+        "SPEC-019/TC-11"
+      ],
       "test_files": [],
       "impl_files": [],
       "impl_symbols": [],
@@ -38,8 +62,17 @@
     },
     "FR-5": {
       "title": "HTTP 에러 매핑",
-      "specs": [],
-      "test_cases": [],
+      "specs": [
+        "SPEC-019"
+      ],
+      "test_cases": [
+        "SPEC-019/TC-2",
+        "SPEC-019/TC-4",
+        "SPEC-019/TC-7",
+        "SPEC-019/TC-9",
+        "SPEC-019/TC-10",
+        "SPEC-019/TC-14"
+      ],
       "test_files": [],
       "impl_files": [],
       "impl_symbols": [],
@@ -47,7 +80,9 @@
     },
     "FR-6": {
       "title": "웹 UI 관리 탭",
-      "specs": [],
+      "specs": [
+        "SPEC-019"
+      ],
       "test_cases": [],
       "test_files": [],
       "impl_files": [],
@@ -56,7 +91,9 @@
     },
     "FR-7": {
       "title": "read-after-write 일관성",
-      "specs": [],
+      "specs": [
+        "SPEC-019"
+      ],
       "test_cases": [],
       "test_files": [],
       "impl_files": [],
