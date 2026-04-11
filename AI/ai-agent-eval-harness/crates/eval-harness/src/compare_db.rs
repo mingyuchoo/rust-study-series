@@ -49,11 +49,19 @@ pub fn compare_two_tasks(baseline_task: &str, current_task: &str, threshold: f64
     Ok(ReportComparator::new(threshold).compare(&baseline_report, &current_report))
 }
 
-/// agent + 시간 범위 두 개를 비교한다. 각 윈도우의 평균 메트릭이 EvaluationReport 로 변환된다.
+/// agent + 시간 범위 두 개를 비교한다. 각 윈도우의 평균 메트릭이
+/// EvaluationReport 로 변환된다.
 ///
 /// @trace SPEC: SPEC-021
 /// @trace FR: PRD-021/FR-6
-pub fn compare_windows(agent: &str, baseline_since: &str, baseline_until: &str, current_since: &str, current_until: &str, threshold: f64) -> anyhow::Result<ComparisonResult> {
+pub fn compare_windows(
+    agent: &str,
+    baseline_since: &str,
+    baseline_until: &str,
+    current_since: &str,
+    current_until: &str,
+    threshold: f64,
+) -> anyhow::Result<ComparisonResult> {
     let store = data_scenarios::loader::try_installed_store().ok_or_else(|| anyhow::anyhow!("SqliteStore not installed"))?;
     let baseline_window = run({
         let store = store.clone();
@@ -94,11 +102,7 @@ fn task_json_to_report(task_id: &str, json: &serde_json::Value) -> EvaluationRep
             }
         }
     }
-    let success = json
-        .get("trajectory")
-        .and_then(|t| t.get("success"))
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let success = json.get("trajectory").and_then(|t| t.get("success")).and_then(|v| v.as_bool()).unwrap_or(false);
     EvaluationReport {
         version: "1.0".into(),
         timestamp: chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string(),
@@ -141,4 +145,3 @@ fn window_to_report(agent: &str, label: &str, w: &EvaluationWindow) -> Evaluatio
         scenarios: Vec::new(),
     }
 }
-

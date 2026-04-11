@@ -64,7 +64,8 @@ enum Commands {
         /// SPEC-021: 시간 범위 평균 비교 — agent 이름
         #[arg(long)]
         agent: Option<String>,
-        /// SPEC-021: 베이스라인 시간 범위 시작 (RFC3339, 예: 2026-01-01T00:00:00Z)
+        /// SPEC-021: 베이스라인 시간 범위 시작 (RFC3339, 예:
+        /// 2026-01-01T00:00:00Z)
         #[arg(long)]
         baseline_since: Option<String>,
         /// SPEC-021: 베이스라인 시간 범위 종료
@@ -77,7 +78,8 @@ enum Commands {
         #[arg(long)]
         current_until: Option<String>,
     },
-    /// SPEC-021: 디렉토리의 trajectory_*.json / evaluation_*.json 을 DB 로 일회성 backfill.
+    /// SPEC-021: 디렉토리의 trajectory_*.json / evaluation_*.json 을 DB 로
+    /// 일회성 backfill.
     BackfillResults {
         #[arg(long, default_value = "reporting_trajectories")]
         trajectories_dir: String,
@@ -258,7 +260,9 @@ fn main() {
                     },
                 }
             } else {
-                eprintln!("compare: 파일 인자 두 개, --baseline-task/--current-task, 또는 --agent/--baseline-since/--baseline-until/--current-since/--current-until 중 하나의 모드를 지정하세요.");
+                eprintln!(
+                    "compare: 파일 인자 두 개, --baseline-task/--current-task, 또는 --agent/--baseline-since/--baseline-until/--current-since/--current-until 중 하나의 모드를 지정하세요."
+                );
                 std::process::exit(2);
             };
 

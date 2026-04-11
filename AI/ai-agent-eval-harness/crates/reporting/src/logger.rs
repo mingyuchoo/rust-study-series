@@ -95,11 +95,7 @@ impl SqliteLogger {
 impl TrajectoryLog for SqliteLogger {
     fn save_trajectory(&self, trajectory: &Trajectory) -> Result<()> {
         let steps_json = serde_json::to_string(&trajectory.steps)?;
-        let final_state_json = trajectory
-            .final_state
-            .as_ref()
-            .map(serde_json::to_string)
-            .transpose()?;
+        let final_state_json = trajectory.final_state.as_ref().map(serde_json::to_string).transpose()?;
         let started_at = trajectory.start_time.to_rfc3339();
         let ended_at = trajectory.end_time.map(|t| t.to_rfc3339());
         let store = self.store.clone();
@@ -142,11 +138,7 @@ impl TrajectoryLog for SqliteLogger {
         // 상위 MultiLogger 가 trajectory 를 먼저 호출해 보장한다.
         let metrics_map = evaluation.metrics.to_map();
         let metrics_json = serde_json::to_string(&metrics_map)?;
-        let golden_set_result_json = evaluation
-            .golden_set_result
-            .as_ref()
-            .map(serde_json::to_string)
-            .transpose()?;
+        let golden_set_result_json = evaluation.golden_set_result.as_ref().map(serde_json::to_string).transpose()?;
         let task_id = evaluation.trajectory.task_id.clone();
         let success = evaluation.trajectory.success;
         let (domain, scenario_id) = evaluation
@@ -160,7 +152,12 @@ impl TrajectoryLog for SqliteLogger {
             })
             .unwrap_or((None, None));
         let (criteria_score, tool_sequence_score, domain_routing_score, overall_score) = match &evaluation.golden_set_result {
-            | Some(g) => (Some(g.criteria_score), Some(g.tool_sequence_score), g.domain_routing_score, Some(g.overall_score)),
+            | Some(g) => (
+                Some(g.criteria_score),
+                Some(g.tool_sequence_score),
+                g.domain_routing_score,
+                Some(g.overall_score),
+            ),
             | None => (None, None, None, None),
         };
         let store = self.store.clone();
@@ -223,8 +220,8 @@ impl TrajectoryLog for MultiLogger {
 // 기존 facade — 호출부 호환을 위해 동일한 시그니처 유지
 // =============================================================================
 
-/// 기존 코드 호환용 facade. 내부적으로 `MultiLogger { FileLogger, SqliteLogger? }`
-/// 를 들고 있어, `HarnessRunner::new` 같은 호출부 변경 없이 dual-write 가
+/// 기존 코드 호환용 facade. 내부적으로 `MultiLogger { FileLogger, SqliteLogger?
+/// }` 를 들고 있어, `HarnessRunner::new` 같은 호출부 변경 없이 dual-write 가
 /// 활성화된다. SqliteStore 가 install 되지 않은 환경(테스트 등)에서는
 /// 자동으로 FileLogger 단독 모드로 떨어진다.
 pub struct TrajectoryLogger {

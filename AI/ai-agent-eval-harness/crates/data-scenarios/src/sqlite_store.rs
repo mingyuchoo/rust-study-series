@@ -1681,19 +1681,7 @@ scenarios:
         for (i, score) in [0.6_f64, 0.8, 1.0].iter().enumerate() {
             let task_id = format!("550e8400-e29b-41d4-a716-44665544000{i}");
             store
-                .upsert_trajectory(
-                    &task_id,
-                    "t",
-                    "ppa",
-                    Some("financial"),
-                    None,
-                    true,
-                    1,
-                    "2026-04-11T10:00:00Z",
-                    None,
-                    "[]",
-                    None,
-                )
+                .upsert_trajectory(&task_id, "t", "ppa", Some("financial"), None, true, 1, "2026-04-11T10:00:00Z", None, "[]", None)
                 .await
                 .unwrap();
             store

@@ -41,7 +41,9 @@ pub fn backfill_results(trajectories_dir: &Path, logs_dir: &Path) -> BackfillRep
     if let Ok(entries) = std::fs::read_dir(trajectories_dir) {
         for e in entries.flatten() {
             let p = e.path();
-            let Some(name) = p.file_name().and_then(|n| n.to_str()) else { continue };
+            let Some(name) = p.file_name().and_then(|n| n.to_str()) else {
+                continue;
+            };
             if !name.starts_with("trajectory_") || !name.ends_with(".json") {
                 continue;
             }
@@ -59,7 +61,9 @@ pub fn backfill_results(trajectories_dir: &Path, logs_dir: &Path) -> BackfillRep
     if let Ok(entries) = std::fs::read_dir(logs_dir) {
         for e in entries.flatten() {
             let p = e.path();
-            let Some(name) = p.file_name().and_then(|n| n.to_str()) else { continue };
+            let Some(name) = p.file_name().and_then(|n| n.to_str()) else {
+                continue;
+            };
             if !name.starts_with("evaluation_") || !name.ends_with(".json") || name.starts_with("evaluation_report_") {
                 continue;
             }
@@ -132,7 +136,12 @@ fn parse_and_upsert_evaluation(path: &Path, store: &std::sync::Arc<data_scenario
     let metrics_json = serde_json::to_string(&metrics_map)?;
     let golden_json = eval.golden_set_result.as_ref().map(serde_json::to_string).transpose()?;
     let (criteria, tool_seq, routing, overall) = match &eval.golden_set_result {
-        | Some(g) => (Some(g.criteria_score), Some(g.tool_sequence_score), g.domain_routing_score, Some(g.overall_score)),
+        | Some(g) => (
+            Some(g.criteria_score),
+            Some(g.tool_sequence_score),
+            g.domain_routing_score,
+            Some(g.overall_score),
+        ),
         | None => (None, None, None, None),
     };
     let task_id = traj.task_id.clone();

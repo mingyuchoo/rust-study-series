@@ -78,15 +78,13 @@ pub fn get_evaluation(task_id: &str) -> Option<serde_json::Value> {
 pub fn parse_task_id_from_filename(name: &str) -> Option<String> {
     let stripped = name.strip_suffix(".json")?;
     // prefix 제거
-    let body = stripped
-        .strip_prefix("trajectory_")
-        .or_else(|| stripped.strip_prefix("evaluation_"))?;
+    let body = stripped.strip_prefix("trajectory_").or_else(|| stripped.strip_prefix("evaluation_"))?;
     // body = "<task_id>_<YYYYMMDD_HHMMSS>"
     // task_id 는 UUID(36자 + 4 hyphens) 이므로 길이 36 자르기
     if body.len() < 36 {
         return None;
     }
-    let id = &body[..36];
+    let id = &body[.. 36];
     if id.chars().all(|c| c.is_ascii_hexdigit() || c == '-') {
         Some(id.to_string())
     } else {
@@ -109,13 +107,9 @@ pub fn evaluation_row_to_filename(row: &EvaluationListRow) -> String {
 
 fn compact_ts(s: &str) -> String {
     // RFC3339 또는 SQLite "YYYY-MM-DD HH:MM:SS" 모두 처리.
-    let cleaned: String = s
-        .chars()
-        .filter(|c| c.is_ascii_digit())
-        .take(14)
-        .collect();
+    let cleaned: String = s.chars().filter(|c| c.is_ascii_digit()).take(14).collect();
     if cleaned.len() == 14 {
-        format!("{}_{}", &cleaned[..8], &cleaned[8..])
+        format!("{}_{}", &cleaned[.. 8], &cleaned[8 ..])
     } else {
         cleaned
     }
