@@ -40,8 +40,7 @@ use std::{collections::HashMap,
 /// @trace FR: PRD-004/FR-3
 pub fn build_full_tool_registry() -> ToolRegistry {
     let mut reg = ToolRegistry::new();
-    domains::register_customer_service_tools(&mut reg);
-    domains::register_financial_tools(&mut reg);
+    domains::register_all(&mut reg);
     reg
 }
 
@@ -102,7 +101,7 @@ pub fn run_scenario_impl(scen_dir: &Path, reps_dir: &Path, domain: &str, id: &st
 /// @trace TC: SPEC-004/TC-3, SPEC-004/TC-12, SPEC-004/TC-13
 /// @trace FR: PRD-004/FR-2, PRD-004/FR-8
 pub fn agent_execute_impl(
-    scen_dir: &Path,
+    _scen_dir: &Path,
     agent_name: &str,
     task: &str,
     env: Option<HashMap<String, Value>>,
@@ -111,20 +110,26 @@ pub fn agent_execute_impl(
     if !is_safe_name(agent_name) {
         return Err("invalid agent name".into());
     }
-    let registry = build_agent_registry();
-    let agent = registry.get_agent(agent_name).ok_or_else(|| format!("unknown agent: {}", agent_name))?;
-
     if let Some(d) = domain {
         if !is_safe_name(d) {
             return Err("invalid domain name".into());
         }
-        let dir_str = scen_dir.to_str().ok_or("invalid scenarios_dir")?;
-        let configs = ScenarioLoader::new()
-            .load_all_domains(dir_str)
-            .map_err(|e| format!("failed to load domain configs: {}", e))?;
-        let cfg = configs.into_iter().find(|c| c.name == d).ok_or_else(|| format!("domain not found: {}", d))?;
-        agent.load_domain_tools(&cfg);
+        if !domains::known_domains().iter().any(|k| *k == d) {
+            return Err(format!("domain not found: {}", d));
+        }
     }
+    let registry = build_agent_registry();
+    let agent = registry.get_agent(agent_name).ok_or_else(|| format!("unknown agent: {}", agent_name))?;
+    // SPEC-020: 도메인 파라미터는 이제 힌트에 불과하며, 에이전트는 항상
+    // 모든 도메인의 네임스페이스 도구를 받는다. LLM 이 task 의 문맥에 맞춰
+    // 도구(=도메인) 를 직접 선택한다.
+    let dummy_cfg = agent_models::domain_config::DomainConfig {
+        name: domain.unwrap_or("").to_string(),
+        description: String::new(),
+        tools: Vec::new(),
+        scenarios: Vec::new(),
+    };
+    agent.load_domain_tools(&dummy_cfg);
 
     Ok(agent.execute_task(task, env))
 }
@@ -201,10 +206,18 @@ pub fn fault_sim_impl(name: &str, params: &HashMap<String, Value>, config: Fault
 // FR-7: 궤적 파일 조회
 // --------------------------------------------------------------------------
 
-/// @trace SPEC: SPEC-004
+/// SPEC-021 Stage 4: DB 우선 조회 + 파일 폴백.
+///
+/// @trace SPEC: SPEC-004, SPEC-021
 /// @trace TC: SPEC-004/TC-10
-/// @trace FR: PRD-004/FR-7
+/// @trace FR: PRD-004/FR-7, PRD-021/FR-4
 pub fn list_trajectories_impl(dir: &Path) -> Vec<String> {
+    if let Some(rows) = super::db_query::list_trajectories() {
+        if !rows.is_empty() {
+            return rows.iter().map(super::db_query::trajectory_row_to_filename).collect();
+        }
+    }
+    // 파일 폴백
     let mut out = Vec::new();
     let Ok(entries) = fs::read_dir(dir) else {
         return out;
@@ -221,12 +234,19 @@ pub fn list_trajectories_impl(dir: &Path) -> Vec<String> {
     out
 }
 
-/// @trace SPEC: SPEC-004
+/// SPEC-021 Stage 4: 파일명에서 task_id 추출 → DB 조회 → 파일 폴백.
+///
+/// @trace SPEC: SPEC-004, SPEC-021
 /// @trace TC: SPEC-004/TC-11
-/// @trace FR: PRD-004/FR-7
+/// @trace FR: PRD-004/FR-7, PRD-021/FR-4
 pub fn get_trajectory_impl(dir: &Path, name: &str) -> Option<Value> {
     if !is_safe_name(name) {
         return None;
+    }
+    if let Some(task_id) = super::db_query::parse_task_id_from_filename(name) {
+        if let Some(v) = super::db_query::get_trajectory(&task_id) {
+            return Some(v);
+        }
     }
     let path: PathBuf = dir.join(name);
     let text = fs::read_to_string(path).ok()?;
@@ -374,12 +394,8 @@ mod tests {
     use tempfile::tempdir;
 
     fn ws_scenarios() -> PathBuf {
+        // SPEC-017 이후 loader 는 내장 시드만 사용. 경로는 `exists()` 통과용.
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("eval_data/eval_scenarios")
     }
 
     /// @trace TC: SPEC-004/TC-1
@@ -461,7 +477,8 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("inquiry_text".into(), serde_json::json!("환불하고 싶어요"));
         params.insert("customer_id".into(), serde_json::json!("C001"));
-        let res = tool_invoke_impl("classify_inquiry", &params);
+        // SPEC-020: 도메인 네임스페이스 적용 이후 도구 이름은 `<domain>__<name>` 형식.
+        let res = tool_invoke_impl("customer_service__classify_inquiry", &params);
         assert!(res.is_ok(), "{:?}", res.err());
     }
 
@@ -476,22 +493,12 @@ mod tests {
 
     /// @trace TC: SPEC-004/TC-6
     /// @trace FR: PRD-004/FR-4
-    /// @trace scenario: golden entry 조회 성공
+    /// @trace scenario: golden entry 조회 성공 (내장 시드 기반)
     #[test]
     fn test_tc_6_golden_entry_found() {
         let dir = tempdir().unwrap();
-        let json = r#"{
-            "domain":"demo",
-            "golden_sets":[{
-                "scenario_id":"s1",
-                "input":{"task":"t","environment":{}},
-                "expected_output":{"tool_sequence":[],"tool_results":{},"success_criteria":{},"tolerance":0.0},
-                "metadata":{}
-            }]
-        }"#;
-        File::create(dir.path().join("demo.json")).unwrap().write_all(json.as_bytes()).unwrap();
-        let e = golden_entry_impl(dir.path(), "demo", "s1");
-        assert!(e.is_some());
+        let e = golden_entry_impl(dir.path(), "financial", "fin_001");
+        assert!(e.is_some(), "embedded financial/fin_001 must be loadable");
     }
 
     /// @trace TC: SPEC-004/TC-7
@@ -533,7 +540,7 @@ mod tests {
         params.insert("customer_id".into(), serde_json::json!("C1"));
         let mut config = FaultInjectionConfig::default();
         config.enabled = false; // 정상 경로 유지
-        let res = fault_sim_impl("classify_inquiry", &params, config);
+        let res = fault_sim_impl("customer_service__classify_inquiry", &params, config);
         assert!(res.is_ok(), "{:?}", res.err());
     }
 

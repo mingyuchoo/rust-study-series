@@ -38,6 +38,12 @@ pub struct EvaluationConfig {
     pub enable_human_in_loop: bool,
     pub safety_check_enabled: bool,
     pub enable_llm_judge: bool,
+    /// SPEC-020: 도메인 키워드 pre-filter 의 top-K. 0 이면 라우터 비활성 (모든
+    /// 도메인 도구 사용). 1 이상이면 task_description 에서 키워드 매칭이 가장
+    /// 많은 상위 K 개 도메인의 도구만 LLM 에 노출한다. `general` 도메인(기본
+    /// 파일 도구)은 항상 포함.
+    #[serde(default)]
+    pub domain_router_top_k: usize,
 }
 
 impl Default for EvaluationConfig {
@@ -50,6 +56,7 @@ impl Default for EvaluationConfig {
             enable_human_in_loop: false,
             safety_check_enabled: true,
             enable_llm_judge: false,
+            domain_router_top_k: 0,
         }
     }
 }

@@ -8,6 +8,7 @@
 pub mod api;
 pub mod api_crud;
 pub mod api_exec;
+pub mod db_query;
 pub mod handlers;
 
 use axum::{Router,
@@ -75,7 +76,14 @@ pub fn build_router(state: AppState) -> Router {
 /// @trace SPEC: SPEC-002, SPEC-019
 /// @trace TC: SPEC-002/TC-1
 /// @trace FR: PRD-002/FR-1, PRD-019/FR-7
-pub fn run_server(addr: SocketAddr, scenarios_dir: PathBuf, reports_dir: PathBuf, golden_sets_dir: PathBuf, trajectories_dir: PathBuf, db_path: Option<PathBuf>) -> io::Result<()> {
+pub fn run_server(
+    addr: SocketAddr,
+    scenarios_dir: PathBuf,
+    reports_dir: PathBuf,
+    golden_sets_dir: PathBuf,
+    trajectories_dir: PathBuf,
+    db_path: Option<PathBuf>,
+) -> io::Result<()> {
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async move {
         // SPEC-019: 동일 tokio 런타임에서 SqliteStore 를 열어 AppState 에 주입.

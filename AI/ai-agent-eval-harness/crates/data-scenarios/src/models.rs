@@ -30,6 +30,11 @@ pub struct GoldenSetExpectedOutput {
     pub tool_results: HashMap<String, serde_json::Value>,
     #[serde(default = "default_tolerance")]
     pub tolerance: f64,
+    /// 에이전트가 task 를 해결하기 위해 **반드시 선택해야 하는 도메인**. 도메인
+    /// auto-routing 평가용(SPEC-020). None 이면 라우팅 축은 스코어링 시
+    /// 건너뛴다. golden set JSON 에서 누락 가능(하위 호환).
+    #[serde(default)]
+    pub expected_domain: Option<String>,
 }
 
 fn default_tolerance() -> f64 { 0.01 }

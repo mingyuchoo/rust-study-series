@@ -72,36 +72,58 @@ fn to_summary(c: DomainConfig) -> DomainSummary {
     }
 }
 
-/// 리포트 디렉토리에서 .json 파일명 리스트.
+/// SPEC-021 Stage 4: DB 의 evaluations 행을 파일명 형식으로 surface,
+/// 디렉토리의 `evaluation_report_*.json` (집계 보고서) 는 파일에서 그대로
+/// 합쳐서 반환. PRD-021/FR-5: 집계 보고서는 본 PRD 범위 외(파일 유지).
 ///
-/// @trace SPEC: SPEC-002
+/// @trace SPEC: SPEC-002, SPEC-021
 /// @trace TC: SPEC-002/TC-3
-/// @trace FR: PRD-002/FR-3
+/// @trace FR: PRD-002/FR-3, PRD-021/FR-4
 pub fn list_reports_impl(dir: &Path) -> Vec<String> {
     let mut out = Vec::new();
-    let Ok(entries) = fs::read_dir(dir) else {
-        return out;
-    };
-    for e in entries.flatten() {
-        let p = e.path();
-        if p.extension().and_then(|x| x.to_str()) == Some("json") {
-            if let Some(n) = p.file_name().and_then(|n| n.to_str()) {
-                out.push(n.to_string());
+    if let Some(rows) = super::db_query::list_evaluations() {
+        for row in &rows {
+            out.push(super::db_query::evaluation_row_to_filename(row));
+        }
+    }
+    if let Ok(entries) = fs::read_dir(dir) {
+        for e in entries.flatten() {
+            let p = e.path();
+            if p.extension().and_then(|x| x.to_str()) != Some("json") {
+                continue;
+            }
+            let Some(name) = p.file_name().and_then(|n| n.to_str()) else {
+                continue;
+            };
+            // 집계 보고서(`evaluation_report_*`) 와 임의의 .json 은 항상 surface.
+            // 개별 평가 로그(`evaluation_<task_id>_*`)는 DB 가 권위이므로
+            // DB 에서 이미 surface 된 경우만 중복을 피한다.
+            if !out.iter().any(|x| x == name) {
+                out.push(name.to_string());
             }
         }
     }
     out.sort();
+    out.dedup();
     out
 }
 
-/// 리포트 파일 내용을 JSON 값으로 반환. 존재/안전하지 않으면 None.
+/// SPEC-021 Stage 4: 평가 로그(`evaluation_<task_id>_*.json`) 는 DB 우선,
+/// 집계 보고서(`evaluation_report_*.json`) 와 그 외는 파일에서 직접 읽는다.
 ///
-/// @trace SPEC: SPEC-002
+/// @trace SPEC: SPEC-002, SPEC-021
 /// @trace TC: SPEC-002/TC-4, SPEC-002/TC-5
-/// @trace FR: PRD-002/FR-4
+/// @trace FR: PRD-002/FR-4, PRD-021/FR-4
 pub fn get_report_impl(dir: &Path, name: &str) -> Option<serde_json::Value> {
     if !is_safe_name(name) {
         return None;
+    }
+    if !name.starts_with("evaluation_report_") {
+        if let Some(task_id) = super::db_query::parse_task_id_from_filename(name) {
+            if let Some(v) = super::db_query::get_evaluation(&task_id) {
+                return Some(v);
+            }
+        }
     }
     let path: PathBuf = dir.join(name);
     let text = fs::read_to_string(&path).ok()?;
@@ -119,9 +141,7 @@ pub async fn help() -> Html<&'static str> { Html(HELP_HTML) }
 
 pub async fn list_scenarios(State(st): State<AppState>) -> Json<Vec<DomainSummary>> {
     let scen = st.scenarios_dir.clone();
-    let out = tokio::task::spawn_blocking(move || list_scenarios_impl(&scen))
-        .await
-        .unwrap_or_default();
+    let out = tokio::task::spawn_blocking(move || list_scenarios_impl(&scen)).await.unwrap_or_default();
     Json(out)
 }
 
@@ -156,31 +176,13 @@ mod tests {
 
     /// @trace TC: SPEC-002/TC-2
     /// @trace FR: PRD-002/FR-2
-    /// @trace scenario: scenarios 핸들러가 YAML 로드
+    /// @trace scenario: scenarios 핸들러가 내장 시드 기반 도메인을 로드
     #[test]
     fn test_tc_2_list_scenarios_loads_yaml() {
         let dir = tempdir().unwrap();
-        let yaml = r#"
-name: demo
-description: demo domain
-tools: []
-scenarios:
-  - id: d_001
-    name: 데모 시나리오
-    description: desc
-    task_description: t
-    initial_environment: {}
-    expected_tools: []
-    success_criteria: {}
-    difficulty: easy
-"#;
-        let p = dir.path().join("demo.yaml");
-        File::create(&p).unwrap().write_all(yaml.as_bytes()).unwrap();
         let out = list_scenarios_impl(dir.path());
-        assert_eq!(out.len(), 1);
-        assert_eq!(out[0].name, "demo");
-        assert_eq!(out[0].scenarios.len(), 1);
-        assert_eq!(out[0].scenarios[0].id, "d_001");
+        let fin = out.iter().find(|d| d.name == "financial").expect("embedded financial domain");
+        assert!(fin.scenarios.iter().any(|s| s.id == "fin_001"));
     }
 
     /// @trace TC: SPEC-002/TC-3
@@ -239,18 +241,17 @@ scenarios:
 
     /// @trace TC: SPEC-006/TC-1
     /// @trace FR: PRD-006/FR-1
-    /// @trace scenario: 탭 버튼 7개 존재
+    /// @trace scenario: 탭 버튼 존재 (SPEC-019 리워크 후)
     #[test]
     fn test_spec006_tc_1_tabs_present() {
         let html = index_html_body();
         for tab in [
-            "data-tab=\"run\"",
-            "data-tab=\"scenarios\"",
+            "data-tab=\"manage\"",
+            "data-tab=\"execute\"",
+            "data-tab=\"trajectories\"",
+            "data-tab=\"reports\"",
             "data-tab=\"tools\"",
             "data-tab=\"agents\"",
-            "data-tab=\"reports\"",
-            "data-tab=\"trajectories\"",
-            "data-tab=\"goldens\"",
         ] {
             assert!(html.contains(tab), "missing tab marker: {}", tab);
         }
@@ -325,8 +326,9 @@ scenarios:
     #[test]
     fn test_spec006_tc_8_goldens() {
         let html = index_html_body();
-        assert!(html.contains("fetchGolden("));
-        assert!(html.contains("/api/golden-sets/"));
+        assert!(html.contains("editGolden("));
+        assert!(html.contains("newGolden("));
+        assert!(html.contains("/api/golden-sets"));
     }
 
     // --- SPEC-007 help page -------------------------------------------

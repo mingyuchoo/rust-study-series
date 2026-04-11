@@ -127,7 +127,8 @@ AZURE_OPENAI_MAX_TOKENS=4096
 | `list` | 도메인/시나리오 및 등록된 에이전트 목록 출력 |
 | `run` | 평가 시나리오 실행 및 리포트 저장 |
 | `report <file>` | 저장된 리포트 JSON을 컬러 콘솔로 렌더 |
-| `compare <baseline> <current>` | 두 리포트 비교, 회귀 감지 |
+| `compare <baseline> <current>` | 두 리포트 파일 비교 (또는 SPEC-021 의 `--baseline-task/--current-task`, `--agent --baseline-since/...` 옵션) |
+| `backfill-results` | SPEC-021: 기존 `reporting_logs/`, `reporting_trajectories/` 파일을 SQLite DB 로 일회성 import |
 | `tui` | 대화형 TUI 2-패널 뷰 (조회 전용) |
 | `serve` | Axum HTTP 서버 + 브라우저 SPA |
 
@@ -135,14 +136,16 @@ AZURE_OPENAI_MAX_TOKENS=4096
 
 ### 데이터 경로 설정 (`eval-harness.toml`)
 
-평가 데이터는 **SQLite 단일 파일**(`eval_data/eval_harness.db`)에 저장되며, `eval_data/eval_scenarios/*.yaml`, `eval_data/golden_sets/*.json` 파일은 DB 가 비어 있을 때 자동으로 적재되는 **seed 소스**로 남아 있습니다(SPEC-017). 최초 기동 시 DB 가 없으면 파일에서 읽어 적재하고, 이후 실행은 DB 를 재사용합니다. YAML/JSON 파일은 깃 diff 로 변경을 리뷰할 수 있도록 저장소에 유지됩니다.
+평가 데이터는 **SQLite 단일 파일**(`eval_data/eval_harness.db`)에 저장되며, 기본 시드는 `crates/data-scenarios/seed/scenarios/*.yaml`, `crates/data-scenarios/seed/goldens/*.json` 로 **바이너리에 임베드**되어 있습니다(SPEC-017). 최초 기동 시 DB 가 없거나 테이블이 비어 있으면 내장 시드로 자동 적재되며, 이후 실행은 DB 를 재사용합니다. 시드 소스는 깃 diff 로 변경을 리뷰할 수 있도록 저장소에 유지됩니다.
 
-경로는 다음 4단계 우선순위로 해석됩니다 (높음 → 낮음):
+**SPEC-021**: 에이전트 실행 결과(궤적·평가 로그) 도 SQLite v4 스키마(`trajectories`, `evaluations`)에 dual-write 됩니다. 기존 파일 출력(`reporting_trajectories/*.json`, `reporting_logs/*.json`) 은 외부 도구·CI 워크플로우 호환을 위해 그대로 유지되며, 웹 API `GET /api/trajectories`, `GET /api/reports` 는 DB 우선 조회 + 파일 폴백 방식으로 동작합니다. 집계 보고서(`evaluation_report_*.json`) 와 비교 결과는 PRD-021 의 범위 외이며 파일로 유지됩니다. 기존 디렉토리에 쌓여 있는 결과를 DB 로 옮기려면 `cargo run -- backfill-results` 를 실행하세요. 시계열 비교는 `cargo run -- compare --agent ppa --baseline-since 2026-01-01T00:00:00Z --baseline-until 2026-03-31T23:59:59Z --current-since 2026-04-01T00:00:00Z --current-until 2026-04-30T23:59:59Z` 형식으로 가능합니다.
 
-1. **CLI 인자** — `--scenarios-dir`, `--golden-sets-dir`
-2. **환경변수** — `EVAL_HARNESS_SCENARIOS_DIR`, `EVAL_HARNESS_GOLDEN_SETS_DIR`, `EVAL_HARNESS_DB_PATH`
+DB 경로는 다음 4단계 우선순위로 해석됩니다 (높음 → 낮음):
+
+1. **CLI 인자** — `--db-path`
+2. **환경변수** — `EVAL_HARNESS_DB_PATH`
 3. **설정 파일** — 프로젝트 루트의 `eval-harness.toml`
-4. **내장 기본값** — `eval_data/eval_harness.db`, `eval_data/eval_scenarios`, `eval_data/golden_sets`
+4. **내장 기본값** — `eval_data/eval_harness.db`
 
 설정 파일 예시 (`eval-harness.toml`):
 
@@ -154,10 +157,14 @@ db_path         = "eval_data/eval_harness.db"
 scenarios_dir   = "eval_data/eval_scenarios"
 golden_sets_dir = "/var/lib/eval/golden"
 
-# PPA 에이전트 루프 파라미터 (SPEC-016).
+# PPA 에이전트 루프 파라미터 (SPEC-016, SPEC-020).
 [evaluation]
 max_iterations       = 5
 early_stop_threshold = 3
+# 도메인 auto-routing 의 pre-filter top-K. 0 이면 비활성 (모든 도메인 도구 노출).
+# 1 이상이면 task_description 에서 키워드 매칭이 가장 많은 상위 K 개 도메인의 도구만
+# LLM 에 노출합니다. 도메인이 많아져 컨텍스트 토큰이 부담되면 2~3 권장.
+domain_router_top_k  = 0
 ```
 
 설정 파일이 없으면 기존 동작과 동일하게 내장 기본값(CWD 기준)이 사용됩니다. desktop 앱은 워크스페이스 루트에서 동일한 설정 파일을 검색합니다.
@@ -480,9 +487,27 @@ cargo make desktop-release-all
 | fin_004: 예금 데이터 파일 분석 | hard | read_file, calculate_simple_interest, write_file |
 | fin_005: 종합 금융 분석 | hard | calculate_simple_interest, calculate_compound_interest, write_file |
 
+## 도메인 아키텍처 (SPEC-020)
+
+에이전트는 **모든 도메인의 도구를 단일 네임스페이스로 동시에 보유**하며, LLM 의 function-calling 능력으로 task 에 맞는 도구(=도메인)를 스스로 선택합니다. 도구 이름은 `<domain>__<tool>` 형식으로 네임스페이스되어(예: `financial__calculate_simple_interest`, `customer_service__classify_inquiry`) 도메인 간 이름 충돌이 없습니다. `read_file`/`write_file`/`list_directory` 기본 파일 도구는 `general` 도메인으로 네임스페이스 없이 제공됩니다.
+
+- **Stage 1 (Tool Fusion)**: `crates/domains/src/lib.rs::register_all()` 하나의 진입점으로 모든 도메인 도구 등록. 새 도메인 추가 시 이 함수에 1줄 추가.
+- **Stage 2 (Routing Evaluation)**: 골든셋 엔트리에 `expected_domain` 필드를 선언하면, 평가 시 에이전트의 첫 tool call 도메인이 일치하는지 `domain_routing_score` (0.0/1.0) 로 측정됩니다.
+- **Stage 3 (Keyword Pre-filter)**: 도메인이 많아져 토큰 비용이 문제가 되면 `eval-harness.toml` 의 `[evaluation] domain_router_top_k` 를 1+ 로 설정하여 `task_description` 키워드 매칭 상위 K 개 도메인만 LLM 에 노출할 수 있습니다. 0(기본값)이면 모든 도메인 공개.
+
 ## 커스텀 시나리오 추가
 
-`eval_data/eval_scenarios/` 디렉토리에 YAML 파일을 추가하세요:
+런타임에 시나리오를 추가/수정하려면 웹 UI 의 **Scenarios/Goldens** 탭 또는 CRUD API(`POST /api/eval-scenarios/:domain`, `PUT /api/eval-scenarios/:domain/:id` 등)를 사용하세요. 변경 내용은 SQLite DB 에 저장됩니다(SPEC-019).
+
+새 도메인을 **기본 시드**에 포함시키려면:
+
+1. `crates/data-scenarios/seed/scenarios/<domain>.yaml` 및 `crates/data-scenarios/seed/goldens/<domain>.json` 추가
+2. `crates/data-scenarios/src/seed_embedded.rs` 의 `EMBEDDED_SCENARIO_YAMLS` / `EMBEDDED_GOLDEN_JSONS` 에 엔트리 등록
+3. `crates/domains/src/<domain>/` 에 도구 Rust 코드 추가
+4. `crates/domains/src/lib.rs::register_all()` 에 `register_<domain>(registry)` 호출 추가, `known_domains()` 배열에 이름 추가
+5. (선택) `crates/agent-core/src/domain_router.rs::DOMAIN_KEYWORDS` 에 키워드 매핑 추가 (Stage 3 pre-filter 사용 시)
+
+YAML 예시:
 
 ```yaml
 name: my_domain

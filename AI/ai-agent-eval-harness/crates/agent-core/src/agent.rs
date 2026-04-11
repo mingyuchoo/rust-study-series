@@ -223,6 +223,11 @@ impl BaseAgent for PpaAgent {
         let task_id = uuid::Uuid::new_v4().to_string();
         let started_at = std::time::Instant::now();
         println!("▶ PPA 실행 시작: task=\"{}\" (task_id={})", task_description, task_id);
+        // SPEC-020 Stage 3: 도메인 라우터가 활성화되면 task 에 맞는 상위 K
+        // 도메인의 도구만 남기고 나머지는 제외하여 컨텍스트 토큰/오탐을 줄인다.
+        if self.config.domain_router_top_k > 0 {
+            self.load_tools_with_router(task_description, self.config.domain_router_top_k);
+        }
         let mut trajectory = Trajectory {
             task_id: task_id.clone(),
             task_description: task_description.to_string(),
@@ -289,24 +294,60 @@ impl BaseAgent for PpaAgent {
         trajectory
     }
 
-    fn load_domain_tools(&self, domain_config: &DomainConfig) {
-        // 도메인 교체 시 이전 도메인 도구가 남지 않도록 레지스트리를 재생성한다.
-        // ToolRegistry::new()는 read_file/write_file/list_directory 기본 도구를 항상
-        // 포함.
+    fn load_domain_tools(&self, _domain_config: &DomainConfig) {
+        // SPEC-020: 도메인 단위 라우팅 대신 전체 도메인 도구를 단일
+        // 레지스트리에 등록한다. `_domain_config` 는 하위 호환을 위해 남겨
+        // 두지만 내부 구현에서는 사용하지 않는다. 에이전트는 LLM function
+        // calling 의 도구 선택 능력으로 도메인을 스스로 판별한다.
+        self.load_all_tools();
+    }
+}
+
+impl PpaAgent {
+    /// 모든 도메인 도구를 네임스페이스(`<domain>__<name>`) 로 레지스트리에
+    /// 등록한다. 기본 파일 도구(read_file 등)는 `general` 도메인으로 함께
+    /// 포함된다.
+    ///
+    /// @trace SPEC: SPEC-020
+    /// @trace FR: PRD-020/FR-1
+    pub fn load_all_tools(&self) {
         let mut registry = self.tools.lock().unwrap();
         *registry = execution_tools::registry::ToolRegistry::new();
-        match domain_config.name.as_str() {
-            | "financial" => {
-                registry.register(Arc::new(domains::financial::tools::SimpleInterestCalculatorTool::new()));
-                registry.register(Arc::new(domains::financial::tools::CompoundInterestCalculatorTool::new()));
-                registry.register(Arc::new(domains::financial::tools::TransactionValidatorTool::new()));
-            },
-            | "customer_service" => {
-                registry.register(Arc::new(domains::customer_service::tools::ClassifyInquiryTool::new()));
-                registry.register(Arc::new(domains::customer_service::tools::ProcessRefundTool::new()));
-                registry.register(Arc::new(domains::customer_service::tools::EscalateIssueTool::new()));
-            },
-            | _ => {},
+        domains::register_all(&mut registry);
+    }
+
+    /// 키워드 기반 pre-filter. `task_description` 에서 도메인 키워드 빈도를
+    /// 집계해 상위 `top_k` 도메인만 남기고 다른 도메인 도구는 제외한
+    /// 레지스트리를 구성한다. `top_k == 0` 또는 매칭이 전혀 없으면 전체
+    /// 도구를 사용한다. `general` 도메인(기본 파일 도구)은 항상 포함된다.
+    ///
+    /// @trace SPEC: SPEC-020
+    /// @trace FR: PRD-020/FR-3
+    pub fn load_tools_with_router(&self, task_description: &str, top_k: usize) {
+        self.load_all_tools();
+        if top_k == 0 {
+            return;
         }
+        let keep: Vec<String> = crate::domain_router::select_domains(task_description, top_k);
+        if keep.is_empty() {
+            return;
+        }
+        let mut registry = self.tools.lock().unwrap();
+        let all_keys: Vec<String> = registry.get_tool_names();
+        let mut new_reg = execution_tools::registry::ToolRegistry::new();
+        for key in all_keys {
+            let Some(d) = registry.get_tool_domain(&key).map(|s| s.to_string()) else {
+                continue;
+            };
+            if d == "general" {
+                continue; // 기본 도구는 ToolRegistry::new() 가 이미 등록함
+            }
+            if keep.iter().any(|k| k == &d) {
+                if let Some(tool) = registry.get_tool(&key) {
+                    new_reg.register_with_domain(tool, &d);
+                }
+            }
+        }
+        *registry = new_reg;
     }
 }

@@ -46,11 +46,7 @@ fn main() {
         eprintln!("[eval-harness-desktop] data path 설정 오류: {e}");
         std::process::exit(1);
     });
-    if let Err(e) = ScenarioLoader::install(
-        &data_paths.db_path,
-        &data_paths.scenarios_dir,
-        &data_paths.golden_sets_dir,
-    ) {
+    if let Err(e) = ScenarioLoader::install(&data_paths.db_path) {
         eprintln!("[eval-harness-desktop] SQLite 저장소 초기화 실패: {e}");
     } else {
         println!(

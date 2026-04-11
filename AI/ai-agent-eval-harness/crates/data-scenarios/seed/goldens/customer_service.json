@@ -12,11 +12,12 @@
         }
       },
       "expected_output": {
-        "tool_sequence": ["classify_inquiry"],
+        "tool_sequence": ["customer_service__classify_inquiry"],
         "tool_results": {
           "category": "refund"
         },
-        "tolerance": 0.01
+        "tolerance": 0.01,
+        "expected_domain": "customer_service"
       }
     },
     {
@@ -32,11 +33,12 @@
         }
       },
       "expected_output": {
-        "tool_sequence": ["classify_inquiry", "process_refund"],
+        "tool_sequence": ["customer_service__classify_inquiry", "customer_service__process_refund"],
         "tool_results": {
           "refund_approved": true
         },
-        "tolerance": 0.01
+        "tolerance": 0.01,
+        "expected_domain": "customer_service"
       }
     },
     {
@@ -52,11 +54,12 @@
         }
       },
       "expected_output": {
-        "tool_sequence": ["classify_inquiry", "escalate_issue"],
+        "tool_sequence": ["customer_service__classify_inquiry", "customer_service__escalate_issue"],
         "tool_results": {
           "escalated": true
         },
-        "tolerance": 0.01
+        "tolerance": 0.01,
+        "expected_domain": "customer_service"
       }
     },
     {
@@ -75,13 +78,14 @@
         }
       },
       "expected_output": {
-        "tool_sequence": ["classify_inquiry", "process_refund", "escalate_issue"],
+        "tool_sequence": ["customer_service__classify_inquiry", "customer_service__process_refund", "customer_service__escalate_issue"],
         "tool_results": {
           "classified": true,
           "refund_processed": true,
           "escalated": true
         },
-        "tolerance": 0.01
+        "tolerance": 0.01,
+        "expected_domain": "customer_service"
       }
     },
     {
@@ -94,12 +98,13 @@
         }
       },
       "expected_output": {
-        "tool_sequence": ["read_file", "classify_inquiry", "write_file"],
+        "tool_sequence": ["read_file", "customer_service__classify_inquiry", "write_file"],
         "tool_results": {
           "file_created": true,
           "all_inquiries_classified": true
         },
-        "tolerance": 0.01
+        "tolerance": 0.01,
+        "expected_domain": "customer_service"
       }
     }
   ]

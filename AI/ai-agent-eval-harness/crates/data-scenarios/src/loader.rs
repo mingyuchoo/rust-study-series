@@ -11,8 +11,7 @@ use agent_models::domain_config::DomainConfig;
 use anyhow::{Context,
              Result,
              anyhow};
-use std::{path::{Path,
-                 PathBuf},
+use std::{path::Path,
           sync::{Arc,
                  OnceLock}};
 use tokio::runtime::{Builder,
@@ -21,11 +20,18 @@ use tokio::runtime::{Builder,
 /// 런타임 + SqliteStore 를 묶은 내부 핸들.
 struct LoaderInner {
     runtime: Runtime,
-    store: SqliteStore,
+    store: Arc<SqliteStore>,
 }
 
+/// SPEC-021: 전역 install 된 SqliteStore 가 있으면 빌려온다. 없으면 None.
+/// 외부 크레이트(예: reporting::SqliteLogger) 가 dual-write 를 위해 사용한다.
+///
+/// @trace SPEC: SPEC-021
+/// @trace FR: PRD-021/FR-3
+pub fn try_installed_store() -> Option<Arc<SqliteStore>> { INSTALLED.get().map(|inner| inner.store.clone()) }
+
 impl LoaderInner {
-    fn new_blocking(db_path: &Path, scen_dir: &Path, gold_dir: &Path) -> Result<Self> {
+    fn new_blocking(db_path: &Path) -> Result<Self> {
         let runtime = Builder::new_multi_thread()
             .worker_threads(2)
             .enable_all()
@@ -33,8 +39,8 @@ impl LoaderInner {
             .build()
             .context("failed to build tokio runtime for ScenarioLoader")?;
         let store = runtime
-            .block_on(async { SqliteStore::open_and_seed(db_path, scen_dir, gold_dir).await })
-            .map(|(s, _)| s)
+            .block_on(async { SqliteStore::open_and_seed(db_path).await })
+            .map(|(s, _)| Arc::new(s))
             .map_err(|e| anyhow!("SqliteStore open_and_seed failed: {e}"))?;
         Ok(Self {
             runtime,
@@ -42,7 +48,7 @@ impl LoaderInner {
         })
     }
 
-    fn new_in_memory_blocking(scen_dir: &Path, gold_dir: &Path) -> Result<Self> {
+    fn new_in_memory_blocking() -> Result<Self> {
         let runtime = Builder::new_multi_thread()
             .worker_threads(1)
             .enable_all()
@@ -51,12 +57,12 @@ impl LoaderInner {
         // 인메모리 저장소: 파일 DB 대신 max_connections=1 SQLite ":memory:"
         let store = runtime.block_on(async {
             let s = SqliteStore::open_in_memory_for_loader().await.map_err(|e| anyhow!("{e}"))?;
-            s.seed_from_fs(scen_dir, gold_dir).await.map_err(|e| anyhow!("{e}"))?;
+            s.seed_from_embedded().await.map_err(|e| anyhow!("{e}"))?;
             Ok::<SqliteStore, anyhow::Error>(s)
         })?;
         Ok(Self {
             runtime,
-            store,
+            store: Arc::new(store),
         })
     }
 }
@@ -73,38 +79,35 @@ pub struct ScenarioLoader;
 impl ScenarioLoader {
     pub fn new() -> Self { Self }
 
-    /// 진입점에서 기동 시 1회 호출. 파일 DB 기반 로더를 전역 설치.
+    /// 진입점에서 기동 시 1회 호출. 파일 DB 기반 로더를 전역 설치. 시드 원본은
+    /// 크레이트에 내장된 기본값(`seed_embedded`)을 사용한다.
     ///
     /// @trace SPEC: SPEC-017
     /// @trace FR: PRD-017/FR-5
-    pub fn install(db_path: &Path, scenarios_dir: &Path, golden_sets_dir: &Path) -> Result<()> {
-        let inner = Arc::new(LoaderInner::new_blocking(db_path, scenarios_dir, golden_sets_dir)?);
+    pub fn install(db_path: &Path) -> Result<()> {
+        let inner = Arc::new(LoaderInner::new_blocking(db_path)?);
         INSTALLED.set(inner).map_err(|_| anyhow!("ScenarioLoader already installed")).ok();
         Ok(())
     }
 
-    fn resolve(seed_dir_hint: &str) -> Result<Arc<LoaderInner>> {
+    fn resolve() -> Result<Arc<LoaderInner>> {
         if let Some(g) = INSTALLED.get() {
             return Ok(g.clone());
         }
         if let Some(f) = FALLBACK.get() {
             return Ok(f.clone());
         }
-        let scen = PathBuf::from(seed_dir_hint);
-        let gold = derive_golden_dir(&scen);
-        let inner = Arc::new(LoaderInner::new_in_memory_blocking(&scen, &gold)?);
+        let inner = Arc::new(LoaderInner::new_in_memory_blocking()?);
         let _ = FALLBACK.set(inner.clone());
         Ok(inner)
     }
 
-    /// 호환 API. `directory` 인자는 전역 로더가 없을 때 seed 소스 힌트로만
-    /// 사용.
+    /// 호환 API: 단일 도메인 설정 로드. `filepath` 의 파일 stem 이 곧 도메인
+    /// 이름이며, 실제 데이터는 SqliteStore 에서 가져온다.
     pub fn load_domain_config(&self, filepath: &str) -> Result<DomainConfig> {
-        // 옛 API: 단일 YAML 파일 로드. 파일명에서 도메인 유추.
         let p = Path::new(filepath);
-        let hint = p.parent().map(|x| x.to_string_lossy().into_owned()).unwrap_or_default();
-        let inner = Self::resolve(&hint)?;
         let stem = p.file_stem().and_then(|s| s.to_str()).ok_or_else(|| anyhow!("invalid filepath: {filepath}"))?;
+        let inner = Self::resolve()?;
         let all = inner
             .runtime
             .block_on(async { inner.store.load_all_domains().await })
@@ -114,68 +117,44 @@ impl ScenarioLoader {
             .ok_or_else(|| anyhow!("domain '{stem}' not found in store"))
     }
 
-    pub fn load_all_domains(&self, directory: &str) -> Result<Vec<DomainConfig>> {
-        let inner = Self::resolve(directory)?;
+    /// 호환 API: `_directory` 인자는 더 이상 사용되지 않는다 (SqliteStore
+    /// 조회).
+    pub fn load_all_domains(&self, _directory: &str) -> Result<Vec<DomainConfig>> {
+        let inner = Self::resolve()?;
         inner
             .runtime
             .block_on(async { inner.store.load_all_domains().await })
             .map_err(|e| anyhow!("{e}"))
     }
 
-    /// 골든셋 로드: 전역 store 가 install 되어 있으면 SqliteStore 조회(FR-7),
-    /// 그렇지 않으면 파일 직접 파싱(하위호환/테스트).
+    /// 골든셋 로드. `filepath` 의 파일 stem 이 도메인 이름이며, 실제 데이터는
+    /// SqliteStore 에서 가져온다.
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-7
     pub fn load_golden_sets(&self, filepath: &str) -> Result<GoldenSetFile> {
-        if let Some(inner) = INSTALLED.get() {
-            let p = Path::new(filepath);
-            let stem = p.file_stem().and_then(|s| s.to_str()).ok_or_else(|| anyhow!("invalid filepath: {filepath}"))?;
-            return inner
-                .runtime
-                .block_on(async { inner.store.load_golden_sets_by_domain(stem).await })
-                .map_err(|e| anyhow!("{e}"));
-        }
-        let content = std::fs::read_to_string(filepath).with_context(|| format!("골든셋 파일 읽기 실패: {}", filepath))?;
-        serde_json::from_str(&content).with_context(|| format!("JSON 파싱 실패: {}", filepath))
+        let p = Path::new(filepath);
+        let stem = p.file_stem().and_then(|s| s.to_str()).ok_or_else(|| anyhow!("invalid filepath: {filepath}"))?;
+        let inner = Self::resolve()?;
+        inner
+            .runtime
+            .block_on(async { inner.store.load_golden_sets_by_domain(stem).await })
+            .map_err(|e| anyhow!("{e}"))
     }
 
+    /// 호환 API: `_directory` 인자는 더 이상 사용되지 않는다.
+    ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-7
-    pub fn load_all_golden_sets(&self, directory: &str) -> Result<Vec<GoldenSetFile>> {
-        if let Some(inner) = INSTALLED.get() {
-            return inner
-                .runtime
-                .block_on(async { inner.store.load_all_golden_sets().await })
-                .map_err(|e| anyhow!("{e}"));
-        }
-        let dir = Path::new(directory);
-        let mut result = Vec::new();
-        if !dir.exists() {
-            return Ok(result);
-        }
-        let mut entries: Vec<_> = std::fs::read_dir(dir)?
-            .flatten()
-            .filter(|e| e.path().extension().map(|x| x == "json").unwrap_or(false))
-            .collect();
-        entries.sort_by_key(|e| e.path());
-        for entry in entries {
-            let gs = self.load_golden_sets(&entry.path().to_string_lossy())?;
-            result.push(gs);
-        }
-        Ok(result)
+    pub fn load_all_golden_sets(&self, _directory: &str) -> Result<Vec<GoldenSetFile>> {
+        let inner = Self::resolve()?;
+        inner
+            .runtime
+            .block_on(async { inner.store.load_all_golden_sets().await })
+            .map_err(|e| anyhow!("{e}"))
     }
 }
-
 
 impl Default for ScenarioLoader {
     fn default() -> Self { Self::new() }
-}
-
-fn derive_golden_dir(scen_dir: &Path) -> PathBuf {
-    // `eval_data/eval_scenarios` → `eval_data/golden_sets` 유추.
-    scen_dir
-        .parent()
-        .map(|p| p.join("golden_sets"))
-        .unwrap_or_else(|| PathBuf::from("eval_data/golden_sets"))
 }

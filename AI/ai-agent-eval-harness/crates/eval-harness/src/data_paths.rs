@@ -78,6 +78,7 @@ struct ConfigData {
 struct ConfigEvaluation {
     max_iterations: Option<u32>,
     early_stop_threshold: Option<u32>,
+    domain_router_top_k: Option<usize>,
 }
 
 impl Default for DataPaths {
@@ -201,6 +202,9 @@ pub fn load_evaluation_config(base: &Path) -> Result<agent_core::config::Evaluat
             });
         }
         cfg.early_stop_threshold = v;
+    }
+    if let Some(v) = parsed.evaluation.domain_router_top_k {
+        cfg.domain_router_top_k = v;
     }
     Ok(cfg)
 }

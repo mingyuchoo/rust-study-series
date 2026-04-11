@@ -25,7 +25,7 @@ use std::{collections::HashMap,
                  PathBuf}};
 use thiserror::Error;
 
-const SCHEMA_VERSION: i64 = 2;
+const SCHEMA_VERSION: i64 = 4;
 
 /// sqlx UNIQUE 제약 위반을 `StoreError::Conflict` 로 매핑.
 fn map_unique_violation(err: sqlx::Error, subject: String) -> StoreError {
@@ -179,7 +179,7 @@ impl SqliteStore {
                 PRIMARY KEY (domain, id),
                 FOREIGN KEY (domain) REFERENCES domains(name) ON DELETE CASCADE
             )",
-            // 신규 DB 는 v2 스키마 (FK 포함) 로 바로 생성.
+            // 신규 DB 는 v3 스키마 (FK + expected_domain) 로 바로 생성.
             "CREATE TABLE IF NOT EXISTS golden_sets (
                 domain            TEXT NOT NULL,
                 scenario_id       TEXT NOT NULL,
@@ -189,6 +189,7 @@ impl SqliteStore {
                 tool_sequence     TEXT NOT NULL,
                 tool_results      TEXT NOT NULL,
                 tolerance         REAL NOT NULL DEFAULT 0.01,
+                expected_domain   TEXT,
                 PRIMARY KEY (domain, scenario_id),
                 FOREIGN KEY (domain, scenario_id)
                     REFERENCES eval_scenarios(domain, id)
@@ -196,6 +197,43 @@ impl SqliteStore {
             )",
             "CREATE INDEX IF NOT EXISTS idx_eval_scenarios_domain ON eval_scenarios(domain)",
             "CREATE INDEX IF NOT EXISTS idx_golden_sets_domain ON golden_sets(domain)",
+            // SPEC-021 v4: 에이전트 실행 결과(궤적). steps/final_state 는 JSON BLOB.
+            "CREATE TABLE IF NOT EXISTS trajectories (
+                task_id           TEXT PRIMARY KEY,
+                task_description  TEXT NOT NULL DEFAULT '',
+                agent_name        TEXT NOT NULL DEFAULT '',
+                domain            TEXT,
+                scenario_id       TEXT,
+                success           INTEGER NOT NULL DEFAULT 0,
+                total_iterations  INTEGER NOT NULL DEFAULT 0,
+                started_at        TEXT NOT NULL,
+                ended_at          TEXT,
+                steps_json        TEXT NOT NULL,
+                final_state_json  TEXT,
+                created_at        TEXT NOT NULL DEFAULT (datetime('now'))
+            )",
+            "CREATE INDEX IF NOT EXISTS idx_trajectories_agent ON trajectories(agent_name)",
+            "CREATE INDEX IF NOT EXISTS idx_trajectories_domain ON trajectories(domain)",
+            "CREATE INDEX IF NOT EXISTS idx_trajectories_started ON trajectories(started_at)",
+            // SPEC-021 v4: 평가 점수. trajectory 1:1.
+            "CREATE TABLE IF NOT EXISTS evaluations (
+                task_id                TEXT PRIMARY KEY,
+                agent_name             TEXT NOT NULL DEFAULT '',
+                domain                 TEXT,
+                scenario_id            TEXT,
+                success                INTEGER NOT NULL DEFAULT 0,
+                criteria_score         REAL,
+                tool_sequence_score    REAL,
+                domain_routing_score   REAL,
+                overall_score          REAL,
+                metrics_json           TEXT NOT NULL DEFAULT '{}',
+                golden_set_result_json TEXT,
+                created_at             TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (task_id) REFERENCES trajectories(task_id) ON DELETE CASCADE
+            )",
+            "CREATE INDEX IF NOT EXISTS idx_evaluations_agent ON evaluations(agent_name)",
+            "CREATE INDEX IF NOT EXISTS idx_evaluations_domain ON evaluations(domain)",
+            "CREATE INDEX IF NOT EXISTS idx_evaluations_created ON evaluations(created_at)",
         ];
         for sql in stmts.iter() {
             sqlx::query(sql).execute(&self.pool).await?;
@@ -204,12 +242,13 @@ impl SqliteStore {
         // v1 DB 마이그레이션: 기존 golden_sets 에 FK 가 없는 경우 재생성.
         // `CREATE TABLE IF NOT EXISTS` 는 기존 스키마를 건드리지 않으므로,
         // `schema_migrations` 의 현재 버전을 확인하여 필요 시 rebuild 한다.
-        let current: Option<i64> = sqlx::query_scalar("SELECT MAX(version) FROM schema_migrations")
-            .fetch_one(&self.pool)
-            .await?;
+        let current: Option<i64> = sqlx::query_scalar("SELECT MAX(version) FROM schema_migrations").fetch_one(&self.pool).await?;
         let current = current.unwrap_or(0);
         if current < 2 {
             self.migrate_v2_cascade().await?;
+        }
+        if current < 3 {
+            self.migrate_v3_expected_domain().await?;
         }
 
         sqlx::query("INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, datetime('now'))")
@@ -219,8 +258,8 @@ impl SqliteStore {
         Ok(())
     }
 
-    /// v1 → v2: `golden_sets` 에 `(domain, scenario_id) → eval_scenarios` FK 추가.
-    /// 무손실 table-rename 방식.
+    /// v1 → v2: `golden_sets` 에 `(domain, scenario_id) → eval_scenarios` FK
+    /// 추가. 무손실 table-rename 방식.
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-4
@@ -259,6 +298,25 @@ impl SqliteStore {
         Ok(())
     }
 
+    /// v2 → v3: `golden_sets` 에 `expected_domain TEXT` 컬럼 추가.
+    ///
+    /// @trace SPEC: SPEC-020
+    /// @trace FR: PRD-020/FR-2
+    async fn migrate_v3_expected_domain(&self) -> Result<(), StoreError> {
+        let cols = sqlx::query("PRAGMA table_info('golden_sets')").fetch_all(&self.pool).await?;
+        let has = cols.iter().any(|r| {
+            let n: String = r.get("name");
+            n == "expected_domain"
+        });
+        if has {
+            return Ok(());
+        }
+        sqlx::query("ALTER TABLE golden_sets ADD COLUMN expected_domain TEXT")
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
     /// eval_scenarios 테이블이 비어 있는지.
     pub async fn is_empty(&self) -> Result<bool, StoreError> {
         let row = sqlx::query("SELECT COUNT(*) AS cnt FROM eval_scenarios").fetch_one(&self.pool).await?;
@@ -266,26 +324,44 @@ impl SqliteStore {
         Ok(cnt == 0)
     }
 
-    /// SPEC-019 후속 버그픽스: scenarios OR golden_sets 중 어느 하나가 비어 있으면
-    /// 초기 시드가 완전히 적용되지 않은 것으로 간주. `INSERT OR IGNORE` 기반 시드
-    /// 는 멱등이므로 안전하게 재실행할 수 있다. 다만 사용자가 모든 goldens 를
-    /// CRUD 로 삭제한 경우에도 이 조건이 참이 되어 재시드가 일어날 수 있는데,
-    /// 그 경우 사용자는 domain 단위 의도적 초기화로 해석한다(범위 외 시나리오).
+    /// SPEC-019 후속 버그픽스: scenarios OR golden_sets 중 어느 하나가 비어
+    /// 있으면 초기 시드가 완전히 적용되지 않은 것으로 간주. `INSERT OR
+    /// IGNORE` 기반 시드 는 멱등이므로 안전하게 재실행할 수 있다. 다만
+    /// 사용자가 모든 goldens 를 CRUD 로 삭제한 경우에도 이 조건이 참이 되어
+    /// 재시드가 일어날 수 있는데, 그 경우 사용자는 domain 단위 의도적
+    /// 초기화로 해석한다(범위 외 시나리오).
     pub async fn needs_seed(&self) -> Result<bool, StoreError> {
         let s: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM eval_scenarios").fetch_one(&self.pool).await?;
         let g: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM golden_sets").fetch_one(&self.pool).await?;
         Ok(s == 0 || g == 0)
     }
 
-    /// YAML/JSON 파일에서 읽어 DB 에 적재. INSERT OR IGNORE 로 멱등.
+    /// 내장(embedded) 기본 시드에서 DB 를 채운다. 외부 파일 의존 없이 `INSERT
+    /// OR IGNORE` 로 멱등 적재.
+    ///
+    /// @trace SPEC: SPEC-017
+    /// @trace FR: PRD-017/FR-2, PRD-017/FR-7
+    pub async fn seed_from_embedded(&self) -> Result<SeedReport, StoreError> {
+        use crate::seed_embedded::{EMBEDDED_GOLDEN_JSONS,
+                                   EMBEDDED_SCENARIO_YAMLS};
+        let scenarios: Vec<(String, String)> = EMBEDDED_SCENARIO_YAMLS
+            .iter()
+            .map(|(stem, body)| ((*stem).to_string(), (*body).to_string()))
+            .collect();
+        let goldens: Vec<(String, String)> = EMBEDDED_GOLDEN_JSONS
+            .iter()
+            .map(|(stem, body)| ((*stem).to_string(), (*body).to_string()))
+            .collect();
+        self.seed_from_sources(&scenarios, &goldens).await
+    }
+
+    /// YAML/JSON 파일 디렉토리에서 읽어 DB 에 적재. 테스트에서 임시 디렉토리
+    /// 기반 시드가 필요할 때만 사용.
     ///
     /// @trace SPEC: SPEC-017
     /// @trace FR: PRD-017/FR-2, PRD-017/FR-7
     pub async fn seed_from_fs(&self, scenarios_dir: &Path, golden_sets_dir: &Path) -> Result<SeedReport, StoreError> {
-        let mut report = SeedReport::default();
-        let mut tx = self.pool.begin().await?;
-
-        // 시나리오 YAML 파일들
+        let mut scenarios: Vec<(String, String)> = Vec::new();
         if scenarios_dir.exists() {
             let mut yaml_files: Vec<_> = std::fs::read_dir(scenarios_dir)
                 .map_err(|e| StoreError::Io {
@@ -296,68 +372,18 @@ impl SqliteStore {
                 .filter(|e| e.path().extension().map(|x| x == "yaml").unwrap_or(false))
                 .collect();
             yaml_files.sort_by_key(|e| e.path());
-
             for entry in yaml_files {
                 let p = entry.path();
-                let content = std::fs::read_to_string(&p).map_err(|e| StoreError::Io {
+                let body = std::fs::read_to_string(&p).map_err(|e| StoreError::Io {
                     path: p.clone(),
                     source: e,
                 })?;
-                let cfg: DomainConfig = serde_yaml::from_str(&content).map_err(|e| StoreError::Yaml {
-                    path: p.clone(),
-                    source: e,
-                })?;
-
-                let r = sqlx::query("INSERT OR IGNORE INTO domains (name, description) VALUES (?, ?)")
-                    .bind(&cfg.name)
-                    .bind(&cfg.description)
-                    .execute(&mut *tx)
-                    .await?;
-                if r.rows_affected() > 0 {
-                    report.domains_inserted += 1;
-                }
-
-                for (idx, tool) in cfg.tools.iter().enumerate() {
-                    sqlx::query("INSERT OR IGNORE INTO domain_tools (domain, class_name, module_path, position) VALUES (?, ?, ?, ?)")
-                        .bind(&cfg.name)
-                        .bind(&tool.class_name)
-                        .bind(&tool.module_path)
-                        .bind(idx as i64)
-                        .execute(&mut *tx)
-                        .await?;
-                }
-
-                for (idx, scen) in cfg.scenarios.iter().enumerate() {
-                    let env_json = serde_json::to_string(&scen.initial_environment)?;
-                    let tools_json = serde_json::to_string(&scen.expected_tools)?;
-                    let crit_json = serde_json::to_string(&scen.success_criteria)?;
-                    let r = sqlx::query(
-                        "INSERT OR IGNORE INTO eval_scenarios
-                         (domain, id, name, description, task_description,
-                          initial_environment, expected_tools, success_criteria,
-                          difficulty, position)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                    )
-                    .bind(&cfg.name)
-                    .bind(&scen.id)
-                    .bind(&scen.name)
-                    .bind(&scen.description)
-                    .bind(&scen.task_description)
-                    .bind(env_json)
-                    .bind(tools_json)
-                    .bind(crit_json)
-                    .bind(&scen.difficulty)
-                    .bind(idx as i64)
-                    .execute(&mut *tx)
-                    .await?;
-                    if r.rows_affected() > 0 {
-                        report.scenarios_inserted += 1;
-                    }
-                }
+                let stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown").to_string();
+                scenarios.push((stem, body));
             }
         }
 
-        // 골든셋 JSON 파일들
+        let mut goldens: Vec<(String, String)> = Vec::new();
         if golden_sets_dir.exists() {
             let mut json_files: Vec<_> = std::fs::read_dir(golden_sets_dir)
                 .map_err(|e| StoreError::Io {
@@ -368,38 +394,103 @@ impl SqliteStore {
                 .filter(|e| e.path().extension().map(|x| x == "json").unwrap_or(false))
                 .collect();
             json_files.sort_by_key(|e| e.path());
-
             for entry in json_files {
                 let p = entry.path();
-                let content = std::fs::read_to_string(&p).map_err(|e| StoreError::Io {
+                let body = std::fs::read_to_string(&p).map_err(|e| StoreError::Io {
                     path: p.clone(),
                     source: e,
                 })?;
-                let gs: GoldenSetFile = serde_json::from_str(&content)?;
+                let stem = p.file_stem().and_then(|s| s.to_str()).unwrap_or("unknown").to_string();
+                goldens.push((stem, body));
+            }
+        }
+        self.seed_from_sources(&scenarios, &goldens).await
+    }
 
-                for g in gs.golden_sets.iter() {
-                    let env_json = serde_json::to_string(&g.input.environment)?;
-                    let seq_json = serde_json::to_string(&g.expected_output.tool_sequence)?;
-                    let res_json = serde_json::to_string(&g.expected_output.tool_results)?;
-                    let r = sqlx::query(
-                        "INSERT OR IGNORE INTO golden_sets
-                         (domain, scenario_id, version, task,
-                          input_environment, tool_sequence, tool_results, tolerance)
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                    )
-                    .bind(&gs.domain)
-                    .bind(&g.scenario_id)
-                    .bind(&gs.version)
-                    .bind(&g.input.task)
-                    .bind(env_json)
-                    .bind(seq_json)
-                    .bind(res_json)
-                    .bind(g.expected_output.tolerance)
+    /// 공통 시드 헬퍼. `(stem, body)` 페어 리스트를 받아 트랜잭션으로 적재.
+    async fn seed_from_sources(&self, scenarios: &[(String, String)], goldens: &[(String, String)]) -> Result<SeedReport, StoreError> {
+        let mut report = SeedReport::default();
+        let mut tx = self.pool.begin().await?;
+
+        for (stem, body) in scenarios {
+            let cfg: DomainConfig = serde_yaml::from_str(body).map_err(|e| StoreError::Yaml {
+                path: PathBuf::from(format!("<embedded:{stem}.yaml>")),
+                source: e,
+            })?;
+
+            let r = sqlx::query("INSERT OR IGNORE INTO domains (name, description) VALUES (?, ?)")
+                .bind(&cfg.name)
+                .bind(&cfg.description)
+                .execute(&mut *tx)
+                .await?;
+            if r.rows_affected() > 0 {
+                report.domains_inserted += 1;
+            }
+
+            for (idx, tool) in cfg.tools.iter().enumerate() {
+                sqlx::query("INSERT OR IGNORE INTO domain_tools (domain, class_name, module_path, position) VALUES (?, ?, ?, ?)")
+                    .bind(&cfg.name)
+                    .bind(&tool.class_name)
+                    .bind(&tool.module_path)
+                    .bind(idx as i64)
                     .execute(&mut *tx)
                     .await?;
-                    if r.rows_affected() > 0 {
-                        report.golden_sets_inserted += 1;
-                    }
+            }
+
+            for (idx, scen) in cfg.scenarios.iter().enumerate() {
+                let env_json = serde_json::to_string(&scen.initial_environment)?;
+                let tools_json = serde_json::to_string(&scen.expected_tools)?;
+                let crit_json = serde_json::to_string(&scen.success_criteria)?;
+                let r = sqlx::query(
+                    "INSERT OR IGNORE INTO eval_scenarios
+                     (domain, id, name, description, task_description,
+                      initial_environment, expected_tools, success_criteria,
+                      difficulty, position)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                )
+                .bind(&cfg.name)
+                .bind(&scen.id)
+                .bind(&scen.name)
+                .bind(&scen.description)
+                .bind(&scen.task_description)
+                .bind(env_json)
+                .bind(tools_json)
+                .bind(crit_json)
+                .bind(&scen.difficulty)
+                .bind(idx as i64)
+                .execute(&mut *tx)
+                .await?;
+                if r.rows_affected() > 0 {
+                    report.scenarios_inserted += 1;
+                }
+            }
+        }
+
+        for (_stem, body) in goldens {
+            let gs: GoldenSetFile = serde_json::from_str(body)?;
+            for g in gs.golden_sets.iter() {
+                let env_json = serde_json::to_string(&g.input.environment)?;
+                let seq_json = serde_json::to_string(&g.expected_output.tool_sequence)?;
+                let res_json = serde_json::to_string(&g.expected_output.tool_results)?;
+                let r = sqlx::query(
+                    "INSERT OR IGNORE INTO golden_sets
+                     (domain, scenario_id, version, task,
+                      input_environment, tool_sequence, tool_results, tolerance, expected_domain)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                )
+                .bind(&gs.domain)
+                .bind(&g.scenario_id)
+                .bind(&gs.version)
+                .bind(&g.input.task)
+                .bind(env_json)
+                .bind(seq_json)
+                .bind(res_json)
+                .bind(g.expected_output.tolerance)
+                .bind(&g.expected_output.expected_domain)
+                .execute(&mut *tx)
+                .await?;
+                if r.rows_affected() > 0 {
+                    report.golden_sets_inserted += 1;
                 }
             }
         }
@@ -408,12 +499,13 @@ impl SqliteStore {
         Ok(report)
     }
 
-    /// 편의 헬퍼: open → (scenarios 또는 golden_sets 가 비어 있으면) seed. 항상 멱등.
-    pub async fn open_and_seed(db_path: &Path, scenarios_dir: &Path, golden_sets_dir: &Path) -> Result<(Self, SeedReport), StoreError> {
+    /// 편의 헬퍼: open → (scenarios 또는 golden_sets 가 비어 있으면) 내장 시드
+    /// 적용. 항상 멱등.
+    pub async fn open_and_seed(db_path: &Path) -> Result<(Self, SeedReport), StoreError> {
         let store = Self::open(db_path).await?;
         let mut report = SeedReport::default();
         if store.needs_seed().await? {
-            report = store.seed_from_fs(scenarios_dir, golden_sets_dir).await?;
+            report = store.seed_from_embedded().await?;
         }
         Ok((store, report))
     }
@@ -489,7 +581,7 @@ impl SqliteStore {
     /// @trace FR: PRD-017/FR-3, PRD-017/FR-7
     pub async fn load_golden_sets_by_domain(&self, domain: &str) -> Result<GoldenSetFile, StoreError> {
         let rows = sqlx::query(
-            "SELECT scenario_id, version, task, input_environment, tool_sequence, tool_results, tolerance
+            "SELECT scenario_id, version, task, input_environment, tool_sequence, tool_results, tolerance, expected_domain
              FROM golden_sets WHERE domain = ? ORDER BY scenario_id",
         )
         .bind(domain)
@@ -503,6 +595,7 @@ impl SqliteStore {
             let env_json: String = r.get("input_environment");
             let seq_json: String = r.get("tool_sequence");
             let res_json: String = r.get("tool_results");
+            let expected_domain: Option<String> = r.try_get("expected_domain").ok();
             entries.push(GoldenSetEntry {
                 scenario_id: r.get("scenario_id"),
                 input: GoldenSetInput {
@@ -513,6 +606,7 @@ impl SqliteStore {
                     tool_sequence: serde_json::from_str(&seq_json)?,
                     tool_results: serde_json::from_str(&res_json)?,
                     tolerance: r.get("tolerance"),
+                    expected_domain,
                 },
             });
         }
@@ -531,7 +625,8 @@ impl SqliteStore {
     // PRD-019/FR-5
     // =========================================================================
 
-    /// 신규 시나리오 INSERT. 동일 `(domain, id)` 존재 시 `StoreError::Conflict`.
+    /// 신규 시나리오 INSERT. 동일 `(domain, id)` 존재 시
+    /// `StoreError::Conflict`.
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-1, PRD-019/FR-5
@@ -631,8 +726,8 @@ impl SqliteStore {
         let res = sqlx::query(
             "INSERT INTO golden_sets
              (domain, scenario_id, version, task,
-              input_environment, tool_sequence, tool_results, tolerance)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+              input_environment, tool_sequence, tool_results, tolerance, expected_domain)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         )
         .bind(domain)
         .bind(&entry.scenario_id)
@@ -642,6 +737,7 @@ impl SqliteStore {
         .bind(seq_json)
         .bind(res_json)
         .bind(entry.expected_output.tolerance)
+        .bind(&entry.expected_output.expected_domain)
         .execute(&self.pool)
         .await;
         match res {
@@ -661,7 +757,7 @@ impl SqliteStore {
         let res = sqlx::query(
             "UPDATE golden_sets
              SET task = ?, input_environment = ?, tool_sequence = ?,
-                 tool_results = ?, tolerance = ?
+                 tool_results = ?, tolerance = ?, expected_domain = ?
              WHERE domain = ? AND scenario_id = ?",
         )
         .bind(&entry.input.task)
@@ -669,6 +765,7 @@ impl SqliteStore {
         .bind(seq_json)
         .bind(res_json)
         .bind(entry.expected_output.tolerance)
+        .bind(&entry.expected_output.expected_domain)
         .bind(domain)
         .bind(scenario_id)
         .execute(&self.pool)
@@ -707,6 +804,308 @@ impl SqliteStore {
         }
         Ok(out)
     }
+
+    // =========================================================================
+    // SPEC-021: trajectories / evaluations CRUD
+    // =========================================================================
+
+    /// 궤적 1행 INSERT OR REPLACE. `task_id` 가 PK 이므로 동일 ID 재기록은
+    /// 덮어쓴다. `steps_json` 은 호출자가 직렬화한 JSON 텍스트.
+    ///
+    /// @trace SPEC: SPEC-021
+    /// @trace FR: PRD-021/FR-1
+    #[allow(clippy::too_many_arguments)]
+    pub async fn upsert_trajectory(
+        &self,
+        task_id: &str,
+        task_description: &str,
+        agent_name: &str,
+        domain: Option<&str>,
+        scenario_id: Option<&str>,
+        success: bool,
+        total_iterations: i64,
+        started_at: &str,
+        ended_at: Option<&str>,
+        steps_json: &str,
+        final_state_json: Option<&str>,
+    ) -> Result<(), StoreError> {
+        sqlx::query(
+            "INSERT OR REPLACE INTO trajectories
+             (task_id, task_description, agent_name, domain, scenario_id,
+              success, total_iterations, started_at, ended_at,
+              steps_json, final_state_json, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+        )
+        .bind(task_id)
+        .bind(task_description)
+        .bind(agent_name)
+        .bind(domain)
+        .bind(scenario_id)
+        .bind(success as i64)
+        .bind(total_iterations)
+        .bind(started_at)
+        .bind(ended_at)
+        .bind(steps_json)
+        .bind(final_state_json)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    /// 평가 1행 INSERT OR REPLACE. trajectory 가 먼저 존재해야 FK 충족.
+    ///
+    /// @trace SPEC: SPEC-021
+    /// @trace FR: PRD-021/FR-2
+    #[allow(clippy::too_many_arguments)]
+    pub async fn upsert_evaluation(
+        &self,
+        task_id: &str,
+        agent_name: &str,
+        domain: Option<&str>,
+        scenario_id: Option<&str>,
+        success: bool,
+        criteria_score: Option<f64>,
+        tool_sequence_score: Option<f64>,
+        domain_routing_score: Option<f64>,
+        overall_score: Option<f64>,
+        metrics_json: &str,
+        golden_set_result_json: Option<&str>,
+    ) -> Result<(), StoreError> {
+        sqlx::query(
+            "INSERT OR REPLACE INTO evaluations
+             (task_id, agent_name, domain, scenario_id, success,
+              criteria_score, tool_sequence_score, domain_routing_score, overall_score,
+              metrics_json, golden_set_result_json, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+        )
+        .bind(task_id)
+        .bind(agent_name)
+        .bind(domain)
+        .bind(scenario_id)
+        .bind(success as i64)
+        .bind(criteria_score)
+        .bind(tool_sequence_score)
+        .bind(domain_routing_score)
+        .bind(overall_score)
+        .bind(metrics_json)
+        .bind(golden_set_result_json)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    /// 궤적 task_id 목록을 created_at 내림차순으로 반환.
+    ///
+    /// @trace SPEC: SPEC-021
+    /// @trace FR: PRD-021/FR-4
+    pub async fn list_trajectory_ids(&self) -> Result<Vec<TrajectoryListRow>, StoreError> {
+        let rows = sqlx::query(
+            "SELECT task_id, started_at, agent_name, domain, scenario_id, success
+             FROM trajectories ORDER BY started_at DESC",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(rows
+            .into_iter()
+            .map(|r| TrajectoryListRow {
+                task_id: r.get("task_id"),
+                started_at: r.get("started_at"),
+                agent_name: r.get("agent_name"),
+                domain: r.try_get("domain").ok(),
+                scenario_id: r.try_get("scenario_id").ok(),
+                success: r.get::<i64, _>("success") != 0,
+            })
+            .collect())
+    }
+
+    /// 단건 trajectory 를 raw JSON 으로 반환. task_id 미존재 시 None.
+    ///
+    /// @trace SPEC: SPEC-021
+    /// @trace FR: PRD-021/FR-4
+    pub async fn get_trajectory_json(&self, task_id: &str) -> Result<Option<serde_json::Value>, StoreError> {
+        let row = sqlx::query(
+            "SELECT task_id, task_description, agent_name, domain, scenario_id,
+                    success, total_iterations, started_at, ended_at,
+                    steps_json, final_state_json
+             FROM trajectories WHERE task_id = ?",
+        )
+        .bind(task_id)
+        .fetch_optional(&self.pool)
+        .await?;
+        let Some(r) = row else {
+            return Ok(None);
+        };
+        let steps: serde_json::Value = serde_json::from_str(&r.get::<String, _>("steps_json"))?;
+        let final_state: Option<serde_json::Value> = r
+            .try_get::<Option<String>, _>("final_state_json")
+            .ok()
+            .flatten()
+            .and_then(|s| serde_json::from_str(&s).ok());
+        let success: i64 = r.get("success");
+        Ok(Some(serde_json::json!({
+            "task_id": r.get::<String, _>("task_id"),
+            "task_description": r.get::<String, _>("task_description"),
+            "agent_name": r.get::<String, _>("agent_name"),
+            "domain": r.try_get::<Option<String>, _>("domain").ok().flatten(),
+            "scenario_id": r.try_get::<Option<String>, _>("scenario_id").ok().flatten(),
+            "success": success != 0,
+            "total_iterations": r.get::<i64, _>("total_iterations"),
+            "start_time": r.get::<String, _>("started_at"),
+            "end_time": r.try_get::<Option<String>, _>("ended_at").ok().flatten(),
+            "steps": steps,
+            "final_state": final_state,
+        })))
+    }
+
+    /// 평가 task_id 목록을 created_at 내림차순.
+    ///
+    /// @trace SPEC: SPEC-021
+    /// @trace FR: PRD-021/FR-4
+    pub async fn list_evaluation_ids(&self) -> Result<Vec<EvaluationListRow>, StoreError> {
+        let rows = sqlx::query(
+            "SELECT task_id, created_at, agent_name, domain, scenario_id, success, overall_score
+             FROM evaluations ORDER BY created_at DESC",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(rows
+            .into_iter()
+            .map(|r| EvaluationListRow {
+                task_id: r.get("task_id"),
+                created_at: r.get("created_at"),
+                agent_name: r.get("agent_name"),
+                domain: r.try_get("domain").ok(),
+                scenario_id: r.try_get("scenario_id").ok(),
+                success: r.get::<i64, _>("success") != 0,
+                overall_score: r.try_get("overall_score").ok(),
+            })
+            .collect())
+    }
+
+    /// 단건 evaluation 을 raw JSON 으로.
+    ///
+    /// @trace SPEC: SPEC-021
+    /// @trace FR: PRD-021/FR-4
+    pub async fn get_evaluation_json(&self, task_id: &str) -> Result<Option<serde_json::Value>, StoreError> {
+        let row = sqlx::query(
+            "SELECT e.task_id, e.agent_name, e.domain, e.scenario_id, e.success,
+                    e.criteria_score, e.tool_sequence_score, e.domain_routing_score, e.overall_score,
+                    e.metrics_json, e.golden_set_result_json,
+                    t.task_description, t.total_iterations, t.started_at, t.ended_at,
+                    t.steps_json, t.final_state_json
+             FROM evaluations e LEFT JOIN trajectories t ON t.task_id = e.task_id
+             WHERE e.task_id = ?",
+        )
+        .bind(task_id)
+        .fetch_optional(&self.pool)
+        .await?;
+        let Some(r) = row else {
+            return Ok(None);
+        };
+        let metrics: serde_json::Value = serde_json::from_str(&r.get::<String, _>("metrics_json"))?;
+        let golden_set_result: Option<serde_json::Value> = r
+            .try_get::<Option<String>, _>("golden_set_result_json")
+            .ok()
+            .flatten()
+            .and_then(|s| serde_json::from_str(&s).ok());
+        let steps: Option<serde_json::Value> = r
+            .try_get::<Option<String>, _>("steps_json")
+            .ok()
+            .flatten()
+            .and_then(|s| serde_json::from_str(&s).ok());
+        let final_state: Option<serde_json::Value> = r
+            .try_get::<Option<String>, _>("final_state_json")
+            .ok()
+            .flatten()
+            .and_then(|s| serde_json::from_str(&s).ok());
+        let success: i64 = r.get("success");
+        Ok(Some(serde_json::json!({
+            "trajectory": {
+                "task_id": r.get::<String, _>("task_id"),
+                "task_description": r.try_get::<Option<String>, _>("task_description").ok().flatten().unwrap_or_default(),
+                "agent_name": r.get::<String, _>("agent_name"),
+                "success": success != 0,
+                "total_iterations": r.try_get::<Option<i64>, _>("total_iterations").ok().flatten().unwrap_or(0),
+                "start_time": r.try_get::<Option<String>, _>("started_at").ok().flatten(),
+                "end_time": r.try_get::<Option<String>, _>("ended_at").ok().flatten(),
+                "steps": steps.unwrap_or(serde_json::json!([])),
+                "final_state": final_state,
+            },
+            "metrics": metrics,
+            "golden_set_result": golden_set_result,
+            "scores": {
+                "criteria_score": r.try_get::<Option<f64>, _>("criteria_score").ok().flatten(),
+                "tool_sequence_score": r.try_get::<Option<f64>, _>("tool_sequence_score").ok().flatten(),
+                "domain_routing_score": r.try_get::<Option<f64>, _>("domain_routing_score").ok().flatten(),
+                "overall_score": r.try_get::<Option<f64>, _>("overall_score").ok().flatten(),
+            },
+        })))
+    }
+
+    /// `compare` FR-6 의 시간 범위 평균. 지정 agent + 시간 범위의 평가 결과
+    /// 평균 메트릭을 반환. 매칭 행이 없으면 빈 HashMap.
+    ///
+    /// @trace SPEC: SPEC-021
+    /// @trace FR: PRD-021/FR-6
+    pub async fn evaluation_window_average(&self, agent_name: &str, since: &str, until: &str) -> Result<EvaluationWindow, StoreError> {
+        let row = sqlx::query(
+            "SELECT COUNT(*) AS cnt,
+                    AVG(criteria_score) AS criteria,
+                    AVG(tool_sequence_score) AS tool_seq,
+                    AVG(domain_routing_score) AS routing,
+                    AVG(overall_score) AS overall,
+                    SUM(CASE WHEN success != 0 THEN 1 ELSE 0 END) AS successes
+             FROM evaluations
+             WHERE agent_name = ? AND created_at >= ? AND created_at <= ?",
+        )
+        .bind(agent_name)
+        .bind(since)
+        .bind(until)
+        .fetch_one(&self.pool)
+        .await?;
+        Ok(EvaluationWindow {
+            count: row.get::<i64, _>("cnt"),
+            successes: row.try_get::<Option<i64>, _>("successes").ok().flatten().unwrap_or(0),
+            criteria_score: row.try_get::<Option<f64>, _>("criteria").ok().flatten(),
+            tool_sequence_score: row.try_get::<Option<f64>, _>("tool_seq").ok().flatten(),
+            domain_routing_score: row.try_get::<Option<f64>, _>("routing").ok().flatten(),
+            overall_score: row.try_get::<Option<f64>, _>("overall").ok().flatten(),
+        })
+    }
+}
+
+/// SPEC-021: trajectories 목록 조회 행.
+#[derive(Debug, Clone)]
+pub struct TrajectoryListRow {
+    pub task_id: String,
+    pub started_at: String,
+    pub agent_name: String,
+    pub domain: Option<String>,
+    pub scenario_id: Option<String>,
+    pub success: bool,
+}
+
+/// SPEC-021: evaluations 목록 조회 행.
+#[derive(Debug, Clone)]
+pub struct EvaluationListRow {
+    pub task_id: String,
+    pub created_at: String,
+    pub agent_name: String,
+    pub domain: Option<String>,
+    pub scenario_id: Option<String>,
+    pub success: bool,
+    pub overall_score: Option<f64>,
+}
+
+/// SPEC-021: 시간 범위 평균 결과(`compare --agent --since --until`).
+#[derive(Debug, Clone, Default)]
+pub struct EvaluationWindow {
+    pub count: i64,
+    pub successes: i64,
+    pub criteria_score: Option<f64>,
+    pub tool_sequence_score: Option<f64>,
+    pub domain_routing_score: Option<f64>,
+    pub overall_score: Option<f64>,
 }
 
 // =============================================================================
@@ -986,6 +1385,7 @@ scenarios:
                 tool_sequence: vec!["tool_a".to_string()],
                 tool_results: results,
                 tolerance: 0.01,
+                expected_domain: None,
             },
         }
     }
@@ -1160,15 +1560,166 @@ scenarios:
     #[tokio::test]
     async fn open_and_seed_is_idempotent_across_opens() {
         let dir = tempdir().unwrap();
-        let scen = dir.path().join("scen");
-        let gold = dir.path().join("gold");
         let db = dir.path().join("eval.db");
-        write_sample_dataset(&scen, &gold);
 
-        let (_s1, r1) = SqliteStore::open_and_seed(&db, &scen, &gold).await.unwrap();
+        let (_s1, r1) = SqliteStore::open_and_seed(&db).await.unwrap();
         assert!(r1.scenarios_inserted > 0);
 
-        let (_s2, r2) = SqliteStore::open_and_seed(&db, &scen, &gold).await.unwrap();
+        let (_s2, r2) = SqliteStore::open_and_seed(&db).await.unwrap();
         assert_eq!(r2.scenarios_inserted, 0);
+    }
+
+    // -------- SPEC-021 --------
+
+    /// @trace TC: SPEC-021/TC-2, SPEC-021/TC-4
+    /// @trace FR: PRD-021/FR-1
+    #[tokio::test]
+    async fn spec021_tc_2_trajectory_upsert_round_trip() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        let task_id = "550e8400-e29b-41d4-a716-446655440001";
+        store
+            .upsert_trajectory(
+                task_id,
+                "단리 이자 계산",
+                "ppa",
+                Some("financial"),
+                Some("fin_001"),
+                true,
+                3,
+                "2026-04-11T10:23:45Z",
+                Some("2026-04-11T10:23:50Z"),
+                "[{\"stage\":\"perceive\"}]",
+                Some("{\"k\":\"v\"}"),
+            )
+            .await
+            .unwrap();
+
+        let rows = store.list_trajectory_ids().await.unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].task_id, task_id);
+        assert_eq!(rows[0].domain.as_deref(), Some("financial"));
+        assert!(rows[0].success);
+
+        // 동일 task_id 재기록 → 행 1개 유지(REPLACE)
+        store
+            .upsert_trajectory(
+                task_id,
+                "단리 이자 계산 v2",
+                "ppa",
+                Some("financial"),
+                Some("fin_001"),
+                false,
+                4,
+                "2026-04-11T10:30:00Z",
+                Some("2026-04-11T10:30:10Z"),
+                "[]",
+                None,
+            )
+            .await
+            .unwrap();
+        let rows2 = store.list_trajectory_ids().await.unwrap();
+        assert_eq!(rows2.len(), 1, "REPLACE 가 새 행을 만들면 안 된다");
+        assert!(!rows2[0].success);
+
+        let json = store.get_trajectory_json(task_id).await.unwrap().unwrap();
+        assert_eq!(json["task_description"], "단리 이자 계산 v2");
+        assert_eq!(json["total_iterations"], 4);
+    }
+
+    /// @trace TC: SPEC-021/TC-3
+    /// @trace FR: PRD-021/FR-2
+    #[tokio::test]
+    async fn spec021_tc_3_evaluation_upsert_with_fk() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        let task_id = "550e8400-e29b-41d4-a716-446655440002";
+        store
+            .upsert_trajectory(
+                task_id,
+                "task",
+                "ppa",
+                Some("financial"),
+                Some("fin_001"),
+                true,
+                2,
+                "2026-04-11T10:00:00Z",
+                Some("2026-04-11T10:00:05Z"),
+                "[]",
+                None,
+            )
+            .await
+            .unwrap();
+        store
+            .upsert_evaluation(
+                task_id,
+                "ppa",
+                Some("financial"),
+                Some("fin_001"),
+                true,
+                Some(0.9),
+                Some(1.0),
+                Some(1.0),
+                Some(0.93),
+                "{\"latency\":0.5}",
+                Some("{\"criteria_score\":0.9}"),
+            )
+            .await
+            .unwrap();
+        let rows = store.list_evaluation_ids().await.unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].task_id, task_id);
+        assert_eq!(rows[0].overall_score, Some(0.93));
+
+        let json = store.get_evaluation_json(task_id).await.unwrap().unwrap();
+        assert_eq!(json["scores"]["domain_routing_score"], 1.0);
+    }
+
+    /// @trace TC: SPEC-021/TC-10
+    /// @trace FR: PRD-021/FR-6
+    #[tokio::test]
+    async fn spec021_tc_10_evaluation_window_average() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        for (i, score) in [0.6_f64, 0.8, 1.0].iter().enumerate() {
+            let task_id = format!("550e8400-e29b-41d4-a716-44665544000{i}");
+            store
+                .upsert_trajectory(
+                    &task_id,
+                    "t",
+                    "ppa",
+                    Some("financial"),
+                    None,
+                    true,
+                    1,
+                    "2026-04-11T10:00:00Z",
+                    None,
+                    "[]",
+                    None,
+                )
+                .await
+                .unwrap();
+            store
+                .upsert_evaluation(
+                    &task_id,
+                    "ppa",
+                    Some("financial"),
+                    None,
+                    true,
+                    Some(*score),
+                    Some(*score),
+                    Some(1.0),
+                    Some(*score),
+                    "{}",
+                    None,
+                )
+                .await
+                .unwrap();
+        }
+        let win = store
+            .evaluation_window_average("ppa", "1900-01-01 00:00:00", "2099-12-31 23:59:59")
+            .await
+            .unwrap();
+        assert_eq!(win.count, 3);
+        assert_eq!(win.successes, 3);
+        let overall = win.overall_score.unwrap();
+        assert!((overall - 0.8).abs() < 1e-9, "expected average 0.8, got {overall}");
     }
 }

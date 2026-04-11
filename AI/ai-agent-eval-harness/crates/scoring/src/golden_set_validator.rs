@@ -38,6 +38,8 @@ impl GoldenSetValidator {
             llm_judge_score: None,
             llm_judge_reasoning: None,
             overall_score: overall,
+            domain_routing_score: None,
+            actual_first_domain: None,
         }
     }
 
@@ -88,6 +90,7 @@ impl GoldenSetValidator {
         };
 
         let (tool_seq_score, actual_tools, _, _) = self.validate_tool_sequence(trajectory, &entry.expected_output.tool_sequence);
+        let (domain_routing_score, actual_first_domain) = Self::validate_domain_routing(trajectory, entry.expected_output.expected_domain.as_deref());
         let overall = criteria_score * 0.7 + tool_seq_score * 0.3;
 
         GoldenSetResult {
@@ -99,6 +102,8 @@ impl GoldenSetValidator {
             llm_judge_score: None,
             llm_judge_reasoning: None,
             overall_score: overall,
+            domain_routing_score,
+            actual_first_domain,
         }
     }
 
@@ -133,6 +138,48 @@ impl GoldenSetValidator {
             }
         }
         results
+    }
+
+    /// 에이전트가 처음으로 성공 호출한 도구의 도메인이 `expected_domain` 과
+    /// 일치하는지 검사한다. `expected_domain` 이 None 이면 스코어 생성 안함.
+    ///
+    /// 반환: `(score, actual_first_domain)`
+    /// - score: 1.0 == 일치, 0.0 == 불일치 또는 tool call 없음
+    /// - actual_first_domain: 첫 tool call 의 도메인 (None 이면 tool call 없음)
+    ///
+    /// @trace SPEC: SPEC-020
+    /// @trace FR: PRD-020/FR-2
+    pub fn validate_domain_routing(trajectory: &Trajectory, expected_domain: Option<&str>) -> (Option<f64>, Option<String>) {
+        let actual_first_domain = Self::first_tool_domain(trajectory);
+        let Some(expected) = expected_domain else {
+            return (None, actual_first_domain);
+        };
+        let score = match actual_first_domain.as_deref() {
+            | Some(actual) if actual == expected => 1.0,
+            | _ => 0.0,
+        };
+        (Some(score), actual_first_domain)
+    }
+
+    /// 궤적에서 성공한 첫 tool call 의 도메인을 추출한다. 도구 이름은
+    /// `<domain>__<name>` 네임스페이스 형식이므로 `__` 앞부분이 도메인이다.
+    /// 네임스페이스가 없으면 `"general"` 로 간주.
+    fn first_tool_domain(trajectory: &Trajectory) -> Option<String> {
+        for step in &trajectory.steps {
+            if step.stage != PpaStage::Action {
+                continue;
+            }
+            for tc in &step.tool_calls {
+                if !tc.success {
+                    continue;
+                }
+                return Some(match tc.tool_name.split_once("__") {
+                    | Some((d, _)) => d.to_string(),
+                    | None => "general".to_string(),
+                });
+            }
+        }
+        None
     }
 
     pub fn validate_tool_sequence(&self, trajectory: &Trajectory, expected_tools: &[String]) -> (f64, Vec<String>, Vec<String>, Vec<String>) {
@@ -314,5 +361,58 @@ mod tests {
         let v = GoldenSetValidator::new(0.01);
         let (score, _, _, _) = v.validate_tool_sequence(&trajectory, &[]);
         assert_eq!(score, 1.0);
+    }
+
+    /// @trace TC: SPEC-020/TC-6
+    /// @trace FR: PRD-020/FR-2
+    #[test]
+    fn domain_routing_match_returns_one() {
+        let traj = make_trajectory(vec![("financial__calculate_simple_interest", true, None)]);
+        let (score, actual) = GoldenSetValidator::validate_domain_routing(&traj, Some("financial"));
+        assert_eq!(score, Some(1.0));
+        assert_eq!(actual.as_deref(), Some("financial"));
+    }
+
+    /// @trace TC: SPEC-020/TC-7
+    /// @trace FR: PRD-020/FR-2
+    #[test]
+    fn domain_routing_mismatch_returns_zero() {
+        let traj = make_trajectory(vec![("customer_service__classify_inquiry", true, None)]);
+        let (score, actual) = GoldenSetValidator::validate_domain_routing(&traj, Some("financial"));
+        assert_eq!(score, Some(0.0));
+        assert_eq!(actual.as_deref(), Some("customer_service"));
+    }
+
+    /// @trace TC: SPEC-020/TC-8
+    /// @trace FR: PRD-020/FR-2
+    #[test]
+    fn domain_routing_none_expected_returns_none_score() {
+        let traj = make_trajectory(vec![("financial__calculate_simple_interest", true, None)]);
+        let (score, actual) = GoldenSetValidator::validate_domain_routing(&traj, None);
+        assert_eq!(score, None);
+        assert_eq!(actual.as_deref(), Some("financial"));
+    }
+
+    /// @trace TC: SPEC-020/TC-9
+    /// @trace FR: PRD-020/FR-2
+    #[test]
+    fn domain_routing_unprefixed_tool_is_general() {
+        let traj = make_trajectory(vec![("read_file", true, None)]);
+        let (score, actual) = GoldenSetValidator::validate_domain_routing(&traj, Some("general"));
+        assert_eq!(score, Some(1.0));
+        assert_eq!(actual.as_deref(), Some("general"));
+    }
+
+    /// @trace TC: SPEC-020/TC-10
+    /// @trace FR: PRD-020/FR-2
+    #[test]
+    fn domain_routing_skips_failed_tool_calls() {
+        let traj = make_trajectory(vec![
+            ("customer_service__classify_inquiry", false, None),
+            ("financial__calculate_simple_interest", true, None),
+        ]);
+        let (score, actual) = GoldenSetValidator::validate_domain_routing(&traj, Some("financial"));
+        assert_eq!(score, Some(1.0));
+        assert_eq!(actual.as_deref(), Some("financial"));
     }
 }

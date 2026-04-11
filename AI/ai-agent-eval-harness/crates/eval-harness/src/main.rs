@@ -41,14 +41,48 @@ enum Commands {
         #[arg(long, default_value = "reporting_logs")]
         output_dir: String,
     },
-    /// 두 리포트 비교 및 회귀 감지
+    /// 두 리포트 비교 및 회귀 감지. 파일 인자 또는 SPEC-021 의 DB 쿼리
+    /// 모드(--baseline-task/--current-task, 또는 --agent/--since/--until)
+    /// 중 하나를 선택할 수 있다.
     Compare {
+        /// 베이스라인 파일 경로 (DB 쿼리 모드 사용 시 생략)
+        #[arg(default_value = "")]
         baseline: String,
+        /// 현재 파일 경로 (DB 쿼리 모드 사용 시 생략)
+        #[arg(default_value = "")]
         current: String,
         #[arg(short, long, default_value = "5.0")]
         threshold: f64,
         #[arg(short, long)]
         output: Option<String>,
+        /// SPEC-021: 베이스라인 task_id (DB 조회)
+        #[arg(long)]
+        baseline_task: Option<String>,
+        /// SPEC-021: 현재 task_id (DB 조회)
+        #[arg(long)]
+        current_task: Option<String>,
+        /// SPEC-021: 시간 범위 평균 비교 — agent 이름
+        #[arg(long)]
+        agent: Option<String>,
+        /// SPEC-021: 베이스라인 시간 범위 시작 (RFC3339, 예: 2026-01-01T00:00:00Z)
+        #[arg(long)]
+        baseline_since: Option<String>,
+        /// SPEC-021: 베이스라인 시간 범위 종료
+        #[arg(long)]
+        baseline_until: Option<String>,
+        /// SPEC-021: 현재 시간 범위 시작
+        #[arg(long)]
+        current_since: Option<String>,
+        /// SPEC-021: 현재 시간 범위 종료
+        #[arg(long)]
+        current_until: Option<String>,
+    },
+    /// SPEC-021: 디렉토리의 trajectory_*.json / evaluation_*.json 을 DB 로 일회성 backfill.
+    BackfillResults {
+        #[arg(long, default_value = "reporting_trajectories")]
+        trajectories_dir: String,
+        #[arg(long, default_value = "reporting_logs")]
+        logs_dir: String,
     },
     /// 사용 가능한 평가 시나리오 목록 표시
     List {
@@ -97,8 +131,8 @@ fn resolve_data_paths(scenarios: Option<&str>, golden_sets: Option<&str>) -> Dat
 /// @trace FR: PRD-017/FR-5
 fn install_data_store(paths: &DataPaths) {
     use data_scenarios::loader::ScenarioLoader;
-    if let Err(e) = ScenarioLoader::install(&paths.db_path, &paths.scenarios_dir, &paths.golden_sets_dir) {
-        eprintln!("[warn] SQLite 저장소 초기화 실패: {e} — 파일 fallback 모드");
+    if let Err(e) = ScenarioLoader::install(&paths.db_path) {
+        eprintln!("[warn] SQLite 저장소 초기화 실패: {e} — 인메모리 fallback 모드");
     } else {
         println!("[store] SQLite DB: {}", paths.db_path.display());
     }
@@ -177,14 +211,55 @@ fn main() {
             current,
             threshold,
             output,
+            baseline_task,
+            current_task,
+            agent,
+            baseline_since,
+            baseline_until,
+            current_since,
+            current_until,
         } => {
             let comparator = ReportComparator::new(threshold);
-            let result = match comparator.compare_files(&baseline, &current) {
-                | Ok(r) => r,
-                | Err(e) => {
-                    eprintln!("비교 오류: {}", e);
-                    std::process::exit(1);
-                },
+            // SPEC-021: 입력 모드 결정. 우선순위 = 시간 범위 > task_id > 파일.
+            let result = if agent.is_some() && baseline_since.is_some() {
+                // 시간 범위 모드
+                let paths = resolve_data_paths(None, None);
+                install_data_store(&paths);
+                let agent = agent.unwrap();
+                let bs = baseline_since.unwrap();
+                let bu = baseline_until.expect("--baseline-until 필요");
+                let cs = current_since.expect("--current-since 필요");
+                let cu = current_until.expect("--current-until 필요");
+                match eval_harness::compare_db::compare_windows(&agent, &bs, &bu, &cs, &cu, threshold) {
+                    | Ok(r) => r,
+                    | Err(e) => {
+                        eprintln!("비교 오류: {}", e);
+                        std::process::exit(1);
+                    },
+                }
+            } else if let (Some(bt), Some(ct)) = (baseline_task.as_ref(), current_task.as_ref()) {
+                // task_id 모드
+                let paths = resolve_data_paths(None, None);
+                install_data_store(&paths);
+                match eval_harness::compare_db::compare_two_tasks(bt, ct, threshold) {
+                    | Ok(r) => r,
+                    | Err(e) => {
+                        eprintln!("비교 오류: {}", e);
+                        std::process::exit(1);
+                    },
+                }
+            } else if !baseline.is_empty() && !current.is_empty() {
+                // 파일 모드 (기존)
+                match comparator.compare_files(&baseline, &current) {
+                    | Ok(r) => r,
+                    | Err(e) => {
+                        eprintln!("비교 오류: {}", e);
+                        std::process::exit(1);
+                    },
+                }
+            } else {
+                eprintln!("compare: 파일 인자 두 개, --baseline-task/--current-task, 또는 --agent/--baseline-since/--baseline-until/--current-since/--current-until 중 하나의 모드를 지정하세요.");
+                std::process::exit(2);
             };
 
             comparator.print_comparison(&result);
@@ -194,6 +269,19 @@ fn main() {
             if result.verdict == "fail" {
                 std::process::exit(1);
             }
+        },
+
+        | Commands::BackfillResults {
+            trajectories_dir,
+            logs_dir,
+        } => {
+            let paths = resolve_data_paths(None, None);
+            install_data_store(&paths);
+            let report = eval_harness::backfill::backfill_results(Path::new(&trajectories_dir), Path::new(&logs_dir));
+            println!(
+                "[backfill] trajectories: {} 성공 / {} 실패, evaluations: {} 성공 / {} 실패",
+                report.trajectories_imported, report.trajectories_failed, report.evaluations_imported, report.evaluations_failed
+            );
         },
 
         | Commands::List {
@@ -261,7 +349,14 @@ fn main() {
             };
             let paths = resolve_data_paths(scenarios_dir.as_deref(), golden_sets_dir.as_deref());
             install_data_store(&paths);
-            if let Err(e) = web::run_server(socket, paths.scenarios_dir, reports_dir.into(), paths.golden_sets_dir, trajectories_dir.into(), Some(paths.db_path.clone())) {
+            if let Err(e) = web::run_server(
+                socket,
+                paths.scenarios_dir,
+                reports_dir.into(),
+                paths.golden_sets_dir,
+                trajectories_dir.into(),
+                Some(paths.db_path.clone()),
+            ) {
                 eprintln!("서버 오류: {}", e);
                 std::process::exit(1);
             }

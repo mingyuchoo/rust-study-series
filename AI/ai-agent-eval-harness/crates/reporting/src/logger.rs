@@ -1,19 +1,41 @@
+// =============================================================================
+// @trace SPEC-021
+// @trace PRD: PRD-021
+// @trace FR: PRD-021/FR-1, PRD-021/FR-2, PRD-021/FR-3
+// @trace file-type: impl
+// =============================================================================
+//
+// 궤적/평가 결과를 파일 시스템과 SQLite 양쪽에 동시 기록(dual-write)하는 로거.
+// 기존 구현체 `TrajectoryLogger` 는 facade 로 남아 있어 호출부 시그니처는
+// 변경되지 않는다.
+
 use agent_models::models::{EvaluationResult,
                            PpaStage,
                            Trajectory};
 use anyhow::Result;
 use colored::*;
-use std::path::PathBuf;
+use data_scenarios::sqlite_store::SqliteStore;
+use std::{path::{Path,
+                 PathBuf},
+          sync::Arc};
 
-pub struct TrajectoryLogger {
+/// 궤적/평가 결과 영속화 계약. 어떤 백엔드(파일/DB/...) 든 이 트레이트로
+/// 노출된다.
+pub trait TrajectoryLog: Send + Sync {
+    fn save_trajectory(&self, trajectory: &Trajectory) -> Result<()>;
+    fn save_evaluation(&self, evaluation: &EvaluationResult) -> Result<()>;
+}
+
+/// 파일 시스템 백엔드. SPEC-021 이전 동작을 그대로 유지한다.
+pub struct FileLogger {
     log_dir: PathBuf,
     trajectory_dir: PathBuf,
 }
 
-impl TrajectoryLogger {
-    pub fn new(log_dir: &str, trajectory_dir: &str) -> Self {
-        let log_dir = PathBuf::from(log_dir);
-        let trajectory_dir = PathBuf::from(trajectory_dir);
+impl FileLogger {
+    pub fn new(log_dir: impl AsRef<Path>, trajectory_dir: impl AsRef<Path>) -> Self {
+        let log_dir = log_dir.as_ref().to_path_buf();
+        let trajectory_dir = trajectory_dir.as_ref().to_path_buf();
         std::fs::create_dir_all(&log_dir).ok();
         std::fs::create_dir_all(&trajectory_dir).ok();
         Self {
@@ -21,25 +43,219 @@ impl TrajectoryLogger {
             trajectory_dir,
         }
     }
+}
 
-    pub fn save_trajectory(&self, trajectory: &Trajectory) -> Result<PathBuf> {
+impl TrajectoryLog for FileLogger {
+    fn save_trajectory(&self, trajectory: &Trajectory) -> Result<()> {
         let ts = chrono::Utc::now().format("%Y%m%d_%H%M%S");
         let filename = format!("trajectory_{}_{}.json", trajectory.task_id, ts);
         let filepath = self.trajectory_dir.join(&filename);
         let json = serde_json::to_string_pretty(trajectory)?;
         std::fs::write(&filepath, json)?;
         println!("{} 궤적 저장: {}", "✓".green(), filepath.display());
-        Ok(filepath)
+        Ok(())
     }
 
-    pub fn save_evaluation(&self, evaluation: &EvaluationResult) -> Result<PathBuf> {
+    fn save_evaluation(&self, evaluation: &EvaluationResult) -> Result<()> {
         let ts = chrono::Utc::now().format("%Y%m%d_%H%M%S");
         let filename = format!("evaluation_{}_{}.json", evaluation.trajectory.task_id, ts);
         let filepath = self.log_dir.join(&filename);
         let json = serde_json::to_string_pretty(evaluation)?;
         std::fs::write(&filepath, json)?;
         println!("{} 평가 결과 저장: {}", "✓".green(), filepath.display());
-        Ok(filepath)
+        Ok(())
+    }
+}
+
+/// SQLite 백엔드. 동기 컨텍스트에서 호출 가능하도록 자체 tokio 런타임을
+/// 들고 있다(이미 tokio 런타임 안이면 `Handle::current()` 재사용).
+pub struct SqliteLogger {
+    store: Arc<SqliteStore>,
+}
+
+impl SqliteLogger {
+    pub fn new(store: Arc<SqliteStore>) -> Self {
+        Self {
+            store,
+        }
+    }
+
+    fn run<F: std::future::Future>(fut: F) -> F::Output {
+        match tokio::runtime::Handle::try_current() {
+            | Ok(handle) => tokio::task::block_in_place(|| handle.block_on(fut)),
+            | Err(_) => tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .expect("failed to build tokio runtime")
+                .block_on(fut),
+        }
+    }
+}
+
+impl TrajectoryLog for SqliteLogger {
+    fn save_trajectory(&self, trajectory: &Trajectory) -> Result<()> {
+        let steps_json = serde_json::to_string(&trajectory.steps)?;
+        let final_state_json = trajectory
+            .final_state
+            .as_ref()
+            .map(serde_json::to_string)
+            .transpose()?;
+        let started_at = trajectory.start_time.to_rfc3339();
+        let ended_at = trajectory.end_time.map(|t| t.to_rfc3339());
+        let store = self.store.clone();
+        let task_id = trajectory.task_id.clone();
+        let task_description = trajectory.task_description.clone();
+        // 도메인/시나리오 ID 는 final_state 에서 추출 시도(있으면)
+        let (domain, scenario_id) = trajectory
+            .final_state
+            .as_ref()
+            .map(|s| {
+                let d = s.perceived_info.get("domain").and_then(|v| v.as_str()).map(String::from);
+                let sid = s.perceived_info.get("scenario_id").and_then(|v| v.as_str()).map(String::from);
+                (d, sid)
+            })
+            .unwrap_or((None, None));
+        let success = trajectory.success;
+        let total_iterations = trajectory.total_iterations as i64;
+        Self::run(async move {
+            store
+                .upsert_trajectory(
+                    &task_id,
+                    &task_description,
+                    "ppa", // FR-1: 기본 agent 라벨. 향후 trajectory 모델에 직접 필드 추가 시 교체.
+                    domain.as_deref(),
+                    scenario_id.as_deref(),
+                    success,
+                    total_iterations,
+                    &started_at,
+                    ended_at.as_deref(),
+                    &steps_json,
+                    final_state_json.as_deref(),
+                )
+                .await
+        })?;
+        Ok(())
+    }
+
+    fn save_evaluation(&self, evaluation: &EvaluationResult) -> Result<()> {
+        // trajectory 가 먼저 DB 에 있어야 FK 충족. dual-write 컨텍스트에서는
+        // 상위 MultiLogger 가 trajectory 를 먼저 호출해 보장한다.
+        let metrics_map = evaluation.metrics.to_map();
+        let metrics_json = serde_json::to_string(&metrics_map)?;
+        let golden_set_result_json = evaluation
+            .golden_set_result
+            .as_ref()
+            .map(serde_json::to_string)
+            .transpose()?;
+        let task_id = evaluation.trajectory.task_id.clone();
+        let success = evaluation.trajectory.success;
+        let (domain, scenario_id) = evaluation
+            .trajectory
+            .final_state
+            .as_ref()
+            .map(|s| {
+                let d = s.perceived_info.get("domain").and_then(|v| v.as_str()).map(String::from);
+                let sid = s.perceived_info.get("scenario_id").and_then(|v| v.as_str()).map(String::from);
+                (d, sid)
+            })
+            .unwrap_or((None, None));
+        let (criteria_score, tool_sequence_score, domain_routing_score, overall_score) = match &evaluation.golden_set_result {
+            | Some(g) => (Some(g.criteria_score), Some(g.tool_sequence_score), g.domain_routing_score, Some(g.overall_score)),
+            | None => (None, None, None, None),
+        };
+        let store = self.store.clone();
+        Self::run(async move {
+            store
+                .upsert_evaluation(
+                    &task_id,
+                    "ppa",
+                    domain.as_deref(),
+                    scenario_id.as_deref(),
+                    success,
+                    criteria_score,
+                    tool_sequence_score,
+                    domain_routing_score,
+                    overall_score,
+                    &metrics_json,
+                    golden_set_result_json.as_deref(),
+                )
+                .await
+        })?;
+        Ok(())
+    }
+}
+
+/// fan-out 로거. 모든 child 에 호출을 전달하고, 개별 실패는 stderr 경고로
+/// 변환하여 다른 child 의 진행을 막지 않는다.
+pub struct MultiLogger {
+    children: Vec<Box<dyn TrajectoryLog>>,
+}
+
+impl MultiLogger {
+    pub fn new(children: Vec<Box<dyn TrajectoryLog>>) -> Self {
+        Self {
+            children,
+        }
+    }
+}
+
+impl TrajectoryLog for MultiLogger {
+    fn save_trajectory(&self, trajectory: &Trajectory) -> Result<()> {
+        for (idx, child) in self.children.iter().enumerate() {
+            if let Err(e) = child.save_trajectory(trajectory) {
+                eprintln!("[warn] logger #{idx} save_trajectory 실패: {e}");
+            }
+        }
+        Ok(())
+    }
+
+    fn save_evaluation(&self, evaluation: &EvaluationResult) -> Result<()> {
+        for (idx, child) in self.children.iter().enumerate() {
+            if let Err(e) = child.save_evaluation(evaluation) {
+                eprintln!("[warn] logger #{idx} save_evaluation 실패: {e}");
+            }
+        }
+        Ok(())
+    }
+}
+
+// =============================================================================
+// 기존 facade — 호출부 호환을 위해 동일한 시그니처 유지
+// =============================================================================
+
+/// 기존 코드 호환용 facade. 내부적으로 `MultiLogger { FileLogger, SqliteLogger? }`
+/// 를 들고 있어, `HarnessRunner::new` 같은 호출부 변경 없이 dual-write 가
+/// 활성화된다. SqliteStore 가 install 되지 않은 환경(테스트 등)에서는
+/// 자동으로 FileLogger 단독 모드로 떨어진다.
+pub struct TrajectoryLogger {
+    inner: Box<dyn TrajectoryLog>,
+}
+
+impl TrajectoryLogger {
+    pub fn new(log_dir: &str, trajectory_dir: &str) -> Self {
+        let file = Box::new(FileLogger::new(log_dir, trajectory_dir));
+        let inner: Box<dyn TrajectoryLog> = match try_global_store() {
+            | Some(store) => {
+                let sqlite = Box::new(SqliteLogger::new(store));
+                Box::new(MultiLogger::new(vec![file, sqlite]))
+            },
+            | None => file,
+        };
+        Self {
+            inner,
+        }
+    }
+
+    pub fn save_trajectory(&self, trajectory: &Trajectory) -> Result<PathBuf> {
+        self.inner.save_trajectory(trajectory)?;
+        // 하위호환: 호출자가 PathBuf 를 기대하는 경우가 있어 빈 PathBuf 반환.
+        // 새 코드는 trait 직접 사용 권장.
+        Ok(PathBuf::new())
+    }
+
+    pub fn save_evaluation(&self, evaluation: &EvaluationResult) -> Result<PathBuf> {
+        self.inner.save_evaluation(evaluation)?;
+        Ok(PathBuf::new())
     }
 
     #[allow(dead_code)]
@@ -65,3 +281,7 @@ impl TrajectoryLogger {
         println!("  Action:   {}", action);
     }
 }
+
+/// 전역 ScenarioLoader 에 install 된 SqliteStore 를 빌려온다. install 안
+/// 되었으면(예: 단위 테스트) None.
+fn try_global_store() -> Option<Arc<SqliteStore>> { data_scenarios::loader::try_installed_store() }

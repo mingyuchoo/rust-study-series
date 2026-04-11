@@ -6,6 +6,7 @@
 // @trace file-type: impl
 // =============================================================================
 
+use super::AppState;
 use agent_models::domain_config::ScenarioConfig;
 use axum::{extract::{Json as JsonExt,
                      Path as AxPath,
@@ -22,8 +23,6 @@ use serde::{Deserialize,
             Serialize};
 use std::{collections::HashMap,
           sync::Arc};
-
-use super::AppState;
 
 // --------------------------------------------------------------------------
 // Request / response DTOs
@@ -66,6 +65,9 @@ pub struct GoldenEntryUpsert {
     pub tool_results: HashMap<String, serde_json::Value>,
     #[serde(default = "default_tolerance")]
     pub tolerance: f64,
+    /// SPEC-020: 기대 도메인(auto-routing 평가용). optional.
+    #[serde(default)]
+    pub expected_domain: Option<String>,
 }
 
 fn default_version() -> String { "1.0".into() }
@@ -226,6 +228,7 @@ pub async fn create_golden_entry_impl(store: &SqliteStore, domain: &str, body: G
             tool_sequence: body.tool_sequence,
             tool_results: body.tool_results,
             tolerance: body.tolerance,
+            expected_domain: body.expected_domain,
         },
     };
     store.insert_golden_entry(domain, &version, &entry).await?;
@@ -251,6 +254,7 @@ pub async fn update_golden_entry_impl(store: &SqliteStore, domain: &str, scenari
             tool_sequence: body.tool_sequence,
             tool_results: body.tool_results,
             tolerance: body.tolerance,
+            expected_domain: body.expected_domain,
         },
     };
     store.update_golden_entry(domain, scenario_id, &entry).await?;
@@ -273,12 +277,19 @@ pub async fn delete_golden_entry_impl(store: &SqliteStore, domain: &str, scenari
 // --------------------------------------------------------------------------
 
 fn store_from(state: &AppState) -> Result<Arc<SqliteStore>, CrudFailure> {
-    state.store.clone().ok_or_else(|| CrudFailure::Internal("SqliteStore not installed in AppState".into()))
+    state
+        .store
+        .clone()
+        .ok_or_else(|| CrudFailure::Internal("SqliteStore not installed in AppState".into()))
 }
 
 /// @trace SPEC: SPEC-019
 /// @trace FR: PRD-019/FR-1
-pub async fn create_scenario(State(st): State<AppState>, AxPath(domain): AxPath<String>, JsonExt(body): JsonExt<EvalScenarioUpsert>) -> Result<(StatusCode, JsonOut<ScenarioConfig>), CrudFailure> {
+pub async fn create_scenario(
+    State(st): State<AppState>,
+    AxPath(domain): AxPath<String>,
+    JsonExt(body): JsonExt<EvalScenarioUpsert>,
+) -> Result<(StatusCode, JsonOut<ScenarioConfig>), CrudFailure> {
     let store = store_from(&st)?;
     let scen = create_scenario_impl(store.as_ref(), &domain, body).await?;
     Ok((StatusCode::CREATED, JsonOut(scen)))
@@ -286,7 +297,11 @@ pub async fn create_scenario(State(st): State<AppState>, AxPath(domain): AxPath<
 
 /// @trace SPEC: SPEC-019
 /// @trace FR: PRD-019/FR-1
-pub async fn update_scenario_handler(State(st): State<AppState>, AxPath((domain, id)): AxPath<(String, String)>, JsonExt(body): JsonExt<EvalScenarioUpsert>) -> Result<JsonOut<ScenarioConfig>, CrudFailure> {
+pub async fn update_scenario_handler(
+    State(st): State<AppState>,
+    AxPath((domain, id)): AxPath<(String, String)>,
+    JsonExt(body): JsonExt<EvalScenarioUpsert>,
+) -> Result<JsonOut<ScenarioConfig>, CrudFailure> {
     let store = store_from(&st)?;
     let scen = update_scenario_impl(store.as_ref(), &domain, &id, body).await?;
     Ok(JsonOut(scen))
@@ -302,7 +317,11 @@ pub async fn delete_scenario_handler(State(st): State<AppState>, AxPath((domain,
 
 /// @trace SPEC: SPEC-019
 /// @trace FR: PRD-019/FR-2
-pub async fn create_golden_entry(State(st): State<AppState>, AxPath(domain): AxPath<String>, JsonExt(body): JsonExt<GoldenEntryUpsert>) -> Result<(StatusCode, JsonOut<GoldenSetEntry>), CrudFailure> {
+pub async fn create_golden_entry(
+    State(st): State<AppState>,
+    AxPath(domain): AxPath<String>,
+    JsonExt(body): JsonExt<GoldenEntryUpsert>,
+) -> Result<(StatusCode, JsonOut<GoldenSetEntry>), CrudFailure> {
     let store = store_from(&st)?;
     let entry = create_golden_entry_impl(store.as_ref(), &domain, body).await?;
     Ok((StatusCode::CREATED, JsonOut(entry)))
@@ -310,7 +329,11 @@ pub async fn create_golden_entry(State(st): State<AppState>, AxPath(domain): AxP
 
 /// @trace SPEC: SPEC-019
 /// @trace FR: PRD-019/FR-2
-pub async fn update_golden_entry_handler(State(st): State<AppState>, AxPath((domain, scenario_id)): AxPath<(String, String)>, JsonExt(body): JsonExt<GoldenEntryUpsert>) -> Result<JsonOut<GoldenSetEntry>, CrudFailure> {
+pub async fn update_golden_entry_handler(
+    State(st): State<AppState>,
+    AxPath((domain, scenario_id)): AxPath<(String, String)>,
+    JsonExt(body): JsonExt<GoldenEntryUpsert>,
+) -> Result<JsonOut<GoldenSetEntry>, CrudFailure> {
     let store = store_from(&st)?;
     let entry = update_golden_entry_impl(store.as_ref(), &domain, &scenario_id, body).await?;
     Ok(JsonOut(entry))
@@ -318,7 +341,10 @@ pub async fn update_golden_entry_handler(State(st): State<AppState>, AxPath((dom
 
 /// @trace SPEC: SPEC-019
 /// @trace FR: PRD-019/FR-2
-pub async fn delete_golden_entry_handler(State(st): State<AppState>, AxPath((domain, scenario_id)): AxPath<(String, String)>) -> Result<StatusCode, CrudFailure> {
+pub async fn delete_golden_entry_handler(
+    State(st): State<AppState>,
+    AxPath((domain, scenario_id)): AxPath<(String, String)>,
+) -> Result<StatusCode, CrudFailure> {
     let store = store_from(&st)?;
     delete_golden_entry_impl(store.as_ref(), &domain, &scenario_id).await?;
     Ok(StatusCode::NO_CONTENT)
@@ -415,6 +441,7 @@ scenarios:
             tool_sequence: vec!["t".into()],
             tool_results: HashMap::new(),
             tolerance: 0.01,
+            expected_domain: None,
         }
     }
 
@@ -439,10 +466,14 @@ scenarios:
     #[tokio::test]
     async fn tc_10_update_scenario_ok_and_not_found() {
         let store = make_store().await;
-        let updated = update_scenario_impl(&store, "financial", "fin_001", upsert_body("fin_001", "새 task")).await.expect("update ok");
+        let updated = update_scenario_impl(&store, "financial", "fin_001", upsert_body("fin_001", "새 task"))
+            .await
+            .expect("update ok");
         assert_eq!(updated.task_description, "새 task");
 
-        let err = update_scenario_impl(&store, "financial", "no_such", upsert_body("no_such", "x")).await.unwrap_err();
+        let err = update_scenario_impl(&store, "financial", "no_such", upsert_body("no_such", "x"))
+            .await
+            .unwrap_err();
         assert!(matches!(err, CrudFailure::NotFound(_)));
         let (status, _) = err.status_and_kind();
         assert_eq!(status, StatusCode::NOT_FOUND);
@@ -500,7 +531,9 @@ scenarios:
 
         // 전체 CRUD 사이클
         create_scenario_impl(&store, "financial", upsert_body("fin_new", "t")).await.unwrap();
-        update_scenario_impl(&store, "financial", "fin_001", upsert_body("fin_001", "변경")).await.unwrap();
+        update_scenario_impl(&store, "financial", "fin_001", upsert_body("fin_001", "변경"))
+            .await
+            .unwrap();
         create_golden_entry_impl(&store, "financial", golden_body("fin_002")).await.unwrap();
         delete_golden_entry_impl(&store, "financial", "fin_001").await.unwrap();
         delete_scenario_impl(&store, "financial", "fin_new").await.unwrap();

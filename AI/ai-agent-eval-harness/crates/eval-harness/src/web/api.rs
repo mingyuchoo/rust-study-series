@@ -77,8 +77,7 @@ pub fn list_agents_impl(reg: &AgentRegistry) -> Vec<String> {
 /// @trace FR: PRD-003/FR-2
 pub fn list_tools_impl() -> Vec<serde_json::Value> {
     let mut reg = ToolRegistry::new();
-    domains::register_customer_service_tools(&mut reg);
-    domains::register_financial_tools(&mut reg);
+    domains::register_all(&mut reg);
     reg.get_tools_metadata()
 }
 
@@ -345,19 +344,14 @@ mod tests {
     // =============================================================================
 
     use super::*;
-    use std::{fs::{self,
-                   File},
-              io::Write};
+    use std::fs;
     use tempfile::tempdir;
 
     fn workspace_scenarios() -> PathBuf {
-        // tests 디렉토리는 워크스페이스 루트에서 실행된다
+        // SPEC-017 이후 loader 는 내장 시드만 사용하므로 경로 값은 무의미하다.
+        // 기존 테스트의 `dir.exists()` 조기 반환을 우회하기 위해 항상 존재하는
+        // CARGO_MANIFEST_DIR 을 반환한다.
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .unwrap()
-            .parent()
-            .unwrap()
-            .join("eval_data/eval_scenarios")
     }
 
     /// @trace TC: SPEC-003/TC-1
@@ -381,14 +375,13 @@ mod tests {
 
     /// @trace TC: SPEC-003/TC-3
     /// @trace FR: PRD-003/FR-3
-    /// @trace scenario: golden-sets 로드
+    /// @trace scenario: golden-sets 로드 (SPEC-019 이후 내장 시드 기반)
     #[test]
     fn test_tc_3_load_golden_sets() {
         let dir = tempdir().unwrap();
-        let json = r#"{"domain":"demo","golden_sets":[]}"#;
-        File::create(dir.path().join("demo.json")).unwrap().write_all(json.as_bytes()).unwrap();
         let out = list_golden_sets_impl(dir.path());
-        assert_eq!(out.len(), 1);
+        assert!(out.iter().any(|g| g.domain == "financial"), "embedded financial seed must load");
+        assert!(out.iter().any(|g| g.domain == "customer_service"), "embedded customer_service seed must load");
     }
 
     /// @trace TC: SPEC-003/TC-4

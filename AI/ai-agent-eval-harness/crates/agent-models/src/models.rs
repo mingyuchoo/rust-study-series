@@ -116,6 +116,13 @@ pub struct GoldenSetResult {
     pub llm_judge_score: Option<f64>,
     pub llm_judge_reasoning: Option<String>,
     pub overall_score: f64,
+    /// 에이전트의 첫 tool call 이 `expected_domain` 과 일치하는지(SPEC-020).
+    /// `expected_domain` 이 None 이면 이 필드도 None.
+    #[serde(default)]
+    pub domain_routing_score: Option<f64>,
+    /// 실제로 처음 호출된 도구의 도메인(디버깅용). None 이면 tool call 없음.
+    #[serde(default)]
+    pub actual_first_domain: Option<String>,
 }
 
 /// 평가 메트릭

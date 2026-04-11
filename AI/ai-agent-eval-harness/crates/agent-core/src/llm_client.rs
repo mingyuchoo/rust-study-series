@@ -153,14 +153,15 @@ impl LlmClient {
             "당신은 AI Agent의 Policy(판단) 단계를 담당합니다.\n\
              인지된 정보를 바탕으로 다음 행동을 계획하세요.\n\n\
              **중요 규칙**:\n\
-             1. 반드시 사용 가능한 도구 중에서 선택하세요.\n\
-             2. 주어진 환경 정보를 도구의 파라미터로 직접 활용하세요.\n\
-             3. 도구를 호출할 때는 required 파라미터를 모두 포함하세요.\n\
-             4. 한 번에 하나의 도구만 선택하세요.\n\
-             5. 모든 필요한 도구를 순차적으로 실행한 후 작업이 완료되면 \"task_completed\": true를 설정하세요.\n\n\
+             1. 반드시 사용 가능한 도구 중에서 선택하세요. 도구 이름은 반드시 `<domain>__<tool>` 네임스페이스 형식 그대로 사용하세요 (예: `financial__calculate_simple_interest`). `general` 도메인의 기본 파일 도구(read_file, write_file, list_directory)는 네임스페이스 없이 이름 그대로 사용합니다.\n\
+             2. 각 도구에는 `[domain=...]` 라벨이 붙어 있습니다. task 의 성격과 일치하는 도메인의 도구를 우선 고려하세요. 여러 도메인이 필요한 task 도 가능합니다.\n\
+             3. 주어진 환경 정보를 도구의 파라미터로 직접 활용하세요.\n\
+             4. 도구를 호출할 때는 required 파라미터를 모두 포함하세요.\n\
+             5. 한 번에 하나의 도구만 선택하세요.\n\
+             6. 모든 필요한 도구를 순차적으로 실행한 후 작업이 완료되면 \"task_completed\": true를 설정하세요.\n\n\
              출력 형식 (JSON):\n\
-             - reasoning: 판단 근거\n\
-             - selected_tool: 선택한 도구 이름 (작업 완료 시 null)\n\
+             - reasoning: 판단 근거 (어떤 도메인의 도구를 왜 선택했는지 포함)\n\
+             - selected_tool: 선택한 도구의 네임스페이스 포함 이름 (작업 완료 시 null)\n\
              - tool_parameters: 도구에 전달할 파라미터\n\
              - confidence: 확신도 (0.0-1.0)\n\
              - requires_human_approval: 인간 승인 필요 여부\n\
@@ -172,6 +173,7 @@ impl LlmClient {
         for meta in tools_metadata {
             let name = meta.get("name").and_then(|v| v.as_str()).unwrap_or("");
             let desc = meta.get("description").and_then(|v| v.as_str()).unwrap_or("");
+            let domain = meta.get("domain").and_then(|v| v.as_str()).unwrap_or("general");
             let schema = meta.get("parameters_schema").cloned().unwrap_or_default();
             let empty_map = serde_json::Map::new();
             let props = schema.get("properties").and_then(|v| v.as_object()).unwrap_or(&empty_map);
@@ -188,7 +190,7 @@ impl LlmClient {
                 let pdesc = pinfo.get("description").and_then(|v| v.as_str()).unwrap_or("");
                 params_desc.push(format!("    - {} ({}) {}: {}", pname, ptype, req, pdesc));
             }
-            tools_info_parts.push(format!("  * {}: {}\n{}", name, desc, params_desc.join("\n")));
+            tools_info_parts.push(format!("  * [domain={}] {}: {}\n{}", domain, name, desc, params_desc.join("\n")));
         }
 
         let ctx_str = context.map(|c| format!("\n이전 맥락: {:?}", c)).unwrap_or_default();

@@ -4,8 +4,10 @@
   version.workspace = true
 
 [dependencies]
-  agent-models = {workspace = true}
-  anyhow       = {workspace = true}
-  chrono       = {workspace = true}
-  colored      = {workspace = true}
-  serde_json   = {workspace = true}
+  agent-models   = {workspace = true}
+  anyhow         = {workspace = true}
+  chrono         = {workspace = true}
+  colored        = {workspace = true}
+  data-scenarios = {workspace = true}
+  serde_json     = {workspace = true}
+  tokio          = {workspace = true}
