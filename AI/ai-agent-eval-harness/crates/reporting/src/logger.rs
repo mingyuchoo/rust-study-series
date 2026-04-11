@@ -113,6 +113,7 @@ impl TrajectoryLog for SqliteLogger {
             .unwrap_or((None, None));
         let success = trajectory.success;
         let total_iterations = trajectory.total_iterations as i64;
+        let prompt_set_id = trajectory.prompt_set_id;
         Self::run(async move {
             store
                 .upsert_trajectory(
@@ -127,6 +128,7 @@ impl TrajectoryLog for SqliteLogger {
                     ended_at.as_deref(),
                     &steps_json,
                     final_state_json.as_deref(),
+                    prompt_set_id,
                 )
                 .await
         })?;
@@ -282,3 +284,96 @@ impl TrajectoryLogger {
 /// 전역 ScenarioLoader 에 install 된 SqliteStore 를 빌려온다. install 안
 /// 되었으면(예: 단위 테스트) None.
 fn try_global_store() -> Option<Arc<SqliteStore>> { data_scenarios::loader::try_installed_store() }
+
+#[cfg(test)]
+mod spec025_tests {
+    use super::*;
+    use agent_models::models::{AgentState, PpaStage, PpaStep, Trajectory};
+    use std::collections::HashMap;
+
+    fn v1_bundle() -> data_scenarios::sqlite_store::BootstrapBundleRef<'static> {
+        data_scenarios::sqlite_store::BootstrapBundleRef {
+            perceive_system: "PSYS",
+            perceive_user:   "{task_description} {environment_state}",
+            policy_system:   "OSYS",
+            policy_user:     "{task_description} {perceived_info} {tools}",
+        }
+    }
+
+    fn make_trajectory(task_id: &str, domain: &str, prompt_set_id: Option<i64>) -> Trajectory {
+        let now = chrono::Utc::now();
+        let step = PpaStep {
+            stage: PpaStage::Perceive,
+            iteration: 1,
+            timestamp: now,
+            input_data: HashMap::new(),
+            output_data: HashMap::new(),
+            tool_calls: Vec::new(),
+            duration_ms: Some(1.0),
+        };
+        let mut final_state = AgentState::new("e2e-test".into());
+        final_state
+            .perceived_info
+            .insert("domain".into(), serde_json::Value::String(domain.into()));
+        final_state.is_complete = true;
+        Trajectory {
+            task_id: task_id.into(),
+            task_description: "e2e-test".into(),
+            start_time: now,
+            end_time: Some(now),
+            steps: vec![step],
+            final_state: Some(final_state),
+            success: true,
+            total_iterations: 1,
+            prompt_set_id,
+        }
+    }
+
+    /// @trace TC: SPEC-025/TC-14
+    /// @trace FR: PRD-025/FR-8
+    /// dual-write 경로의 통합 계약:
+    ///   SqliteLogger::save_trajectory 가 prompt_set_id 를 실제로 DB 에
+    ///   기록하고, `get_trajectory_json` 응답에 동일한 id 가 포함된다.
+    /// LLM 을 호출하지 않고 Trajectory 구조체를 직접 주입해 PpaAgent 가
+    /// 할 일 (=resolve → Trajectory.prompt_set_id 설정) 을 미리 수행한
+    /// 상태에서 저장/복원 round-trip 을 검증한다.
+    ///
+    /// 주의: `SqliteLogger::save_trajectory` 는 동기 API 로 `block_in_place +
+    /// Handle::block_on` 을 사용하므로 반드시 `multi_thread` 런타임에서 실행.
+    /// in-memory sqlite (`:memory:`) 는 max_connections=1 이라 동일 커넥션
+    /// 재진입 시 풀 timeout 발생 → 파일 기반 tempfile 로 전환.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn spec025_logger_round_trips_prompt_set_id() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let db_path = tmp.path().join("e2e.db");
+        let store = Arc::new(SqliteStore::open(&db_path).await.unwrap());
+        store.insert_domain("customer_service", "").await.unwrap();
+        store.seed_bootstrap_prompt_sets(&v1_bundle()).await.unwrap();
+        let active = store.get_active_prompt_set("customer_service").await.unwrap().expect("bootstrap");
+        let task_id = "e2e-abc";
+        let traj = make_trajectory(task_id, "customer_service", Some(active.id));
+
+        let logger = SqliteLogger::new(store.clone());
+        // 현재 런타임(multi_thread) 안에서 동기 save_trajectory 를 호출해도
+        // block_in_place 가 워커 스레드를 양보하므로 안전.
+        logger.save_trajectory(&traj).expect("save ok");
+
+        let json = store.get_trajectory_json(task_id).await.unwrap().expect("row");
+        assert_eq!(json["prompt_set_id"], serde_json::json!(active.id));
+        assert_eq!(json["task_id"], serde_json::json!(task_id));
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn spec025_logger_round_trips_none_prompt_set_id() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let db_path = tmp.path().join("e2e-none.db");
+        let store = Arc::new(SqliteStore::open(&db_path).await.unwrap());
+        store.insert_domain("general", "").await.unwrap();
+        let task_id = "e2e-none";
+        let traj = make_trajectory(task_id, "general", None);
+        let logger = SqliteLogger::new(store.clone());
+        logger.save_trajectory(&traj).expect("save ok");
+        let json = store.get_trajectory_json(task_id).await.unwrap().expect("row");
+        assert!(json["prompt_set_id"].is_null());
+    }
+}

@@ -100,7 +100,7 @@ mod tests {
 
     /// @trace TC: SPEC-025/TC-18
     /// @trace FR: PRD-025/FR-9
-    /// @trace scenario: index.html Domains 탭에 Prompts 서브 섹션 + 궤적 배지 존재
+    /// @trace scenario: index.html Domains 탭에 Prompts 서브 섹션 + 궤적 배지 + diff UI 존재
     #[test]
     fn spec025_tc_18_index_has_prompts_section_and_badge() {
         for token in [
@@ -116,6 +116,11 @@ mod tests {
             "refreshPromptSets",
             r#"id="traj-badge""#,
             "renderTrajBadge",
+            // 후속: 버전 diff UI
+            r#"id="ps-compare-select""#,
+            r#"id="ps-diff""#,
+            "comparePromptSetVersions",
+            "diffLines",
         ] {
             assert!(
                 WEB_INDEX_HTML.contains(token),

@@ -895,13 +895,14 @@ impl SqliteStore {
         ended_at: Option<&str>,
         steps_json: &str,
         final_state_json: Option<&str>,
+        prompt_set_id: Option<i64>,
     ) -> Result<(), StoreError> {
         sqlx::query(
             "INSERT OR REPLACE INTO trajectories
              (task_id, task_description, agent_name, domain, scenario_id,
               success, total_iterations, started_at, ended_at,
-              steps_json, final_state_json, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
+              steps_json, final_state_json, prompt_set_id, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))",
         )
         .bind(task_id)
         .bind(task_description)
@@ -914,6 +915,7 @@ impl SqliteStore {
         .bind(ended_at)
         .bind(steps_json)
         .bind(final_state_json)
+        .bind(prompt_set_id)
         .execute(&self.pool)
         .await?;
         Ok(())
@@ -993,7 +995,7 @@ impl SqliteStore {
         let row = sqlx::query(
             "SELECT task_id, task_description, agent_name, domain, scenario_id,
                     success, total_iterations, started_at, ended_at,
-                    steps_json, final_state_json
+                    steps_json, final_state_json, prompt_set_id
              FROM trajectories WHERE task_id = ?",
         )
         .bind(task_id)
@@ -1021,6 +1023,7 @@ impl SqliteStore {
             "end_time": r.try_get::<Option<String>, _>("ended_at").ok().flatten(),
             "steps": steps,
             "final_state": final_state,
+            "prompt_set_id": r.try_get::<Option<i64>, _>("prompt_set_id").ok().flatten(),
         })))
     }
 
@@ -2182,6 +2185,7 @@ scenarios:
                 Some("2026-04-11T10:23:50Z"),
                 "[{\"stage\":\"perceive\"}]",
                 Some("{\"k\":\"v\"}"),
+                Some(7),
             )
             .await
             .unwrap();
@@ -2205,6 +2209,7 @@ scenarios:
                 "2026-04-11T10:30:00Z",
                 Some("2026-04-11T10:30:10Z"),
                 "[]",
+                None,
                 None,
             )
             .await
@@ -2236,6 +2241,7 @@ scenarios:
                 "2026-04-11T10:00:00Z",
                 Some("2026-04-11T10:00:05Z"),
                 "[]",
+                None,
                 None,
             )
             .await
@@ -2273,7 +2279,7 @@ scenarios:
         for (i, score) in [0.6_f64, 0.8, 1.0].iter().enumerate() {
             let task_id = format!("550e8400-e29b-41d4-a716-44665544000{i}");
             store
-                .upsert_trajectory(&task_id, "t", "ppa", Some("financial"), None, true, 1, "2026-04-11T10:00:00Z", None, "[]", None)
+                .upsert_trajectory(&task_id, "t", "ppa", Some("financial"), None, true, 1, "2026-04-11T10:00:00Z", None, "[]", None, None)
                 .await
                 .unwrap();
             store

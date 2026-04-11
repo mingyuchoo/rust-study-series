@@ -418,6 +418,13 @@
               <button class="danger" onclick="deleteSelectedPromptSet()" data-i18n="prompts.delete">삭제</button>
               <button class="secondary" onclick="clearPromptSetEditor()" data-i18n="prompts.clear">초기화</button>
             </div>
+            <div class="row" style="margin-top:8px;gap:6px">
+              <label style="flex:0 0 auto;margin-bottom:0"><span data-i18n="prompts.compareWith">비교 대상</span>
+                <select id="ps-compare-select"></select>
+              </label>
+              <button class="secondary" onclick="comparePromptSetVersions()" data-i18n="prompts.compare">차이 보기</button>
+            </div>
+            <pre id="ps-diff" style="max-height:320px"></pre>
             <pre id="ps-out" data-i18n="common.idle">Ready</pre>
           </div>
         </div>
@@ -515,6 +522,9 @@
         "prompts.clear": "초기화",
         "prompts.selectFirst": "먼저 도메인을 선택하세요",
         "prompts.selectVersionFirst": "먼저 버전을 선택하세요",
+        "prompts.compareWith": "비교 대상",
+        "prompts.compare": "차이 보기",
+        "prompts.compareNeedTwo": "비교하려면 현재 버전과 비교 대상 버전을 모두 선택하세요",
         "extools.name": "이름",
         "extools.desc": "설명",
         "extools.method": "메서드",
@@ -629,6 +639,9 @@
         "prompts.clear": "Clear",
         "prompts.selectFirst": "Select a domain first",
         "prompts.selectVersionFirst": "Select a version first",
+        "prompts.compareWith": "compare with",
+        "prompts.compare": "Show diff",
+        "prompts.compareNeedTwo": "Select both the current version and a target to compare",
         "extools.name": "name",
         "extools.desc": "description",
         "extools.method": "method",
@@ -981,14 +994,27 @@
     }
 
     // 선택된 궤적의 prompt_set_id 가 있으면 Domains 탭 배지 형식으로 표시.
-    function renderTrajBadge(data) {
+    // 도메인이 같이 있으면 해당 도메인의 prompts 목록에서 version 번호까지
+    // 해석해 "prompt_set v{N} (id=#)" 로 보여준다. 실패해도 id 만 표시.
+    async function renderTrajBadge(data) {
       const el = $('traj-badge');
       if (!el) return;
       const traj = (data && data.trajectory) || data || {};
       const psid = traj.prompt_set_id;
       if (psid == null) { el.textContent = ''; return; }
       const domain = traj.domain || '';
+      // 기본 표시 (즉시)
       el.textContent = `prompt_set #${psid}` + (domain ? ` · domain=${domain}` : '');
+      if (!domain) return;
+      try {
+        const rows = await API.get('/api/domains/' + encodeURIComponent(domain) + '/prompts');
+        const match = (rows || []).find(r => r.id === psid);
+        if (match) {
+          const active = match.is_active ? ' [active]' : '';
+          const boot = match.is_bootstrap ? ' [bootstrap]' : '';
+          el.textContent = `prompt_set v${match.version}${active}${boot} · domain=${domain} · id=${psid}`;
+        }
+      } catch (e) { /* 조회 실패 시 초기 표시 유지 */ }
     }
 
     // ---------- MANAGE (CRUD — SPEC-019) ----------
@@ -1417,17 +1443,19 @@
     }
 
     // ---------- SPEC-025: PromptSet CRUD ----------
-    let PROMPT_EDITOR = { domain: null, selectedVersion: null };
+    let PROMPT_EDITOR = { domain: null, selectedVersion: null, rows: [] };
 
     async function refreshPromptSets(domain) {
       PROMPT_EDITOR.domain = domain;
       PROMPT_EDITOR.selectedVersion = null;
+      PROMPT_EDITOR.rows = [];
       const list = $('prompts-list');
       if (!list) return;
       list.innerHTML = '';
       let rows = [];
       try { rows = await API.get('/api/domains/' + encodeURIComponent(domain) + '/prompts'); }
       catch (e) { list.textContent = 'load error: ' + e; return; }
+      PROMPT_EDITOR.rows = rows;
       rows.forEach(r => {
         const it = document.createElement('div');
         it.className = 'item';
@@ -1440,6 +1468,68 @@
         };
         list.appendChild(it);
       });
+      rebuildCompareSelect();
+    }
+
+    function rebuildCompareSelect() {
+      const sel = $('ps-compare-select');
+      if (!sel) return;
+      const cur = PROMPT_EDITOR.selectedVersion;
+      sel.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = '--';
+      sel.appendChild(placeholder);
+      for (const r of (PROMPT_EDITOR.rows || [])) {
+        if (r.version === cur) continue;
+        const opt = document.createElement('option');
+        opt.value = String(r.version);
+        opt.textContent = `v${r.version}${r.is_active ? ' [active]' : ''}${r.is_bootstrap ? ' [bootstrap]' : ''}`;
+        sel.appendChild(opt);
+      }
+    }
+
+    // 라인 단위 naive diff. 동일 인덱스 비교 → 같으면 "  line", 다르면 "-/+" 표시.
+    // 최소 구현이라 이동·삽입은 정확치 않지만 템플릿 편집 비교에는 충분하다.
+    function diffLines(a, b) {
+      const la = (a || '').split('\n');
+      const lb = (b || '').split('\n');
+      const out = [];
+      const max = Math.max(la.length, lb.length);
+      for (let i = 0; i < max; i++) {
+        const xa = la[i];
+        const xb = lb[i];
+        if (xa === xb && xa !== undefined) {
+          out.push('  ' + xa);
+        } else {
+          if (xa !== undefined) out.push('- ' + xa);
+          if (xb !== undefined) out.push('+ ' + xb);
+        }
+      }
+      return out.join('\n');
+    }
+
+    function comparePromptSetVersions() {
+      const out = $('ps-diff');
+      const targetVer = parseInt($('ps-compare-select').value);
+      const curVer = PROMPT_EDITOR.selectedVersion;
+      if (!curVer || !targetVer || isNaN(targetVer)) {
+        out.textContent = t('prompts.compareNeedTwo');
+        return;
+      }
+      const cur = (PROMPT_EDITOR.rows || []).find(r => r.version === curVer);
+      const tgt = (PROMPT_EDITOR.rows || []).find(r => r.version === targetVer);
+      if (!cur || !tgt) { out.textContent = 'not found'; return; }
+      const fields = ['perceive_system','perceive_user','policy_system','policy_user'];
+      const parts = [`# diff: v${curVer}  →  v${targetVer}   (- = base, + = target)`, ''];
+      for (const f of fields) {
+        if (cur[f] === tgt[f]) {
+          parts.push(`## ${f}`, '  (unchanged)', '');
+        } else {
+          parts.push(`## ${f}`, diffLines(cur[f], tgt[f]), '');
+        }
+      }
+      out.textContent = parts.join('\n');
     }
 
     function loadPromptSetIntoEditor(row) {
@@ -1450,6 +1540,8 @@
       $('ps-pol-user').value  = row.policy_user    || '';
       $('ps-notes').value     = row.notes          || '';
       $('ps-out').textContent = `v${row.version}${row.is_active ? ' [active]' : ''}${row.is_bootstrap ? ' [bootstrap]' : ''}`;
+      $('ps-diff').textContent = '';
+      rebuildCompareSelect();
     }
 
     function clearPromptSetEditor() {

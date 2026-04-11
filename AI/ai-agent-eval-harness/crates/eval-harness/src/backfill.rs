@@ -103,6 +103,7 @@ fn parse_and_upsert_trajectory(path: &Path, store: &std::sync::Arc<data_scenario
     let task_description = traj.task_description.clone();
     let success = traj.success;
     let total = traj.total_iterations as i64;
+    let prompt_set_id = traj.prompt_set_id;
     run(async move {
         store
             .upsert_trajectory(
@@ -117,6 +118,7 @@ fn parse_and_upsert_trajectory(path: &Path, store: &std::sync::Arc<data_scenario
                 ended_at.as_deref(),
                 &steps_json,
                 final_state_json.as_deref(),
+                prompt_set_id,
             )
             .await
     })?;
@@ -148,6 +150,7 @@ fn parse_and_upsert_evaluation(path: &Path, store: &std::sync::Arc<data_scenario
     let task_description = traj.task_description.clone();
     let success = traj.success;
     let total = traj.total_iterations as i64;
+    let prompt_set_id = traj.prompt_set_id;
     let store = store.clone();
     run(async move {
         store
@@ -163,6 +166,7 @@ fn parse_and_upsert_evaluation(path: &Path, store: &std::sync::Arc<data_scenario
                 ended_at.as_deref(),
                 &steps_json,
                 final_state_json.as_deref(),
+                prompt_set_id,
             )
             .await?;
         store
