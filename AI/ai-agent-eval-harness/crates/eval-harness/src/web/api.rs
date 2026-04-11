@@ -217,7 +217,15 @@ pub async fn list_agents() -> Json<Vec<String>> { Json(list_agents_impl(&build_a
 
 pub async fn list_tools() -> Json<Vec<serde_json::Value>> { Json(list_tools_impl()) }
 
-pub async fn list_golden_sets(State(st): State<AppState>) -> Json<Vec<GoldenSetFile>> { Json(list_golden_sets_impl(&st.golden_sets_dir)) }
+/// @trace SPEC: SPEC-019
+/// @trace FR: PRD-019/FR-7
+pub async fn list_golden_sets(State(st): State<AppState>) -> Json<Vec<GoldenSetFile>> {
+    let dir = st.golden_sets_dir.clone();
+    // loader 는 내부 runtime 에서 block_on 을 사용하므로, axum worker 스레드에서
+    // 직접 호출하면 runtime 중첩 패닉이 발생한다. spawn_blocking 으로 격리.
+    let res = tokio::task::spawn_blocking(move || list_golden_sets_impl(&dir)).await.unwrap_or_default();
+    Json(res)
+}
 
 pub async fn scenario_detail(State(st): State<AppState>, AxPath((domain, id)): AxPath<(String, String)>) -> Result<Json<ScenarioConfig>, StatusCode> {
     let scen = st.scenarios_dir.clone();

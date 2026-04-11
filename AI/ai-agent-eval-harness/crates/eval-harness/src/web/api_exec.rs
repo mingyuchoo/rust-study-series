@@ -303,8 +303,15 @@ pub async fn tool_invoke(AxPath(name): AxPath<String>, Json(req): Json<ToolInvok
     res.map(Json).map_err(|e| (StatusCode::NOT_FOUND, e))
 }
 
+/// @trace SPEC: SPEC-019
+/// @trace FR: PRD-019/FR-7
 pub async fn golden_entry(State(st): State<AppState>, AxPath((domain, sid)): AxPath<(String, String)>) -> Result<Json<GoldenSetEntry>, StatusCode> {
-    match golden_entry_impl(&st.golden_sets_dir, &domain, &sid) {
+    let dir = st.golden_sets_dir.clone();
+    // loader 는 내부 runtime 에서 block_on 을 사용하므로 spawn_blocking 으로 격리.
+    let res = tokio::task::spawn_blocking(move || golden_entry_impl(&dir, &domain, &sid))
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    match res {
         | Some(e) => Ok(Json(e)),
         | None => Err(StatusCode::NOT_FOUND),
     }

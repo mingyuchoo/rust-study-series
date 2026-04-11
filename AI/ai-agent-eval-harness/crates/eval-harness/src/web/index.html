@@ -88,6 +88,7 @@
     nav.tabs button { background: none; border: none; color: var(--fg-muted); padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; }
     nav.tabs button:hover { color: var(--fg-strong); }
     nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+    nav.tabs .sep { display: inline-block; width: 1px; align-self: stretch; background: var(--border); margin: 6px 10px; }
     main { padding: 16px; }
     .panel { display: none; }
     .panel.active { display: block; }
@@ -158,48 +159,56 @@
   </header>
 
   <nav class="tabs" id="tab-bar">
-    <button data-tab="goldens" data-i18n="nav.goldens">Goldens</button>
-    <button data-tab="scenarios" data-i18n="nav.scenarios">Scenarios</button>
-    <button data-tab="run" class="active" data-i18n="nav.run">Run</button>
-    <button data-tab="tools" data-i18n="nav.tools">Tools</button>
-    <button data-tab="agents" data-i18n="nav.agents">Agents</button>
+    <button data-tab="manage" class="active" data-i18n="nav.manage">Scenarios/Goldens</button>
+    <button data-tab="execute" data-i18n="nav.execute">Execute</button>
+    <span class="sep" aria-hidden="true"></span>
     <button data-tab="trajectories" data-i18n="nav.trajectories">Trajectories</button>
     <button data-tab="reports" data-i18n="nav.reports">Reports</button>
-    <button data-tab="manage" data-i18n="nav.manage">Manage</button>
+    <span class="sep" aria-hidden="true"></span>
+    <button data-tab="tools" data-i18n="nav.tools">Tools</button>
+    <button data-tab="agents" data-i18n="nav.agents">Agents</button>
   </nav>
 
   <main>
-    <!-- ============ RUN ============ -->
-    <section id="panel-run" class="panel active">
-      <h2 data-i18n="run.title">Run eval scenario</h2>
-      <form id="run-form" onsubmit="runEvalScenario(event)" class="form-block">
-        <div class="row">
-          <label><span data-i18n="run.evalScenario">Eval Scenario</span> <select id="run-eval-scenario"><option>all</option><option>customer_service</option><option>financial</option></select></label>
-          <label><span data-i18n="run.agent">Agent</span> <select id="run-agent"></select></label>
-          <label><span data-i18n="run.output">Output</span> <input id="run-output" data-i18n-placeholder="run.outputPh" placeholder="(optional) my_report.json" size="30"/></label>
-          <button type="submit" class="primary" data-i18n="run.button">Run → POST /api/run</button>
-        </div>
-        <div class="hint" data-i18n="run.hint">Calls POST /api/run. Always saves to reports_dir.</div>
-      </form>
-      <pre id="run-out" data-i18n="common.waiting">waiting…</pre>
-    </section>
+    <!-- ============ EXECUTE (single / batch) ============ -->
+    <section id="panel-execute" class="panel">
+      <nav class="tabs" id="execute-subnav" style="margin-bottom:12px">
+        <button data-subtab="single" class="active" data-i18n="execute.single">Single</button>
+        <button data-subtab="batch" data-i18n="execute.batch">Batch</button>
+      </nav>
 
-    <!-- ============ SCENARIOS ============ -->
-    <section id="panel-scenarios" class="panel">
-      <h2 data-i18n="scenarios.title">Scenarios (list + single run)</h2>
-      <div class="split">
-        <div class="list" id="scenarios-list"></div>
-        <div>
-          <div class="form-block" id="scenario-detail"><em data-i18n="scenarios.empty">select a scenario</em></div>
-          <div class="form-block">
-            <h3 data-i18n="scenarios.formTitle">Run this scenario</h3>
-            <div class="row">
-              <label><span data-i18n="run.agent">Agent</span> <select id="scen-agent"></select></label>
-              <button class="primary" onclick="runScenario()" data-i18n="scenarios.runBtn">Run → POST /api/scenarios/:d/:id/run</button>
+      <!-- single run -->
+      <div id="subpanel-single" class="subpanel">
+        <h2 data-i18n="scenarios.title">Scenarios (list + single run)</h2>
+        <div class="split">
+          <div class="list" id="scenarios-list"></div>
+          <div>
+            <div class="form-block" id="scenario-detail"><em data-i18n="scenarios.empty">select a scenario</em></div>
+            <div class="form-block">
+              <h3 data-i18n="scenarios.formTitle">Run this scenario</h3>
+              <div class="row">
+                <label><span data-i18n="run.agent">Agent</span> <select id="scen-agent"></select></label>
+                <button class="primary" onclick="runScenario()" data-i18n="scenarios.runBtn">Run → POST /api/scenarios/:d/:id/run</button>
+              </div>
             </div>
+            <pre id="scen-out" data-i18n="common.waiting">waiting…</pre>
           </div>
-          <pre id="scen-out" data-i18n="common.waiting">waiting…</pre>
         </div>
+      </div>
+
+      <!-- batch run -->
+      <div id="subpanel-batch" class="subpanel" hidden>
+        <h2 data-i18n="run.title">Run eval scenario</h2>
+        <form id="run-form" onsubmit="runEvalScenario(event)" class="form-block">
+          <div class="row">
+            <label><span data-i18n="run.evalScenario">Eval Scenario</span> <select id="run-eval-scenario"><option>all</option><option>customer_service</option><option>financial</option></select></label>
+            <label><span data-i18n="run.agent">Agent</span> <select id="run-agent"></select></label>
+            <label><span data-i18n="run.output">Output</span> <input id="run-output" data-i18n-placeholder="run.outputPh" placeholder="(optional) my_report.json" size="30"/></label>
+            <button type="submit" class="primary" data-i18n="run.button">Run → POST /api/run</button>
+          </div>
+          <div class="hint" data-i18n="run.hint">Calls POST /api/run. Always saves to reports_dir.</div>
+        </form>
+        <pre id="run-out" data-i18n="common.waiting">waiting…</pre>
       </div>
     </section>
 
@@ -284,23 +293,8 @@
       </div>
     </section>
 
-    <!-- ============ GOLDENS ============ -->
-    <section id="panel-goldens" class="panel">
-      <h2 data-i18n="gold.title">Golden sets</h2>
-      <div class="form-block">
-        <h3 data-i18n="gold.lookup">Lookup entry</h3>
-        <div class="row">
-          <label><span data-i18n="gold.domain">Domain</span> <input id="gold-domain" placeholder="customer_service"/></label>
-          <label><span data-i18n="gold.scenarioId">Scenario ID</span> <input id="gold-sid" placeholder="cs_001"/></label>
-          <button class="primary" onclick="fetchGolden()" data-i18n="gold.fetch">Fetch → GET /api/golden-sets/:d/:sid</button>
-          <button class="secondary" onclick="fetchAllGoldens()" data-i18n="gold.all">All files → /api/golden-sets</button>
-        </div>
-      </div>
-      <pre id="gold-out" data-i18n="common.waiting">waiting…</pre>
-    </section>
-
     <!-- ============ MANAGE (CRUD) — SPEC-019 ============ -->
-    <section id="panel-manage" class="panel">
+    <section id="panel-manage" class="panel active">
       <h2 data-i18n="manage.title">Manage scenarios &amp; golden sets</h2>
       <div class="form-block">
         <div class="row">
@@ -322,6 +316,12 @@
         <div>
           <h3 id="manage-editor-title" data-i18n="manage.editor">Editor</h3>
           <div class="hint" id="manage-editor-hint"></div>
+          <div id="manage-golden-picker" class="form-block" style="padding:8px;margin-bottom:8px" hidden>
+            <label>
+              <span data-i18n="manage.pickScenario">Scenario</span>
+              <select id="manage-golden-scenario-sel"></select>
+            </label>
+          </div>
           <textarea id="manage-editor" rows="18" style="width:100%;font-family:monospace"></textarea>
           <div class="row" style="margin-top:8px">
             <button class="primary" onclick="saveEditor()" data-i18n="manage.save">Save</button>
@@ -340,14 +340,16 @@
       ko: {
         "header.sub": "— REST API 싱글 페이지 클라이언트",
         "header.help": "📖 사용안내",
+        "nav.execute": "실행",
+        "execute.single": "단일",
+        "execute.batch": "전체",
         "nav.run": "전체 평가 시나리오 실행",
         "nav.scenarios": "단일 평가 시나리오 실행",
         "nav.tools": "도구",
         "nav.agents": "에이전트",
         "nav.reports": "리포트",
         "nav.trajectories": "궤적",
-        "nav.goldens": "골든셋",
-        "nav.manage": "관리",
+        "nav.manage": "시나리오/골든셋",
         "manage.title": "시나리오/골든셋 관리 (CRUD)",
         "manage.domain": "도메인",
         "manage.refresh": "새로고침",
@@ -359,6 +361,7 @@
         "manage.save": "저장",
         "manage.delete": "삭제",
         "manage.clear": "초기화",
+        "manage.pickScenario": "시나리오 선택",
         "run.title": "평가 시나리오 실행",
         "run.evalScenario": "평가 시나리오",
         "run.agent": "에이전트",
@@ -392,23 +395,20 @@
         "traj.refresh": "새로고침 → GET /api/trajectories",
         "traj.score": "이 궤적 채점 → POST /api/score",
         "traj.selectHint": "궤적을 선택하세요",
-        "gold.title": "골든셋",
-        "gold.lookup": "엔트리 조회",
-        "gold.domain": "도메인",
-        "gold.scenarioId": "시나리오 ID",
-        "gold.fetch": "조회 → GET /api/golden-sets/:d/:sid",
-        "gold.all": "전체 파일 → /api/golden-sets",
       },
       en: {
         "header.sub": "— single-page client for the REST API",
         "header.help": "📖 Help",
+        "nav.execute": "Execute",
+        "execute.single": "Single",
+        "execute.batch": "Batch",
         "nav.run": "Run all eval scenarios",
         "nav.scenarios": "Run single eval scenario",
         "nav.tools": "Tools",
         "nav.agents": "Agents",
         "nav.reports": "Reports",
         "nav.trajectories": "Trajectories",
-        "nav.goldens": "Goldens",
+        "nav.manage": "Scenarios/Goldens",
         "run.title": "Run eval scenario",
         "run.evalScenario": "Eval Scenario",
         "run.agent": "Agent",
@@ -442,12 +442,6 @@
         "traj.refresh": "Refresh → GET /api/trajectories",
         "traj.score": "Score this trajectory → POST /api/score",
         "traj.selectHint": "select a trajectory",
-        "gold.title": "Golden sets",
-        "gold.lookup": "Lookup entry",
-        "gold.domain": "Domain",
-        "gold.scenarioId": "Scenario ID",
-        "gold.fetch": "Fetch → GET /api/golden-sets/:d/:sid",
-        "gold.all": "All files → /api/golden-sets",
       }
     };
     function t(key) { const lang = currentLang(); return (I18N[lang] && I18N[lang][key]) || (I18N.ko && I18N.ko[key]) || key; }
@@ -498,7 +492,7 @@
         if (!initialized[tab]) { (initFns[tab] || (()=>{}))(); initialized[tab] = true; }
       };
     });
-    const initialized = { run: false };
+    const initialized = {};
 
     // ---------- shared agent list fill ----------
     let AGENTS = [];
@@ -536,7 +530,7 @@
             try {
               const full = await API.get(`/api/scenarios/${d.name}/${s.id}`);
               $('scenario-detail').innerHTML = `<h3>${full.name}</h3>
-                <div><strong>${t('gold.domain')}:</strong> ${d.name} · <strong>difficulty:</strong> ${full.difficulty}</div>
+                <div><strong>${t('manage.domain')}:</strong> ${d.name} · <strong>difficulty:</strong> ${full.difficulty}</div>
                 <div><strong>ID:</strong> ${full.id}</div>
                 <div style="margin-top:6px"><small>${full.task_description}</small></div>
                 <div style="margin-top:6px"><strong>tools:</strong> ${(full.expected_tools||[]).join(', ') || '—'}</div>`;
@@ -667,20 +661,11 @@
       try { showOk($('traj-out'), await API.post('/api/score', { trajectory: SELECTED_TRAJ_DATA })); } catch (err) { showErr($('traj-out'), err); }
     }
 
-    // ---------- GOLDENS ----------
-    async function initGoldens() { await fetchAllGoldens(); }
-    async function fetchAllGoldens() {
-      try { showOk($('gold-out'), await API.get('/api/golden-sets')); } catch (err) { showErr($('gold-out'), err); }
-    }
-    async function fetchGolden() {
-      const d = $('gold-domain').value.trim(), s = $('gold-sid').value.trim();
-      if (!d || !s) return showErr($('gold-out'), 'domain and scenario_id required');
-      try { showOk($('gold-out'), await API.get(`/api/golden-sets/${d}/${s}`)); } catch (err) { showErr($('gold-out'), err); }
-    }
-
     // ---------- MANAGE (CRUD — SPEC-019) ----------
     // 편집 모드 상태: {kind: 'scenario'|'golden', mode: 'new'|'edit', domain, id}
     let MANAGE_STATE = null;
+    // 현재 도메인의 시나리오 id 목록 (골든셋 생성 시 드롭다운 소스)
+    let MANAGE_SCEN_IDS = [];
 
     async function initManage() {
       // 기존 /api/scenarios 로 도메인 목록만 뽑아 드롭다운 채우기
@@ -699,16 +684,23 @@
     async function refreshManage() {
       const domain = $('manage-domain').value;
       if (!domain) return;
-      // 시나리오 목록
+      // 시나리오 목록 (리스트 API 는 id/name/difficulty 만 반환하므로
+      // 클릭 시 상세 API 로 전체 필드를 다시 로드한다)
       try {
         const data = await API.get('/api/scenarios');
         const d = data.find(x => x.name === domain);
+        MANAGE_SCEN_IDS = (d?.scenarios || []).map(s => ({id: s.id, name: s.name}));
         const listEl = $('manage-scen-list'); listEl.innerHTML = '';
         (d?.scenarios || []).forEach(s => {
           const it = document.createElement('div');
           it.className = 'item';
           it.textContent = `${s.id} — ${s.name}`;
-          it.onclick = () => editScenario(domain, s);
+          it.onclick = async () => {
+            try {
+              const full = await API.get(`/api/scenarios/${domain}/${encodeURIComponent(s.id)}`);
+              editScenario(domain, full);
+            } catch (e) { showErr($('manage-out'), e); }
+          };
           listEl.appendChild(it);
         });
       } catch (e) { showErr($('manage-out'), e); }
@@ -727,7 +719,10 @@
       } catch (e) { /* ignore empty */ }
     }
 
+    function hideGoldenPicker() { $('manage-golden-picker').hidden = true; }
+
     function editScenario(domain, scen) {
+      hideGoldenPicker();
       MANAGE_STATE = {kind: 'scenario', mode: 'edit', domain, id: scen.id};
       $('manage-editor-title').textContent = `Scenario: ${domain}/${scen.id}`;
       $('manage-editor-hint').textContent = 'PUT /api/eval-scenarios/:domain/:id 본문으로 저장';
@@ -744,6 +739,7 @@
     }
 
     function editGolden(domain, entry, version) {
+      hideGoldenPicker();
       MANAGE_STATE = {kind: 'golden', mode: 'edit', domain, id: entry.scenario_id};
       $('manage-editor-title').textContent = `Golden: ${domain}/${entry.scenario_id}`;
       $('manage-editor-hint').textContent = 'PUT /api/golden-sets/:domain/:scenario_id';
@@ -759,6 +755,7 @@
     }
 
     function newScenario() {
+      hideGoldenPicker();
       const domain = $('manage-domain').value;
       MANAGE_STATE = {kind: 'scenario', mode: 'new', domain, id: null};
       $('manage-editor-title').textContent = `New scenario in ${domain}`;
@@ -777,21 +774,41 @@
 
     function newGolden() {
       const domain = $('manage-domain').value;
+      if (MANAGE_SCEN_IDS.length === 0) {
+        return showErr($('manage-out'), '이 도메인에 시나리오가 없습니다. 먼저 평가 시나리오를 생성하세요.');
+      }
       MANAGE_STATE = {kind: 'golden', mode: 'new', domain, id: null};
       $('manage-editor-title').textContent = `New golden in ${domain}`;
-      $('manage-editor-hint').textContent = 'POST /api/golden-sets/:domain';
-      $('manage-editor').value = JSON.stringify({
-        scenario_id: 'scenario_id',
-        version: '1.0',
-        task: '작업',
-        environment: {},
-        tool_sequence: [],
-        tool_results: {},
-        tolerance: 0.01
-      }, null, 2);
+      $('manage-editor-hint').textContent = 'POST /api/golden-sets/:domain — scenario_id 는 드롭다운에서만 선택 가능';
+
+      // 드롭다운 구성
+      const sel = $('manage-golden-scenario-sel');
+      sel.innerHTML = '';
+      MANAGE_SCEN_IDS.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.id;
+        o.textContent = `${s.id} — ${s.name}`;
+        sel.appendChild(o);
+      });
+      $('manage-golden-picker').hidden = false;
+
+      const writeJson = (sid) => {
+        $('manage-editor').value = JSON.stringify({
+          scenario_id: sid,
+          version: '1.0',
+          task: '작업',
+          environment: {},
+          tool_sequence: [],
+          tool_results: {},
+          tolerance: 0.01
+        }, null, 2);
+      };
+      writeJson(sel.value);
+      sel.onchange = () => writeJson(sel.value);
     }
 
     function clearEditor() {
+      hideGoldenPicker();
       MANAGE_STATE = null;
       $('manage-editor-title').textContent = 'Editor';
       $('manage-editor-hint').textContent = '';
@@ -805,6 +822,12 @@
       try { body = JSON.parse($('manage-editor').value); }
       catch (e) { return showErr($('manage-out'), 'invalid JSON: ' + e.message); }
       const {kind, mode, domain, id} = MANAGE_STATE;
+      // 신규 골든셋: scenario_id 는 반드시 드롭다운에서 온 값으로 강제.
+      if (kind === 'golden' && mode === 'new') {
+        const sid = $('manage-golden-scenario-sel').value;
+        if (!sid) return showErr($('manage-out'), 'scenario_id 드롭다운에서 선택하세요');
+        body.scenario_id = sid;
+      }
       const base = kind === 'scenario' ? '/api/eval-scenarios' : '/api/golden-sets';
       try {
         let res;
@@ -837,18 +860,35 @@
       } catch (err) { showErr($('manage-out'), err); }
     }
 
+    // ---------- EXECUTE (단일/전체 통합 탭) ----------
+    async function initExecute() {
+      // 하위 탭 둘 다 초기화 — 토글 시 재초기화 불필요
+      await loadAgents();
+      await initScenarios();
+    }
+    function initExecuteSubnav() {
+      document.querySelectorAll('#execute-subnav button').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('#execute-subnav button').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const target = btn.dataset.subtab;
+          $('subpanel-single').hidden = (target !== 'single');
+          $('subpanel-batch').hidden = (target !== 'batch');
+        };
+      });
+    }
+
     // ---------- init dispatcher ----------
     const initFns = {
-      run: () => loadAgents(),
-      scenarios: () => { loadAgents(); initScenarios(); },
+      execute: initExecute,
       tools: initTools,
       agents: initAgentsPanel,
       reports: initReports,
       trajectories: initTrajectories,
-      goldens: initGoldens,
       manage: initManage,
     };
-    (async () => { try { await initFns.run(); initialized.run = true; } catch (e) { console.error(e); } })();
+    initExecuteSubnav();
+    (async () => { try { await initFns.manage(); initialized.manage = true; } catch (e) { console.error(e); } })();
   </script>
 </body>
 </html>

@@ -266,6 +266,17 @@ impl SqliteStore {
         Ok(cnt == 0)
     }
 
+    /// SPEC-019 후속 버그픽스: scenarios OR golden_sets 중 어느 하나가 비어 있으면
+    /// 초기 시드가 완전히 적용되지 않은 것으로 간주. `INSERT OR IGNORE` 기반 시드
+    /// 는 멱등이므로 안전하게 재실행할 수 있다. 다만 사용자가 모든 goldens 를
+    /// CRUD 로 삭제한 경우에도 이 조건이 참이 되어 재시드가 일어날 수 있는데,
+    /// 그 경우 사용자는 domain 단위 의도적 초기화로 해석한다(범위 외 시나리오).
+    pub async fn needs_seed(&self) -> Result<bool, StoreError> {
+        let s: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM eval_scenarios").fetch_one(&self.pool).await?;
+        let g: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM golden_sets").fetch_one(&self.pool).await?;
+        Ok(s == 0 || g == 0)
+    }
+
     /// YAML/JSON 파일에서 읽어 DB 에 적재. INSERT OR IGNORE 로 멱등.
     ///
     /// @trace SPEC: SPEC-017
@@ -397,11 +408,11 @@ impl SqliteStore {
         Ok(report)
     }
 
-    /// 편의 헬퍼: open → (빈 경우) seed. 항상 멱등.
+    /// 편의 헬퍼: open → (scenarios 또는 golden_sets 가 비어 있으면) seed. 항상 멱등.
     pub async fn open_and_seed(db_path: &Path, scenarios_dir: &Path, golden_sets_dir: &Path) -> Result<(Self, SeedReport), StoreError> {
         let store = Self::open(db_path).await?;
         let mut report = SeedReport::default();
-        if store.is_empty().await? {
+        if store.needs_seed().await? {
             report = store.seed_from_fs(scenarios_dir, golden_sets_dir).await?;
         }
         Ok((store, report))
