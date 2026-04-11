@@ -73,6 +73,7 @@ mod tests {
             reports_dir: std::path::PathBuf::from("."),
             golden_sets_dir: std::path::PathBuf::from("."),
             trajectories_dir: std::path::PathBuf::from("."),
+            store: None,
         };
         let _router: axum::Router = crate::web::build_router(state);
     }

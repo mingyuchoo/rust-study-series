@@ -6,15 +6,19 @@
 // =============================================================================
 
 pub mod api;
+pub mod api_crud;
 pub mod api_exec;
 pub mod handlers;
 
 use axum::{Router,
            routing::{get,
-                     post}};
+                     post,
+                     put}};
+use data_scenarios::sqlite_store::SqliteStore;
 use std::{io,
           net::SocketAddr,
-          path::PathBuf};
+          path::PathBuf,
+          sync::Arc};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -22,6 +26,13 @@ pub struct AppState {
     pub reports_dir: PathBuf,
     pub golden_sets_dir: PathBuf,
     pub trajectories_dir: PathBuf,
+    /// CRUD 라우트에서 사용하는 SQLite 저장소. 기동 시 주입된다.
+    /// `None` 이면 CRUD 핸들러가 500 을 반환한다 (Option 으로 기존
+    /// 호출부 호환성 유지).
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-7
+    pub store: Option<Arc<SqliteStore>>,
 }
 
 /// axum 라우터 빌드. 테스트에서도 재사용 가능.
@@ -51,6 +62,11 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/score", post(api_exec::score))
         .route("/api/trajectories", get(api_exec::list_trajectories))
         .route("/api/trajectories/:name", get(api_exec::get_trajectory))
+        // -------- SPEC-019: CRUD 라우트 --------
+        .route("/api/eval-scenarios/:domain", post(api_crud::create_scenario))
+        .route("/api/eval-scenarios/:domain/:id", put(api_crud::update_scenario_handler).delete(api_crud::delete_scenario_handler))
+        .route("/api/golden-sets/:domain", post(api_crud::create_golden_entry))
+        .route("/api/golden-sets/:domain/:scenario_id", put(api_crud::update_golden_entry_handler).delete(api_crud::delete_golden_entry_handler))
         .with_state(state)
 }
 
@@ -65,6 +81,7 @@ pub fn run_server(addr: SocketAddr, scenarios_dir: PathBuf, reports_dir: PathBuf
         reports_dir,
         golden_sets_dir,
         trajectories_dir,
+        store: None,
     };
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async move {

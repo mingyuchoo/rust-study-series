@@ -1,8 +1,11 @@
 // =============================================================================
 // @trace SPEC-017
-// @trace PRD: PRD-017
+// @trace SPEC-019
+// @trace PRD: PRD-017, PRD-019
 // @trace FR: PRD-017/FR-1, PRD-017/FR-2, PRD-017/FR-3, PRD-017/FR-6,
-// PRD-017/FR-7 @trace file-type: impl
+// PRD-017/FR-7, PRD-019/FR-1, PRD-019/FR-2, PRD-019/FR-3, PRD-019/FR-4,
+// PRD-019/FR-5, PRD-019/FR-7
+// @trace file-type: impl
 // =============================================================================
 
 use crate::models::{GoldenSetEntry,
@@ -42,6 +45,10 @@ pub enum StoreError {
         #[source]
         source: serde_yaml::Error,
     },
+    #[error("conflict: {0}")]
+    Conflict(String),
+    #[error("not found: {0}")]
+    NotFound(String),
 }
 
 #[derive(Debug, Default, Clone, Copy)]
@@ -413,6 +420,64 @@ impl SqliteStore {
         })
     }
 
+    // =========================================================================
+    // CRUD: 시나리오/골든셋 쓰기 API
+    //
+    // @trace SPEC: SPEC-019
+    // @trace FR: PRD-019/FR-1, PRD-019/FR-2, PRD-019/FR-3, PRD-019/FR-4,
+    // PRD-019/FR-5
+    // =========================================================================
+
+    /// 신규 시나리오 INSERT. 동일 `(domain, id)` 존재 시 `StoreError::Conflict`.
+    /// 스텁(Phase 3 RED) — Phase 4 에서 구현.
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-1, PRD-019/FR-5
+    pub async fn insert_scenario(&self, _domain: &str, _scenario: &ScenarioConfig, _position: i64) -> Result<(), StoreError> {
+        Err(StoreError::NotFound("insert_scenario not yet implemented".into()))
+    }
+
+    /// 기존 시나리오 UPDATE. 없으면 `StoreError::NotFound`.
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-1, PRD-019/FR-5
+    pub async fn update_scenario(&self, _domain: &str, _id: &str, _scenario: &ScenarioConfig) -> Result<(), StoreError> {
+        Err(StoreError::NotFound("update_scenario not yet implemented".into()))
+    }
+
+    /// 시나리오 DELETE. 없으면 `StoreError::NotFound`. 연결된 golden_set 는
+    /// FK cascade 로 함께 삭제된다.
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-1, PRD-019/FR-4
+    pub async fn delete_scenario(&self, _domain: &str, _id: &str) -> Result<(), StoreError> {
+        Err(StoreError::NotFound("delete_scenario not yet implemented".into()))
+    }
+
+    /// 신규 골든셋 엔트리 INSERT.
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-2
+    pub async fn insert_golden_entry(&self, _domain: &str, _version: &str, _entry: &GoldenSetEntry) -> Result<(), StoreError> {
+        Err(StoreError::NotFound("insert_golden_entry not yet implemented".into()))
+    }
+
+    /// 골든셋 엔트리 UPDATE.
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-2, PRD-019/FR-5
+    pub async fn update_golden_entry(&self, _domain: &str, _scenario_id: &str, _entry: &GoldenSetEntry) -> Result<(), StoreError> {
+        Err(StoreError::NotFound("update_golden_entry not yet implemented".into()))
+    }
+
+    /// 골든셋 엔트리 DELETE.
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-2, PRD-019/FR-5
+    pub async fn delete_golden_entry(&self, _domain: &str, _scenario_id: &str) -> Result<(), StoreError> {
+        Err(StoreError::NotFound("delete_golden_entry not yet implemented".into()))
+    }
+
     /// 모든 도메인의 골든셋을 반환.
     pub async fn load_all_golden_sets(&self) -> Result<Vec<GoldenSetFile>, StoreError> {
         let rows = sqlx::query("SELECT DISTINCT domain FROM golden_sets ORDER BY domain")
@@ -661,6 +726,216 @@ scenarios:
         assert_eq!(entry.expected_output.tool_results.get("interest").and_then(|v| v.as_f64()), Some(100000.0));
         assert_eq!(entry.expected_output.tool_results.get("total_amount").and_then(|v| v.as_f64()), Some(1100000.0));
         assert_eq!(entry.expected_output.tolerance, 0.01);
+    }
+
+    // =========================================================================
+    // SPEC-019 CRUD 테스트
+    //
+    // @trace SPEC-019
+    // @trace PRD: PRD-019
+    // @trace TC: SPEC-019/TC-1, TC-2, TC-3, TC-4, TC-5, TC-6, TC-7, TC-8, TC-15
+    // @trace file-type: test
+    // =========================================================================
+
+    fn sample_scenario(id: &str, task: &str) -> ScenarioConfig {
+        let mut env = HashMap::new();
+        env.insert("x".to_string(), Value::from(1_i64));
+        let mut crit = HashMap::new();
+        crit.insert("ok".to_string(), Value::Bool(true));
+        ScenarioConfig {
+            id: id.to_string(),
+            name: format!("시나리오 {id}"),
+            description: "테스트".to_string(),
+            task_description: task.to_string(),
+            initial_environment: env,
+            expected_tools: vec!["tool_a".to_string()],
+            success_criteria: crit,
+            difficulty: "easy".to_string(),
+        }
+    }
+
+    fn sample_entry(scenario_id: &str) -> GoldenSetEntry {
+        let mut env = HashMap::new();
+        env.insert("y".to_string(), Value::from(2_i64));
+        let mut results = HashMap::new();
+        results.insert("result".to_string(), Value::from(42_i64));
+        GoldenSetEntry {
+            scenario_id: scenario_id.to_string(),
+            input: GoldenSetInput {
+                task: "golden task".to_string(),
+                environment: env,
+            },
+            expected_output: GoldenSetExpectedOutput {
+                tool_sequence: vec!["tool_a".to_string()],
+                tool_results: results,
+                tolerance: 0.01,
+            },
+        }
+    }
+
+    async fn seeded_store() -> SqliteStore {
+        let dir = tempdir().unwrap();
+        let scen = dir.path().join("scen");
+        let gold = dir.path().join("gold");
+        write_sample_dataset(&scen, &gold);
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.seed_from_fs(&scen, &gold).await.unwrap();
+        // tempdir 은 drop 되지만 DB 는 in-memory 이므로 무관.
+        store
+    }
+
+    /// @trace TC: SPEC-019/TC-1
+    /// @trace FR: PRD-019/FR-1
+    #[tokio::test]
+    async fn spec019_tc_1_insert_scenario_appears_in_load_all() {
+        let store = seeded_store().await;
+        let scen = sample_scenario("fin_new", "새 시나리오");
+        store.insert_scenario("financial", &scen, 99).await.expect("insert should succeed");
+
+        let domains = store.load_all_domains().await.unwrap();
+        let fin = domains.iter().find(|d| d.name == "financial").unwrap();
+        assert!(fin.scenarios.iter().any(|s| s.id == "fin_new"));
+    }
+
+    /// @trace TC: SPEC-019/TC-2
+    /// @trace FR: PRD-019/FR-5
+    #[tokio::test]
+    async fn spec019_tc_2_insert_scenario_duplicate_returns_conflict() {
+        let store = seeded_store().await;
+        // fin_001 은 seed 에 이미 있음
+        let dup = sample_scenario("fin_001", "duplicate");
+        let err = store.insert_scenario("financial", &dup, 10).await.unwrap_err();
+        assert!(matches!(err, StoreError::Conflict(_)), "expected Conflict, got {err:?}");
+    }
+
+    /// @trace TC: SPEC-019/TC-3
+    /// @trace FR: PRD-019/FR-1
+    #[tokio::test]
+    async fn spec019_tc_3_update_scenario_changes_task() {
+        let store = seeded_store().await;
+        let mut s = sample_scenario("fin_001", "변경된 task");
+        s.name = "변경된 이름".into();
+        store.update_scenario("financial", "fin_001", &s).await.expect("update should succeed");
+
+        let domains = store.load_all_domains().await.unwrap();
+        let fin = domains.iter().find(|d| d.name == "financial").unwrap();
+        let got = fin.scenarios.iter().find(|x| x.id == "fin_001").unwrap();
+        assert_eq!(got.task_description, "변경된 task");
+        assert_eq!(got.name, "변경된 이름");
+    }
+
+    /// @trace TC: SPEC-019/TC-4
+    /// @trace FR: PRD-019/FR-5
+    #[tokio::test]
+    async fn spec019_tc_4_update_scenario_missing_returns_not_found() {
+        let store = seeded_store().await;
+        let s = sample_scenario("nonexistent", "x");
+        let err = store.update_scenario("financial", "nonexistent", &s).await.unwrap_err();
+        assert!(matches!(err, StoreError::NotFound(_)), "expected NotFound, got {err:?}");
+    }
+
+    /// @trace TC: SPEC-019/TC-5
+    /// @trace FR: PRD-019/FR-4
+    #[tokio::test]
+    async fn spec019_tc_5_delete_scenario_cascades_golden_set() {
+        let store = seeded_store().await;
+        // seed 상태: financial/fin_001 에 golden entry 있음
+        let before = store.load_golden_sets_by_domain("financial").await.unwrap();
+        assert!(before.golden_sets.iter().any(|e| e.scenario_id == "fin_001"));
+
+        store.delete_scenario("financial", "fin_001").await.expect("delete should succeed");
+
+        let after = store.load_golden_sets_by_domain("financial").await.unwrap();
+        assert!(
+            !after.golden_sets.iter().any(|e| e.scenario_id == "fin_001"),
+            "cascade delete: golden_set for fin_001 must be gone"
+        );
+
+        let domains = store.load_all_domains().await.unwrap();
+        let fin = domains.iter().find(|d| d.name == "financial").unwrap();
+        assert!(!fin.scenarios.iter().any(|s| s.id == "fin_001"));
+    }
+
+    /// @trace TC: SPEC-019/TC-6
+    /// @trace FR: PRD-019/FR-2
+    #[tokio::test]
+    async fn spec019_tc_6_insert_golden_entry_appears_in_load() {
+        let store = seeded_store().await;
+        // fin_002 는 seed 에 시나리오는 있으나 golden entry 는 없음
+        let entry = sample_entry("fin_002");
+        store.insert_golden_entry("financial", "1.0", &entry).await.expect("insert should succeed");
+
+        let gs = store.load_golden_sets_by_domain("financial").await.unwrap();
+        assert!(gs.golden_sets.iter().any(|e| e.scenario_id == "fin_002"));
+    }
+
+    /// @trace TC: SPEC-019/TC-7
+    /// @trace FR: PRD-019/FR-2, PRD-019/FR-5
+    #[tokio::test]
+    async fn spec019_tc_7_golden_entry_update_delete_cycle() {
+        let store = seeded_store().await;
+        // update 없는 것 → NotFound
+        let missing = sample_entry("nope");
+        let err = store.update_golden_entry("financial", "nope", &missing).await.unwrap_err();
+        assert!(matches!(err, StoreError::NotFound(_)));
+
+        // 기존 fin_001 업데이트
+        let mut upd = sample_entry("fin_001");
+        upd.input.task = "업데이트된 task".into();
+        store.update_golden_entry("financial", "fin_001", &upd).await.expect("update should succeed");
+        let gs = store.load_golden_sets_by_domain("financial").await.unwrap();
+        let got = gs.golden_sets.iter().find(|e| e.scenario_id == "fin_001").unwrap();
+        assert_eq!(got.input.task, "업데이트된 task");
+
+        // delete
+        store.delete_golden_entry("financial", "fin_001").await.expect("delete should succeed");
+        let after = store.load_golden_sets_by_domain("financial").await.unwrap();
+        assert!(!after.golden_sets.iter().any(|e| e.scenario_id == "fin_001"));
+
+        // 없는 것 delete → NotFound
+        let err = store.delete_golden_entry("financial", "fin_001").await.unwrap_err();
+        assert!(matches!(err, StoreError::NotFound(_)));
+    }
+
+    /// @trace TC: SPEC-019/TC-8
+    /// @trace FR: PRD-019/FR-4
+    #[tokio::test]
+    async fn spec019_tc_8_migration_v2_preserves_data() {
+        // init_schema 이후 golden_sets 에 FK 가 활성화되어야 하고,
+        // PRAGMA foreign_keys = ON 에서 cascade 동작이 유효해야 한다.
+        let store = seeded_store().await;
+        // FK 활성 확인: fin_001 삭제 시 golden_set 도 사라져야 함
+        store.delete_scenario("financial", "fin_001").await.expect("delete ok");
+        let gs = store.load_golden_sets_by_domain("financial").await.unwrap();
+        assert!(!gs.golden_sets.iter().any(|e| e.scenario_id == "fin_001"));
+
+        // 마이그레이션이 기존 fin_001 이외의 데이터를 보존했는지
+        let domains = store.load_all_domains().await.unwrap();
+        let fin = domains.iter().find(|d| d.name == "financial").unwrap();
+        assert!(fin.scenarios.iter().any(|s| s.id == "fin_002"));
+    }
+
+    /// @trace TC: SPEC-019/TC-15
+    /// @trace FR: PRD-019/FR-7
+    #[tokio::test]
+    async fn spec019_tc_15_loader_golden_sets_via_db() {
+        // ScenarioLoader 가 DB 를 조회하는지 (파일이 아닌) 확인하기 위해,
+        // DB 에만 존재하고 파일에는 없는 엔트리를 삽입한 뒤 로더 결과에
+        // 포함되는지 본다. 이 TC 는 loader.rs 의 리와이어링 이후 GREEN.
+        //
+        // NOTE: 현재 ScenarioLoader 는 전역 싱글톤이고 파일을 직접 읽으므로
+        // 본 테스트는 `SqliteStore::load_all_golden_sets` 만 직접 검증한다.
+        // loader 경로 자체는 integration 레벨에서 재검증한다.
+        let store = seeded_store().await;
+        let entry = sample_entry("fin_002");
+        store.insert_golden_entry("financial", "1.0", &entry).await.expect("insert ok");
+
+        let all = store.load_all_golden_sets().await.unwrap();
+        let fin = all.iter().find(|f| f.domain == "financial").unwrap();
+        assert!(
+            fin.golden_sets.iter().any(|e| e.scenario_id == "fin_002"),
+            "store.load_all_golden_sets must reflect DB writes"
+        );
     }
 
     /// @trace TC: SPEC-017/TC-1, SPEC-017/TC-2

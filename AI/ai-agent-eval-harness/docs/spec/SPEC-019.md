@@ -36,11 +36,13 @@
 | TC-12 | `POST/PUT/DELETE /api/golden-sets/:domain[/:scenario_id]` 전체 사이클 200/201/204/404 | FR-2, FR-5 | crates/eval-harness/src/web/api_crud.rs | Draft |
 | TC-13 | CRUD 호출이 `eval_data/eval_scenarios/*.yaml` 과 `eval_data/golden_sets/*.json` 의 mtime 을 변경하지 않는다 | FR-3 | crates/eval-harness/src/web/api_crud.rs | Draft |
 | TC-14 | 필수 필드 누락 본문에 대해 400 Bad Request + 에러 JSON 반환 | FR-5 | crates/eval-harness/src/web/api_crud.rs | Draft |
+| TC-15 | `ScenarioLoader::load_all_golden_sets` / `load_golden_sets` 가 파일이 아닌 `SqliteStore` 를 조회한다 (CRUD 쓰기 직후 결과가 보임) | FR-7 | crates/data-scenarios/src/loader.rs | Draft |
 
 ### 구현 추적 (이 SPEC을 구현하는 코드)
 | 패키지 | 파일 | 심볼 | 관련 FR |
 |--------|------|------|--------|
 | crates/data-scenarios | src/sqlite_store.rs | `SqliteStore::insert_scenario`, `update_scenario`, `delete_scenario`, `insert_golden_entry`, `update_golden_entry`, `delete_golden_entry`, `migrate_v2_cascade`, `StoreError::{Conflict,NotFound}` | FR-1, FR-2, FR-4, FR-5 |
+| crates/data-scenarios | src/loader.rs | `ScenarioLoader::load_golden_sets`, `load_all_golden_sets` 가 파일 대신 `SqliteStore` 조회로 재구성 | FR-7 |
 | crates/eval-harness | src/web/api_crud.rs (신규) | `create_scenario`, `update_scenario_handler`, `delete_scenario_handler`, `create_golden_entry`, `update_golden_entry_handler`, `delete_golden_entry_handler`, `CrudError`, `EvalScenarioUpsert`, `GoldenEntryUpsert` | FR-1, FR-2, FR-5, FR-7 |
 | crates/eval-harness | src/web/mod.rs | `AppState.store: Arc<SqliteStore>`, `Router` 에 CRUD 라우트 7개 추가 | FR-1, FR-2, FR-7 |
 | crates/eval-harness | src/web/index.html | "관리" 탭, 도메인/시나리오/골든셋 리스트, JSON 편집기, fetch 호출 | FR-6 |
