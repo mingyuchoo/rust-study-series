@@ -63,6 +63,7 @@ fn main() {
     let reports_dir = root.join("reporting_logs");
     let golden_sets_dir = data_paths.golden_sets_dir;
     let trajectories_dir = root.join("reporting_trajectories");
+    let db_path = data_paths.db_path.clone();
 
     // 내장 Axum 서버를 별도 OS 스레드에서 기동. 프로세스 종료 시 OS 가 정리한다.
     std::thread::spawn(move || {
@@ -72,6 +73,7 @@ fn main() {
             reports_dir,
             golden_sets_dir,
             trajectories_dir,
+            Some(db_path),
         ) {
             eprintln!("[eval-harness-desktop] embedded server error: {e}");
         }

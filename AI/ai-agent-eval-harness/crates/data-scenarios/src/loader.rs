@@ -122,15 +122,33 @@ impl ScenarioLoader {
             .map_err(|e| anyhow!("{e}"))
     }
 
-    /// 골든셋은 SQLite 에도 적재되지만, 웹/테스트 호환성을 위해 loader 공개
-    /// API 는 디렉토리/파일 인자를 그대로 사용해 파일에서 직접 파싱한다.
-    /// (시나리오 경로만 SQLite 경유.)
+    /// 골든셋 로드: 전역 store 가 install 되어 있으면 SqliteStore 조회(FR-7),
+    /// 그렇지 않으면 파일 직접 파싱(하위호환/테스트).
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-7
     pub fn load_golden_sets(&self, filepath: &str) -> Result<GoldenSetFile> {
+        if let Some(inner) = INSTALLED.get() {
+            let p = Path::new(filepath);
+            let stem = p.file_stem().and_then(|s| s.to_str()).ok_or_else(|| anyhow!("invalid filepath: {filepath}"))?;
+            return inner
+                .runtime
+                .block_on(async { inner.store.load_golden_sets_by_domain(stem).await })
+                .map_err(|e| anyhow!("{e}"));
+        }
         let content = std::fs::read_to_string(filepath).with_context(|| format!("골든셋 파일 읽기 실패: {}", filepath))?;
         serde_json::from_str(&content).with_context(|| format!("JSON 파싱 실패: {}", filepath))
     }
 
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-7
     pub fn load_all_golden_sets(&self, directory: &str) -> Result<Vec<GoldenSetFile>> {
+        if let Some(inner) = INSTALLED.get() {
+            return inner
+                .runtime
+                .block_on(async { inner.store.load_all_golden_sets().await })
+                .map_err(|e| anyhow!("{e}"));
+        }
         let dir = Path::new(directory);
         let mut result = Vec::new();
         if !dir.exists() {
@@ -148,6 +166,7 @@ impl ScenarioLoader {
         Ok(result)
     }
 }
+
 
 impl Default for ScenarioLoader {
     fn default() -> Self { Self::new() }

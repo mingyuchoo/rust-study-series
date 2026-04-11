@@ -25,7 +25,25 @@ use std::{collections::HashMap,
                  PathBuf}};
 use thiserror::Error;
 
-const SCHEMA_VERSION: i64 = 1;
+const SCHEMA_VERSION: i64 = 2;
+
+/// sqlx UNIQUE 제약 위반을 `StoreError::Conflict` 로 매핑.
+fn map_unique_violation(err: sqlx::Error, subject: String) -> StoreError {
+    if let sqlx::Error::Database(db) = &err {
+        // SQLite UNIQUE 제약 오류 코드: 1555 (PRIMARY KEY), 2067 (UNIQUE)
+        if let Some(code) = db.code() {
+            if code == "1555" || code == "2067" || code == "19" {
+                return StoreError::Conflict(format!("{subject} already exists"));
+            }
+        }
+        // 메시지 기반 fallback
+        let msg = db.message();
+        if msg.contains("UNIQUE constraint failed") {
+            return StoreError::Conflict(format!("{subject} already exists"));
+        }
+    }
+    StoreError::Sqlx(err)
+}
 
 #[derive(Debug, Error)]
 pub enum StoreError {
@@ -80,8 +98,17 @@ impl SqliteStore {
                 })?;
             }
         }
-        let opts = SqliteConnectOptions::new().filename(db_path).create_if_missing(true);
-        let pool = SqlitePoolOptions::new().max_connections(4).connect_with(opts).await?;
+        let opts = SqliteConnectOptions::new().filename(db_path).create_if_missing(true).foreign_keys(true);
+        let pool = SqlitePoolOptions::new()
+            .max_connections(4)
+            .after_connect(|conn, _| {
+                Box::pin(async move {
+                    sqlx::query("PRAGMA foreign_keys = ON").execute(conn).await?;
+                    Ok(())
+                })
+            })
+            .connect_with(opts)
+            .await?;
         let store = Self {
             pool,
         };
@@ -96,8 +123,17 @@ impl SqliteStore {
     /// 인메모리 저장소. `loader` 의 fallback 경로에서 사용.
     pub async fn open_in_memory_for_loader() -> Result<Self, StoreError> {
         use std::str::FromStr;
-        let opts = SqliteConnectOptions::from_str("sqlite::memory:").unwrap();
-        let pool = SqlitePoolOptions::new().max_connections(1).connect_with(opts).await?;
+        let opts = SqliteConnectOptions::from_str("sqlite::memory:").unwrap().foreign_keys(true);
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .after_connect(|conn, _| {
+                Box::pin(async move {
+                    sqlx::query("PRAGMA foreign_keys = ON").execute(conn).await?;
+                    Ok(())
+                })
+            })
+            .connect_with(opts)
+            .await?;
         let store = Self {
             pool,
         };
@@ -107,10 +143,10 @@ impl SqliteStore {
 
     pub fn pool(&self) -> &SqlitePool { &self.pool }
 
-    /// CREATE TABLE IF NOT EXISTS (멱등).
+    /// CREATE TABLE IF NOT EXISTS (멱등) + v1→v2 마이그레이션.
     ///
-    /// @trace SPEC: SPEC-017
-    /// @trace FR: PRD-017/FR-1
+    /// @trace SPEC: SPEC-017, SPEC-019
+    /// @trace FR: PRD-017/FR-1, PRD-019/FR-4
     pub async fn init_schema(&self) -> Result<(), StoreError> {
         let stmts = [
             "CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -143,6 +179,7 @@ impl SqliteStore {
                 PRIMARY KEY (domain, id),
                 FOREIGN KEY (domain) REFERENCES domains(name) ON DELETE CASCADE
             )",
+            // 신규 DB 는 v2 스키마 (FK 포함) 로 바로 생성.
             "CREATE TABLE IF NOT EXISTS golden_sets (
                 domain            TEXT NOT NULL,
                 scenario_id       TEXT NOT NULL,
@@ -152,7 +189,10 @@ impl SqliteStore {
                 tool_sequence     TEXT NOT NULL,
                 tool_results      TEXT NOT NULL,
                 tolerance         REAL NOT NULL DEFAULT 0.01,
-                PRIMARY KEY (domain, scenario_id)
+                PRIMARY KEY (domain, scenario_id),
+                FOREIGN KEY (domain, scenario_id)
+                    REFERENCES eval_scenarios(domain, id)
+                    ON DELETE CASCADE
             )",
             "CREATE INDEX IF NOT EXISTS idx_eval_scenarios_domain ON eval_scenarios(domain)",
             "CREATE INDEX IF NOT EXISTS idx_golden_sets_domain ON golden_sets(domain)",
@@ -160,10 +200,62 @@ impl SqliteStore {
         for sql in stmts.iter() {
             sqlx::query(sql).execute(&self.pool).await?;
         }
+
+        // v1 DB 마이그레이션: 기존 golden_sets 에 FK 가 없는 경우 재생성.
+        // `CREATE TABLE IF NOT EXISTS` 는 기존 스키마를 건드리지 않으므로,
+        // `schema_migrations` 의 현재 버전을 확인하여 필요 시 rebuild 한다.
+        let current: Option<i64> = sqlx::query_scalar("SELECT MAX(version) FROM schema_migrations")
+            .fetch_one(&self.pool)
+            .await?;
+        let current = current.unwrap_or(0);
+        if current < 2 {
+            self.migrate_v2_cascade().await?;
+        }
+
         sqlx::query("INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (?, datetime('now'))")
             .bind(SCHEMA_VERSION)
             .execute(&self.pool)
             .await?;
+        Ok(())
+    }
+
+    /// v1 → v2: `golden_sets` 에 `(domain, scenario_id) → eval_scenarios` FK 추가.
+    /// 무손실 table-rename 방식.
+    ///
+    /// @trace SPEC: SPEC-019
+    /// @trace FR: PRD-019/FR-4
+    async fn migrate_v2_cascade(&self) -> Result<(), StoreError> {
+        // FK 가 이미 있는지 검사: PRAGMA foreign_key_list('golden_sets')
+        let fks = sqlx::query("PRAGMA foreign_key_list('golden_sets')").fetch_all(&self.pool).await?;
+        if !fks.is_empty() {
+            return Ok(());
+        }
+        let stmts = [
+            "CREATE TABLE golden_sets_v2 (
+                domain            TEXT NOT NULL,
+                scenario_id       TEXT NOT NULL,
+                version           TEXT NOT NULL DEFAULT '1.0',
+                task              TEXT NOT NULL,
+                input_environment TEXT NOT NULL,
+                tool_sequence     TEXT NOT NULL,
+                tool_results      TEXT NOT NULL,
+                tolerance         REAL NOT NULL DEFAULT 0.01,
+                PRIMARY KEY (domain, scenario_id),
+                FOREIGN KEY (domain, scenario_id)
+                    REFERENCES eval_scenarios(domain, id)
+                    ON DELETE CASCADE
+            )",
+            "INSERT INTO golden_sets_v2
+             SELECT domain, scenario_id, version, task, input_environment,
+                    tool_sequence, tool_results, tolerance
+             FROM golden_sets",
+            "DROP TABLE golden_sets",
+            "ALTER TABLE golden_sets_v2 RENAME TO golden_sets",
+            "CREATE INDEX IF NOT EXISTS idx_golden_sets_domain ON golden_sets(domain)",
+        ];
+        for sql in stmts.iter() {
+            sqlx::query(sql).execute(&self.pool).await?;
+        }
         Ok(())
     }
 
@@ -429,20 +521,75 @@ impl SqliteStore {
     // =========================================================================
 
     /// 신규 시나리오 INSERT. 동일 `(domain, id)` 존재 시 `StoreError::Conflict`.
-    /// 스텁(Phase 3 RED) — Phase 4 에서 구현.
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-1, PRD-019/FR-5
-    pub async fn insert_scenario(&self, _domain: &str, _scenario: &ScenarioConfig, _position: i64) -> Result<(), StoreError> {
-        Err(StoreError::NotFound("insert_scenario not yet implemented".into()))
+    pub async fn insert_scenario(&self, domain: &str, scenario: &ScenarioConfig, position: i64) -> Result<(), StoreError> {
+        // 상위 도메인이 없으면 생성 (seed 단계가 아닐 때 대비).
+        sqlx::query("INSERT OR IGNORE INTO domains (name, description) VALUES (?, '')")
+            .bind(domain)
+            .execute(&self.pool)
+            .await?;
+
+        let env_json = serde_json::to_string(&scenario.initial_environment)?;
+        let tools_json = serde_json::to_string(&scenario.expected_tools)?;
+        let crit_json = serde_json::to_string(&scenario.success_criteria)?;
+
+        let res = sqlx::query(
+            "INSERT INTO eval_scenarios
+             (domain, id, name, description, task_description,
+              initial_environment, expected_tools, success_criteria,
+              difficulty, position)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(domain)
+        .bind(&scenario.id)
+        .bind(&scenario.name)
+        .bind(&scenario.description)
+        .bind(&scenario.task_description)
+        .bind(env_json)
+        .bind(tools_json)
+        .bind(crit_json)
+        .bind(&scenario.difficulty)
+        .bind(position)
+        .execute(&self.pool)
+        .await;
+        match res {
+            | Ok(_) => Ok(()),
+            | Err(e) => Err(map_unique_violation(e, format!("scenario ({domain}, {})", scenario.id))),
+        }
     }
 
     /// 기존 시나리오 UPDATE. 없으면 `StoreError::NotFound`.
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-1, PRD-019/FR-5
-    pub async fn update_scenario(&self, _domain: &str, _id: &str, _scenario: &ScenarioConfig) -> Result<(), StoreError> {
-        Err(StoreError::NotFound("update_scenario not yet implemented".into()))
+    pub async fn update_scenario(&self, domain: &str, id: &str, scenario: &ScenarioConfig) -> Result<(), StoreError> {
+        let env_json = serde_json::to_string(&scenario.initial_environment)?;
+        let tools_json = serde_json::to_string(&scenario.expected_tools)?;
+        let crit_json = serde_json::to_string(&scenario.success_criteria)?;
+        let res = sqlx::query(
+            "UPDATE eval_scenarios
+             SET name = ?, description = ?, task_description = ?,
+                 initial_environment = ?, expected_tools = ?, success_criteria = ?,
+                 difficulty = ?
+             WHERE domain = ? AND id = ?",
+        )
+        .bind(&scenario.name)
+        .bind(&scenario.description)
+        .bind(&scenario.task_description)
+        .bind(env_json)
+        .bind(tools_json)
+        .bind(crit_json)
+        .bind(&scenario.difficulty)
+        .bind(domain)
+        .bind(id)
+        .execute(&self.pool)
+        .await?;
+        if res.rows_affected() == 0 {
+            return Err(StoreError::NotFound(format!("scenario ({domain}, {id})")));
+        }
+        Ok(())
     }
 
     /// 시나리오 DELETE. 없으면 `StoreError::NotFound`. 연결된 golden_set 는
@@ -450,32 +597,91 @@ impl SqliteStore {
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-1, PRD-019/FR-4
-    pub async fn delete_scenario(&self, _domain: &str, _id: &str) -> Result<(), StoreError> {
-        Err(StoreError::NotFound("delete_scenario not yet implemented".into()))
+    pub async fn delete_scenario(&self, domain: &str, id: &str) -> Result<(), StoreError> {
+        let res = sqlx::query("DELETE FROM eval_scenarios WHERE domain = ? AND id = ?")
+            .bind(domain)
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+        if res.rows_affected() == 0 {
+            return Err(StoreError::NotFound(format!("scenario ({domain}, {id})")));
+        }
+        Ok(())
     }
 
     /// 신규 골든셋 엔트리 INSERT.
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-2
-    pub async fn insert_golden_entry(&self, _domain: &str, _version: &str, _entry: &GoldenSetEntry) -> Result<(), StoreError> {
-        Err(StoreError::NotFound("insert_golden_entry not yet implemented".into()))
+    pub async fn insert_golden_entry(&self, domain: &str, version: &str, entry: &GoldenSetEntry) -> Result<(), StoreError> {
+        let env_json = serde_json::to_string(&entry.input.environment)?;
+        let seq_json = serde_json::to_string(&entry.expected_output.tool_sequence)?;
+        let res_json = serde_json::to_string(&entry.expected_output.tool_results)?;
+        let res = sqlx::query(
+            "INSERT INTO golden_sets
+             (domain, scenario_id, version, task,
+              input_environment, tool_sequence, tool_results, tolerance)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        )
+        .bind(domain)
+        .bind(&entry.scenario_id)
+        .bind(version)
+        .bind(&entry.input.task)
+        .bind(env_json)
+        .bind(seq_json)
+        .bind(res_json)
+        .bind(entry.expected_output.tolerance)
+        .execute(&self.pool)
+        .await;
+        match res {
+            | Ok(_) => Ok(()),
+            | Err(e) => Err(map_unique_violation(e, format!("golden_entry ({domain}, {})", entry.scenario_id))),
+        }
     }
 
     /// 골든셋 엔트리 UPDATE.
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-2, PRD-019/FR-5
-    pub async fn update_golden_entry(&self, _domain: &str, _scenario_id: &str, _entry: &GoldenSetEntry) -> Result<(), StoreError> {
-        Err(StoreError::NotFound("update_golden_entry not yet implemented".into()))
+    pub async fn update_golden_entry(&self, domain: &str, scenario_id: &str, entry: &GoldenSetEntry) -> Result<(), StoreError> {
+        let env_json = serde_json::to_string(&entry.input.environment)?;
+        let seq_json = serde_json::to_string(&entry.expected_output.tool_sequence)?;
+        let res_json = serde_json::to_string(&entry.expected_output.tool_results)?;
+        let res = sqlx::query(
+            "UPDATE golden_sets
+             SET task = ?, input_environment = ?, tool_sequence = ?,
+                 tool_results = ?, tolerance = ?
+             WHERE domain = ? AND scenario_id = ?",
+        )
+        .bind(&entry.input.task)
+        .bind(env_json)
+        .bind(seq_json)
+        .bind(res_json)
+        .bind(entry.expected_output.tolerance)
+        .bind(domain)
+        .bind(scenario_id)
+        .execute(&self.pool)
+        .await?;
+        if res.rows_affected() == 0 {
+            return Err(StoreError::NotFound(format!("golden_entry ({domain}, {scenario_id})")));
+        }
+        Ok(())
     }
 
     /// 골든셋 엔트리 DELETE.
     ///
     /// @trace SPEC: SPEC-019
     /// @trace FR: PRD-019/FR-2, PRD-019/FR-5
-    pub async fn delete_golden_entry(&self, _domain: &str, _scenario_id: &str) -> Result<(), StoreError> {
-        Err(StoreError::NotFound("delete_golden_entry not yet implemented".into()))
+    pub async fn delete_golden_entry(&self, domain: &str, scenario_id: &str) -> Result<(), StoreError> {
+        let res = sqlx::query("DELETE FROM golden_sets WHERE domain = ? AND scenario_id = ?")
+            .bind(domain)
+            .bind(scenario_id)
+            .execute(&self.pool)
+            .await?;
+        if res.rows_affected() == 0 {
+            return Err(StoreError::NotFound(format!("golden_entry ({domain}, {scenario_id})")));
+        }
+        Ok(())
     }
 
     /// 모든 도메인의 골든셋을 반환.

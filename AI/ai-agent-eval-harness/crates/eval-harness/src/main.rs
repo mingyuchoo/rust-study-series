@@ -261,7 +261,7 @@ fn main() {
             };
             let paths = resolve_data_paths(scenarios_dir.as_deref(), golden_sets_dir.as_deref());
             install_data_store(&paths);
-            if let Err(e) = web::run_server(socket, paths.scenarios_dir, reports_dir.into(), paths.golden_sets_dir, trajectories_dir.into()) {
+            if let Err(e) = web::run_server(socket, paths.scenarios_dir, reports_dir.into(), paths.golden_sets_dir, trajectories_dir.into(), Some(paths.db_path.clone())) {
                 eprintln!("서버 오류: {}", e);
                 std::process::exit(1);
             }

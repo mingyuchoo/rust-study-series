@@ -72,19 +72,33 @@ pub fn build_router(state: AppState) -> Router {
 
 /// 블로킹 진입점. 내부에서 tokio 런타임을 띄운다.
 ///
-/// @trace SPEC: SPEC-002
+/// @trace SPEC: SPEC-002, SPEC-019
 /// @trace TC: SPEC-002/TC-1
-/// @trace FR: PRD-002/FR-1
-pub fn run_server(addr: SocketAddr, scenarios_dir: PathBuf, reports_dir: PathBuf, golden_sets_dir: PathBuf, trajectories_dir: PathBuf) -> io::Result<()> {
-    let state = AppState {
-        scenarios_dir,
-        reports_dir,
-        golden_sets_dir,
-        trajectories_dir,
-        store: None,
-    };
+/// @trace FR: PRD-002/FR-1, PRD-019/FR-7
+pub fn run_server(addr: SocketAddr, scenarios_dir: PathBuf, reports_dir: PathBuf, golden_sets_dir: PathBuf, trajectories_dir: PathBuf, db_path: Option<PathBuf>) -> io::Result<()> {
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async move {
+        // SPEC-019: 동일 tokio 런타임에서 SqliteStore 를 열어 AppState 에 주입.
+        // 이렇게 해야 axum 핸들러가 같은 런타임에서 안전하게 풀을 사용한다.
+        let store = if let Some(p) = db_path.as_ref() {
+            match SqliteStore::open(p).await {
+                | Ok(s) => Some(Arc::new(s)),
+                | Err(e) => {
+                    eprintln!("[warn] CRUD store open failed ({}): {e} — CRUD disabled", p.display());
+                    None
+                },
+            }
+        } else {
+            None
+        };
+
+        let state = AppState {
+            scenarios_dir,
+            reports_dir,
+            golden_sets_dir,
+            trajectories_dir,
+            store,
+        };
         let app = build_router(state);
         let listener = tokio::net::TcpListener::bind(addr).await?;
         println!("eval-harness web client listening on http://{}", addr);
