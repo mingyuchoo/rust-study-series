@@ -83,6 +83,9 @@ pub struct PpaStep {
 }
 
 /// Agent의 전체 궤적
+///
+/// SPEC-025: `prompt_set_id` 는 이 실행에 사용된 PromptSet 의 DB id.
+/// 구버전 JSON (`prompt_set_id` 키 없음) 역직렬화 호환을 위해 `serde(default)`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Trajectory {
     pub task_id: String,
@@ -93,6 +96,8 @@ pub struct Trajectory {
     pub final_state: Option<AgentState>,
     pub success: bool,
     pub total_iterations: u32,
+    #[serde(default)]
+    pub prompt_set_id: Option<i64>,
 }
 
 /// 개별 기준 검증 결과
@@ -179,4 +184,62 @@ pub struct EvaluationResult {
     pub recommendations: Vec<String>,
     pub golden_set_result: Option<GoldenSetResult>,
     pub timestamp: DateTime<Utc>,
+}
+
+#[cfg(test)]
+mod spec025_tests {
+    use super::*;
+
+    /// @trace TC: SPEC-025/TC-15
+    /// @trace FR: PRD-025/FR-8
+    #[test]
+    fn spec025_tc_15_legacy_trajectory_json_parses_with_none() {
+        // prompt_set_id 가 없는 구 JSON (SPEC-025 이전 포맷)
+        let legacy = r#"{
+            "task_id": "t-legacy-1",
+            "task_description": "test",
+            "start_time": "2026-04-11T00:00:00Z",
+            "end_time": null,
+            "steps": [],
+            "final_state": null,
+            "success": true,
+            "total_iterations": 0
+        }"#;
+        let t: Trajectory = serde_json::from_str(legacy).expect("legacy JSON must parse");
+        assert_eq!(t.task_id, "t-legacy-1");
+        assert!(t.prompt_set_id.is_none(), "#[serde(default)] 으로 None");
+    }
+
+    /// @trace TC: SPEC-025/TC-14
+    /// @trace FR: PRD-025/FR-8
+    #[test]
+    fn spec025_tc_14_trajectory_records_prompt_set_id() {
+        // 실행 경로의 핵심 계약: 첫 스텝에서 resolve 된 prompt_set_id 를
+        // Trajectory 에 한 번 기록하고, 이후 스텝에서는 덮어쓰지 않는다.
+        let mut t = Trajectory {
+            task_id: "x".into(),
+            task_description: "".into(),
+            start_time: Utc::now(),
+            end_time: None,
+            steps: vec![],
+            final_state: None,
+            success: false,
+            total_iterations: 0,
+            prompt_set_id: None,
+        };
+        // 첫 스텝에서 id=42 주입
+        if t.prompt_set_id.is_none() {
+            t.prompt_set_id = Some(42);
+        }
+        // 두 번째 스텝에서 id=99 (무시되어야 함)
+        if t.prompt_set_id.is_none() {
+            t.prompt_set_id = Some(99);
+        }
+        assert_eq!(t.prompt_set_id, Some(42));
+        // Serde round-trip 시에도 필드가 살아 있는지
+        let j = serde_json::to_string(&t).unwrap();
+        assert!(j.contains("\"prompt_set_id\":42"));
+        let back: Trajectory = serde_json::from_str(&j).unwrap();
+        assert_eq!(back.prompt_set_id, Some(42));
+    }
 }

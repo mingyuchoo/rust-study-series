@@ -101,6 +101,66 @@ pub fn validate_required_slots(field: &str, tmpl: &str) -> Vec<String> {
     required.iter().filter(|slot| !tmpl.contains(*slot)).map(|s| (*s).to_string()).collect()
 }
 
+/// 런타임 해석 결과. 활성 PromptSet 을 DB 에서 조회해 담거나, 조회 실패 시
+/// bootstrap 으로 채워진다. `id` 는 조회된 DB 행의 식별자이며 bootstrap
+/// 폴백의 경우 `None`. 호출자는 첫 Perceive 시점에 1회 해석해 `Trajectory`
+/// 에 기록한다.
+///
+/// @trace SPEC: SPEC-025
+/// @trace FR: PRD-025/FR-3, PRD-025/FR-8
+#[derive(Debug, Clone)]
+pub struct ResolvedPromptSet {
+    pub id:              Option<i64>,
+    pub perceive_system: String,
+    pub perceive_user:   String,
+    pub policy_system:   String,
+    pub policy_user:     String,
+}
+
+impl ResolvedPromptSet {
+    pub fn bootstrap() -> Self {
+        Self {
+            id:              None,
+            perceive_system: BOOTSTRAP_PERCEIVE_SYSTEM.to_string(),
+            perceive_user:   BOOTSTRAP_PERCEIVE_USER.to_string(),
+            policy_system:   BOOTSTRAP_POLICY_SYSTEM.to_string(),
+            policy_user:     BOOTSTRAP_POLICY_USER.to_string(),
+        }
+    }
+}
+
+impl From<data_scenarios::sqlite_store::PromptSetRow> for ResolvedPromptSet {
+    fn from(row: data_scenarios::sqlite_store::PromptSetRow) -> Self {
+        Self {
+            id:              Some(row.id),
+            perceive_system: row.perceive_system,
+            perceive_user:   row.perceive_user,
+            policy_system:   row.policy_system,
+            policy_user:     row.policy_user,
+        }
+    }
+}
+
+/// 도메인 → `general` → bootstrap 순서로 PromptSet 을 해석.
+/// 호출자가 `block_on_future` 같은 동기 컨텍스트에서 await 할 수 있도록 async.
+///
+/// @trace SPEC: SPEC-025
+/// @trace FR: PRD-025/FR-3
+pub async fn resolve_prompt_set(store: Option<&data_scenarios::sqlite_store::SqliteStore>, domain: &str) -> ResolvedPromptSet {
+    let Some(s) = store else {
+        return ResolvedPromptSet::bootstrap();
+    };
+    if let Ok(Some(row)) = s.get_active_prompt_set(domain).await {
+        return row.into();
+    }
+    if domain != "general" {
+        if let Ok(Some(row)) = s.get_active_prompt_set("general").await {
+            return row.into();
+        }
+    }
+    ResolvedPromptSet::bootstrap()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message {
     pub role: String,
@@ -216,93 +276,91 @@ impl LlmClient {
         })
     }
 
+    /// Perceive 프롬프트 생성. 호출자가 사전에 `resolve_prompt_set(...).await`
+    /// 으로 해석한 `bundle` 을 전달한다. `domain` 은 `{domain_name}` 슬롯
+    /// 치환에 쓰인다. 반환되는 `Option<i64>` 는 `bundle.id` 와 동일하며
+    /// 호출자가 Trajectory 에 기록한다.
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-3, PRD-025/FR-4
     pub fn create_perceive_prompt(
+        bundle: &ResolvedPromptSet,
+        domain: &str,
         task: &str,
         environment_state: &HashMap<String, serde_json::Value>,
         context: Option<&HashMap<String, serde_json::Value>>,
-    ) -> Vec<Message> {
-        let system = Message::system(
-            "당신은 AI Agent의 Perceive(인지) 단계를 담당합니다.\n\
-             주어진 환경 상태를 분석하고, 작업 수행에 필요한 핵심 정보를 추출하세요.\n\n\
-             출력 형식:\n\
-             - perceived_facts: 환경에서 인지한 사실들\n\
-             - missing_info: 부족한 정보\n\
-             - anomalies: 발견된 이상 징후\n\
-             - context_summary: 맥락 요약",
-        );
-
+    ) -> (Vec<Message>, Option<i64>) {
         let ctx_str = context.map(|c| format!("\n이전 맥락: {:?}", c)).unwrap_or_default();
-        let human = Message::user(format!(
-            "작업: {}\n\n환경 상태:\n{:?}{}\n\n위 정보를 분석하여 JSON 형식으로 출력하세요.",
-            task, environment_state, ctx_str
-        ));
+        let env_str = format!("{:?}", environment_state);
 
-        vec![system, human]
+        let mut vars: HashMap<&str, String> = HashMap::new();
+        vars.insert("domain_name", domain.to_string());
+        vars.insert("task_description", task.to_string());
+        vars.insert("environment_state", env_str);
+        vars.insert("context", ctx_str);
+
+        let system = Message::system(render_template(&bundle.perceive_system, &vars));
+        let user = Message::user(render_template(&bundle.perceive_user, &vars));
+        (vec![system, user], bundle.id)
     }
 
+    /// Policy 프롬프트 생성. 도구 메타데이터는 이전과 동일한 규칙으로
+    /// 사람 가독 문자열로 직렬화된 뒤 `{tools}` 슬롯에 주입된다.
+    ///
+    /// @trace SPEC: SPEC-025
+    /// @trace FR: PRD-025/FR-3, PRD-025/FR-4
     pub fn create_policy_prompt(
+        bundle: &ResolvedPromptSet,
+        domain: &str,
         task: &str,
         perceived_info: &HashMap<String, serde_json::Value>,
         tools_metadata: &[serde_json::Value],
         context: Option<&HashMap<String, serde_json::Value>>,
-    ) -> Vec<Message> {
-        let system = Message::system(
-            "당신은 AI Agent의 Policy(판단) 단계를 담당합니다.\n\
-             인지된 정보를 바탕으로 다음 행동을 계획하세요.\n\n\
-             **중요 규칙**:\n\
-             1. 반드시 사용 가능한 도구 중에서 선택하세요. 도구 이름은 반드시 `<domain>__<tool>` 네임스페이스 형식 그대로 사용하세요 (예: `financial__calculate_simple_interest`). `general` 도메인의 기본 파일 도구(read_file, write_file, list_directory)는 네임스페이스 없이 이름 그대로 사용합니다.\n\
-             2. 각 도구에는 `[domain=...]` 라벨이 붙어 있습니다. task 의 성격과 일치하는 도메인의 도구를 우선 고려하세요. 여러 도메인이 필요한 task 도 가능합니다.\n\
-             3. 주어진 환경 정보를 도구의 파라미터로 직접 활용하세요.\n\
-             4. 도구를 호출할 때는 required 파라미터를 모두 포함하세요.\n\
-             5. 한 번에 하나의 도구만 선택하세요.\n\
-             6. 모든 필요한 도구를 순차적으로 실행한 후 작업이 완료되면 \"task_completed\": true를 설정하세요.\n\n\
-             출력 형식 (JSON):\n\
-             - reasoning: 판단 근거 (어떤 도메인의 도구를 왜 선택했는지 포함)\n\
-             - selected_tool: 선택한 도구의 네임스페이스 포함 이름 (작업 완료 시 null)\n\
-             - tool_parameters: 도구에 전달할 파라미터\n\
-             - confidence: 확신도 (0.0-1.0)\n\
-             - requires_human_approval: 인간 승인 필요 여부\n\
-             - task_completed: 작업 완료 여부 (true/false)\n\
-             - next_step: 다음 단계 설명",
-        );
-
-        let mut tools_info_parts = Vec::new();
-        for meta in tools_metadata {
-            let name = meta.get("name").and_then(|v| v.as_str()).unwrap_or("");
-            let desc = meta.get("description").and_then(|v| v.as_str()).unwrap_or("");
-            let domain = meta.get("domain").and_then(|v| v.as_str()).unwrap_or("general");
-            let schema = meta.get("parameters_schema").cloned().unwrap_or_default();
-            let empty_map = serde_json::Map::new();
-            let props = schema.get("properties").and_then(|v| v.as_object()).unwrap_or(&empty_map);
-            let required: Vec<&str> = schema
-                .get("required")
-                .and_then(|v| v.as_array())
-                .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect())
-                .unwrap_or_default();
-
-            let mut params_desc = Vec::new();
-            for (pname, pinfo) in props {
-                let req = if required.contains(&pname.as_str()) { "(필수)" } else { "(선택)" };
-                let ptype = pinfo.get("type").and_then(|v| v.as_str()).unwrap_or("any");
-                let pdesc = pinfo.get("description").and_then(|v| v.as_str()).unwrap_or("");
-                params_desc.push(format!("    - {} ({}) {}: {}", pname, ptype, req, pdesc));
-            }
-            tools_info_parts.push(format!("  * [domain={}] {}: {}\n{}", domain, name, desc, params_desc.join("\n")));
-        }
-
+    ) -> (Vec<Message>, Option<i64>) {
+        let tools_str = format_tools_block(tools_metadata);
         let ctx_str = context.map(|c| format!("\n이전 맥락: {:?}", c)).unwrap_or_default();
-        let human = Message::user(format!(
-            "작업: {}\n\n인지된 정보:\n{:?}\n\n사용 가능한 도구:\n{}{}\n\n\
-             위 도구 중 적절한 것을 선택하고, 환경 정보에서 파라미터 값을 추출하여 JSON 형식으로 출력하세요.\n\
-             모든 필요한 도구 호출이 완료되면 \"task_completed\": true로 설정하세요.",
-            task,
-            perceived_info,
-            tools_info_parts.join("\n"),
-            ctx_str
-        ));
+        let perc_str = format!("{:?}", perceived_info);
 
-        vec![system, human]
+        let mut vars: HashMap<&str, String> = HashMap::new();
+        vars.insert("domain_name", domain.to_string());
+        vars.insert("task_description", task.to_string());
+        vars.insert("perceived_info", perc_str);
+        vars.insert("tools", tools_str);
+        vars.insert("context", ctx_str);
+
+        let system = Message::system(render_template(&bundle.policy_system, &vars));
+        let user = Message::user(render_template(&bundle.policy_user, &vars));
+        (vec![system, user], bundle.id)
     }
+}
+
+/// 도구 메타데이터 배열을 Policy 프롬프트의 `{tools}` 슬롯에 주입할
+/// 사람 가독 형식으로 조립. 기존 하드코딩 로직과 1:1 동등.
+fn format_tools_block(tools_metadata: &[serde_json::Value]) -> String {
+    let mut parts = Vec::new();
+    for meta in tools_metadata {
+        let name = meta.get("name").and_then(|v| v.as_str()).unwrap_or("");
+        let desc = meta.get("description").and_then(|v| v.as_str()).unwrap_or("");
+        let domain = meta.get("domain").and_then(|v| v.as_str()).unwrap_or("general");
+        let schema = meta.get("parameters_schema").cloned().unwrap_or_default();
+        let empty_map = serde_json::Map::new();
+        let props = schema.get("properties").and_then(|v| v.as_object()).unwrap_or(&empty_map);
+        let required: Vec<&str> = schema
+            .get("required")
+            .and_then(|v| v.as_array())
+            .map(|arr| arr.iter().filter_map(|v| v.as_str()).collect())
+            .unwrap_or_default();
+
+        let mut params_desc = Vec::new();
+        for (pname, pinfo) in props {
+            let req = if required.contains(&pname.as_str()) { "(필수)" } else { "(선택)" };
+            let ptype = pinfo.get("type").and_then(|v| v.as_str()).unwrap_or("any");
+            let pdesc = pinfo.get("description").and_then(|v| v.as_str()).unwrap_or("");
+            params_desc.push(format!("    - {} ({}) {}: {}", pname, ptype, req, pdesc));
+        }
+        parts.push(format!("  * [domain={}] {}: {}\n{}", domain, name, desc, params_desc.join("\n")));
+    }
+    parts.join("\n")
 }
 
 #[cfg(test)]
@@ -361,5 +419,123 @@ mod spec025_tests {
         // 필수 슬롯이 bootstrap 에 존재해야 함 (자기 검증)
         assert!(validate_required_slots("perceive_user", BOOTSTRAP_PERCEIVE_USER).is_empty());
         assert!(validate_required_slots("policy_user", BOOTSTRAP_POLICY_USER).is_empty());
+    }
+
+    // -------- L3: resolution + render (TC-11 / TC-12 / TC-13) --------
+
+    use data_scenarios::sqlite_store::{PromptSetInsert, SqliteStore};
+
+    fn v1_bundle_ref() -> data_scenarios::sqlite_store::BootstrapBundleRef<'static> {
+        data_scenarios::sqlite_store::BootstrapBundleRef {
+            perceive_system: BOOTSTRAP_PERCEIVE_SYSTEM,
+            perceive_user:   BOOTSTRAP_PERCEIVE_USER,
+            policy_system:   BOOTSTRAP_POLICY_SYSTEM,
+            policy_user:     BOOTSTRAP_POLICY_USER,
+        }
+    }
+
+    /// @trace TC: SPEC-025/TC-11
+    /// @trace FR: PRD-025/FR-3
+    #[tokio::test]
+    async fn spec025_tc_11_create_perceive_prompt_uses_active_version() {
+        let store = SqliteStore::open_in_memory_for_loader().await.unwrap();
+        store.insert_domain("customer_service", "").await.unwrap();
+        let b = v1_bundle_ref();
+        store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+        // v2 삽입(비활성), 그 다음 활성화
+        let v2 = store
+            .insert_prompt_set(PromptSetInsert {
+                domain_name: "customer_service",
+                perceive_system: "XSYS {domain_name}",
+                perceive_user: "작업: {task_description} / env: {environment_state}{context}",
+                policy_system: "POLX",
+                policy_user: "작업: {task_description} / perc: {perceived_info} / tools: {tools}{context}",
+                notes: None,
+                is_bootstrap: false,
+            })
+            .await
+            .unwrap();
+        store.activate_prompt_set("customer_service", v2.version).await.unwrap();
+
+        let bundle = resolve_prompt_set(Some(&store), "customer_service").await;
+        assert_eq!(bundle.id, Some(v2.id));
+        let env = HashMap::from([("k".to_string(), serde_json::json!(1))]);
+        let (msgs, id) = LlmClient::create_perceive_prompt(&bundle, "customer_service", "환불 처리", &env, None);
+        assert_eq!(id, Some(v2.id));
+        assert_eq!(msgs.len(), 2);
+        // system 에 {domain_name} 치환
+        assert_eq!(msgs[0].content, "XSYS customer_service");
+        // user 에 작업/환경 치환
+        assert!(msgs[1].content.contains("작업: 환불 처리"));
+        assert!(msgs[1].content.contains("env: "));
+    }
+
+    /// @trace TC: SPEC-025/TC-12
+    /// @trace FR: PRD-025/FR-3, PRD-025/FR-4
+    #[tokio::test]
+    async fn spec025_tc_12_create_policy_prompt_renders_tools_slot() {
+        let store = SqliteStore::open_in_memory_for_loader().await.unwrap();
+        store.insert_domain("financial", "").await.unwrap();
+        let b = v1_bundle_ref();
+        store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+
+        let bundle = resolve_prompt_set(Some(&store), "financial").await;
+        assert!(bundle.id.is_some(), "bootstrap 활성 버전 조회 성공");
+
+        let tools = vec![serde_json::json!({
+            "name": "financial__calc",
+            "description": "단리 계산",
+            "domain": "financial",
+            "parameters_schema": {
+                "type": "object",
+                "properties": {"amount": {"type": "number", "description": "금액"}},
+                "required": ["amount"]
+            }
+        })];
+        let perc = HashMap::from([("x".to_string(), serde_json::json!(1))]);
+        let (msgs, _id) = LlmClient::create_policy_prompt(&bundle, "financial", "이자 계산", &perc, &tools, None);
+        // user 메시지에 tools 블록이 조립돼 삽입되었는지
+        let user = &msgs[1].content;
+        assert!(user.contains("[domain=financial] financial__calc"));
+        assert!(user.contains("amount"));
+        assert!(user.contains("작업: 이자 계산"));
+    }
+
+    /// @trace TC: SPEC-025/TC-13
+    /// @trace FR: PRD-025/FR-3
+    #[tokio::test]
+    async fn spec025_tc_13_fallback_chain_general_then_bootstrap() {
+        let store = SqliteStore::open_in_memory_for_loader().await.unwrap();
+        // 어떤 도메인도 없음 → bootstrap 폴백
+        let bundle1 = resolve_prompt_set(Some(&store), "xxx").await;
+        assert_eq!(bundle1.id, None);
+        assert_eq!(bundle1.perceive_system, BOOTSTRAP_PERCEIVE_SYSTEM);
+
+        // general 도메인에만 활성 PromptSet 을 두고 요청 도메인은 xxx
+        store.insert_domain("general", "").await.unwrap();
+        let b = v1_bundle_ref();
+        store.seed_bootstrap_prompt_sets(&b).await.unwrap();
+        let bundle2 = resolve_prompt_set(Some(&store), "xxx").await;
+        assert!(bundle2.id.is_some(), "general 로 폴백된 PromptSet 사용");
+
+        // 요청 도메인에도 PromptSet 을 두면 그게 우선
+        store.insert_domain("xxx", "").await.unwrap();
+        let b2 = data_scenarios::sqlite_store::BootstrapBundleRef {
+            perceive_system: "X-ONLY SYS",
+            perceive_user:   "{task_description} {environment_state}",
+            policy_system:   "X-ONLY POL",
+            policy_user:     "{task_description} {perceived_info} {tools}",
+        };
+        store.seed_bootstrap_prompt_sets(&b2).await.unwrap();
+        let bundle3 = resolve_prompt_set(Some(&store), "xxx").await;
+        assert_eq!(bundle3.perceive_system, "X-ONLY SYS");
+    }
+
+    /// store=None 이면 항상 bootstrap.
+    #[tokio::test]
+    async fn spec025_resolve_without_store_is_bootstrap() {
+        let bundle = resolve_prompt_set(None, "customer_service").await;
+        assert!(bundle.id.is_none());
+        assert_eq!(bundle.perceive_system, BOOTSTRAP_PERCEIVE_SYSTEM);
     }
 }

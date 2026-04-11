@@ -67,6 +67,7 @@ impl BaseAgent for PassthroughAgent {
             start_time: now,
             end_time: Some(now),
             steps: vec![perceive_step, policy_step],
+            prompt_set_id: None,
             final_state: Some(AgentState {
                 current_stage: PpaStage::Policy,
                 iteration: 1,

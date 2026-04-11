@@ -1,5 +1,7 @@
 use crate::{config::EvaluationConfig,
-            llm_client::LlmClient};
+            llm_client::{LlmClient,
+                         ResolvedPromptSet,
+                         resolve_prompt_set}};
 use agent_models::{base_agent::{AgentMetadata,
                                 BaseAgent},
                    domain_config::DomainConfig,
@@ -43,13 +45,24 @@ impl PpaAgent {
         }
     }
 
-    fn perceive_step(&self, state: &mut AgentState, trajectory: &mut Trajectory) {
+    fn perceive_step(
+        &self,
+        bundle: &ResolvedPromptSet,
+        domain: &str,
+        state: &mut AgentState,
+        trajectory: &mut Trajectory,
+    ) {
         let start = std::time::Instant::now();
 
         let mut ctx_map = HashMap::new();
         ctx_map.insert("iteration".into(), serde_json::json!(state.iteration));
 
-        let messages = LlmClient::create_perceive_prompt(&state.task_description, &state.perceived_info, Some(&ctx_map));
+        let (messages, prompt_set_id) =
+            LlmClient::create_perceive_prompt(bundle, domain, &state.task_description, &state.perceived_info, Some(&ctx_map));
+        // 첫 번째 스텝에서만 Trajectory 에 prompt_set_id 를 한 번 기록한다.
+        if trajectory.prompt_set_id.is_none() {
+            trajectory.prompt_set_id = prompt_set_id;
+        }
 
         match block_on_future(self.llm.invoke(messages)) {
             | Ok(response) => {
@@ -82,14 +95,30 @@ impl PpaAgent {
         }
     }
 
-    fn policy_step(&self, state: &mut AgentState, trajectory: &mut Trajectory) {
+    fn policy_step(
+        &self,
+        bundle: &ResolvedPromptSet,
+        domain: &str,
+        state: &mut AgentState,
+        trajectory: &mut Trajectory,
+    ) {
         let start = std::time::Instant::now();
 
         let tools_meta = self.tools.lock().unwrap().get_tools_metadata();
         let mut ctx_map = HashMap::new();
         ctx_map.insert("iteration".into(), serde_json::json!(state.iteration));
 
-        let messages = LlmClient::create_policy_prompt(&state.task_description, &state.perceived_info, &tools_meta, Some(&ctx_map));
+        let (messages, prompt_set_id) = LlmClient::create_policy_prompt(
+            bundle,
+            domain,
+            &state.task_description,
+            &state.perceived_info,
+            &tools_meta,
+            Some(&ctx_map),
+        );
+        if trajectory.prompt_set_id.is_none() {
+            trajectory.prompt_set_id = prompt_set_id;
+        }
 
         match block_on_future(self.llm.invoke(messages)) {
             | Ok(response) => {
@@ -228,6 +257,18 @@ impl BaseAgent for PpaAgent {
         if self.config.domain_router_top_k > 0 {
             self.load_tools_with_router(task_description, self.config.domain_router_top_k);
         }
+        // SPEC-025: 이 실행의 "주 도메인" 을 라우터 top-1 로 해석한다.
+        // 라우터가 비활성이거나 매칭 실패 시 "general" 로 폴백.
+        let primary_domain = crate::domain_router::select_domains(task_description, 1)
+            .into_iter()
+            .next()
+            .unwrap_or_else(|| "general".to_string());
+
+        // SPEC-025: 주 도메인의 활성 PromptSet 을 DB 에서 해석한다. 실패 시
+        // `general` → bootstrap 폴백 (resolve_prompt_set 내부에서 처리).
+        let store = data_scenarios::loader::try_installed_store();
+        let bundle: ResolvedPromptSet = block_on_future(resolve_prompt_set(store.as_deref(), &primary_domain));
+
         let mut trajectory = Trajectory {
             task_id: task_id.clone(),
             task_description: task_description.to_string(),
@@ -237,6 +278,7 @@ impl BaseAgent for PpaAgent {
             final_state: None,
             success: false,
             total_iterations: 0,
+            prompt_set_id: None,
         };
 
         let mut state = AgentState::new(task_description.to_string()).with_environment(initial_environment.unwrap_or_default());
@@ -248,12 +290,12 @@ impl BaseAgent for PpaAgent {
             state.iteration += 1;
             println!("  [Iteration {}/{}]", state.iteration, self.config.max_iterations);
 
-            self.perceive_step(&mut state, &mut trajectory);
+            self.perceive_step(&bundle, &primary_domain, &mut state, &mut trajectory);
             if state.error_message.is_some() {
                 break;
             }
 
-            self.policy_step(&mut state, &mut trajectory);
+            self.policy_step(&bundle, &primary_domain, &mut state, &mut trajectory);
             if state.error_message.is_some() {
                 break;
             }

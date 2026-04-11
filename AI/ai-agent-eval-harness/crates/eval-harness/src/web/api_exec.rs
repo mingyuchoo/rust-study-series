@@ -525,6 +525,7 @@ mod tests {
             final_state: None,
             success: false,
             total_iterations: 0,
+            prompt_set_id: None,
         };
         let res = score_impl(traj);
         assert_eq!(res.trajectory.task_id, "t1");

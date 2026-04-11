@@ -305,6 +305,7 @@ mod tests {
             final_state: None,
             success: true,
             total_iterations: 1,
+            prompt_set_id: None,
         }
     }
 
