@@ -140,6 +140,33 @@
     .hint { color: var(--fg-subtle); font-size: 11px; margin-top: 4px; }
     .form-block { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px; margin-bottom: 12px; }
     .form-block h3 { margin: 0 0 10px; font-size: 13px; color: var(--fg-label); }
+    /* SPEC-022 Domains 탭 — 목록 항목 single-line + 우측 메타 badge */
+    #panel-domains .list .item,
+    #panel-domains #extools-list .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    #panel-domains .list .item .name { overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+    #panel-domains .list .item .meta {
+      flex-shrink: 0;
+      font-size: 10px;
+      opacity: 0.75;
+      font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+    }
+    #panel-domains .list .item.active .meta { opacity: 0.9; }
+    /* SPEC-022 Domains 탭 — 편집기 폼 일관된 간격 */
+    #panel-domains .form-block label { display: block; margin-bottom: 10px; }
+    #panel-domains .form-block label > span { display: block; margin-bottom: 4px; color: var(--fg-label); font-size: 12px; }
+    #panel-domains .form-block input[type="text"],
+    #panel-domains .form-block input[type="number"],
+    #panel-domains .form-block textarea,
+    #panel-domains .form-block select { width: 100%; }
+    #panel-domains .form-block select[multiple] { min-height: 160px; font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 12px; }
+    #panel-domains .form-block textarea { min-height: 70px; }
   </style>
 </head>
 <body>
@@ -165,6 +192,7 @@
     <button data-tab="trajectories" data-i18n="nav.trajectories">Trajectories</button>
     <button data-tab="reports" data-i18n="nav.reports">Reports</button>
     <span class="sep" aria-hidden="true"></span>
+    <button data-tab="domains" data-i18n="nav.domains">Domains</button>
     <button data-tab="tools" data-i18n="nav.tools">Tools</button>
     <button data-tab="agents" data-i18n="nav.agents">Agents</button>
   </nav>
@@ -294,6 +322,78 @@
     </section>
 
     <!-- ============ MANAGE (CRUD) — SPEC-019 ============ -->
+    <!-- ============ DOMAINS (SPEC-022 동적 도메인 CRUD) ============ -->
+    <section id="panel-domains" class="panel">
+      <h2 data-i18n="domains.title">Domains</h2>
+      <div class="form-block">
+        <div class="row">
+          <button class="secondary" onclick="refreshDomains()" data-i18n="domains.refresh">Refresh</button>
+          <button class="primary" onclick="newDomain()" data-i18n="domains.new">+ New domain</button>
+        </div>
+      </div>
+      <div class="split">
+        <div>
+          <h3 data-i18n="domains.list">Domains</h3>
+          <div class="list" id="domains-list"></div>
+        </div>
+        <div>
+          <div class="form-block">
+            <h3 id="domain-editor-title" data-i18n="domains.editor">Domain editor</h3>
+            <div class="hint" id="domain-editor-hint"></div>
+            <label>
+              <span data-i18n="domains.name">Name (lowercase, A-Z 0-9 _ -)</span>
+              <input type="text" id="domain-name-input" />
+            </label>
+            <label>
+              <span data-i18n="domains.desc">Description</span>
+              <textarea id="domain-desc-input" rows="2"></textarea>
+            </label>
+            <label>
+              <span data-i18n="domains.tools">Tools (compiled catalog — multi-select)</span>
+              <select id="domain-tools-input" multiple size="8"></select>
+            </label>
+            <label>
+              <span data-i18n="domains.keywords">Router keywords (comma-separated)</span>
+              <textarea id="domain-keywords-input" rows="3" data-i18n-placeholder="domains.keywordsPh" placeholder="환자, 처방, patient, prescription, ..."></textarea>
+            </label>
+            <div class="row">
+              <button class="primary" onclick="saveDomain()" data-i18n="domains.save">Save</button>
+              <button class="danger" onclick="deleteDomain()" data-i18n="domains.delete">Delete</button>
+              <button class="secondary" onclick="clearDomainEditor()" data-i18n="domains.clear">Clear</button>
+            </div>
+            <pre id="domain-out" data-i18n="common.waiting">waiting…</pre>
+          </div>
+
+          <!-- SPEC-023: external HTTP tools -->
+          <div class="form-block">
+            <h3 data-i18n="extools.title">External HTTP Tools</h3>
+            <div class="hint" data-i18n="extools.hint">선택된 도메인의 외부 HTTP 도구를 등록/관리합니다. 사용자가 띄운 외부 서비스를 LLM 도구로 노출.</div>
+            <div class="list" id="extools-list" style="margin-top:8px;margin-bottom:10px"></div>
+            <label><span data-i18n="extools.name">name</span><input type="text" id="extool-name" placeholder="search_patient" /></label>
+            <label><span data-i18n="extools.desc">description</span><input type="text" id="extool-desc" /></label>
+            <div class="row">
+              <label style="flex:0 0 140px;margin-bottom:0"><span data-i18n="extools.method">method</span>
+                <select id="extool-method">
+                  <option>POST</option><option>GET</option><option>PUT</option><option>DELETE</option>
+                </select>
+              </label>
+              <label style="flex:1;margin-bottom:0"><span data-i18n="extools.url">url</span><input type="text" id="extool-url" placeholder="http://localhost:9000/q" /></label>
+            </div>
+            <label><span data-i18n="extools.headers">headers (JSON object, optional)</span><textarea id="extool-headers" rows="2"></textarea></label>
+            <label><span data-i18n="extools.body">body_template ({{var}} placeholders)</span><textarea id="extool-body" rows="3" placeholder='{"q":"{{topic}}"}'></textarea></label>
+            <label><span data-i18n="extools.schema">params_schema (JSON Schema)</span><textarea id="extool-schema" rows="3" placeholder='{"type":"object","properties":{"topic":{"type":"string"}},"required":["topic"]}'></textarea></label>
+            <label><span data-i18n="extools.timeout">timeout_ms</span><input type="number" id="extool-timeout" value="10000" /></label>
+            <div class="row">
+              <button class="primary" onclick="saveExternalTool()" data-i18n="extools.save">Save</button>
+              <button class="danger" onclick="deleteExternalTool()" data-i18n="extools.delete">Delete</button>
+              <button class="secondary" onclick="clearExternalToolForm()" data-i18n="extools.clear">Clear</button>
+            </div>
+            <pre id="extool-out" data-i18n="common.waiting">waiting…</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="panel-manage" class="panel active">
       <h2 data-i18n="manage.title">Manage scenarios &amp; golden sets</h2>
       <div class="form-block">
@@ -350,6 +450,49 @@
         "nav.reports": "리포트",
         "nav.trajectories": "궤적",
         "nav.manage": "시나리오/골든셋",
+        "nav.domains": "도메인",
+        "domains.title": "도메인",
+        "domains.refresh": "새로고침",
+        "domains.new": "+ 도메인 추가",
+        "domains.list": "도메인 목록",
+        "domains.editor": "도메인 편집기",
+        "domains.name": "이름 (소문자, A-Z 0-9 _ -)",
+        "domains.desc": "설명",
+        "domains.tools": "도구 (컴파일된 카탈로그 — 다중 선택)",
+        "domains.keywords": "라우터 키워드 (쉼표로 구분)",
+        "domains.keywordsPh": "환자, 처방, patient, prescription, ...",
+        "domains.save": "저장",
+        "domains.delete": "삭제",
+        "domains.clear": "초기화",
+        "domains.newTitle": "새 도메인",
+        "domains.newHint": "POST /api/domains",
+        "domains.editTitle": "편집: ",
+        "domains.editHint": "PUT /api/domains/",
+        "domains.bootstrap": " (부트스트랩)",
+        "domains.selectFirst": "먼저 기존 도메인을 선택하세요",
+        "domains.cantDeleteBootstrap": "부트스트랩 도메인은 삭제할 수 없습니다",
+        "domains.confirmDelete": "정말 삭제?",
+        "domains.deleted": "삭제됨: ",
+        "domains.error": "오류: ",
+        "extools.title": "외부 HTTP 도구",
+        "extools.hint": "선택된 도메인의 외부 HTTP 도구를 등록/관리합니다. 사용자가 띄운 외부 서비스를 LLM 도구로 노출.",
+        "extools.name": "이름",
+        "extools.desc": "설명",
+        "extools.method": "메서드",
+        "extools.url": "URL",
+        "extools.headers": "헤더 (JSON 객체, 선택)",
+        "extools.body": "본문 템플릿 ({{var}} placeholder)",
+        "extools.schema": "파라미터 스키마 (JSON Schema)",
+        "extools.timeout": "타임아웃 (ms)",
+        "extools.save": "저장",
+        "extools.delete": "삭제",
+        "extools.clear": "초기화",
+        "extools.selectDomainFirst": "먼저 Domains 목록에서 도메인을 선택하세요.",
+        "extools.selectToolFirst": "먼저 기존 도구를 선택하세요",
+        "extools.confirmDelete": "정말 삭제?",
+        "extools.deleted": "삭제됨: ",
+        "extools.loadError": "로드 오류: ",
+        "extools.error": "오류: ",
         "manage.title": "시나리오/골든셋 관리 (CRUD)",
         "manage.domain": "도메인",
         "manage.refresh": "새로고침",
@@ -409,6 +552,49 @@
         "nav.reports": "Reports",
         "nav.trajectories": "Trajectories",
         "nav.manage": "Scenarios/Goldens",
+        "nav.domains": "Domains",
+        "domains.title": "Domains",
+        "domains.refresh": "Refresh",
+        "domains.new": "+ New domain",
+        "domains.list": "Domains",
+        "domains.editor": "Domain editor",
+        "domains.name": "Name (lowercase, A-Z 0-9 _ -)",
+        "domains.desc": "Description",
+        "domains.tools": "Tools (compiled catalog — multi-select)",
+        "domains.keywords": "Router keywords (comma-separated)",
+        "domains.keywordsPh": "patient, prescription, 환자, 처방, ...",
+        "domains.save": "Save",
+        "domains.delete": "Delete",
+        "domains.clear": "Clear",
+        "domains.newTitle": "New domain",
+        "domains.newHint": "POST /api/domains",
+        "domains.editTitle": "Edit: ",
+        "domains.editHint": "PUT /api/domains/",
+        "domains.bootstrap": " (bootstrap)",
+        "domains.selectFirst": "select an existing domain first",
+        "domains.cantDeleteBootstrap": "bootstrap domain cannot be deleted",
+        "domains.confirmDelete": "Really delete?",
+        "domains.deleted": "deleted: ",
+        "domains.error": "error: ",
+        "extools.title": "External HTTP Tools",
+        "extools.hint": "Register/manage external HTTP tools for the selected domain. Exposes user-hosted services as LLM tools.",
+        "extools.name": "name",
+        "extools.desc": "description",
+        "extools.method": "method",
+        "extools.url": "url",
+        "extools.headers": "headers (JSON object, optional)",
+        "extools.body": "body_template ({{var}} placeholders)",
+        "extools.schema": "params_schema (JSON Schema)",
+        "extools.timeout": "timeout_ms",
+        "extools.save": "Save",
+        "extools.delete": "Delete",
+        "extools.clear": "Clear",
+        "extools.selectDomainFirst": "Select a domain from the Domains list first.",
+        "extools.selectToolFirst": "select an existing tool first",
+        "extools.confirmDelete": "Really delete?",
+        "extools.deleted": "deleted: ",
+        "extools.loadError": "load error: ",
+        "extools.error": "error: ",
         "run.title": "Run eval scenario",
         "run.evalScenario": "Eval Scenario",
         "run.agent": "Agent",
@@ -475,6 +661,16 @@
         const r = await fetch(p, {method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
         if (!r.ok) throw new Error(r.status+' '+await r.text());
         return r.json();
+      },
+      put: async (p, body) => {
+        const r = await fetch(p, {method:'PUT', headers:{'content-type':'application/json'}, body: JSON.stringify(body)});
+        if (!r.ok) throw new Error(r.status+' '+await r.text());
+        return r.json();
+      },
+      del: async (p) => {
+        const r = await fetch(p, {method:'DELETE'});
+        if (!r.ok) throw new Error(r.status+' '+await r.text());
+        return null;
       }
     };
     const pretty = (o) => JSON.stringify(o, null, 2);
@@ -878,6 +1074,199 @@
       });
     }
 
+    // ---------- SPEC-022 Domains 탭 ----------
+    let DOMAIN_EDITOR = {mode: 'new', name: null};
+    let TOOL_CATALOG = [];
+
+    async function initDomains() {
+      try {
+        TOOL_CATALOG = await API.get('/api/tools/catalog');
+      } catch (e) { TOOL_CATALOG = []; }
+      const sel = $('domain-tools-input');
+      if (sel) {
+        sel.innerHTML = '';
+        TOOL_CATALOG.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.name;
+          opt.textContent = `${t.name}  [${t.domain || 'general'}]`;
+          sel.appendChild(opt);
+        });
+      }
+      await refreshDomains();
+    }
+
+    async function refreshDomains() {
+      const list = $('domains-list');
+      if (!list) return;
+      list.innerHTML = '';
+      let domains = [];
+      try { domains = await API.get('/api/domains'); }
+      catch (e) { list.textContent = 'load error: ' + e; return; }
+      domains.forEach(d => {
+        const it = document.createElement('div');
+        it.className = 'item';
+        const lock = d.is_bootstrap ? ' 🔒' : '';
+        const name = document.createElement('span');
+        name.className = 'name';
+        name.textContent = d.name + lock;
+        const meta = document.createElement('span');
+        meta.className = 'meta';
+        meta.textContent = `scen ${d.scenario_count} · tools ${d.tool_class_names.length} · kw ${d.keywords.length}`;
+        it.appendChild(name);
+        it.appendChild(meta);
+        it.onclick = () => editDomain(d);
+        list.appendChild(it);
+      });
+    }
+
+    function newDomain() {
+      DOMAIN_EDITOR = {mode: 'new', name: null};
+      $('domain-editor-title').textContent = t('domains.newTitle');
+      $('domain-editor-hint').textContent = t('domains.newHint');
+      $('domain-name-input').value = '';
+      $('domain-name-input').disabled = false;
+      $('domain-desc-input').value = '';
+      Array.from($('domain-tools-input').options).forEach(o => o.selected = false);
+      $('domain-keywords-input').value = '';
+      $('domain-out').textContent = t('common.waiting');
+    }
+
+    function editDomain(d) {
+      DOMAIN_EDITOR = {mode: 'edit', name: d.name, isBootstrap: d.is_bootstrap};
+      $('domain-editor-title').textContent = t('domains.editTitle') + d.name + (d.is_bootstrap ? t('domains.bootstrap') : '');
+      $('domain-editor-hint').textContent = t('domains.editHint') + d.name;
+      $('domain-name-input').value = d.name;
+      $('domain-name-input').disabled = true;
+      $('domain-desc-input').value = d.description || '';
+      const sel = $('domain-tools-input');
+      Array.from(sel.options).forEach(o => o.selected = d.tool_class_names.includes(o.value));
+      $('domain-keywords-input').value = (d.keywords || []).join(', ');
+      refreshExternalTools(d.name);
+    }
+
+    // ---------- SPEC-023 external tools ----------
+    let EXTOOL_EDITOR = {mode: 'new', domain: null, name: null};
+    async function refreshExternalTools(domain) {
+      EXTOOL_EDITOR.domain = domain;
+      const list = $('extools-list');
+      if (!list) return;
+      list.innerHTML = '';
+      try {
+        const rows = await API.get('/api/external-tools/' + domain);
+        rows.forEach(r => {
+          const it = document.createElement('div');
+          it.className = 'item';
+          const name = document.createElement('span');
+          name.className = 'name';
+          name.textContent = r.name;
+          const meta = document.createElement('span');
+          meta.className = 'meta';
+          meta.textContent = `${r.method} ${r.url}`;
+          it.appendChild(name);
+          it.appendChild(meta);
+          it.onclick = () => loadExternalTool(r);
+          list.appendChild(it);
+        });
+      } catch (e) { list.textContent = t('extools.loadError') + e; }
+    }
+    function loadExternalTool(r) {
+      EXTOOL_EDITOR = {mode: 'edit', domain: r.domain, name: r.name};
+      $('extool-name').value = r.name;
+      $('extool-name').disabled = true;
+      $('extool-desc').value = r.description || '';
+      $('extool-method').value = r.method || 'POST';
+      $('extool-url').value = r.url || '';
+      $('extool-headers').value = r.headers_json || '';
+      $('extool-body').value = r.body_template || '';
+      $('extool-schema').value = r.params_schema || '';
+      $('extool-timeout').value = r.timeout_ms || 10000;
+    }
+    function clearExternalToolForm() {
+      EXTOOL_EDITOR = {mode: 'new', domain: EXTOOL_EDITOR.domain, name: null};
+      $('extool-name').value = '';
+      $('extool-name').disabled = false;
+      $('extool-desc').value = '';
+      $('extool-method').value = 'POST';
+      $('extool-url').value = '';
+      $('extool-headers').value = '';
+      $('extool-body').value = '';
+      $('extool-schema').value = '';
+      $('extool-timeout').value = '10000';
+      $('extool-out').textContent = t('common.waiting');
+    }
+    async function saveExternalTool() {
+      const out = $('extool-out');
+      if (!EXTOOL_EDITOR.domain) { out.textContent = t('extools.selectDomainFirst'); return; }
+      const body = {
+        name: $('extool-name').value.trim(),
+        description: $('extool-desc').value,
+        method: $('extool-method').value,
+        url: $('extool-url').value.trim(),
+        headers_json: $('extool-headers').value.trim() || null,
+        body_template: $('extool-body').value,
+        params_schema: $('extool-schema').value || '{}',
+        timeout_ms: parseInt($('extool-timeout').value || '10000', 10),
+      };
+      try {
+        let res;
+        if (EXTOOL_EDITOR.mode === 'new') {
+          res = await API.post('/api/external-tools/' + EXTOOL_EDITOR.domain, body);
+        } else {
+          res = await API.put('/api/external-tools/' + EXTOOL_EDITOR.domain + '/' + EXTOOL_EDITOR.name, body);
+        }
+        out.textContent = JSON.stringify(res, null, 2);
+        await refreshExternalTools(EXTOOL_EDITOR.domain);
+      } catch (e) { out.textContent = t('extools.error') + e; }
+    }
+    async function deleteExternalTool() {
+      if (EXTOOL_EDITOR.mode !== 'edit') { $('extool-out').textContent = t('extools.selectToolFirst'); return; }
+      if (!confirm(t('extools.confirmDelete') + ' ' + EXTOOL_EDITOR.name)) return;
+      try {
+        await API.del('/api/external-tools/' + EXTOOL_EDITOR.domain + '/' + EXTOOL_EDITOR.name);
+        $('extool-out').textContent = t('extools.deleted') + EXTOOL_EDITOR.name;
+        clearExternalToolForm();
+        await refreshExternalTools(EXTOOL_EDITOR.domain);
+      } catch (e) { $('extool-out').textContent = t('extools.error') + e; }
+    }
+
+    function clearDomainEditor() { newDomain(); }
+
+    async function saveDomain() {
+      const out = $('domain-out');
+      const name = $('domain-name-input').value.trim();
+      const description = $('domain-desc-input').value;
+      const tool_class_names = Array.from($('domain-tools-input').selectedOptions).map(o => o.value);
+      const keywords = $('domain-keywords-input').value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      try {
+        let res;
+        if (DOMAIN_EDITOR.mode === 'new') {
+          res = await API.post('/api/domains', {name, description, tool_class_names, keywords});
+        } else {
+          res = await API.put('/api/domains/' + DOMAIN_EDITOR.name, {description, tool_class_names, keywords});
+        }
+        out.textContent = JSON.stringify(res, null, 2);
+        await refreshDomains();
+      } catch (e) { out.textContent = t('domains.error') + e; }
+    }
+
+    async function deleteDomain() {
+      if (DOMAIN_EDITOR.mode !== 'edit' || !DOMAIN_EDITOR.name) {
+        $('domain-out').textContent = t('domains.selectFirst');
+        return;
+      }
+      if (DOMAIN_EDITOR.isBootstrap) {
+        $('domain-out').textContent = t('domains.cantDeleteBootstrap');
+        return;
+      }
+      if (!confirm(t('domains.confirmDelete') + ' ' + DOMAIN_EDITOR.name)) return;
+      try {
+        await API.del('/api/domains/' + DOMAIN_EDITOR.name);
+        $('domain-out').textContent = t('domains.deleted') + DOMAIN_EDITOR.name;
+        clearDomainEditor();
+        await refreshDomains();
+      } catch (e) { $('domain-out').textContent = t('domains.error') + e; }
+    }
+
     // ---------- init dispatcher ----------
     const initFns = {
       execute: initExecute,
@@ -886,6 +1275,7 @@
       reports: initReports,
       trajectories: initTrajectories,
       manage: initManage,
+      domains: initDomains,
     };
     initExecuteSubnav();
     (async () => { try { await initFns.manage(); initialized.manage = true; } catch (e) { console.error(e); } })();

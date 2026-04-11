@@ -132,11 +132,33 @@ fn resolve_data_paths(scenarios: Option<&str>, golden_sets: Option<&str>) -> Dat
 /// @trace SPEC: SPEC-017
 /// @trace FR: PRD-017/FR-5
 fn install_data_store(paths: &DataPaths) {
-    use data_scenarios::loader::ScenarioLoader;
+    use data_scenarios::loader::{ScenarioLoader,
+                                 try_installed_store};
     if let Err(e) = ScenarioLoader::install(&paths.db_path) {
         eprintln!("[warn] SQLite 저장소 초기화 실패: {e} — 인메모리 fallback 모드");
-    } else {
-        println!("[store] SQLite DB: {}", paths.db_path.display());
+        return;
+    }
+    println!("[store] SQLite DB: {}", paths.db_path.display());
+
+    // SPEC-022: 부트스트랩 도메인의 라우터 키워드를 DB 에 시드한다(멱등). 기존
+    // 사용자가 키워드를 수정한 경우는 INSERT OR IGNORE 로 보존된다.
+    if let Some(store) = try_installed_store() {
+        let pairs = agent_core::domain_router::default_keywords_flat();
+        let store_clone = store.clone();
+        let result = match tokio::runtime::Handle::try_current() {
+            | Ok(handle) => tokio::task::block_in_place(|| handle.block_on(async move { store_clone.seed_domain_keywords(&pairs).await })),
+            | Err(_) => tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .ok()
+                .map(|rt| rt.block_on(async move { store_clone.seed_domain_keywords(&pairs).await }))
+                .unwrap_or_else(|| Ok(0)),
+        };
+        match result {
+            | Ok(n) if n > 0 => println!("[store] 부트스트랩 키워드 {n}개 시드"),
+            | Ok(_) => {},
+            | Err(e) => eprintln!("[warn] 키워드 시드 실패: {e}"),
+        }
     }
 }
 

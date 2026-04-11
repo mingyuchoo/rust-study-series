@@ -25,7 +25,7 @@ use std::{collections::HashMap,
                  PathBuf}};
 use thiserror::Error;
 
-const SCHEMA_VERSION: i64 = 4;
+const SCHEMA_VERSION: i64 = 6;
 
 /// sqlx UNIQUE 제약 위반을 `StoreError::Conflict` 로 매핑.
 fn map_unique_violation(err: sqlx::Error, subject: String) -> StoreError {
@@ -234,6 +234,30 @@ impl SqliteStore {
             "CREATE INDEX IF NOT EXISTS idx_evaluations_agent ON evaluations(agent_name)",
             "CREATE INDEX IF NOT EXISTS idx_evaluations_domain ON evaluations(domain)",
             "CREATE INDEX IF NOT EXISTS idx_evaluations_created ON evaluations(created_at)",
+            // SPEC-022 v5: 도메인 라우터 키워드. 기존 const 를 대체.
+            "CREATE TABLE IF NOT EXISTS domain_keywords (
+                domain  TEXT NOT NULL,
+                keyword TEXT NOT NULL,
+                PRIMARY KEY (domain, keyword),
+                FOREIGN KEY (domain) REFERENCES domains(name) ON DELETE CASCADE
+            )",
+            "CREATE INDEX IF NOT EXISTS idx_domain_keywords_domain ON domain_keywords(domain)",
+            // SPEC-023 v6: 외부 HTTP 도구.
+            "CREATE TABLE IF NOT EXISTS external_tools (
+                name           TEXT NOT NULL,
+                domain         TEXT NOT NULL,
+                description    TEXT NOT NULL DEFAULT '',
+                method         TEXT NOT NULL DEFAULT 'POST',
+                url            TEXT NOT NULL,
+                headers_json   TEXT,
+                body_template  TEXT NOT NULL,
+                params_schema  TEXT NOT NULL,
+                timeout_ms     INTEGER NOT NULL DEFAULT 10000,
+                created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+                PRIMARY KEY (domain, name),
+                FOREIGN KEY (domain) REFERENCES domains(name) ON DELETE CASCADE
+            )",
+            "CREATE INDEX IF NOT EXISTS idx_external_tools_domain ON external_tools(domain)",
         ];
         for sql in stmts.iter() {
             sqlx::query(sql).execute(&self.pool).await?;
@@ -1072,6 +1096,300 @@ impl SqliteStore {
             overall_score: row.try_get::<Option<f64>, _>("overall").ok().flatten(),
         })
     }
+
+    // =========================================================================
+    // SPEC-022: 도메인 CRUD + 키워드/도구 매핑
+    // =========================================================================
+
+    /// 신규 도메인 INSERT. 동일 이름 존재 시 `Conflict`.
+    ///
+    /// @trace SPEC: SPEC-022
+    /// @trace FR: PRD-022/FR-1
+    pub async fn insert_domain(&self, name: &str, description: &str) -> Result<(), StoreError> {
+        let res = sqlx::query("INSERT INTO domains (name, description) VALUES (?, ?)")
+            .bind(name)
+            .bind(description)
+            .execute(&self.pool)
+            .await;
+        match res {
+            | Ok(_) => Ok(()),
+            | Err(e) => Err(map_unique_violation(e, format!("domain ({name})"))),
+        }
+    }
+
+    /// 도메인 description 갱신. 미존재 시 `NotFound`.
+    ///
+    /// @trace SPEC: SPEC-022
+    /// @trace FR: PRD-022/FR-1
+    pub async fn update_domain(&self, name: &str, description: &str) -> Result<(), StoreError> {
+        let res = sqlx::query("UPDATE domains SET description = ? WHERE name = ?")
+            .bind(description)
+            .bind(name)
+            .execute(&self.pool)
+            .await?;
+        if res.rows_affected() == 0 {
+            return Err(StoreError::NotFound(format!("domain ({name})")));
+        }
+        Ok(())
+    }
+
+    /// 도메인 삭제. cascade 로 scenarios/goldens/tools/keywords 모두 함께 삭제.
+    /// 미존재 시 `NotFound`. 부트스트랩 보호는 호출자 책임(SqliteStore 는
+    /// 라이브러리이므로 정책을 모름).
+    ///
+    /// @trace SPEC: SPEC-022
+    /// @trace FR: PRD-022/FR-1, PRD-022/FR-4
+    pub async fn delete_domain(&self, name: &str) -> Result<(), StoreError> {
+        let res = sqlx::query("DELETE FROM domains WHERE name = ?").bind(name).execute(&self.pool).await?;
+        if res.rows_affected() == 0 {
+            return Err(StoreError::NotFound(format!("domain ({name})")));
+        }
+        Ok(())
+    }
+
+    /// 모든 도메인의 요약 정보(설명·도구·키워드·시나리오 개수). UI 목록용.
+    ///
+    /// @trace SPEC: SPEC-022
+    /// @trace FR: PRD-022/FR-1
+    pub async fn list_domain_summaries(&self) -> Result<Vec<DomainSummary>, StoreError> {
+        let rows = sqlx::query("SELECT name, description FROM domains ORDER BY name").fetch_all(&self.pool).await?;
+        let mut out = Vec::with_capacity(rows.len());
+        for r in rows {
+            let name: String = r.get("name");
+            let description: String = r.get("description");
+            out.push(self.build_domain_summary(name, description).await?);
+        }
+        Ok(out)
+    }
+
+    /// 단일 도메인 요약. 미존재 시 None.
+    pub async fn get_domain_summary(&self, name: &str) -> Result<Option<DomainSummary>, StoreError> {
+        let row = sqlx::query("SELECT name, description FROM domains WHERE name = ?")
+            .bind(name)
+            .fetch_optional(&self.pool)
+            .await?;
+        let Some(r) = row else {
+            return Ok(None);
+        };
+        let n: String = r.get("name");
+        let d: String = r.get("description");
+        Ok(Some(self.build_domain_summary(n, d).await?))
+    }
+
+    async fn build_domain_summary(&self, name: String, description: String) -> Result<DomainSummary, StoreError> {
+        let tool_class_names: Vec<String> = sqlx::query_scalar("SELECT class_name FROM domain_tools WHERE domain = ? ORDER BY position, class_name")
+            .bind(&name)
+            .fetch_all(&self.pool)
+            .await?;
+        let keywords: Vec<String> = sqlx::query_scalar("SELECT keyword FROM domain_keywords WHERE domain = ? ORDER BY keyword")
+            .bind(&name)
+            .fetch_all(&self.pool)
+            .await?;
+        let scenario_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM eval_scenarios WHERE domain = ?")
+            .bind(&name)
+            .fetch_one(&self.pool)
+            .await?;
+        Ok(DomainSummary {
+            name,
+            description,
+            tool_class_names,
+            keywords,
+            scenario_count,
+        })
+    }
+
+    /// 도메인의 도구 목록을 통째로 교체. 트랜잭션 안에서 DELETE → INSERT.
+    ///
+    /// @trace SPEC: SPEC-022
+    /// @trace FR: PRD-022/FR-1
+    pub async fn replace_domain_tools(&self, domain: &str, tool_class_names: &[String]) -> Result<(), StoreError> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("DELETE FROM domain_tools WHERE domain = ?").bind(domain).execute(&mut *tx).await?;
+        for (idx, name) in tool_class_names.iter().enumerate() {
+            sqlx::query("INSERT INTO domain_tools (domain, class_name, module_path, position) VALUES (?, ?, ?, ?)")
+                .bind(domain)
+                .bind(name)
+                .bind("") // module_path: SPEC-022 이후 의미 없음. 후속 정리.
+                .bind(idx as i64)
+                .execute(&mut *tx)
+                .await?;
+        }
+        tx.commit().await?;
+        Ok(())
+    }
+
+    /// 도메인의 라우터 키워드 목록을 통째로 교체.
+    ///
+    /// @trace SPEC: SPEC-022
+    /// @trace FR: PRD-022/FR-3
+    pub async fn replace_domain_keywords(&self, domain: &str, keywords: &[String]) -> Result<(), StoreError> {
+        let mut tx = self.pool.begin().await?;
+        sqlx::query("DELETE FROM domain_keywords WHERE domain = ?")
+            .bind(domain)
+            .execute(&mut *tx)
+            .await?;
+        for kw in keywords {
+            let trimmed = kw.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            sqlx::query("INSERT OR IGNORE INTO domain_keywords (domain, keyword) VALUES (?, ?)")
+                .bind(domain)
+                .bind(trimmed)
+                .execute(&mut *tx)
+                .await?;
+        }
+        tx.commit().await?;
+        Ok(())
+    }
+
+    /// 모든 도메인의 키워드를 `domain → Vec<keyword>` 매핑으로 반환.
+    /// `domain_router` 의 캐시 채우기에 사용.
+    ///
+    /// @trace SPEC: SPEC-022
+    /// @trace FR: PRD-022/FR-3
+    pub async fn list_all_domain_keywords(&self) -> Result<HashMap<String, Vec<String>>, StoreError> {
+        let rows = sqlx::query("SELECT domain, keyword FROM domain_keywords ORDER BY domain, keyword")
+            .fetch_all(&self.pool)
+            .await?;
+        let mut out: HashMap<String, Vec<String>> = HashMap::new();
+        for r in rows {
+            let d: String = r.get("domain");
+            let k: String = r.get("keyword");
+            out.entry(d).or_default().push(k);
+        }
+        Ok(out)
+    }
+
+    /// SPEC-022 v5 시드: 부트스트랩 도메인의 기본 키워드를 INSERT OR IGNORE.
+    /// 호출자가 (domain, keyword) 페어 리스트를 전달.
+    ///
+    /// @trace SPEC: SPEC-022
+    /// @trace FR: PRD-022/FR-7
+    pub async fn seed_domain_keywords(&self, pairs: &[(String, String)]) -> Result<usize, StoreError> {
+        let mut inserted = 0usize;
+        let mut tx = self.pool.begin().await?;
+        for (d, k) in pairs {
+            let res = sqlx::query("INSERT OR IGNORE INTO domain_keywords (domain, keyword) VALUES (?, ?)")
+                .bind(d)
+                .bind(k)
+                .execute(&mut *tx)
+                .await?;
+            if res.rows_affected() > 0 {
+                inserted += 1;
+            }
+        }
+        tx.commit().await?;
+        Ok(inserted)
+    }
+
+    // =========================================================================
+    // SPEC-023: external_tools CRUD
+    // =========================================================================
+
+    /// 모든 external tool 행을 반환. domain, name 정렬.
+    ///
+    /// @trace SPEC: SPEC-023
+    /// @trace FR: PRD-023/FR-1, PRD-023/FR-2
+    pub async fn list_external_tools(&self) -> Result<Vec<ExternalToolRow>, StoreError> {
+        let rows = sqlx::query(
+            "SELECT name, domain, description, method, url, headers_json, body_template, params_schema, timeout_ms
+             FROM external_tools ORDER BY domain, name",
+        )
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(rows.into_iter().map(row_to_external_tool).collect())
+    }
+
+    /// 특정 도메인의 external tool 행 반환.
+    pub async fn list_external_tools_by_domain(&self, domain: &str) -> Result<Vec<ExternalToolRow>, StoreError> {
+        let rows = sqlx::query(
+            "SELECT name, domain, description, method, url, headers_json, body_template, params_schema, timeout_ms
+             FROM external_tools WHERE domain = ? ORDER BY name",
+        )
+        .bind(domain)
+        .fetch_all(&self.pool)
+        .await?;
+        Ok(rows.into_iter().map(row_to_external_tool).collect())
+    }
+
+    /// external tool 1행 INSERT OR REPLACE.
+    ///
+    /// @trace SPEC: SPEC-023
+    /// @trace FR: PRD-023/FR-1
+    pub async fn upsert_external_tool(&self, row: &ExternalToolRow) -> Result<(), StoreError> {
+        sqlx::query(
+            "INSERT OR REPLACE INTO external_tools
+             (name, domain, description, method, url, headers_json, body_template, params_schema, timeout_ms, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE((SELECT created_at FROM external_tools WHERE domain = ? AND name = ?), datetime('now')))",
+        )
+        .bind(&row.name)
+        .bind(&row.domain)
+        .bind(&row.description)
+        .bind(&row.method)
+        .bind(&row.url)
+        .bind(&row.headers_json)
+        .bind(&row.body_template)
+        .bind(&row.params_schema)
+        .bind(row.timeout_ms)
+        .bind(&row.domain)
+        .bind(&row.name)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
+
+    /// external tool 삭제. 미존재 시 NotFound.
+    pub async fn delete_external_tool(&self, domain: &str, name: &str) -> Result<(), StoreError> {
+        let res = sqlx::query("DELETE FROM external_tools WHERE domain = ? AND name = ?")
+            .bind(domain)
+            .bind(name)
+            .execute(&self.pool)
+            .await?;
+        if res.rows_affected() == 0 {
+            return Err(StoreError::NotFound(format!("external_tool ({domain}, {name})")));
+        }
+        Ok(())
+    }
+}
+
+fn row_to_external_tool(r: sqlx::sqlite::SqliteRow) -> ExternalToolRow {
+    ExternalToolRow {
+        name: r.get("name"),
+        domain: r.get("domain"),
+        description: r.get("description"),
+        method: r.get("method"),
+        url: r.get("url"),
+        headers_json: r.try_get("headers_json").ok(),
+        body_template: r.get("body_template"),
+        params_schema: r.get("params_schema"),
+        timeout_ms: r.get("timeout_ms"),
+    }
+}
+
+/// SPEC-022: 도메인 단위 요약 정보. UI/REST 응답용.
+#[derive(Debug, Clone)]
+pub struct DomainSummary {
+    pub name: String,
+    pub description: String,
+    pub tool_class_names: Vec<String>,
+    pub keywords: Vec<String>,
+    pub scenario_count: i64,
+}
+
+/// SPEC-023: 외부 HTTP 도구 등록 행. `HttpCallTool::from_row` 가 이 값으로
+/// 인스턴스를 만든다.
+#[derive(Debug, Clone)]
+pub struct ExternalToolRow {
+    pub name: String,
+    pub domain: String,
+    pub description: String,
+    pub method: String,
+    pub url: String,
+    pub headers_json: Option<String>,
+    pub body_template: String,
+    pub params_schema: String,
+    pub timeout_ms: i64,
 }
 
 /// SPEC-021: trajectories 목록 조회 행.
@@ -1709,5 +2027,166 @@ scenarios:
         assert_eq!(win.successes, 3);
         let overall = win.overall_score.unwrap();
         assert!((overall - 0.8).abs() < 1e-9, "expected average 0.8, got {overall}");
+    }
+
+    // -------- SPEC-022 --------
+
+    /// @trace TC: SPEC-022/TC-3
+    /// @trace FR: PRD-022/FR-1
+    #[tokio::test]
+    async fn spec022_tc_3_insert_update_domain() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("healthcare", "의료 도메인").await.unwrap();
+        let s = store.get_domain_summary("healthcare").await.unwrap().unwrap();
+        assert_eq!(s.name, "healthcare");
+        assert_eq!(s.description, "의료 도메인");
+        assert_eq!(s.scenario_count, 0);
+
+        store.update_domain("healthcare", "갱신된 설명").await.unwrap();
+        let s2 = store.get_domain_summary("healthcare").await.unwrap().unwrap();
+        assert_eq!(s2.description, "갱신된 설명");
+
+        // 미존재 갱신 → NotFound
+        let err = store.update_domain("nope", "x").await.unwrap_err();
+        assert!(matches!(err, StoreError::NotFound(_)));
+    }
+
+    /// @trace TC: SPEC-022/TC-4
+    /// @trace FR: PRD-022/FR-1
+    #[tokio::test]
+    async fn spec022_tc_4_replace_domain_tools() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("legal", "법률").await.unwrap();
+        store
+            .replace_domain_tools("legal", &["read_file".to_string(), "write_file".to_string(), "list_directory".to_string()])
+            .await
+            .unwrap();
+        let s = store.get_domain_summary("legal").await.unwrap().unwrap();
+        assert_eq!(s.tool_class_names.len(), 3);
+
+        // 통째로 교체 → 2개로 줄어듦
+        store
+            .replace_domain_tools("legal", &["read_file".to_string(), "write_file".to_string()])
+            .await
+            .unwrap();
+        let s2 = store.get_domain_summary("legal").await.unwrap().unwrap();
+        assert_eq!(s2.tool_class_names.len(), 2);
+    }
+
+    /// @trace TC: SPEC-022/TC-5
+    /// @trace FR: PRD-022/FR-3
+    #[tokio::test]
+    async fn spec022_tc_5_replace_domain_keywords() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("healthcare", "").await.unwrap();
+        store
+            .replace_domain_keywords("healthcare", &["환자".to_string(), "처방".to_string(), "치료".to_string(), "  ".to_string()])
+            .await
+            .unwrap();
+        let s = store.get_domain_summary("healthcare").await.unwrap().unwrap();
+        assert_eq!(s.keywords.len(), 3, "공백 키워드는 무시됨");
+        assert!(s.keywords.contains(&"환자".to_string()));
+    }
+
+    /// @trace TC: SPEC-022/TC-6
+    /// @trace FR: PRD-022/FR-4
+    #[tokio::test]
+    async fn spec022_tc_6_delete_cascade() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("healthcare", "").await.unwrap();
+        store.replace_domain_tools("healthcare", &["read_file".to_string()]).await.unwrap();
+        store.replace_domain_keywords("healthcare", &["환자".to_string()]).await.unwrap();
+
+        store.delete_domain("healthcare").await.unwrap();
+        assert!(store.get_domain_summary("healthcare").await.unwrap().is_none());
+
+        // cascade 확인: domain_keywords 와 domain_tools 도 0
+        let kw_map = store.list_all_domain_keywords().await.unwrap();
+        assert!(!kw_map.contains_key("healthcare"));
+    }
+
+    /// @trace TC: SPEC-022/TC-8
+    /// @trace FR: PRD-022/FR-3
+    #[tokio::test]
+    async fn spec022_tc_8_list_all_domain_keywords() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("a", "").await.unwrap();
+        store.insert_domain("b", "").await.unwrap();
+        store.replace_domain_keywords("a", &["x".to_string(), "y".to_string()]).await.unwrap();
+        store.replace_domain_keywords("b", &["z".to_string()]).await.unwrap();
+        let map = store.list_all_domain_keywords().await.unwrap();
+        assert_eq!(map.get("a").unwrap().len(), 2);
+        assert_eq!(map.get("b").unwrap().len(), 1);
+    }
+
+    /// @trace TC: SPEC-022/TC-2
+    /// @trace FR: PRD-022/FR-7
+    #[tokio::test]
+    async fn spec022_tc_2_seed_domain_keywords_idempotent() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("financial", "").await.unwrap();
+        let pairs = vec![("financial".to_string(), "이자".to_string()), ("financial".to_string(), "대출".to_string())];
+        let n1 = store.seed_domain_keywords(&pairs).await.unwrap();
+        assert_eq!(n1, 2);
+        let n2 = store.seed_domain_keywords(&pairs).await.unwrap();
+        assert_eq!(n2, 0, "재호출은 INSERT OR IGNORE 로 0건");
+    }
+
+    // -------- SPEC-023 --------
+
+    fn sample_external_row(name: &str, domain: &str) -> ExternalToolRow {
+        ExternalToolRow {
+            name: name.to_string(),
+            domain: domain.to_string(),
+            description: "테스트 도구".into(),
+            method: "POST".into(),
+            url: "http://localhost:9000/q".into(),
+            headers_json: Some(r#"{"X-Auth":"abc"}"#.to_string()),
+            body_template: r#"{"q":"{{topic}}"}"#.to_string(),
+            params_schema: r#"{"type":"object"}"#.to_string(),
+            timeout_ms: 5000,
+        }
+    }
+
+    /// @trace TC: SPEC-023/TC-2
+    /// @trace FR: PRD-023/FR-1
+    #[tokio::test]
+    async fn spec023_tc_2_upsert_and_list_external_tools() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("healthcare", "").await.unwrap();
+        store.upsert_external_tool(&sample_external_row("search_patient", "healthcare")).await.unwrap();
+        store.upsert_external_tool(&sample_external_row("get_record", "healthcare")).await.unwrap();
+        let rows = store.list_external_tools().await.unwrap();
+        assert_eq!(rows.len(), 2);
+        let by_dom = store.list_external_tools_by_domain("healthcare").await.unwrap();
+        assert_eq!(by_dom.len(), 2);
+
+        // upsert (REPLACE) → 행 수 유지
+        let mut updated = sample_external_row("search_patient", "healthcare");
+        updated.description = "갱신".into();
+        store.upsert_external_tool(&updated).await.unwrap();
+        let rows2 = store.list_external_tools().await.unwrap();
+        assert_eq!(rows2.len(), 2);
+        assert!(rows2.iter().any(|r| r.name == "search_patient" && r.description == "갱신"));
+    }
+
+    /// @trace TC: SPEC-023/TC-3
+    /// @trace FR: PRD-023/FR-4
+    #[tokio::test]
+    async fn spec023_tc_3_delete_domain_cascades_external_tools() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("healthcare", "").await.unwrap();
+        store.upsert_external_tool(&sample_external_row("search_patient", "healthcare")).await.unwrap();
+        store.delete_domain("healthcare").await.unwrap();
+        let rows = store.list_external_tools().await.unwrap();
+        assert!(rows.is_empty(), "도메인 삭제 시 external_tools cascade 삭제");
+    }
+
+    #[tokio::test]
+    async fn spec023_delete_external_tool_not_found() {
+        let store = SqliteStore::open_in_memory().await.unwrap();
+        store.insert_domain("healthcare", "").await.unwrap();
+        let err = store.delete_external_tool("healthcare", "nope").await.unwrap_err();
+        assert!(matches!(err, StoreError::NotFound(_)));
     }
 }

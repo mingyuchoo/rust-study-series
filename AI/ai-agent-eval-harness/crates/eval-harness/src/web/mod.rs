@@ -68,6 +68,14 @@ pub fn build_router(state: AppState) -> Router {
         .route("/api/eval-scenarios/:domain/:id", put(api_crud::update_scenario_handler).delete(api_crud::delete_scenario_handler))
         .route("/api/golden-sets/:domain", post(api_crud::create_golden_entry))
         .route("/api/golden-sets/:domain/:scenario_id", put(api_crud::update_golden_entry_handler).delete(api_crud::delete_golden_entry_handler))
+        // -------- SPEC-022: 도메인 CRUD + 도구 카탈로그 --------
+        .route("/api/domains", get(api_crud::list_domains).post(api_crud::create_domain))
+        .route("/api/domains/:name", get(api_crud::get_domain).put(api_crud::update_domain_handler).delete(api_crud::delete_domain_handler))
+        .route("/api/tools/catalog", get(api::list_tools))
+        // -------- SPEC-023: external HTTP tools --------
+        .route("/api/external-tools", get(api_crud::list_external_tools))
+        .route("/api/external-tools/:domain", get(api_crud::list_external_tools_by_domain).post(api_crud::create_external_tool))
+        .route("/api/external-tools/:domain/:name", put(api_crud::update_external_tool_handler).delete(api_crud::delete_external_tool_handler))
         .with_state(state)
 }
 

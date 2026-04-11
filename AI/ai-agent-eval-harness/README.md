@@ -204,6 +204,51 @@ DELETE /api/golden-sets/:domain/:scenario_id     골든셋 엔트리 삭제
 
 자세한 명세는 `docs/prd/PRD-019.md`, `docs/spec/SPEC-019.md` 참조.
 
+### 동적 도메인 CRUD + 도구 카탈로그 (SPEC-022)
+
+`customer_service`, `financial` 외에 새로운 도메인을 **런타임에 추가**할 수 있습니다. 도메인은 `domains` 테이블에, 소속 도구 메타데이터는 `domain_tools` 테이블에, 라우터 키워드는 `domain_keywords` 테이블에 저장되며, `agent-core::domain_router` 는 DB 에서 키워드를 lazy-load 합니다. 도메인 CRUD 이후 `invalidate_cache()` 가 호출되어 다음 `select_domains` 호출부터 즉시 반영됩니다.
+
+**REST 엔드포인트**:
+
+```
+GET    /api/domains                 전체 도메인 요약 목록 (tools, keywords, scenario_count, is_bootstrap)
+GET    /api/domains/:name           단일 도메인 상세
+POST   /api/domains                 도메인 생성 ({name, description, tools[], keywords[]})
+PUT    /api/domains/:name           도메인 수정 (도구/키워드 전량 교체)
+DELETE /api/domains/:name           도메인 삭제 (cascade: tools/keywords/external_tools)
+
+GET    /api/tools/catalog           등록된 Rust 도구 전체 카탈로그 (domain 별)
+```
+
+**부트스트랩 보호**: `financial`, `customer_service` 는 Rust 에 정적 컴파일된 도메인이므로 `DELETE` 시 `409 Conflict` 를 반환합니다. 설명/도구/키워드 업데이트는 허용됩니다 (라우터 튜닝 용도).
+
+**웹 UI**: "도메인" 탭에서 도메인 생성/수정/삭제, 멀티-셀렉트 도구 피커, 줄바꿈 구분 키워드 에디터 제공.
+
+### 외부 HTTP 도구 (SPEC-023)
+
+DB 로 정의된 `HttpCallTool` 은 **Rust 재컴파일 없이** 새 외부 API 를 에이전트 도구로 노출합니다. `external_tools` 테이블에 URL/메소드/헤더/바디 템플릿을 저장하면 `PpaAgent::load_all_tools` 가 매 task 시작 시 `ToolRegistry` 에 자동 등록합니다. 바디 템플릿의 `{{key}}` 는 도구 호출 파라미터로 치환됩니다.
+
+**REST 엔드포인트**:
+
+```
+GET    /api/external-tools                       전체 external 도구 목록
+GET    /api/external-tools/:domain               도메인별 목록
+POST   /api/external-tools/:domain               생성 ({name, description, method, url, headers_json?, body_template, params_schema, timeout_ms})
+PUT    /api/external-tools/:domain/:name         수정
+DELETE /api/external-tools/:domain/:name         삭제
+```
+
+**보안 — URL allowlist**: 환경변수 `EVAL_HARNESS_HTTP_TOOL_ALLOWLIST` 에 콤마 구분 prefix 목록을 지정하면 해당 prefix 로 시작하는 URL 만 등록 가능합니다. 미설정 시 모든 URL 허용 (개발용 기본값).
+
+```bash
+export EVAL_HARNESS_HTTP_TOOL_ALLOWLIST="https://api.internal.corp/,http://localhost:"
+cargo run -- serve
+```
+
+**웹 UI**: "도메인" 탭 하위에 외부 도구 섹션이 있어 method/url/headers/body_template/params_schema/timeout_ms 를 폼으로 편집할 수 있습니다.
+
+자세한 명세는 `docs/prd/PRD-022.md`, `docs/spec/SPEC-022.md`, `docs/prd/PRD-023.md`, `docs/spec/SPEC-023.md` 참조.
+
 ### 시나리오 목록 조회
 
 ```bash

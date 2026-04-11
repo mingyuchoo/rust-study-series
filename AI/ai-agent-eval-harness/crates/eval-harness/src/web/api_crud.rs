@@ -351,6 +351,311 @@ pub async fn delete_golden_entry_handler(
 }
 
 // =============================================================================
+// SPEC-022: 도메인 CRUD
+// =============================================================================
+
+#[derive(Debug, Deserialize)]
+pub struct DomainUpsert {
+    /// POST 시에만 사용. PUT 은 path param 으로 식별.
+    #[serde(default)]
+    pub name: Option<String>,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub tool_class_names: Vec<String>,
+    #[serde(default)]
+    pub keywords: Vec<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct DomainSummaryDto {
+    pub name: String,
+    pub description: String,
+    pub tool_class_names: Vec<String>,
+    pub keywords: Vec<String>,
+    pub scenario_count: i64,
+    pub is_bootstrap: bool,
+}
+
+impl DomainSummaryDto {
+    fn from_summary(s: data_scenarios::sqlite_store::DomainSummary) -> Self {
+        let is_bootstrap = domains::known_domains().iter().any(|k| *k == s.name);
+        Self {
+            name: s.name,
+            description: s.description,
+            tool_class_names: s.tool_class_names,
+            keywords: s.keywords,
+            scenario_count: s.scenario_count,
+            is_bootstrap,
+        }
+    }
+}
+
+/// @trace SPEC: SPEC-022
+/// @trace FR: PRD-022/FR-1
+pub async fn list_domains_impl(store: &SqliteStore) -> Result<Vec<DomainSummaryDto>, CrudFailure> {
+    let summaries = store.list_domain_summaries().await?;
+    Ok(summaries.into_iter().map(DomainSummaryDto::from_summary).collect())
+}
+
+/// @trace SPEC: SPEC-022
+/// @trace FR: PRD-022/FR-1
+pub async fn get_domain_impl(store: &SqliteStore, name: &str) -> Result<DomainSummaryDto, CrudFailure> {
+    validate_id("domain", name)?;
+    let summary = store
+        .get_domain_summary(name)
+        .await?
+        .ok_or_else(|| CrudFailure::NotFound(format!("domain ({name})")))?;
+    Ok(DomainSummaryDto::from_summary(summary))
+}
+
+/// 신규 도메인 + 도구·키워드 일괄 등록. 라우터 캐시 invalidate.
+///
+/// @trace SPEC: SPEC-022
+/// @trace FR: PRD-022/FR-1, PRD-022/FR-3
+pub async fn create_domain_impl(store: &SqliteStore, body: DomainUpsert) -> Result<DomainSummaryDto, CrudFailure> {
+    let name = body.name.as_deref().ok_or_else(|| CrudFailure::BadRequest("name required".into()))?;
+    validate_id("domain", name)?;
+    store.insert_domain(name, &body.description).await?;
+    if !body.tool_class_names.is_empty() {
+        store.replace_domain_tools(name, &body.tool_class_names).await?;
+    }
+    if !body.keywords.is_empty() {
+        store.replace_domain_keywords(name, &body.keywords).await?;
+    }
+    agent_core::domain_router::invalidate_cache();
+    let summary = store
+        .get_domain_summary(name)
+        .await?
+        .ok_or_else(|| CrudFailure::Internal("just created but not found".into()))?;
+    Ok(DomainSummaryDto::from_summary(summary))
+}
+
+/// 도메인 갱신 (description + tools + keywords). 부트스트랩 도메인도 갱신
+/// 가능(name 만 보호).
+///
+/// @trace SPEC: SPEC-022
+/// @trace FR: PRD-022/FR-1
+pub async fn update_domain_impl(store: &SqliteStore, name: &str, body: DomainUpsert) -> Result<DomainSummaryDto, CrudFailure> {
+    validate_id("domain", name)?;
+    store.update_domain(name, &body.description).await?;
+    store.replace_domain_tools(name, &body.tool_class_names).await?;
+    store.replace_domain_keywords(name, &body.keywords).await?;
+    agent_core::domain_router::invalidate_cache();
+    let summary = store
+        .get_domain_summary(name)
+        .await?
+        .ok_or_else(|| CrudFailure::NotFound(format!("domain ({name})")))?;
+    Ok(DomainSummaryDto::from_summary(summary))
+}
+
+/// 도메인 삭제. 부트스트랩 도메인은 409 Conflict.
+///
+/// @trace SPEC: SPEC-022
+/// @trace FR: PRD-022/FR-1, PRD-022/FR-5
+pub async fn delete_domain_impl(store: &SqliteStore, name: &str) -> Result<(), CrudFailure> {
+    validate_id("domain", name)?;
+    if domains::known_domains().iter().any(|k| *k == name) {
+        return Err(CrudFailure::Conflict(format!("bootstrap domain '{name}' cannot be deleted")));
+    }
+    store.delete_domain(name).await?;
+    agent_core::domain_router::invalidate_cache();
+    Ok(())
+}
+
+// ----- axum handlers -----
+
+pub async fn list_domains(State(st): State<AppState>) -> Result<JsonOut<Vec<DomainSummaryDto>>, CrudFailure> {
+    let store = store_from(&st)?;
+    let dtos = list_domains_impl(store.as_ref()).await?;
+    Ok(JsonOut(dtos))
+}
+
+pub async fn get_domain(State(st): State<AppState>, AxPath(name): AxPath<String>) -> Result<JsonOut<DomainSummaryDto>, CrudFailure> {
+    let store = store_from(&st)?;
+    let dto = get_domain_impl(store.as_ref(), &name).await?;
+    Ok(JsonOut(dto))
+}
+
+pub async fn create_domain(State(st): State<AppState>, JsonExt(body): JsonExt<DomainUpsert>) -> Result<(StatusCode, JsonOut<DomainSummaryDto>), CrudFailure> {
+    let store = store_from(&st)?;
+    let dto = create_domain_impl(store.as_ref(), body).await?;
+    Ok((StatusCode::CREATED, JsonOut(dto)))
+}
+
+pub async fn update_domain_handler(
+    State(st): State<AppState>,
+    AxPath(name): AxPath<String>,
+    JsonExt(body): JsonExt<DomainUpsert>,
+) -> Result<JsonOut<DomainSummaryDto>, CrudFailure> {
+    let store = store_from(&st)?;
+    let dto = update_domain_impl(store.as_ref(), &name, body).await?;
+    Ok(JsonOut(dto))
+}
+
+pub async fn delete_domain_handler(State(st): State<AppState>, AxPath(name): AxPath<String>) -> Result<StatusCode, CrudFailure> {
+    let store = store_from(&st)?;
+    delete_domain_impl(store.as_ref(), &name).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// =============================================================================
+// SPEC-023: external_tools CRUD + URL allowlist
+// =============================================================================
+
+#[derive(Debug, Deserialize)]
+pub struct ExternalToolUpsert {
+    pub name: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default = "default_method")]
+    pub method: String,
+    pub url: String,
+    #[serde(default)]
+    pub headers_json: Option<String>,
+    pub body_template: String,
+    #[serde(default = "default_schema")]
+    pub params_schema: String,
+    #[serde(default = "default_timeout")]
+    pub timeout_ms: i64,
+}
+
+fn default_method() -> String { "POST".into() }
+fn default_schema() -> String { "{}".into() }
+fn default_timeout() -> i64 { 10000 }
+
+#[derive(Debug, Serialize)]
+pub struct ExternalToolDto {
+    pub name: String,
+    pub domain: String,
+    pub description: String,
+    pub method: String,
+    pub url: String,
+    pub headers_json: Option<String>,
+    pub body_template: String,
+    pub params_schema: String,
+    pub timeout_ms: i64,
+}
+
+impl ExternalToolDto {
+    fn from_row(r: data_scenarios::sqlite_store::ExternalToolRow) -> Self {
+        Self {
+            name: r.name,
+            domain: r.domain,
+            description: r.description,
+            method: r.method,
+            url: r.url,
+            headers_json: r.headers_json,
+            body_template: r.body_template,
+            params_schema: r.params_schema,
+            timeout_ms: r.timeout_ms,
+        }
+    }
+}
+
+/// `EVAL_HARNESS_HTTP_TOOL_ALLOWLIST` 환경변수가 설정되어 있으면 prefix
+/// 매칭으로 URL 을 검증한다. 미설정 또는 빈 값이면 모든 URL 허용.
+///
+/// @trace SPEC: SPEC-023
+/// @trace FR: PRD-023/FR-5
+fn url_allowed(url: &str) -> bool {
+    let Ok(allow) = std::env::var("EVAL_HARNESS_HTTP_TOOL_ALLOWLIST") else {
+        return true;
+    };
+    if allow.trim().is_empty() {
+        return true;
+    }
+    allow.split(',').map(str::trim).any(|prefix| !prefix.is_empty() && url.starts_with(prefix))
+}
+
+/// @trace SPEC: SPEC-023
+/// @trace FR: PRD-023/FR-1, PRD-023/FR-4
+pub async fn list_external_tools_impl(store: &SqliteStore) -> Result<Vec<ExternalToolDto>, CrudFailure> {
+    let rows = store.list_external_tools().await?;
+    Ok(rows.into_iter().map(ExternalToolDto::from_row).collect())
+}
+
+pub async fn list_external_tools_by_domain_impl(store: &SqliteStore, domain: &str) -> Result<Vec<ExternalToolDto>, CrudFailure> {
+    validate_id("domain", domain)?;
+    let rows = store.list_external_tools_by_domain(domain).await?;
+    Ok(rows.into_iter().map(ExternalToolDto::from_row).collect())
+}
+
+pub async fn upsert_external_tool_impl(store: &SqliteStore, domain: &str, body: ExternalToolUpsert) -> Result<ExternalToolDto, CrudFailure> {
+    validate_id("domain", domain)?;
+    validate_id("name", &body.name)?;
+    validate_non_empty("url", &body.url)?;
+    validate_non_empty("body_template", &body.body_template)?;
+    if !url_allowed(&body.url) {
+        return Err(CrudFailure::BadRequest(format!("url '{}' not in EVAL_HARNESS_HTTP_TOOL_ALLOWLIST", body.url)));
+    }
+    if body.timeout_ms < 0 {
+        return Err(CrudFailure::BadRequest("timeout_ms must be >= 0".into()));
+    }
+    let row = data_scenarios::sqlite_store::ExternalToolRow {
+        name: body.name,
+        domain: domain.to_string(),
+        description: body.description,
+        method: body.method,
+        url: body.url,
+        headers_json: body.headers_json,
+        body_template: body.body_template,
+        params_schema: body.params_schema,
+        timeout_ms: body.timeout_ms,
+    };
+    store.upsert_external_tool(&row).await?;
+    Ok(ExternalToolDto::from_row(row))
+}
+
+pub async fn delete_external_tool_impl(store: &SqliteStore, domain: &str, name: &str) -> Result<(), CrudFailure> {
+    validate_id("domain", domain)?;
+    validate_id("name", name)?;
+    store.delete_external_tool(domain, name).await?;
+    Ok(())
+}
+
+// ----- axum handlers -----
+
+pub async fn list_external_tools(State(st): State<AppState>) -> Result<JsonOut<Vec<ExternalToolDto>>, CrudFailure> {
+    let store = store_from(&st)?;
+    let dtos = list_external_tools_impl(store.as_ref()).await?;
+    Ok(JsonOut(dtos))
+}
+
+pub async fn list_external_tools_by_domain(State(st): State<AppState>, AxPath(domain): AxPath<String>) -> Result<JsonOut<Vec<ExternalToolDto>>, CrudFailure> {
+    let store = store_from(&st)?;
+    let dtos = list_external_tools_by_domain_impl(store.as_ref(), &domain).await?;
+    Ok(JsonOut(dtos))
+}
+
+pub async fn create_external_tool(
+    State(st): State<AppState>,
+    AxPath(domain): AxPath<String>,
+    JsonExt(body): JsonExt<ExternalToolUpsert>,
+) -> Result<(StatusCode, JsonOut<ExternalToolDto>), CrudFailure> {
+    let store = store_from(&st)?;
+    let dto = upsert_external_tool_impl(store.as_ref(), &domain, body).await?;
+    Ok((StatusCode::CREATED, JsonOut(dto)))
+}
+
+pub async fn update_external_tool_handler(
+    State(st): State<AppState>,
+    AxPath((domain, name)): AxPath<(String, String)>,
+    JsonExt(mut body): JsonExt<ExternalToolUpsert>,
+) -> Result<JsonOut<ExternalToolDto>, CrudFailure> {
+    body.name = name; // path 우선
+    let store = store_from(&st)?;
+    let dto = upsert_external_tool_impl(store.as_ref(), &domain, body).await?;
+    Ok(JsonOut(dto))
+}
+
+pub async fn delete_external_tool_handler(State(st): State<AppState>, AxPath((domain, name)): AxPath<(String, String)>) -> Result<StatusCode, CrudFailure> {
+    let store = store_from(&st)?;
+    delete_external_tool_impl(store.as_ref(), &domain, &name).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+// =============================================================================
 // Tests
 //
 // @trace SPEC-019
@@ -574,4 +879,33 @@ scenarios:
     // suppress unused import warning when tests compile without them
     #[allow(dead_code)]
     fn _unused_anchor(_t: SystemTime) {}
+
+    // -------- SPEC-023 --------
+
+    /// @trace TC: SPEC-023/TC-7
+    /// @trace FR: PRD-023/FR-5
+    #[test]
+    fn spec023_tc_7_url_allowlist_blocks_unmatched() {
+        // SAFETY: 단위 테스트는 단일 스레드 가정. set_var 후 즉시 검증.
+        unsafe {
+            std::env::set_var("EVAL_HARNESS_HTTP_TOOL_ALLOWLIST", "https://api.allowed.com/,http://localhost:");
+        }
+        assert!(url_allowed("https://api.allowed.com/v1/q"));
+        assert!(url_allowed("http://localhost:9000/x"));
+        assert!(!url_allowed("https://evil.example.com/"));
+        unsafe {
+            std::env::remove_var("EVAL_HARNESS_HTTP_TOOL_ALLOWLIST");
+        }
+    }
+
+    /// @trace TC: SPEC-023/TC-8
+    /// @trace FR: PRD-023/FR-5
+    #[test]
+    fn spec023_tc_8_url_allowlist_unset_allows_all() {
+        unsafe {
+            std::env::remove_var("EVAL_HARNESS_HTTP_TOOL_ALLOWLIST");
+        }
+        assert!(url_allowed("http://anything"));
+        assert!(url_allowed("https://anything"));
+    }
 }

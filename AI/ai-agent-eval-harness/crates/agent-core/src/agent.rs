@@ -314,6 +314,9 @@ impl PpaAgent {
         let mut registry = self.tools.lock().unwrap();
         *registry = execution_tools::registry::ToolRegistry::new();
         domains::register_all(&mut registry);
+        // SPEC-023: DB 에 등록된 외부 HTTP 도구도 함께 로드. store 가 install
+        // 안 된 환경(테스트)에서는 조용히 skip.
+        crate::external_tools::register_external_tools_from_db(&mut registry);
     }
 
     /// 키워드 기반 pre-filter. `task_description` 에서 도메인 키워드 빈도를
