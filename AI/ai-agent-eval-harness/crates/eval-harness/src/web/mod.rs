@@ -45,6 +45,10 @@ pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/", get(handlers::index))
         .route("/help", get(handlers::help))
+        // 정적 에셋 — index.html 에서 분리된 CSS/JS 를 서빙.
+        // `include_str!` 로 바이너리에 임베드되므로 외부 파일 의존 없음.
+        .route("/assets/app.css", get(handlers::app_css))
+        .route("/assets/app.js", get(handlers::app_js))
         .route("/api/scenarios", get(handlers::list_scenarios))
         .route("/api/scenarios/:domain/:id", get(api::scenario_detail))
         .route("/api/reports", get(handlers::list_reports))

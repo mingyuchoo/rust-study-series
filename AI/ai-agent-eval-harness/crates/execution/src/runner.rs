@@ -24,10 +24,12 @@ pub struct HarnessRunner {
 impl HarnessRunner {
     pub fn new(output_dir: &str) -> Self {
         let path = std::path::PathBuf::from(output_dir);
-        std::fs::create_dir_all(&path).ok();
+        // 디렉토리 생성은 save_report 시점으로 지연한다.
+        // TrajectoryLogger 는 SQLite 가 사용 가능하면 FileLogger 를 생략하므로
+        // reporting_logs/, reporting_trajectories/ 디렉토리가 생성되지 않는다.
         Self {
             output_dir: path,
-            logger: TrajectoryLogger::new("reporting_logs", "reporting_trajectories"),
+            logger: TrajectoryLogger::new(output_dir, output_dir),
             evaluator: TrajectoryEvaluator::new(),
             results: Vec::new(),
         }

@@ -232,13 +232,17 @@ pub struct TrajectoryLogger {
 
 impl TrajectoryLogger {
     pub fn new(log_dir: &str, trajectory_dir: &str) -> Self {
-        let file = Box::new(FileLogger::new(log_dir, trajectory_dir));
         let inner: Box<dyn TrajectoryLog> = match try_global_store() {
             | Some(store) => {
-                let sqlite = Box::new(SqliteLogger::new(store));
-                Box::new(MultiLogger::new(vec![file, sqlite]))
+                // SQLite 가 주 저장소이므로 FileLogger 를 생략한다.
+                // 파일 디렉토리(reporting_logs/, reporting_trajectories/)가
+                // 생성되지 않고 JSON 파일도 쌓이지 않는다.
+                Box::new(SqliteLogger::new(store))
             },
-            | None => file,
+            | None => {
+                // SQLite 미설치(테스트 등): FileLogger fallback
+                Box::new(FileLogger::new(log_dir, trajectory_dir))
+            },
         };
         Self {
             inner,

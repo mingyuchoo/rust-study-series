@@ -22,9 +22,14 @@
   dependencies = ["format"]
 
 [tasks.release]
-  args         = ["build", "--profile", "release"]
-  command      = "cargo"
-  dependencies = ["format"]
+  description  = "Workspace cargo release build + desktop Tauri bundle for the current host platform"
+  dependencies = ["format", "release-workspace", "desktop-release"]
+  workspace    = false
+
+[tasks.release-workspace]
+  args        = ["build", "--profile", "release"]
+  command     = "cargo"
+  description = "Cargo workspace release build (desktop crate는 루트 워크스페이스에서 제외되어 별도 빌드)"
 
 [tasks.test]
   args         = ["test"]
@@ -55,6 +60,19 @@
   # `cargo-tauri` CLI 는 `install_crate` 로 자동 설치된다.
   # =============================================================================
 
+[tasks.desktop-release]
+  description = "Build desktop Tauri bundle for the current host platform"
+  workspace   = false
+
+[tasks.desktop-release.windows]
+  run_task = "desktop-release-windows"
+
+[tasks.desktop-release.linux]
+  run_task = "desktop-release-linux"
+
+[tasks.desktop-release.mac]
+  run_task = "desktop-release-macos"
+
 [tasks.desktop-release-windows]
   args = [
     "tauri",
@@ -67,7 +85,23 @@
   ]
   command = "cargo"
   cwd = "desktop"
-  description = "Build Windows MSI/NSIS desktop bundle via Tauri"
+  description = "Build Windows x86_64 MSI/NSIS desktop bundle via Tauri"
+  install_crate = {binary = "cargo", crate_name = "tauri-cli", test_arg = ["tauri", "--version"]}
+  workspace = false
+
+[tasks.desktop-release-windows-arm64]
+  args = [
+    "tauri",
+    "build",
+    "--target",
+    "aarch64-pc-windows-msvc",
+    "--bundles",
+    "msi",
+    "nsis",
+  ]
+  command = "cargo"
+  cwd = "desktop"
+  description = "Build Windows ARM64 MSI/NSIS desktop bundle via Tauri"
   install_crate = {binary = "cargo", crate_name = "tauri-cli", test_arg = ["tauri", "--version"]}
   workspace = false
 

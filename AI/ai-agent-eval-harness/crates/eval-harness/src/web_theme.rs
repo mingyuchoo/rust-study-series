@@ -11,6 +11,8 @@
 
 pub const WEB_INDEX_HTML: &str = include_str!("web/index.html");
 pub const WEB_HELP_HTML: &str = include_str!("web/help.html");
+pub const WEB_APP_CSS: &str = include_str!("web/app.css");
+pub const WEB_APP_JS: &str = include_str!("web/app.js");
 
 #[cfg(test)]
 mod tests {
@@ -38,32 +40,35 @@ mod tests {
 
     // @trace TC: TC-2
     // @trace FR: FR-2
-    // @trace scenario: index.html 이 CSS 변수 기반 라이트/다크 테마를 정의
+    // @trace scenario: 웹 에셋(index.html 또는 app.css)이 CSS 변수 기반 라이트/다크
+    // 테마를 정의
     #[test]
     fn tc2_index_defines_css_variable_themes() {
+        let css = WEB_APP_CSS;
         assert!(
-            WEB_INDEX_HTML.contains(r#"[data-theme="light"]"#),
-            "index.html 은 [data-theme=\"light\"] CSS 셀렉터 블록을 포함해야 함"
+            css.contains(r#"[data-theme="light"]"#),
+            "app.css 는 [data-theme=\"light\"] CSS 셀렉터 블록을 포함해야 함"
         );
         assert!(
-            WEB_INDEX_HTML.contains(r#"[data-theme="dark"]"#),
-            "index.html 은 [data-theme=\"dark\"] CSS 셀렉터 블록을 포함해야 함"
+            css.contains(r#"[data-theme="dark"]"#),
+            "app.css 는 [data-theme=\"dark\"] CSS 셀렉터 블록을 포함해야 함"
         );
         for var in ["--bg", "--fg", "--accent"] {
-            assert!(WEB_INDEX_HTML.contains(var), "index.html 은 CSS 변수 `{var}` 를 정의해야 함");
+            assert!(css.contains(var), "app.css 는 CSS 변수 `{var}` 를 정의해야 함");
         }
     }
 
     // @trace TC: TC-3
     // @trace FR: FR-3
-    // @trace scenario: index.html 이 setTheme 에서 선택된 테마를 localStorage 에
-    // 저장
+    // @trace scenario: 웹 에셋(index.html 또는 app.js)이 setTheme 에서 선택된
+    // 테마를 localStorage 에 저장
     #[test]
     fn tc3_index_persists_theme_to_localstorage() {
-        assert!(WEB_INDEX_HTML.contains("setTheme"), "index.html 은 setTheme 함수를 포함해야 함");
+        let js = WEB_APP_JS;
+        assert!(js.contains("setTheme"), "app.js 는 setTheme 함수를 포함해야 함");
         assert!(
-            WEB_INDEX_HTML.contains("localStorage.setItem('theme'"),
-            "index.html 은 localStorage.setItem('theme', ...) 호출을 포함해야 함"
+            js.contains("localStorage.setItem('theme'"),
+            "app.js 는 localStorage.setItem('theme', ...) 호출을 포함해야 함"
         );
     }
 
@@ -100,10 +105,12 @@ mod tests {
 
     /// @trace TC: SPEC-025/TC-18
     /// @trace FR: PRD-025/FR-9
-    /// @trace scenario: index.html Domains 탭에 Prompts 서브 섹션 + 궤적 배지 +
-    /// diff UI 존재
+    /// @trace scenario: 웹 에셋(index.html + app.js)의 Domains 탭에 Prompts
+    /// 서브 섹션
+    /// + 궤적 배지 + diff UI 존재
     #[test]
     fn spec025_tc_18_index_has_prompts_section_and_badge() {
+        // HTML 마크업에 존재해야 하는 토큰
         for token in [
             r#"id="prompts-section""#,
             r#"id="prompts-list""#,
@@ -114,19 +121,20 @@ mod tests {
             "savePromptSetNewVersion",
             "activateSelectedPromptSet",
             "deleteSelectedPromptSet",
-            "refreshPromptSets",
             r#"id="traj-badge""#,
-            "renderTrajBadge",
-            // 후속: 버전 diff UI
             r#"id="ps-compare-select""#,
             r#"id="ps-diff""#,
             "comparePromptSetVersions",
-            "diffLines",
         ] {
             assert!(
                 WEB_INDEX_HTML.contains(token),
                 "index.html 은 SPEC-025 Prompts 섹션 토큰 `{token}` 을 포함해야 함"
             );
+        }
+        // JS 로직에 존재해야 하는 토큰
+        let js = WEB_APP_JS;
+        for token in ["refreshPromptSets", "renderTrajBadge", "diffLines"] {
+            assert!(js.contains(token), "app.js 는 SPEC-025 토큰 `{token}` 을 포함해야 함");
         }
     }
 }

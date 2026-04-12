@@ -185,6 +185,11 @@ pub fn select_domains(task_description: &str, top_k: usize) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
+
+    /// 전역 `KEYWORD_CACHE` 를 사용하는 테스트들이 병렬 실행 시 서로 캐시를
+    /// 오염시키는 것을 방지하기 위한 직렬화 가드.
+    static TEST_LOCK: Mutex<()> = Mutex::new(());
 
     fn prime_with_defaults() {
         invalidate_cache();
@@ -198,6 +203,7 @@ mod tests {
     /// @trace TC: SPEC-020/TC-1
     #[test]
     fn financial_task_selects_financial() {
+        let _g = TEST_LOCK.lock().unwrap();
         prime_with_defaults();
         let r = select_domains("연 이자율 5% 로 1000만원을 예금했을 때 복리 계산해줘", 1);
         assert_eq!(r, vec!["financial".to_string()]);
@@ -206,6 +212,7 @@ mod tests {
     /// @trace TC: SPEC-020/TC-2
     #[test]
     fn cs_task_selects_cs() {
+        let _g = TEST_LOCK.lock().unwrap();
         prime_with_defaults();
         let r = select_domains("고객이 주문한 상품 환불을 요청했습니다", 1);
         assert_eq!(r, vec!["customer_service".to_string()]);
@@ -214,6 +221,7 @@ mod tests {
     /// @trace TC: SPEC-020/TC-3
     #[test]
     fn mixed_task_top2_returns_both() {
+        let _g = TEST_LOCK.lock().unwrap();
         prime_with_defaults();
         let r = select_domains("대출 이자 계산 중 고객 문의가 들어왔습니다", 2);
         assert!(r.contains(&"financial".to_string()));
@@ -223,6 +231,7 @@ mod tests {
     /// @trace TC: SPEC-020/TC-4
     #[test]
     fn no_match_returns_empty() {
+        let _g = TEST_LOCK.lock().unwrap();
         prime_with_defaults();
         let r = select_domains("오늘 날씨가 좋네요", 3);
         assert!(r.is_empty(), "매칭 없는 task 는 빈 Vec");
@@ -231,6 +240,7 @@ mod tests {
     /// @trace TC: SPEC-020/TC-5
     #[test]
     fn top_k_zero_returns_empty() {
+        let _g = TEST_LOCK.lock().unwrap();
         prime_with_defaults();
         let r = select_domains("이자 계산", 0);
         assert!(r.is_empty());
@@ -239,6 +249,7 @@ mod tests {
     /// @trace TC: SPEC-022/TC-10
     #[test]
     fn invalidate_then_reprime_picks_up_new_keywords() {
+        let _g = TEST_LOCK.lock().unwrap();
         // 새 도메인 healthcare 를 캐시에 직접 주입
         let mut map = HashMap::new();
         map.insert("healthcare".to_string(), vec!["환자".to_string(), "처방".to_string()]);

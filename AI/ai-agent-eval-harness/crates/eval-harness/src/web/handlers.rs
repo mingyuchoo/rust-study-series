@@ -9,8 +9,10 @@ use super::AppState;
 use agent_models::domain_config::DomainConfig;
 use axum::{extract::{Path as AxPath,
                      State},
-           http::StatusCode,
+           http::{StatusCode,
+                  header},
            response::{Html,
+                      IntoResponse,
                       Json}};
 use data_scenarios::loader::ScenarioLoader;
 use serde::Serialize;
@@ -20,6 +22,8 @@ use std::{fs,
 
 const INDEX_HTML: &str = include_str!("index.html");
 const HELP_HTML: &str = include_str!("help.html");
+const APP_CSS: &str = include_str!("app.css");
+const APP_JS: &str = include_str!("app.js");
 
 #[derive(Serialize)]
 pub struct ScenarioSummary {
@@ -139,6 +143,17 @@ pub async fn index() -> Html<&'static str> { Html(INDEX_HTML) }
 /// @trace FR: PRD-007/FR-1
 pub async fn help() -> Html<&'static str> { Html(HELP_HTML) }
 
+/// 정적 CSS 에셋 — `/assets/app.css` 로 서빙.
+///
+/// index.html 에서 분리된 스타일 블록을 `include_str!` 로 임베드하여
+/// 기존 "단일 Rust 바이너리 배포" 보장을 유지한다.
+pub async fn app_css() -> impl IntoResponse { ([(header::CONTENT_TYPE, "text/css; charset=utf-8")], APP_CSS) }
+
+/// 정적 JS 에셋 — `/assets/app.js` 로 서빙.
+///
+/// index.html 에서 분리된 스크립트 블록을 `include_str!` 로 임베드.
+pub async fn app_js() -> impl IntoResponse { ([(header::CONTENT_TYPE, "application/javascript; charset=utf-8")], APP_JS) }
+
 pub async fn list_scenarios(State(st): State<AppState>) -> Json<Vec<DomainSummary>> {
     let scen = st.scenarios_dir.clone();
     let out = tokio::task::spawn_blocking(move || list_scenarios_impl(&scen)).await.unwrap_or_default();
@@ -154,11 +169,17 @@ pub async fn get_report(State(st): State<AppState>, AxPath(name): AxPath<String>
     }
 }
 
+/// 테스트용 헬퍼 — index.html 본문 + 분리된 CSS/JS 를 합쳐
+/// 하나의 논리적 "SPA 본문" 으로 반환.
+///
+/// SPEC-002 이후 CSS/JS 를 외부 파일로 분리했지만, 기존 문자열
+/// 매칭 기반 테스트들은 하나의 본문을 검사하도록 작성되어 있으므로
+/// 이 헬퍼가 세 파일을 concat 해서 단일 뷰를 제공한다.
 #[cfg(test)]
-pub fn index_html_body() -> &'static str { INDEX_HTML }
+pub fn index_html_body() -> String { format!("{}\n<!--APP_CSS-->\n{}\n<!--APP_JS-->\n{}", INDEX_HTML, APP_CSS, APP_JS) }
 
 #[cfg(test)]
-pub fn help_html_body() -> &'static str { HELP_HTML }
+pub fn help_html_body() -> String { HELP_HTML.to_string() }
 
 #[cfg(test)]
 mod tests {

@@ -10,10 +10,10 @@
   path = "src/main.rs"
 
 [build-dependencies]
-  tauri-build = {features = [], version = "2"}
+  tauri-build = {features = [], version = "2.0.0"}
 
 [dependencies]
-  tauri = {features = [], version = "2"}
+  tauri = {features = [], version = "2.0.0"}
   # eval-harness 크레이트를 라이브러리로 재사용 (web/desktop_helpers 모듈 접근).
   eval-harness   = {path = "../crates/eval-harness"}
   data-scenarios = {path = "../crates/data-scenarios"}

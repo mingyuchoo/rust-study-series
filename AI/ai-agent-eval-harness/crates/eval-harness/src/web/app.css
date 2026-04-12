@@ -1,0 +1,151 @@
+    /* SPEC-014: CSS 변수 기반 라이트/다크 테마 */
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #121212;
+      --bg-elev: #1e1e1e;
+      --bg-panel: #1a1a1a;
+      --bg-input: #1e1e1e;
+      --bg-input-hover: #2a2a2a;
+      --bg-secondary: #2a2a2a;
+      --bg-secondary-hover: #3a3a3a;
+      --bg-pre: #0a0a0a;
+      --bg-item-hover: #262626;
+      --fg: #e0e0e0;
+      --fg-strong: #eee;
+      --fg-muted: #888;
+      --fg-subtle: #6a6a6a;
+      --fg-label: #aaa;
+      --accent: #f0c419;
+      --accent-hover: #ffd83a;
+      --accent-contrast: #111;
+      --border: #333;
+      --border-strong: #444;
+      --border-faint: #262626;
+      --border-pre: #222;
+      --link: #6af;
+      --err: #ff6b6b;
+      --ok: #51cf66;
+      --select-arrow: "%23f0c419";
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f7f7f5;
+      --bg-elev: #ffffff;
+      --bg-panel: #ffffff;
+      --bg-input: #ffffff;
+      --bg-input-hover: #f0ede4;
+      --bg-secondary: #eeeae0;
+      --bg-secondary-hover: #e2ddd0;
+      --bg-pre: #f3f1ea;
+      --bg-item-hover: #f0ede4;
+      --fg: #1f1f1f;
+      --fg-strong: #0d0d0d;
+      --fg-muted: #6a6a6a;
+      --fg-subtle: #9a9a9a;
+      --fg-label: #555;
+      --accent: #b8860b;
+      --accent-hover: #946c09;
+      --accent-contrast: #ffffff;
+      --border: #d7d3c7;
+      --border-strong: #c0bcae;
+      --border-faint: #e7e3d6;
+      --border-pre: #d7d3c7;
+      --link: #1565c0;
+      --err: #c92a2a;
+      --ok: #2b8a3e;
+      --select-arrow: "%23b8860b";
+    }
+    * { box-sizing: border-box; }
+    body { font-family: 'IBM Plex Sans KR', 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif; margin: 0; background: var(--bg); color: var(--fg); font-size: 13px; }
+    header { padding: 10px 16px; background: var(--bg-elev); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 16px; }
+    header h1 { margin: 0; font-size: 16px; color: var(--accent); }
+    header .spacer { flex: 1; }
+    .lang-switch, .theme-switch { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 4px; overflow: hidden; }
+    .lang-switch button, .theme-switch button { background: var(--bg-elev); color: var(--fg-muted); border: none; padding: 5px 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .lang-switch button.active, .theme-switch button.active { background: var(--accent); color: var(--accent-contrast); }
+    .lang-switch button:hover:not(.active), .theme-switch button:hover:not(.active) { background: var(--bg-input-hover); color: var(--fg-strong); }
+    header a.help-btn { background: var(--bg-secondary); color: var(--accent); border: 1px solid var(--border-strong); border-radius: 4px; padding: 6px 14px; text-decoration: none; font-size: 13px; font-weight: 600; }
+    header a.help-btn:hover { background: var(--bg-secondary-hover); border-color: var(--accent); }
+    nav.tabs { display: flex; gap: 2px; background: var(--bg-panel); border-bottom: 1px solid var(--border); padding: 0 12px; }
+    nav.tabs button { background: none; border: none; color: var(--fg-muted); padding: 10px 14px; cursor: pointer; font-size: 13px; border-bottom: 2px solid transparent; }
+    nav.tabs button:hover { color: var(--fg-strong); }
+    nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+    nav.tabs .sep { display: inline-block; width: 1px; align-self: stretch; background: var(--border); margin: 6px 10px; }
+    main { padding: 16px; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .panel h2 { margin-top: 0; color: var(--accent); font-size: 15px; }
+    .row { display: flex; gap: 12px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+    .split { display: grid; grid-template-columns: 280px 1fr; gap: 12px; }
+    label { font-size: 12px; color: var(--fg-label); }
+    select, input, textarea, button {
+      background: var(--bg-input); color: var(--fg); border: 1px solid var(--border-strong); border-radius: 4px; padding: 6px 10px; font-size: 13px; font-family: inherit;
+    }
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding: 6px 28px 6px 10px;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'><path d='M1 1l6 6 6-6' stroke='%23f0c419' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-color: var(--bg-input);
+    }
+    :root[data-theme="light"] select {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='8' viewBox='0 0 14 8'><path d='M1 1l6 6 6-6' stroke='%23b8860b' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    }
+    select:hover { border-color: var(--accent); }
+    select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    select option {
+      background: var(--bg-input);
+      color: var(--fg);
+      padding: 8px 10px;
+      font-family: 'IBM Plex Sans KR', 'IBM Plex Sans', sans-serif;
+    }
+    select option:checked { background: var(--accent); color: var(--accent-contrast); font-weight: 600; }
+    textarea { font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 12px; width: 100%; min-height: 90px; }
+    code, pre { font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; }
+    button.primary { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); font-weight: 600; cursor: pointer; }
+    button.primary:hover { background: var(--accent-hover); }
+    button.secondary { background: var(--bg-secondary); cursor: pointer; }
+    button.secondary:hover { background: var(--bg-secondary-hover); }
+    .list { border: 1px solid var(--border); border-radius: 4px; background: var(--bg-panel); max-height: 60vh; overflow-y: auto; }
+    .list .item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border-faint); font-size: 12px; }
+    .list .item:hover { background: var(--bg-item-hover); }
+    .list .item.active { background: var(--accent); color: var(--accent-contrast); font-weight: 600; }
+    .list .group { padding: 6px 12px; font-size: 11px; color: var(--link); text-transform: uppercase; border-top: 1px solid var(--border-faint); }
+    .badge { float: right; font-size: 10px; opacity: 0.7; }
+    pre { background: var(--bg-pre); border: 1px solid var(--border-pre); padding: 12px; border-radius: 4px; overflow: auto; max-height: 60vh; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+    .error { color: var(--err); }
+    .ok { color: var(--ok); }
+    .hint { color: var(--fg-subtle); font-size: 11px; margin-top: 4px; }
+    .form-block { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px; margin-bottom: 12px; }
+    .form-block h3 { margin: 0 0 10px; font-size: 13px; color: var(--fg-label); }
+    /* SPEC-022 Domains 탭 — 목록 항목 single-line + 우측 메타 badge */
+    #panel-domains .list .item,
+    #panel-domains #extools-list .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    #panel-domains .list .item .name { overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+    #panel-domains .list .item .meta {
+      flex-shrink: 0;
+      font-size: 10px;
+      opacity: 0.75;
+      font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace;
+    }
+    #panel-domains .list .item.active .meta { opacity: 0.9; }
+    /* SPEC-022 Domains 탭 — 편집기 폼 일관된 간격 */
+    #panel-domains .form-block label { display: block; margin-bottom: 10px; }
+    #panel-domains .form-block label > span { display: block; margin-bottom: 4px; color: var(--fg-label); font-size: 12px; }
+    #panel-domains .form-block input[type="text"],
+    #panel-domains .form-block input[type="number"],
+    #panel-domains .form-block textarea,
+    #panel-domains .form-block select { width: 100%; }
+    #panel-domains .form-block select[multiple] { min-height: 160px; font-family: 'IBM Plex Mono', 'SF Mono', Menlo, monospace; font-size: 12px; }
+    #panel-domains .form-block textarea { min-height: 70px; }
