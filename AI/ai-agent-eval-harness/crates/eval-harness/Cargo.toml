@@ -10,6 +10,7 @@
 [dependencies]
   agent-core                = {workspace = true}
   agent-models              = {workspace = true}
+  eval-models               = {workspace = true}
   anyhow                    = {workspace = true}
   axum                      = {workspace = true}
   chrono                    = {workspace = true}

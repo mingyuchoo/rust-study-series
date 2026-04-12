@@ -2,8 +2,8 @@ use crate::{models::{EvaluationReport,
                      ScenarioResult},
             report_renderer::ReportRenderer};
 use agent_models::{base_agent::BaseAgent,
-                   domain_config::DomainConfig,
-                   models::EvaluationResult};
+                   domain_config::DomainConfig};
+use eval_models::models::EvaluationResult;
 use anyhow::Result;
 use chrono::Utc;
 use colored::*;

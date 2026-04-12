@@ -1,10 +1,10 @@
 use crate::golden_set_validator::GoldenSetValidator;
-use agent_models::models::{EvaluationMetrics,
-                           EvaluationResult,
-                           PpaStage,
+use agent_models::models::{PpaStage,
                            Trajectory};
-use data_scenarios::models::{GoldenSetEntry,
-                             Scenario};
+use eval_models::{models::{EvaluationMetrics,
+                           EvaluationResult},
+                  traits::{EvalContext,
+                           GoldenSetContext}};
 use std::collections::HashMap;
 
 pub struct TrajectoryEvaluator;
@@ -12,7 +12,7 @@ pub struct TrajectoryEvaluator;
 impl TrajectoryEvaluator {
     pub fn new() -> Self { Self }
 
-    pub fn evaluate(&self, trajectory: &Trajectory, scenario: Option<&Scenario>, golden_entry: Option<&GoldenSetEntry>) -> EvaluationResult {
+    pub fn evaluate(&self, trajectory: &Trajectory, scenario: Option<&dyn EvalContext>, golden_entry: Option<&dyn GoldenSetContext>) -> EvaluationResult {
         let mut metrics = EvaluationMetrics::default();
 
         let perceive = self.evaluate_perceive_stage(trajectory);

@@ -9,6 +9,7 @@
   chrono         = {workspace = true}
   colored        = {workspace = true}
   data-scenarios = {workspace = true}
+  eval-models    = {workspace = true}
   reporting      = {workspace = true}
   scoring        = {workspace = true}
   serde          = {workspace = true}

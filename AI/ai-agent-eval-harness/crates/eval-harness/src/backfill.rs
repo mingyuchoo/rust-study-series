@@ -8,8 +8,8 @@
 // 디렉토리에 쌓여 있는 trajectory_*.json / evaluation_*.json 을 SQLite 로
 // 일회성 import. 부분 실패는 stderr 로 경고만 하고 계속 진행한다.
 
-use agent_models::models::{EvaluationResult,
-                           Trajectory};
+use agent_models::models::Trajectory;
+use eval_models::models::EvaluationResult;
 use std::path::Path;
 
 pub struct BackfillReport {

@@ -9,6 +9,7 @@
 // 모두 재사용할 수 있도록 TUI/웹/데스크톱 헬퍼 모듈을 공개한다.
 
 pub mod backfill;
+pub mod bootstrap;
 pub mod build_release;
 pub mod compare_db;
 pub mod data_paths;

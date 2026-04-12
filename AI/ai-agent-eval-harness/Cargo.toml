@@ -2,6 +2,7 @@
   exclude = ["desktop"]
   members = [
     "crates/agent-models",
+    "crates/eval-models",
     "crates/execution-tools",
     "crates/data-scenarios",
     "crates/domains",
@@ -46,6 +47,7 @@
     # workspace crates
     agent-core                = {path = "crates/agent-core"}
     agent-models              = {path = "crates/agent-models"}
+    eval-models               = {path = "crates/eval-models"}
     data-scenarios            = {path = "crates/data-scenarios"}
     domains                   = {path = "crates/domains"}
     execution                 = {path = "crates/execution"}

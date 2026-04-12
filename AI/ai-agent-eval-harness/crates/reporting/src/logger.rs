@@ -9,9 +9,9 @@
 // 기존 구현체 `TrajectoryLogger` 는 facade 로 남아 있어 호출부 시그니처는
 // 변경되지 않는다.
 
-use agent_models::models::{EvaluationResult,
-                           PpaStage,
+use agent_models::models::{PpaStage,
                            Trajectory};
+use eval_models::models::EvaluationResult;
 use anyhow::Result;
 use colored::*;
 use data_scenarios::sqlite_store::SqliteStore;

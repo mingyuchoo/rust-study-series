@@ -1,9 +1,9 @@
-use agent_models::models::{CriteriaCheckResult,
-                           GoldenSetResult,
-                           PpaStage,
+use agent_models::models::{PpaStage,
                            Trajectory};
-use data_scenarios::models::{GoldenSetEntry,
-                             Scenario};
+use eval_models::{models::{CriteriaCheckResult,
+                           GoldenSetResult},
+                  traits::{EvalContext,
+                           GoldenSetContext}};
 use std::collections::HashMap;
 
 pub struct GoldenSetValidator {
@@ -17,22 +17,22 @@ impl GoldenSetValidator {
         }
     }
 
-    pub fn validate(&self, trajectory: &Trajectory, scenario: &Scenario, _enable_llm_judge: bool, _llm_client: Option<()>) -> GoldenSetResult {
-        let criteria_results = self.validate_tool_results(trajectory, &scenario.success_criteria);
+    pub fn validate(&self, trajectory: &Trajectory, scenario: &dyn EvalContext, _enable_llm_judge: bool, _llm_client: Option<()>) -> GoldenSetResult {
+        let criteria_results = self.validate_tool_results(trajectory, scenario.success_criteria());
         let criteria_score = if criteria_results.is_empty() {
             1.0
         } else {
             criteria_results.values().filter(|r| r.passed).count() as f64 / criteria_results.len() as f64
         };
 
-        let (tool_seq_score, actual_tools, _, _) = self.validate_tool_sequence(trajectory, &scenario.expected_tools);
+        let (tool_seq_score, actual_tools, _, _) = self.validate_tool_sequence(trajectory, scenario.expected_tools());
 
         let overall = criteria_score * 0.7 + tool_seq_score * 0.3;
 
         GoldenSetResult {
             criteria_results,
             criteria_score,
-            expected_tools: scenario.expected_tools.clone(),
+            expected_tools: scenario.expected_tools().to_vec(),
             actual_tools,
             tool_sequence_score: tool_seq_score,
             llm_judge_score: None,
@@ -46,17 +46,17 @@ impl GoldenSetValidator {
     pub fn validate_with_golden_entry(
         &self,
         trajectory: &Trajectory,
-        entry: &GoldenSetEntry,
+        entry: &dyn GoldenSetContext,
         _enable_llm_judge: bool,
         _llm_client: Option<()>,
     ) -> GoldenSetResult {
-        let tolerance = entry.expected_output.tolerance;
+        let tolerance = entry.tolerance();
         let validator = GoldenSetValidator::new(tolerance);
 
         let actual_results = self.collect_tool_results(trajectory);
         let mut criteria_results = HashMap::new();
 
-        for (key, expected) in &entry.expected_output.tool_results {
+        for (key, expected) in entry.tool_results() {
             if let Some(actual) = actual_results.get(key) {
                 let (passed, match_type) = validator.compare_values(expected, actual);
                 criteria_results.insert(
@@ -89,14 +89,14 @@ impl GoldenSetValidator {
             criteria_results.values().filter(|r| r.passed).count() as f64 / criteria_results.len() as f64
         };
 
-        let (tool_seq_score, actual_tools, _, _) = self.validate_tool_sequence(trajectory, &entry.expected_output.tool_sequence);
-        let (domain_routing_score, actual_first_domain) = Self::validate_domain_routing(trajectory, entry.expected_output.expected_domain.as_deref());
+        let (tool_seq_score, actual_tools, _, _) = self.validate_tool_sequence(trajectory, entry.tool_sequence());
+        let (domain_routing_score, actual_first_domain) = Self::validate_domain_routing(trajectory, entry.expected_domain());
         let overall = criteria_score * 0.7 + tool_seq_score * 0.3;
 
         GoldenSetResult {
             criteria_results,
             criteria_score,
-            expected_tools: entry.expected_output.tool_sequence.clone(),
+            expected_tools: entry.tool_sequence().to_vec(),
             actual_tools,
             tool_sequence_score: tool_seq_score,
             llm_judge_score: None,

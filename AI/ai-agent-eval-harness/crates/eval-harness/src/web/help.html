@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <title>eval-harness — Help</title>
@@ -10,9 +10,9 @@
     // SPEC-014: FOUC 방지
     (function () {
       try {
-        var t = localStorage.getItem('theme') || 'dark';
+        var t = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', t);
-      } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
     })();
   </script>
   <style>
@@ -388,7 +388,7 @@ curl -X POST http://127.0.0.1:8080/api/tools/classify_inquiry/invoke \
     setLang(currentLang());
 
     // SPEC-014: 테마 토글
-    function currentTheme() { return localStorage.getItem('theme') || 'dark'; }
+    function currentTheme() { return localStorage.getItem('theme') || 'light'; }
     function setTheme(theme) {
       localStorage.setItem('theme', theme);
       document.documentElement.setAttribute('data-theme', theme);

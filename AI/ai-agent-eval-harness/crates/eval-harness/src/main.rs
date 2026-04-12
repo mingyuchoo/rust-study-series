@@ -126,71 +126,8 @@ fn resolve_data_paths(scenarios: Option<&str>, golden_sets: Option<&str>) -> Dat
     }
 }
 
-/// SPEC-017: 기동 시 SQLite 저장소를 전역 설치한다. 멱등 — 이미 설치되었으면
-/// 이전 인스턴스를 재사용한다.
-///
-/// @trace SPEC: SPEC-017
-/// @trace FR: PRD-017/FR-5
 fn install_data_store(paths: &DataPaths) {
-    use data_scenarios::loader::{ScenarioLoader,
-                                 try_installed_store};
-    if let Err(e) = ScenarioLoader::install(&paths.db_path) {
-        eprintln!("[warn] SQLite 저장소 초기화 실패: {e} — 인메모리 fallback 모드");
-        return;
-    }
-    println!("[store] SQLite DB: {}", paths.db_path.display());
-
-    // SPEC-022: 부트스트랩 도메인의 라우터 키워드를 DB 에 시드한다(멱등). 기존
-    // 사용자가 키워드를 수정한 경우는 INSERT OR IGNORE 로 보존된다.
-    if let Some(store) = try_installed_store() {
-        let pairs = agent_core::domain_router::default_keywords_flat();
-        let store_clone = store.clone();
-        let result = match tokio::runtime::Handle::try_current() {
-            | Ok(handle) => tokio::task::block_in_place(|| handle.block_on(async move { store_clone.seed_domain_keywords(&pairs).await })),
-            | Err(_) => tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .ok()
-                .map(|rt| rt.block_on(async move { store_clone.seed_domain_keywords(&pairs).await }))
-                .unwrap_or_else(|| Ok(0)),
-        };
-        match result {
-            | Ok(n) if n > 0 => println!("[store] 부트스트랩 키워드 {n}개 시드"),
-            | Ok(_) => {},
-            | Err(e) => eprintln!("[warn] 키워드 시드 실패: {e}"),
-        }
-
-        // SPEC-025: 각 도메인에 v1 bootstrap PromptSet 시드 (멱등).
-        // 기존 하드코딩된 Perceive/Policy 문구를 그대로 DB 에 주입해 기존
-        // 실행 결과와 바이트 동등성을 유지한다.
-        //
-        // @trace SPEC: SPEC-025
-        // @trace FR: PRD-025/FR-2
-        let store = data_scenarios::loader::try_installed_store();
-        if let Some(store) = store {
-            let store_clone = store.clone();
-            let bundle = data_scenarios::sqlite_store::BootstrapBundleRef {
-                perceive_system: agent_core::llm_client::BOOTSTRAP_PERCEIVE_SYSTEM,
-                perceive_user: agent_core::llm_client::BOOTSTRAP_PERCEIVE_USER,
-                policy_system: agent_core::llm_client::BOOTSTRAP_POLICY_SYSTEM,
-                policy_user: agent_core::llm_client::BOOTSTRAP_POLICY_USER,
-            };
-            let result = match tokio::runtime::Handle::try_current() {
-                | Ok(handle) => tokio::task::block_in_place(|| handle.block_on(async move { store_clone.seed_bootstrap_prompt_sets(&bundle).await })),
-                | Err(_) => tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .ok()
-                    .map(|rt| rt.block_on(async move { store_clone.seed_bootstrap_prompt_sets(&bundle).await }))
-                    .unwrap_or(Ok(0)),
-            };
-            match result {
-                | Ok(n) if n > 0 => println!("[store] 부트스트랩 PromptSet {n}개 시드"),
-                | Ok(_) => {},
-                | Err(e) => eprintln!("[warn] PromptSet 시드 실패: {e}"),
-            }
-        }
-    }
+    eval_harness::bootstrap::install_data_store(paths);
 }
 
 /// @trace SPEC: SPEC-016

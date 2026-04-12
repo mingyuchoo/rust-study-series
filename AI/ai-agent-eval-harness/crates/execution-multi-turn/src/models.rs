@@ -1,6 +1,6 @@
 #![allow(dead_code)]
-use agent_models::models::{EvaluationResult,
-                           Trajectory};
+use agent_models::models::Trajectory;
+use eval_models::models::EvaluationResult;
 use chrono::{DateTime,
              Utc};
 use serde::{Deserialize,

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" data-theme="dark">
+<html lang="ko" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <title>eval-harness</title>
@@ -10,9 +10,9 @@
     // SPEC-014: FOUC 방지 — 스타일 로드 전에 data-theme 속성을 먼저 설정
     (function () {
       try {
-        var t = localStorage.getItem('theme') || 'dark';
+        var t = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', t);
-      } catch (e) { document.documentElement.setAttribute('data-theme', 'dark'); }
+      } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
     })();
   </script>
   <link rel="stylesheet" href="/assets/app.css">
@@ -30,7 +30,7 @@
       <button id="lang-ko" class="lang-btn" data-lang="ko">한</button>
       <button id="lang-en" class="lang-btn" data-lang="en">EN</button>
     </div>
-    <a href="/help" target="_blank" class="help-btn" data-i18n="header.help">📖 사용안내</a>
+    <a href="/help" class="help-btn" data-i18n="header.help">📖 사용안내</a>
   </header>
 
   <nav class="tabs" id="tab-bar">

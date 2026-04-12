@@ -8,8 +8,8 @@
 use super::{AppState,
             api::build_agent_registry,
             handlers::is_safe_name};
-use agent_models::models::{EvaluationResult,
-                           Trajectory};
+use agent_models::models::Trajectory;
+use eval_models::models::EvaluationResult;
 use axum::{extract::{Path as AxPath,
                      State},
            http::StatusCode,

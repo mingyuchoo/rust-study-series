@@ -236,7 +236,7 @@
     setLang(currentLang());
 
     // ---------- theme toggle (SPEC-014) ----------
-    function currentTheme() { return localStorage.getItem('theme') || 'dark'; }
+    function currentTheme() { return localStorage.getItem('theme') || 'light'; }
     function setTheme(theme) {
       localStorage.setItem('theme', theme);
       document.documentElement.setAttribute('data-theme', theme);
@@ -1124,11 +1124,12 @@
       } catch (e) { showErr($('ps-out'), e); }
     }
 
-    // Tauri WebView2 는 target="_blank" 새 창 요청을 차단하므로,
-    // 데스크톱 환경에서는 같은 창에서 /help 로 이동하도록 target 속성을 제거한다.
-    if (window.__IS_TAURI__) {
+    // 웹 브라우저 환경에서만 target="_blank" 를 추가하여 새 탭에서 열리게 한다.
+    // Tauri WebView2 는 target="_blank" 새 창 요청을 차단하므로, HTML 기본값은
+    // target 없음(같은 창 이동)으로 두고 브라우저에서만 새 탭 동작을 부여한다.
+    if (!window.__IS_TAURI__) {
       const hb = document.querySelector('a.help-btn');
-      if (hb) hb.removeAttribute('target');
+      if (hb) hb.setAttribute('target', '_blank');
     }
 
     // ---------- init dispatcher ----------

@@ -1,3 +1,5 @@
+use eval_models::traits::{EvalContext,
+                          GoldenSetContext};
 use serde::{Deserialize,
             Serialize};
 use std::collections::HashMap;
@@ -61,4 +63,16 @@ fn default_version() -> String { "1.0".into() }
 impl GoldenSetFile {
     #[allow(dead_code)]
     pub fn get_by_scenario_id(&self, scenario_id: &str) -> Option<&GoldenSetEntry> { self.golden_sets.iter().find(|e| e.scenario_id == scenario_id) }
+}
+
+impl EvalContext for Scenario {
+    fn expected_tools(&self) -> &[String] { &self.expected_tools }
+    fn success_criteria(&self) -> &HashMap<String, serde_json::Value> { &self.success_criteria }
+}
+
+impl GoldenSetContext for GoldenSetEntry {
+    fn tool_sequence(&self) -> &[String] { &self.expected_output.tool_sequence }
+    fn tool_results(&self) -> &HashMap<String, serde_json::Value> { &self.expected_output.tool_results }
+    fn tolerance(&self) -> f64 { self.expected_output.tolerance }
+    fn expected_domain(&self) -> Option<&str> { self.expected_output.expected_domain.as_deref() }
 }

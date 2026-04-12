@@ -9,6 +9,7 @@
   chrono         = {workspace = true}
   colored        = {workspace = true}
   data-scenarios = {workspace = true}
+  eval-models    = {workspace = true}
   serde_json     = {workspace = true}
   tokio          = {workspace = true}
 
