@@ -1,6 +1,7 @@
-use domain::entities::Address;
-use domain::repositories::AddressRepository;
-use rusqlite::{Connection, Result as SqlResult};
+use domain::{entities::Address,
+             repositories::AddressRepository};
+use rusqlite::{Connection,
+               Result as SqlResult};
 use std::sync::Mutex;
 
 pub struct SqliteAddressRepository {

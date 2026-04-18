@@ -1,7 +1,21 @@
 use application::usecases::AddressUseCases;
 use domain::entities::Address;
-use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
-use iced::{Element, Length, Task};
+use iced::{Element,
+           Length,
+           Subscription,
+           Task,
+           keyboard::{self,
+                      key},
+           widget::{Column,
+                    button,
+                    column,
+                    container,
+                    operation::{focus_next,
+                                focus_previous},
+                    row,
+                    scrollable,
+                    text,
+                    text_input}};
 use infrastructure::database::SqliteAddressRepository;
 use std::sync::Arc;
 
@@ -20,6 +34,7 @@ enum Message {
     CancelEdit,
     LoadAddresses,
     AddressesLoaded(Result<Vec<Address>, String>),
+    TabPressed { shift: bool },
 }
 
 struct AddressBook {
@@ -153,19 +168,49 @@ impl AddressBook {
                 }
                 Task::none()
             },
+            | Message::TabPressed {
+                shift,
+            } =>
+                if shift {
+                    focus_previous()
+                } else {
+                    focus_next()
+                },
         }
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        keyboard::listen().filter_map(|event| match event {
+            | keyboard::Event::KeyPressed {
+                key: keyboard::Key::Named(key::Named::Tab),
+                modifiers,
+                ..
+            } => Some(Message::TabPressed {
+                shift: modifiers.shift(),
+            }),
+            | _ => None,
+        })
     }
 
     fn view(&self) -> Element<'_, Message> {
         let input_form = column![
             text("Name:").size(16),
-            text_input("Enter name", &self.name_input).on_input(Message::NameChanged).padding(10),
+            text_input("Enter name", &self.name_input).id("name").on_input(Message::NameChanged).padding(10),
             text("Phone:").size(16),
-            text_input("Enter phone", &self.phone_input).on_input(Message::PhoneChanged).padding(10),
+            text_input("Enter phone", &self.phone_input)
+                .id("phone")
+                .on_input(Message::PhoneChanged)
+                .padding(10),
             text("Email:").size(16),
-            text_input("Enter email", &self.email_input).on_input(Message::EmailChanged).padding(10),
+            text_input("Enter email", &self.email_input)
+                .id("email")
+                .on_input(Message::EmailChanged)
+                .padding(10),
             text("Address:").size(16),
-            text_input("Enter address", &self.address_input).on_input(Message::AddressChanged).padding(10),
+            text_input("Enter address", &self.address_input)
+                .id("address")
+                .on_input(Message::AddressChanged)
+                .padding(10),
         ]
         .spacing(10)
         .padding(20);
@@ -221,7 +266,9 @@ impl AddressBook {
 }
 
 fn main() -> iced::Result {
-    iced::application("Address Book", AddressBook::update, AddressBook::view)
+    iced::application(AddressBook::new, AddressBook::update, AddressBook::view)
+        .subscription(AddressBook::subscription)
+        .title("Address Book")
         .font(NOTO_SANS_KR)
-        .run_with(AddressBook::new)
+        .run()
 }

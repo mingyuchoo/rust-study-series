@@ -1,5 +1,5 @@
-use domain::entities::Address;
-use domain::repositories::AddressRepository;
+use domain::{entities::Address,
+             repositories::AddressRepository};
 use std::sync::Arc;
 
 pub struct AddressUseCases {
