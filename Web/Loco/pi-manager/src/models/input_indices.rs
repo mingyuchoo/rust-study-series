@@ -32,7 +32,10 @@ impl Model {
         item.ok_or_else(|| ModelError::EntityNotFound)
     }
 
-    pub async fn find_by_indicator(db: &DatabaseConnection, indicator_id: i32) -> ModelResult<Vec<Self>> {
+    pub async fn find_by_indicator(
+        db: &DatabaseConnection,
+        indicator_id: i32,
+    ) -> ModelResult<Vec<Self>> {
         Ok(Entity::find()
             .filter(input_indices::Column::PerformanceIndicatorId.eq(indicator_id))
             .all(db)
@@ -54,7 +57,11 @@ impl Model {
         Ok(item)
     }
 
-    pub async fn update(db: &DatabaseConnection, id: i32, params: &UpdateParams) -> ModelResult<Self> {
+    pub async fn update(
+        db: &DatabaseConnection,
+        id: i32,
+        params: &UpdateParams,
+    ) -> ModelResult<Self> {
         let item = Self::find_by_id(db, id).await?;
         let mut active: ActiveModel = item.into();
 

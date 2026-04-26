@@ -41,7 +41,10 @@ impl Initializer for SeedDataInitializer {
             // 순서대로 시드 (외래 키 제약 때문에 부모 테이블부터)
             db::seed::<performance_indicators::ActiveModel>(
                 &ctx.db,
-                &base.join("performance_indicators.yaml").display().to_string(),
+                &base
+                    .join("performance_indicators.yaml")
+                    .display()
+                    .to_string(),
             )
             .await?;
 
@@ -71,7 +74,10 @@ impl Initializer for SeedDataInitializer {
 
             info!("시드 데이터 로드 완료!");
         } else {
-            info!("기존 데이터가 있습니다. 시드를 건너뜁니다. (count: {})", count);
+            info!(
+                "기존 데이터가 있습니다. 시드를 건너뜁니다. (count: {})",
+                count
+            );
         }
 
         Ok(())

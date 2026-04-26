@@ -97,7 +97,7 @@ impl Model {
 
     /// 각 하위지표(입력/과정/산출/결과)의 가중평균을 계산하여 최종 성과점수를 산출
     pub async fn calculate_score(&self, db: &DatabaseConnection) -> ModelResult<f64> {
-        use super::_entities::{input_indices, process_indices, output_indices, outcome_indices};
+        use super::_entities::{input_indices, outcome_indices, output_indices, process_indices};
 
         let input = input_indices::Entity::find()
             .filter(input_indices::Column::PerformanceIndicatorId.eq(self.id))
@@ -168,9 +168,15 @@ trait HasWeightedValue {
 macro_rules! impl_weighted_value {
     ($entity_mod:path) => {
         impl HasWeightedValue for $entity_mod {
-            fn weight_val(&self) -> Option<f64> { self.weight }
-            fn actual_val(&self) -> Option<f64> { self.actual_value }
-            fn target_val(&self) -> Option<f64> { self.target_value }
+            fn weight_val(&self) -> Option<f64> {
+                self.weight
+            }
+            fn actual_val(&self) -> Option<f64> {
+                self.actual_value
+            }
+            fn target_val(&self) -> Option<f64> {
+                self.target_value
+            }
         }
     };
 }

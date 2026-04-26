@@ -8,8 +8,14 @@ async fn dashboard(
     ViewEngine(v): ViewEngine<TeraView>,
     State(ctx): State<AppContext>,
 ) -> Result<Response> {
-    let items = performance_indicators::Model::find_all(&ctx.db).await.unwrap_or_default();
-    format::render().view(&v, "dashboard/index.html", serde_json::json!({ "indicators": items }))
+    let items = performance_indicators::Model::find_all(&ctx.db)
+        .await
+        .unwrap_or_default();
+    format::render().view(
+        &v,
+        "dashboard/index.html",
+        serde_json::json!({ "indicators": items }),
+    )
 }
 
 /// GET /indicators/:id - 성과지표 상세
@@ -21,10 +27,18 @@ async fn indicator_detail(
     let item = performance_indicators::Model::find_by_id(&ctx.db, id).await?;
     let score = item.calculate_score(&ctx.db).await.unwrap_or(0.0);
 
-    let input = crate::models::input_indices::Model::find_by_indicator(&ctx.db, id).await.unwrap_or_default();
-    let process = crate::models::process_indices::Model::find_by_indicator(&ctx.db, id).await.unwrap_or_default();
-    let output = crate::models::output_indices::Model::find_by_indicator(&ctx.db, id).await.unwrap_or_default();
-    let outcome = crate::models::outcome_indices::Model::find_by_indicator(&ctx.db, id).await.unwrap_or_default();
+    let input = crate::models::input_indices::Model::find_by_indicator(&ctx.db, id)
+        .await
+        .unwrap_or_default();
+    let process = crate::models::process_indices::Model::find_by_indicator(&ctx.db, id)
+        .await
+        .unwrap_or_default();
+    let output = crate::models::output_indices::Model::find_by_indicator(&ctx.db, id)
+        .await
+        .unwrap_or_default();
+    let outcome = crate::models::outcome_indices::Model::find_by_indicator(&ctx.db, id)
+        .await
+        .unwrap_or_default();
 
     format::render().view(
         &v,

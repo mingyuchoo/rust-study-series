@@ -126,17 +126,17 @@ args = ["audit"]
 [tasks.db-migrate]
 description = "데이터베이스 마이그레이션 실행"
 command = "cargo"
-args = ["loco", "db", "migrate"]
+args = ["run", "--bin", "pi_manager-cli", "--", "db", "migrate"]
 
 [tasks.db-reset]
 description = "데이터베이스 리셋 후 마이그레이션 재실행"
 command = "cargo"
-args = ["loco", "db", "reset"]
+args = ["run", "--bin", "pi_manager-cli", "--", "db", "reset"]
 
 [tasks.db-status]
 description = "데이터베이스 마이그레이션 상태 확인"
 command = "cargo"
-args = ["loco", "db", "status"]
+args = ["run", "--bin", "pi_manager-cli", "--", "db", "status"]
 
 # =============================================================================
 # 개발 (Development)
@@ -145,7 +145,7 @@ args = ["loco", "db", "status"]
 [tasks.dev]
 description = "개발 서버 시작 (파일 변경 감지 자동 재시작)"
 command = "cargo"
-args = ["loco", "start"]
+args = ["run", "--bin", "pi_manager-cli", "--", "start"]
 
 [tasks.watch]
 description = "파일 변경 감지 자동 빌드"
@@ -155,7 +155,7 @@ args = ["watch", "-x", "build"]
 [tasks.routes]
 description = "등록된 라우트 목록 출력"
 command = "cargo"
-args = ["loco", "routes"]
+args = ["run", "--bin", "pi_manager-cli", "--", "routes"]
 
 # =============================================================================
 # 배포 (Deploy)

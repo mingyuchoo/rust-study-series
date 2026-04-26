@@ -1,7 +1,7 @@
 use axum::extract::Path;
 use loco_rs::prelude::*;
 
-use crate::models::{input_indices, process_indices, output_indices, outcome_indices};
+use crate::models::{input_indices, outcome_indices, output_indices, process_indices};
 
 // ── Input Indices ──────────────────────────────────────────
 

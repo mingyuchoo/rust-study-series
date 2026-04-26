@@ -91,18 +91,16 @@ fn get_system_prompt(index_type: &str) -> String {
     )
 }
 
-async fn chat(
-    State(_ctx): State<AppContext>,
-    Json(params): Json<ChatRequest>,
-) -> Result<Response> {
+async fn chat(State(_ctx): State<AppContext>, Json(params): Json<ChatRequest>) -> Result<Response> {
     let api_key = std::env::var("AZURE_OPENAI_API_KEY")
         .map_err(|_| Error::string("AZURE_OPENAI_API_KEY 환경변수가 설정되지 않았습니다"))?;
     let endpoint = std::env::var("AZURE_OPENAI_ENDPOINT")
         .map_err(|_| Error::string("AZURE_OPENAI_ENDPOINT 환경변수가 설정되지 않았습니다"))?;
     let api_version = std::env::var("AZURE_OPENAI_API_VERSION")
         .map_err(|_| Error::string("AZURE_OPENAI_API_VERSION 환경변수가 설정되지 않았습니다"))?;
-    let deployment_name = std::env::var("AZURE_OPENAI_DEPLOYMENT_NAME")
-        .map_err(|_| Error::string("AZURE_OPENAI_DEPLOYMENT_NAME 환경변수가 설정되지 않았습니다"))?;
+    let deployment_name = std::env::var("AZURE_OPENAI_DEPLOYMENT_NAME").map_err(|_| {
+        Error::string("AZURE_OPENAI_DEPLOYMENT_NAME 환경변수가 설정되지 않았습니다")
+    })?;
 
     let client = Client::new();
 
@@ -110,7 +108,10 @@ async fn chat(
     let user_message = format!(
         "성과지표 '{}' ({})에 대한 {}를 추천해주세요.\n\n사용자 요청: {}",
         params.indicator_name,
-        params.indicator_description.as_deref().unwrap_or("설명 없음"),
+        params
+            .indicator_description
+            .as_deref()
+            .unwrap_or("설명 없음"),
         match params.index_type.as_str() {
             "input" => "입력지표",
             "process" => "과정지표",
@@ -165,7 +166,10 @@ async fn chat(
         .first()
         .and_then(|c| {
             // content가 있으면 사용, 없으면 reasoning_content 사용
-            c.message.content.clone().or_else(|| c.message.reasoning_content.clone())
+            c.message
+                .content
+                .clone()
+                .or_else(|| c.message.reasoning_content.clone())
         })
         .unwrap_or_default();
 
@@ -219,7 +223,5 @@ async fn chat(
 }
 
 pub fn routes() -> Routes {
-    Routes::new()
-        .prefix("/api/ai")
-        .add("/chat", post(chat))
+    Routes::new().prefix("/api/ai").add("/chat", post(chat))
 }

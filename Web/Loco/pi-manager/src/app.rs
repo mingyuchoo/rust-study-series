@@ -20,7 +20,8 @@ use crate::{
         input_indices, outcome_indices, output_indices, performance_indicators, process_indices,
         users,
     },
-    tasks, workers::downloader::DownloadWorker,
+    tasks,
+    workers::downloader::DownloadWorker,
 };
 
 pub struct App;
@@ -92,7 +93,10 @@ impl Hooks for App {
         // 순서대로 시드 (외래 키 제약 때문에 부모 테이블부터)
         db::seed::<performance_indicators::ActiveModel>(
             &ctx.db,
-            &base.join("performance_indicators.yaml").display().to_string(),
+            &base
+                .join("performance_indicators.yaml")
+                .display()
+                .to_string(),
         )
         .await?;
 
