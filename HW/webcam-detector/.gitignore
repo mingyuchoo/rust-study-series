@@ -2,6 +2,7 @@
 /target/
 /dist/
 /recordings/
+/face-registry/
 
 # This is an executable app, so keep the lockfile reproducible.
 !/Cargo.lock

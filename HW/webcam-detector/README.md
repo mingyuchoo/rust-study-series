@@ -67,7 +67,19 @@ The `package` command writes the optimized desktop binary to `dist/`.
 The `REC` button records the live webcam stream to MP4 files under `recordings/`.
 The app uses `ffmpeg` for encoding, so install `ffmpeg` and make sure it is available on `PATH`.
 
-The `PLAY` button opens the last completed recording with the operating system's default video player.
+The `PLAY` button opens the last completed recording with the operating system's default video player. When the app starts again, it scans `recordings/` and uses the newest `webcam-detector-*.mp4` file as the last recording.
+
+## Face Tags
+
+The preview scans incoming frames for face-like regions and draws an `UNKNOWN` tag over each candidate.
+Click `ADD` to register the largest current candidate. A small form opens for `NAME`, `AGE`, and `GENDER`.
+Use `TAB` to move between fields, `ENTER` to save, and `ESC` to cancel.
+When a future candidate matches the local embedding, the overlay changes from `UNKNOWN` to that registered person's name, age, gender, and match confidence when the metadata is available.
+Click `DEL` while a registered person is recognized to remove that person and their local embeddings.
+The local face registry is stored at `face-registry/people.json`.
+
+This is still a lightweight local recognition pipeline. The current detector and embedding are heuristic so the app can run without model files. The next stage should replace them with an ONNX face detector and ArcFace-style embedding model for reliable identity matching.
+The code is already split behind `FaceDetector` and `FaceRecognizer` traits so the heuristic implementation can be replaced without changing the UI loop.
 
 ## Installer Bundles
 
