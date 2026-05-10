@@ -1,0 +1,63 @@
+name: webcam-detector-desktop
+
+on:
+  pull_request:
+    paths:
+      - "HW/webcam-detector/**"
+      - ".github/workflows/webcam-detector-desktop.yml"
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "HW/webcam-detector/**"
+      - ".github/workflows/webcam-detector-desktop.yml"
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux desktop dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang libclang-dev pkg-config libx11-dev libxrandr-dev libxi-dev libxcursor-dev libgl1-mesa-dev libv4l-dev
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            HW/webcam-detector -> target
+
+      - name: Build
+        working-directory: HW/webcam-detector
+        run: cargo build --workspace --all-features
+
+      - name: Test
+        working-directory: HW/webcam-detector
+        run: cargo test --workspace --all-targets --all-features
+
+      - name: Package release binary
+        working-directory: HW/webcam-detector
+        shell: bash
+        run: ./scripts/run.sh package
+
+      - name: Upload desktop binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: webcam-detector-${{ runner.os }}
+          path: HW/webcam-detector/dist/*

@@ -1,0 +1,21 @@
+[workspace]
+  members = [
+    "apps/webcam-detector",
+    "crates/webcam-core",
+  ]
+  resolver = "2"
+
+[workspace.package]
+  edition = "2024"
+  version = "0.1.0"
+
+[workspace.dependencies]
+  anyhow             = "1"
+  image              = "0.25"
+  imageproc          = "0.25"
+  minifb             = "0.27"
+  nokhwa             = {features = ["input-native", "output-threaded"], version = "0.10"}
+  thiserror          = "2"
+  tracing            = "0.1"
+  tracing-subscriber = "0.3"
+  webcam-core        = {path = "crates/webcam-core"}

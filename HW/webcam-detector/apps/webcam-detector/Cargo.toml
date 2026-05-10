@@ -1,0 +1,12 @@
+[package]
+  edition.workspace = true
+  name              = "webcam-detector"
+  version.workspace = true
+
+[dependencies]
+  anyhow             = {workspace = true}
+  minifb             = {workspace = true}
+  nokhwa             = {workspace = true}
+  tracing            = {workspace = true}
+  tracing-subscriber = {workspace = true}
+  webcam-core        = {workspace = true}
