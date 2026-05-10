@@ -69,6 +69,13 @@ The app uses `ffmpeg` for encoding, so install `ffmpeg` and make sure it is avai
 
 The `PLAY` button opens the last completed recording with the operating system's default video player. When the app starts again, it scans `recordings/` and uses the newest `webcam-detector-*.mp4` file as the last recording.
 
+## Preview Size
+
+Use `ZOOM-` and `ZOOM+` to change the webcam preview size from 50% to 200%.
+Use `100%` to reset the preview to the camera's native frame size.
+Recording and face recognition keep using the original camera frame, so changing the preview size only affects the on-screen display.
+The preview window is resizable, and you can move the webcam image inside it by dragging the image with the right mouse button.
+
 ## Face Tags
 
 The preview scans incoming frames for face-like regions and draws an `UNKNOWN` tag over each candidate.

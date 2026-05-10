@@ -56,6 +56,8 @@ const FORM_TEXT: u32 = 0xf9fafb;
 const FORM_MUTED_TEXT: u32 = 0x9ca3af;
 const RECORDINGS_DIR: &str = "recordings";
 const RECORDING_FILE_PREFIX: &str = "webcam-detector-";
+const MIN_WINDOW_WIDTH: usize = 760;
+const DISPLAY_SCALE_STEPS: [usize; 7] = [50, 75, 100, 125, 150, 175, 200];
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
@@ -72,9 +74,10 @@ fn main() -> Result<()> {
     let resolution = first_frame.resolution();
     let mut width = resolution.width() as usize;
     let mut height = resolution.height() as usize;
+    let mut display_scale = DisplayScale::default();
 
     let frame_rate = camera.frame_rate().max(1);
-    let mut window = create_window(width, height)?;
+    let mut window = create_window(width, height, display_scale)?;
     let mut recorder: Option<Recorder> = None;
     let mut last_recording = latest_recording_path();
     let mut was_left_down = false;
@@ -89,6 +92,8 @@ fn main() -> Result<()> {
     let mut selected_face_rect: Option<FaceRect> = None;
     let mut selected_face_manual = false;
     let mut drag_start: Option<Point> = None;
+    let mut preview_origin = PreviewOrigin::default();
+    let mut preview_drag: Option<PreviewDrag> = None;
     let mut frame_index = 0_u64;
     let mut registration_form: Option<RegistrationForm> = None;
 
@@ -122,10 +127,12 @@ fn main() -> Result<()> {
             }
             width = frame_width;
             height = frame_height;
-            window = create_window(width, height)?;
+            window = create_window(width, height, display_scale)?;
             selected_face_rect = None;
             selected_face_manual = false;
             drag_start = None;
+            preview_origin = PreviewOrigin::default();
+            preview_drag = None;
             tracing::info!("웹캠 해상도 변경: {width}x{height}");
         }
 
@@ -178,7 +185,31 @@ fn main() -> Result<()> {
         let buttons = toolbar_buttons(recording);
         let mouse = mouse_position(&window);
         let hover = mouse.and_then(|point| button_at(point, &buttons));
+        let display_width = display_scale.scaled_dimension(width);
+        let display_height = display_scale.scaled_dimension(height);
+        let (window_width, window_height) = window.get_size();
+        let window_width = window_width.max(1);
+        let window_height = window_height.max(TOOLBAR_HEIGHT + 1);
+        preview_origin.clamp(window_width, window_height, display_width, display_height);
         let left_down = window.get_mouse_down(MouseButton::Left);
+        let right_down = window.get_mouse_down(MouseButton::Right);
+        if registration_form.is_none() && right_down {
+            if preview_drag.is_none()
+                && let Some(point) = mouse
+                && mouse_video_point(point, preview_origin, display_scale, width, height).is_some()
+            {
+                preview_drag = Some(PreviewDrag {
+                    mouse_start: point,
+                    origin_start: preview_origin,
+                });
+            }
+            if let (Some(drag), Some(point)) = (preview_drag, mouse) {
+                preview_origin = drag.preview_origin_at(point);
+                preview_origin.clamp(window_width, window_height, display_width, display_height);
+            }
+        } else {
+            preview_drag = None;
+        }
         if registration_form.is_none() && left_down && !was_left_down {
             drag_start = None;
             if let Some(action) = hover {
@@ -230,14 +261,35 @@ fn main() -> Result<()> {
                         | Ok(None) => tracing::warn!("삭제할 등록 얼굴이 현재 화면에 인식되지 않았습니다."),
                         | Err(error) => tracing::warn!("얼굴 등록 삭제 실패: {error}"),
                     },
+                    | UiAction::DecreasePreviewSize => {
+                        display_scale.decrease();
+                        window = create_window(width, height, display_scale)?;
+                        preview_origin = PreviewOrigin::default();
+                        drag_start = None;
+                        preview_drag = None;
+                    },
+                    | UiAction::ResetPreviewSize => {
+                        display_scale.reset();
+                        window = create_window(width, height, display_scale)?;
+                        preview_origin = PreviewOrigin::default();
+                        drag_start = None;
+                        preview_drag = None;
+                    },
+                    | UiAction::IncreasePreviewSize => {
+                        display_scale.increase();
+                        window = create_window(width, height, display_scale)?;
+                        preview_origin = PreviewOrigin::default();
+                        drag_start = None;
+                        preview_drag = None;
+                    },
                     | UiAction::Exit => should_exit = true,
                 }
             } else if let Some(point) = mouse {
-                if let Some(rect) = face_tag_at(point, &face_tags) {
+                if let Some(rect) = face_tag_at(point, &face_tags, preview_origin, display_scale, width, height) {
                     selected_face_rect = Some(rect);
                     selected_face_manual = false;
                     tracing::info!("얼굴 박스 선택: x={} y={} w={} h={}", rect.x, rect.y, rect.width, rect.height);
-                } else if point.y >= TOOLBAR_HEIGHT {
+                } else if mouse_video_point(point, preview_origin, display_scale, width, height).is_some() {
                     selected_face_rect = None;
                     selected_face_manual = false;
                     drag_start = Some(point);
@@ -248,7 +300,7 @@ fn main() -> Result<()> {
             && !left_down
             && was_left_down
             && let (Some(start), Some(end)) = (drag_start.take(), mouse)
-            && let Some(rect) = face_rect_from_drag(start, end, width, height)
+            && let Some(rect) = face_rect_from_drag(start, end, preview_origin, display_scale, width, height)
         {
             selected_face_rect = Some(rect);
             selected_face_manual = true;
@@ -258,26 +310,29 @@ fn main() -> Result<()> {
 
         let recording = recorder.is_some();
         let drag_rect = if registration_form.is_none() && left_down {
-            drag_start.and_then(|start| mouse.and_then(|end| face_rect_from_drag(start, end, width, height)))
+            drag_start.and_then(|start| mouse.and_then(|end| face_rect_from_drag(start, end, preview_origin, display_scale, width, height)))
         } else {
             None
         };
+        let scaled_display = scale_video_buffer(&decoded_frame.display, width, height, display_width, display_height);
         let buffer = compose_frame(
-            &decoded_frame.display,
-            width,
-            height,
+            &scaled_display,
+            window_width,
+            window_height,
+            display_width,
+            display_height,
             ComposeState {
                 recording,
                 hover,
+                preview_origin,
+                display_scale,
                 face_tags: &face_tags,
                 selected_face_rect,
                 drag_rect,
                 registration_form: registration_form.as_ref(),
             },
         );
-        window
-            .update_with_buffer(&buffer, width, height + TOOLBAR_HEIGHT)
-            .context("화면 업데이트 실패")?;
+        window.update_with_buffer(&buffer, window_width, window_height).context("화면 업데이트 실패")?;
     }
 
     if let Some(active_recorder) = recorder.take() {
@@ -291,12 +346,17 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn create_window(width: usize, height: usize) -> Result<Window> {
+fn create_window(width: usize, height: usize, display_scale: DisplayScale) -> Result<Window> {
+    let display_width = display_scale.scaled_dimension(width);
+    let display_height = display_scale.scaled_dimension(height);
     Window::new(
-        &format!("웹캠 감지기 - {width}x{height}"),
-        width,
-        height + TOOLBAR_HEIGHT,
-        WindowOptions::default(),
+        &format!("웹캠 감지기 - {width}x{height} @ {}%", display_scale.percent()),
+        window_width(display_width),
+        display_height + TOOLBAR_HEIGHT,
+        WindowOptions {
+            resize: true,
+            ..WindowOptions::default()
+        },
     )
     .context("윈도우 생성 실패")
 }
@@ -315,6 +375,27 @@ fn decode_frame(frame: Buffer, width: usize, height: usize) -> Result<DecodedFra
         rgb: raw,
         display,
     })
+}
+
+fn window_width(display_width: usize) -> usize { display_width.max(MIN_WINDOW_WIDTH) }
+
+fn scale_video_buffer(video: &[u32], source_width: usize, source_height: usize, target_width: usize, target_height: usize) -> Vec<u32> {
+    if source_width == target_width && source_height == target_height {
+        return video.to_vec();
+    }
+
+    let mut scaled = vec![0; target_width * target_height];
+    for y in 0 .. target_height {
+        let source_y = y * source_height / target_height;
+        let source_row = source_y * source_width;
+        let target_row = y * target_width;
+        for x in 0 .. target_width {
+            let source_x = x * source_width / target_width;
+            scaled[target_row + x] = video[source_row + source_x];
+        }
+    }
+
+    scaled
 }
 
 struct Recorder {
@@ -623,12 +704,85 @@ impl Rect {
     fn contains(self, point: Point) -> bool { point.x >= self.x && point.x < self.x + self.width && point.y >= self.y && point.y < self.y + self.height }
 }
 
+#[derive(Clone, Copy)]
+struct PreviewOrigin {
+    x: isize,
+    y: isize,
+}
+
+impl Default for PreviewOrigin {
+    fn default() -> Self {
+        Self {
+            x: 0,
+            y: TOOLBAR_HEIGHT as isize,
+        }
+    }
+}
+
+impl PreviewOrigin {
+    fn clamp(&mut self, window_width: usize, window_height: usize, display_width: usize, display_height: usize) {
+        let max_x = window_width.saturating_sub(display_width) as isize;
+        let min_y = TOOLBAR_HEIGHT as isize;
+        let max_y = window_height.saturating_sub(display_height) as isize;
+        self.x = self.x.clamp(0, max_x);
+        self.y = self.y.clamp(min_y, max_y.max(min_y));
+    }
+}
+
+#[derive(Clone, Copy)]
+struct PreviewDrag {
+    mouse_start: Point,
+    origin_start: PreviewOrigin,
+}
+
+impl PreviewDrag {
+    fn preview_origin_at(self, point: Point) -> PreviewOrigin {
+        PreviewOrigin {
+            x: self.origin_start.x + point.x as isize - self.mouse_start.x as isize,
+            y: self.origin_start.y + point.y as isize - self.mouse_start.y as isize,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct DisplayScale {
+    index: usize,
+}
+
+impl Default for DisplayScale {
+    fn default() -> Self {
+        let index = DISPLAY_SCALE_STEPS.iter().position(|percent| *percent == 100).unwrap_or(0);
+        Self {
+            index,
+        }
+    }
+}
+
+impl DisplayScale {
+    fn percent(self) -> usize { DISPLAY_SCALE_STEPS[self.index] }
+
+    fn scaled_dimension(self, dimension: usize) -> usize { (dimension * self.percent()).div_ceil(100).max(1) }
+
+    fn decrease(&mut self) { self.index = self.index.saturating_sub(1); }
+
+    fn increase(&mut self) {
+        if self.index + 1 < DISPLAY_SCALE_STEPS.len() {
+            self.index += 1;
+        }
+    }
+
+    fn reset(&mut self) { *self = Self::default(); }
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum UiAction {
     ToggleRecording,
     PlayLastRecording,
     RegisterCurrentFace,
     DeleteCurrentFace,
+    DecreasePreviewSize,
+    ResetPreviewSize,
+    IncreasePreviewSize,
     Exit,
 }
 
@@ -640,13 +794,13 @@ struct Button {
     color: u32,
 }
 
-fn toolbar_buttons(recording: bool) -> [Button; 5] {
+fn toolbar_buttons(recording: bool) -> [Button; 8] {
     [
         Button {
             rect: Rect {
                 x: 12,
                 y: 10,
-                width: 104,
+                width: 74,
                 height: 36,
             },
             label: if recording { "STOP" } else { "REC" },
@@ -655,9 +809,9 @@ fn toolbar_buttons(recording: bool) -> [Button; 5] {
         },
         Button {
             rect: Rect {
-                x: 128,
+                x: 98,
                 y: 10,
-                width: 104,
+                width: 74,
                 height: 36,
             },
             label: "PLAY",
@@ -666,9 +820,9 @@ fn toolbar_buttons(recording: bool) -> [Button; 5] {
         },
         Button {
             rect: Rect {
-                x: 244,
+                x: 184,
                 y: 10,
-                width: 84,
+                width: 64,
                 height: 36,
             },
             label: "ADD",
@@ -677,9 +831,9 @@ fn toolbar_buttons(recording: bool) -> [Button; 5] {
         },
         Button {
             rect: Rect {
-                x: 340,
+                x: 260,
                 y: 10,
-                width: 84,
+                width: 64,
                 height: 36,
             },
             label: "DEL",
@@ -688,9 +842,42 @@ fn toolbar_buttons(recording: bool) -> [Button; 5] {
         },
         Button {
             rect: Rect {
-                x: 436,
+                x: 336,
                 y: 10,
-                width: 84,
+                width: 64,
+                height: 36,
+            },
+            label: "ZOOM-",
+            action: UiAction::DecreasePreviewSize,
+            color: BUTTON_BG,
+        },
+        Button {
+            rect: Rect {
+                x: 412,
+                y: 10,
+                width: 64,
+                height: 36,
+            },
+            label: "100%",
+            action: UiAction::ResetPreviewSize,
+            color: BUTTON_BG,
+        },
+        Button {
+            rect: Rect {
+                x: 488,
+                y: 10,
+                width: 64,
+                height: 36,
+            },
+            label: "ZOOM+",
+            action: UiAction::IncreasePreviewSize,
+            color: BUTTON_BG,
+        },
+        Button {
+            rect: Rect {
+                x: 564,
+                y: 10,
+                width: 64,
                 height: 36,
             },
             label: "EXIT",
@@ -709,15 +896,36 @@ fn mouse_position(window: &Window) -> Option<Point> {
 
 fn button_at(point: Point, buttons: &[Button]) -> Option<UiAction> { buttons.iter().find(|button| button.rect.contains(point)).map(|button| button.action) }
 
-fn face_tag_at(point: Point, face_tags: &[FaceTag]) -> Option<FaceRect> {
-    if point.y < TOOLBAR_HEIGHT {
+fn mouse_video_point(point: Point, preview_origin: PreviewOrigin, display_scale: DisplayScale, video_width: usize, video_height: usize) -> Option<Point> {
+    let display_width = display_scale.scaled_dimension(video_width);
+    let display_height = display_scale.scaled_dimension(video_height);
+    let display_x = point.x as isize - preview_origin.x;
+    let display_y = point.y as isize - preview_origin.y;
+    if display_x < 0 || display_y < 0 || video_width == 0 || video_height == 0 {
         return None;
     }
 
-    let video_point = Point {
-        x: point.x,
-        y: point.y - TOOLBAR_HEIGHT,
-    };
+    let display_x = display_x as usize;
+    let display_y = display_y as usize;
+    if display_x >= display_width || display_y >= display_height {
+        return None;
+    }
+
+    Some(Point {
+        x: (display_x * video_width / display_width).min(video_width - 1),
+        y: (display_y * video_height / display_height).min(video_height - 1),
+    })
+}
+
+fn face_tag_at(
+    point: Point,
+    face_tags: &[FaceTag],
+    preview_origin: PreviewOrigin,
+    display_scale: DisplayScale,
+    video_width: usize,
+    video_height: usize,
+) -> Option<FaceRect> {
+    let video_point = mouse_video_point(point, preview_origin, display_scale, video_width, video_height)?;
 
     face_tags
         .iter()
@@ -732,17 +940,20 @@ fn face_rect_contains(rect: FaceRect, point: Point) -> bool {
     point.x >= rect.x && point.x < rect.x + rect.width && point.y >= rect.y && point.y < rect.y + rect.height
 }
 
-fn face_rect_from_drag(start: Point, end: Point, video_width: usize, video_height: usize) -> Option<FaceRect> {
-    if start.y < TOOLBAR_HEIGHT || end.y < TOOLBAR_HEIGHT || video_width == 0 || video_height == 0 {
-        return None;
-    }
-
-    let start_y = start.y - TOOLBAR_HEIGHT;
-    let end_y = end.y - TOOLBAR_HEIGHT;
-    let min_x = start.x.min(end.x).min(video_width - 1);
-    let min_y = start_y.min(end_y).min(video_height - 1);
-    let max_x = start.x.max(end.x).min(video_width - 1);
-    let max_y = start_y.max(end_y).min(video_height - 1);
+fn face_rect_from_drag(
+    start: Point,
+    end: Point,
+    preview_origin: PreviewOrigin,
+    display_scale: DisplayScale,
+    video_width: usize,
+    video_height: usize,
+) -> Option<FaceRect> {
+    let start = mouse_video_point(start, preview_origin, display_scale, video_width, video_height)?;
+    let end = mouse_video_point(end, preview_origin, display_scale, video_width, video_height)?;
+    let min_x = start.x.min(end.x);
+    let min_y = start.y.min(end.y);
+    let max_x = start.x.max(end.x);
+    let max_y = start.y.max(end.y);
     let width = max_x.saturating_sub(min_x) + 1;
     let height = max_y.saturating_sub(min_y) + 1;
     if width < 16 || height < 16 {
@@ -788,31 +999,79 @@ fn face_rect_overlap_score(left: FaceRect, right: FaceRect) -> f32 {
 struct ComposeState<'a> {
     recording: bool,
     hover: Option<UiAction>,
+    preview_origin: PreviewOrigin,
+    display_scale: DisplayScale,
     face_tags: &'a [FaceTag],
     selected_face_rect: Option<FaceRect>,
     drag_rect: Option<FaceRect>,
     registration_form: Option<&'a RegistrationForm>,
 }
 
-fn compose_frame(video: &[u32], width: usize, height: usize, state: ComposeState<'_>) -> Vec<u32> {
-    let mut output = vec![0; width * (height + TOOLBAR_HEIGHT)];
+fn compose_frame(video: &[u32], window_width: usize, window_height: usize, display_width: usize, display_height: usize, state: ComposeState<'_>) -> Vec<u32> {
+    let mut output = vec![0; window_width * window_height];
 
-    draw_toolbar(&mut output, width, state.recording, state.hover);
-    for row in 0 .. height {
-        let source_start = row * width;
-        let target_start = (row + TOOLBAR_HEIGHT) * width;
-        output[target_start .. target_start + width].copy_from_slice(&video[source_start .. source_start + width]);
-    }
-    draw_face_tags(&mut output, width, state.face_tags, state.selected_face_rect);
-    draw_manual_face_rect(&mut output, width, state.face_tags, state.selected_face_rect);
+    draw_toolbar(&mut output, window_width, state.recording, state.hover, state.display_scale);
+    draw_video(&mut output, window_width, video, display_width, display_height, state.preview_origin);
+    draw_face_tags(
+        &mut output,
+        window_width,
+        state.preview_origin,
+        state.display_scale,
+        state.face_tags,
+        state.selected_face_rect,
+    );
+    draw_manual_face_rect(
+        &mut output,
+        window_width,
+        state.preview_origin,
+        state.display_scale,
+        state.face_tags,
+        state.selected_face_rect,
+    );
     if let Some(drag_rect) = state.drag_rect {
-        draw_face_rect(buffer_rect(drag_rect), &mut output, width, SELECTED_FACE_BOX, 2);
+        draw_face_rect(
+            buffer_rect(drag_rect, state.preview_origin, state.display_scale),
+            &mut output,
+            window_width,
+            SELECTED_FACE_BOX,
+            2,
+        );
     }
     if let Some(form) = state.registration_form {
-        draw_registration_form(&mut output, width, height + TOOLBAR_HEIGHT, form);
+        draw_registration_form(&mut output, window_width, window_height, form);
     }
 
     output
+}
+
+fn draw_video(buffer: &mut [u32], width: usize, video: &[u32], display_width: usize, display_height: usize, preview_origin: PreviewOrigin) {
+    let height = buffer.len() / width;
+    for row in 0 .. display_height {
+        let target_y = preview_origin.y + row as isize;
+        if target_y < TOOLBAR_HEIGHT as isize || target_y >= height as isize {
+            continue;
+        }
+
+        let source_start = row * display_width;
+        let mut source_x = 0;
+        let mut target_x = preview_origin.x;
+        let mut copy_width = display_width;
+        if target_x < 0 {
+            source_x = (-target_x) as usize;
+            copy_width = copy_width.saturating_sub(source_x);
+            target_x = 0;
+        }
+        if target_x as usize + copy_width > width {
+            copy_width = width.saturating_sub(target_x as usize);
+        }
+        if copy_width == 0 {
+            continue;
+        }
+
+        let target_start = target_y as usize * width + target_x as usize;
+        let source_start = source_start + source_x;
+        buffer[target_start .. target_start + copy_width].copy_from_slice(&video[source_start .. source_start + copy_width]);
+    }
 }
 
 fn draw_registration_form(buffer: &mut [u32], width: usize, total_height: usize, form: &RegistrationForm) {
@@ -850,10 +1109,17 @@ fn draw_form_field(buffer: &mut [u32], width: usize, x: usize, y: usize, label: 
     draw_text(buffer, width, field_rect.x + 6, field_rect.y + 8, value, FORM_TEXT);
 }
 
-fn draw_face_tags(buffer: &mut [u32], width: usize, face_tags: &[FaceTag], selected_face_rect: Option<FaceRect>) {
+fn draw_face_tags(
+    buffer: &mut [u32],
+    width: usize,
+    preview_origin: PreviewOrigin,
+    display_scale: DisplayScale,
+    face_tags: &[FaceTag],
+    selected_face_rect: Option<FaceRect>,
+) {
     for tag in face_tags {
         let selected = selected_face_rect == Some(tag.rect);
-        let rect = buffer_rect(tag.rect);
+        let rect = buffer_rect(tag.rect, preview_origin, display_scale);
         draw_face_rect(
             rect,
             buffer,
@@ -874,7 +1140,14 @@ fn draw_face_tags(buffer: &mut [u32], width: usize, face_tags: &[FaceTag], selec
     }
 }
 
-fn draw_manual_face_rect(buffer: &mut [u32], width: usize, face_tags: &[FaceTag], selected_face_rect: Option<FaceRect>) {
+fn draw_manual_face_rect(
+    buffer: &mut [u32],
+    width: usize,
+    preview_origin: PreviewOrigin,
+    display_scale: DisplayScale,
+    face_tags: &[FaceTag],
+    selected_face_rect: Option<FaceRect>,
+) {
     let Some(rect) = selected_face_rect else {
         return;
     };
@@ -882,7 +1155,7 @@ fn draw_manual_face_rect(buffer: &mut [u32], width: usize, face_tags: &[FaceTag]
         return;
     }
 
-    let rect = buffer_rect(rect);
+    let rect = buffer_rect(rect, preview_origin, display_scale);
     draw_face_rect(rect, buffer, width, SELECTED_FACE_BOX, 3);
     let label_rect = Rect {
         x: rect.x,
@@ -894,18 +1167,19 @@ fn draw_manual_face_rect(buffer: &mut [u32], width: usize, face_tags: &[FaceTag]
     draw_text(buffer, width, label_rect.x + 4, label_rect.y + 5, "MANUAL", FACE_LABEL_TEXT);
 }
 
-fn buffer_rect(rect: FaceRect) -> Rect {
+fn buffer_rect(rect: FaceRect, preview_origin: PreviewOrigin, display_scale: DisplayScale) -> Rect {
+    let percent = display_scale.percent();
     Rect {
-        x: rect.x,
-        y: rect.y + TOOLBAR_HEIGHT,
-        width: rect.width,
-        height: rect.height,
+        x: (preview_origin.x + (rect.x * percent / 100) as isize).max(0) as usize,
+        y: (preview_origin.y + (rect.y * percent / 100) as isize).max(TOOLBAR_HEIGHT as isize) as usize,
+        width: (rect.width * percent).div_ceil(100).max(1),
+        height: (rect.height * percent).div_ceil(100).max(1),
     }
 }
 
 fn draw_face_rect(rect: Rect, buffer: &mut [u32], width: usize, color: u32, thickness: usize) { draw_rect_border_thick(buffer, width, rect, color, thickness); }
 
-fn draw_toolbar(buffer: &mut [u32], width: usize, recording: bool, hover: Option<UiAction>) {
+fn draw_toolbar(buffer: &mut [u32], width: usize, recording: bool, hover: Option<UiAction>, display_scale: DisplayScale) {
     fill_rect(
         buffer,
         width,
@@ -924,9 +1198,10 @@ fn draw_toolbar(buffer: &mut [u32], width: usize, recording: bool, hover: Option
     }
 
     if recording {
-        draw_text(buffer, width, 540, 22, "RECORDING", 0xfca5a5);
-        fill_circle(buffer, width, 528, 28, 5, 0xef4444);
+        draw_text(buffer, width, 642, 22, "RECORDING", 0xfca5a5);
+        fill_circle(buffer, width, 630, 28, 5, 0xef4444);
     }
+    draw_text(buffer, width, 706, 22, &format!("{}%", display_scale.percent()), 0xd1d5db);
 }
 
 fn draw_button(buffer: &mut [u32], width: usize, button: Button, color: u32) {
@@ -1063,6 +1338,8 @@ fn glyph(ch: char) -> [u8; 7] {
         | '8' => [0b01110, 0b10001, 0b10001, 0b01110, 0b10001, 0b10001, 0b01110],
         | '9' => [0b01110, 0b10001, 0b10001, 0b01111, 0b00001, 0b00010, 0b01100],
         | '%' => [0b11001, 0b11010, 0b00010, 0b00100, 0b01000, 0b01011, 0b10011],
+        | '+' => [0, 0b00100, 0b00100, 0b11111, 0b00100, 0b00100, 0],
+        | '-' => [0, 0, 0, 0b11111, 0, 0, 0],
         | ' ' => [0, 0, 0, 0, 0, 0, 0],
         | _ => [0b11111, 0b10001, 0b00010, 0b00100, 0b00100, 0, 0b00100],
     }
