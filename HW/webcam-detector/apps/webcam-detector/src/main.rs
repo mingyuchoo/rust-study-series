@@ -929,12 +929,17 @@ fn face_tag_at(
 
     face_tags
         .iter()
+        .filter(|tag| is_known_face_tag(tag))
         .filter(|tag| face_rect_contains(tag.rect, video_point))
         .min_by_key(|tag| tag.rect.width * tag.rect.height)
         .map(|tag| tag.rect)
 }
 
-fn face_tag_at_rect(rect: FaceRect, face_tags: &[FaceTag]) -> Option<FaceRect> { face_tags.iter().find(|tag| tag.rect == rect).map(|tag| tag.rect) }
+fn face_tag_at_rect(rect: FaceRect, face_tags: &[FaceTag]) -> Option<FaceRect> {
+    face_tags.iter().find(|tag| is_known_face_tag(tag) && tag.rect == rect).map(|tag| tag.rect)
+}
+
+fn is_known_face_tag(tag: &FaceTag) -> bool { tag.person_id.is_some() }
 
 fn face_rect_contains(rect: FaceRect, point: Point) -> bool {
     point.x >= rect.x && point.x < rect.x + rect.width && point.y >= rect.y && point.y < rect.y + rect.height
@@ -973,6 +978,7 @@ fn track_selected_face(selected: Option<FaceRect>, face_tags: &[FaceTag]) -> Opt
 
     face_tags
         .iter()
+        .filter(|tag| is_known_face_tag(tag))
         .filter_map(|tag| {
             let score = face_rect_overlap_score(selected, tag.rect);
             (score > 0.0).then_some((score, tag.rect))
@@ -1118,6 +1124,10 @@ fn draw_face_tags(
     selected_face_rect: Option<FaceRect>,
 ) {
     for tag in face_tags {
+        if !is_known_face_tag(tag) {
+            continue;
+        }
+
         let selected = selected_face_rect == Some(tag.rect);
         let rect = buffer_rect(tag.rect, preview_origin, display_scale);
         draw_face_rect(
