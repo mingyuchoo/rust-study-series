@@ -72,10 +72,12 @@ The `PLAY` button opens the last completed recording with the operating system's
 ## Face Tags
 
 The preview scans incoming frames for face-like regions and draws an `UNKNOWN` tag over each candidate.
-Click `ADD` to register the largest current candidate. A small form opens for `NAME`, `AGE`, and `GENDER`.
+Click the face box you want to register first. The selected box is highlighted in yellow.
+If the detector misses the face, drag over the face in the preview to create a manual yellow box.
+Click `ADD` to register the selected candidate. A small form opens for `NAME`, `AGE`, and `GENDER`.
 Use `TAB` to move between fields, `ENTER` to save, and `ESC` to cancel.
 When a future candidate matches the local embedding, the overlay changes from `UNKNOWN` to that registered person's name, age, gender, and match confidence when the metadata is available.
-Click `DEL` while a registered person is recognized to remove that person and their local embeddings.
+Click `DEL` while a registered person is selected or recognized to remove that person and their local embeddings.
 The local face registry is stored at `face-registry/people.json`.
 
 This is still a lightweight local recognition pipeline. The current detector and embedding are heuristic so the app can run without model files. The next stage should replace them with an ONNX face detector and ArcFace-style embedding model for reliable identity matching.

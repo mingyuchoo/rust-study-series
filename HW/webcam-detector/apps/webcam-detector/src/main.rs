@@ -27,6 +27,7 @@ use std::{fs,
 use webcam_core::{FaceDetection,
                   FaceDetector,
                   FaceRecognizer,
+                  FaceRect,
                   FaceRegistry,
                   FaceTag,
                   HeuristicFaceDetector,
@@ -44,6 +45,8 @@ const EXIT_BG: u32 = 0x7f1d1d;
 const FACE_BOX: u32 = 0x22c55e;
 const FACE_LABEL_BG: u32 = 0x064e3b;
 const FACE_LABEL_TEXT: u32 = 0xecfdf5;
+const SELECTED_FACE_BOX: u32 = 0xfacc15;
+const SELECTED_FACE_LABEL_BG: u32 = 0x713f12;
 const FACE_SCAN_INTERVAL: u64 = 5;
 const FACE_MATCH_THRESHOLD: f32 = 0.96;
 const FORM_BG: u32 = 0x111827;
@@ -83,6 +86,9 @@ fn main() -> Result<()> {
     let face_recognizer = HeuristicFaceRecognizer::new(FACE_MATCH_THRESHOLD);
     let mut face_detections: Vec<FaceDetection> = Vec::new();
     let mut face_tags: Vec<FaceTag> = Vec::new();
+    let mut selected_face_rect: Option<FaceRect> = None;
+    let mut selected_face_manual = false;
+    let mut drag_start: Option<Point> = None;
     let mut frame_index = 0_u64;
     let mut registration_form: Option<RegistrationForm> = None;
 
@@ -117,6 +123,9 @@ fn main() -> Result<()> {
             width = frame_width;
             height = frame_height;
             window = create_window(width, height)?;
+            selected_face_rect = None;
+            selected_face_manual = false;
+            drag_start = None;
             tracing::info!("웹캠 해상도 변경: {width}x{height}");
         }
 
@@ -124,6 +133,12 @@ fn main() -> Result<()> {
         if frame_index.is_multiple_of(FACE_SCAN_INTERVAL) {
             face_detections = face_detector.detect(&decoded_frame.rgb, width, height);
             face_tags = face_recognizer.recognize(&face_registry, &decoded_frame.rgb, width, height, &face_detections);
+            if let Some(tracked_rect) = track_selected_face(selected_face_rect, &face_tags) {
+                selected_face_rect = Some(tracked_rect);
+                selected_face_manual = false;
+            } else if !selected_face_manual {
+                selected_face_rect = None;
+            }
         }
         frame_index = frame_index.wrapping_add(1);
 
@@ -161,58 +176,105 @@ fn main() -> Result<()> {
 
         let recording = recorder.is_some();
         let buttons = toolbar_buttons(recording);
-        let hover = mouse_position(&window).and_then(|point| button_at(point, &buttons));
+        let mouse = mouse_position(&window);
+        let hover = mouse.and_then(|point| button_at(point, &buttons));
         let left_down = window.get_mouse_down(MouseButton::Left);
-        if registration_form.is_none()
-            && left_down
-            && !was_left_down
-            && let Some(action) = hover
-        {
-            match action {
-                | UiAction::ToggleRecording =>
-                    if let Some(active_recorder) = recorder.take() {
-                        match active_recorder.stop() {
-                            | Ok(path) => {
-                                tracing::info!("녹화 저장 완료: {}", path.display());
-                                last_recording = Some(path);
-                            },
-                            | Err(error) => tracing::warn!("녹화 중지 실패: {error}"),
+        if registration_form.is_none() && left_down && !was_left_down {
+            drag_start = None;
+            if let Some(action) = hover {
+                match action {
+                    | UiAction::ToggleRecording =>
+                        if let Some(active_recorder) = recorder.take() {
+                            match active_recorder.stop() {
+                                | Ok(path) => {
+                                    tracing::info!("녹화 저장 완료: {}", path.display());
+                                    last_recording = Some(path);
+                                },
+                                | Err(error) => tracing::warn!("녹화 중지 실패: {error}"),
+                            }
+                        } else {
+                            match Recorder::start(width, height, frame_rate) {
+                                | Ok(active_recorder) => {
+                                    tracing::info!("녹화 시작: {}", active_recorder.path().display());
+                                    recorder = Some(active_recorder);
+                                },
+                                | Err(error) => tracing::warn!("녹화 시작 실패: {error}"),
+                            }
+                        },
+                    | UiAction::PlayLastRecording => {
+                        if last_recording.as_ref().is_none_or(|path| !path.exists()) {
+                            last_recording = latest_recording_path();
                         }
-                    } else {
-                        match Recorder::start(width, height, frame_rate) {
-                            | Ok(active_recorder) => {
-                                tracing::info!("녹화 시작: {}", active_recorder.path().display());
-                                recorder = Some(active_recorder);
-                            },
-                            | Err(error) => tracing::warn!("녹화 시작 실패: {error}"),
-                        }
+                        play_last_recording(last_recording.as_deref());
                     },
-                | UiAction::PlayLastRecording => {
-                    if last_recording.as_ref().is_none_or(|path| !path.exists()) {
-                        last_recording = latest_recording_path();
-                    }
-                    play_last_recording(last_recording.as_deref());
-                },
-                | UiAction::RegisterCurrentFace =>
-                    match start_registration_form(&face_registry, &face_recognizer, &decoded_frame.rgb, width, height, &face_detections) {
-                        | Some(form) => registration_form = Some(form),
-                        | None => tracing::warn!("등록할 얼굴 후보가 없습니다."),
+                    | UiAction::RegisterCurrentFace =>
+                        if let Some(rect) = selected_face_rect {
+                            registration_form = Some(start_registration_form(
+                                &face_registry,
+                                &face_recognizer,
+                                &decoded_frame.rgb,
+                                width,
+                                height,
+                                rect,
+                            ));
+                        } else {
+                            tracing::warn!("등록할 얼굴 박스를 먼저 클릭해서 선택하세요.");
+                        },
+                    | UiAction::DeleteCurrentFace => match delete_current_face(&mut face_registry, &registry_path, &face_tags, selected_face_rect) {
+                        | Ok(Some(person_name)) => {
+                            tracing::info!("얼굴 등록 삭제 완료: {person_name}");
+                            face_tags = face_recognizer.recognize(&face_registry, &decoded_frame.rgb, width, height, &face_detections);
+                            selected_face_rect = track_selected_face(selected_face_rect, &face_tags);
+                            selected_face_manual = selected_face_rect.is_some_and(|rect| face_tag_at_rect(rect, &face_tags).is_none());
+                        },
+                        | Ok(None) => tracing::warn!("삭제할 등록 얼굴이 현재 화면에 인식되지 않았습니다."),
+                        | Err(error) => tracing::warn!("얼굴 등록 삭제 실패: {error}"),
                     },
-                | UiAction::DeleteCurrentFace => match delete_current_face(&mut face_registry, &registry_path, &face_tags) {
-                    | Ok(Some(person_name)) => {
-                        tracing::info!("얼굴 등록 삭제 완료: {person_name}");
-                        face_tags = face_recognizer.recognize(&face_registry, &decoded_frame.rgb, width, height, &face_detections);
-                    },
-                    | Ok(None) => tracing::warn!("삭제할 등록 얼굴이 현재 화면에 인식되지 않았습니다."),
-                    | Err(error) => tracing::warn!("얼굴 등록 삭제 실패: {error}"),
-                },
-                | UiAction::Exit => should_exit = true,
+                    | UiAction::Exit => should_exit = true,
+                }
+            } else if let Some(point) = mouse {
+                if let Some(rect) = face_tag_at(point, &face_tags) {
+                    selected_face_rect = Some(rect);
+                    selected_face_manual = false;
+                    tracing::info!("얼굴 박스 선택: x={} y={} w={} h={}", rect.x, rect.y, rect.width, rect.height);
+                } else if point.y >= TOOLBAR_HEIGHT {
+                    selected_face_rect = None;
+                    selected_face_manual = false;
+                    drag_start = Some(point);
+                }
             }
+        }
+        if registration_form.is_none()
+            && !left_down
+            && was_left_down
+            && let (Some(start), Some(end)) = (drag_start.take(), mouse)
+            && let Some(rect) = face_rect_from_drag(start, end, width, height)
+        {
+            selected_face_rect = Some(rect);
+            selected_face_manual = true;
+            tracing::info!("수동 얼굴 박스 선택: x={} y={} w={} h={}", rect.x, rect.y, rect.width, rect.height);
         }
         was_left_down = left_down;
 
         let recording = recorder.is_some();
-        let buffer = compose_frame(&decoded_frame.display, width, height, recording, hover, &face_tags, registration_form.as_ref());
+        let drag_rect = if registration_form.is_none() && left_down {
+            drag_start.and_then(|start| mouse.and_then(|end| face_rect_from_drag(start, end, width, height)))
+        } else {
+            None
+        };
+        let buffer = compose_frame(
+            &decoded_frame.display,
+            width,
+            height,
+            ComposeState {
+                recording,
+                hover,
+                face_tags: &face_tags,
+                selected_face_rect,
+                drag_rect,
+                registration_form: registration_form.as_ref(),
+            },
+        );
         window
             .update_with_buffer(&buffer, width, height + TOOLBAR_HEIGHT)
             .context("화면 업데이트 실패")?;
@@ -357,18 +419,16 @@ fn start_registration_form(
     rgb: &[u8],
     width: usize,
     height: usize,
-    detections: &[FaceDetection],
-) -> Option<RegistrationForm> {
-    let detection = detections.iter().max_by_key(|detection| detection.rect.width * detection.rect.height)?;
-
-    let embedding = recognizer.embed(rgb, width, height, detection.rect);
-    Some(RegistrationForm {
+    rect: FaceRect,
+) -> RegistrationForm {
+    let embedding = recognizer.embed(rgb, width, height, rect);
+    RegistrationForm {
         embedding,
         name: format!("PERSON {}", registry.people.len() + 1),
         age: String::new(),
         gender: String::new(),
         field: RegistrationField::Name,
-    })
+    }
 }
 
 fn complete_registration(registry: &mut FaceRegistry, registry_path: &Path, form: &RegistrationForm) -> Result<String> {
@@ -394,13 +454,21 @@ fn complete_registration(registry: &mut FaceRegistry, registry_path: &Path, form
     Ok(person.name)
 }
 
-fn delete_current_face(registry: &mut FaceRegistry, registry_path: &Path, face_tags: &[FaceTag]) -> Result<Option<String>> {
-    let Some(person_id) = face_tags
+fn delete_current_face(
+    registry: &mut FaceRegistry,
+    registry_path: &Path,
+    face_tags: &[FaceTag],
+    selected_face_rect: Option<FaceRect>,
+) -> Result<Option<String>> {
+    let selected_person_id = selected_face_rect.and_then(|selected| face_tags.iter().find(|tag| tag.rect == selected).and_then(|tag| tag.person_id.clone()));
+
+    let largest_person_id = face_tags
         .iter()
         .filter_map(|tag| tag.person_id.as_ref().map(|person_id| (person_id, tag.rect.width * tag.rect.height)))
         .max_by_key(|(_, area)| *area)
-        .map(|(person_id, _)| person_id.clone())
-    else {
+        .map(|(person_id, _)| person_id.clone());
+
+    let Some(person_id) = selected_person_id.or(largest_person_id) else {
         return Ok(None);
     };
 
@@ -641,25 +709,106 @@ fn mouse_position(window: &Window) -> Option<Point> {
 
 fn button_at(point: Point, buttons: &[Button]) -> Option<UiAction> { buttons.iter().find(|button| button.rect.contains(point)).map(|button| button.action) }
 
-fn compose_frame(
-    video: &[u32],
-    width: usize,
-    height: usize,
+fn face_tag_at(point: Point, face_tags: &[FaceTag]) -> Option<FaceRect> {
+    if point.y < TOOLBAR_HEIGHT {
+        return None;
+    }
+
+    let video_point = Point {
+        x: point.x,
+        y: point.y - TOOLBAR_HEIGHT,
+    };
+
+    face_tags
+        .iter()
+        .filter(|tag| face_rect_contains(tag.rect, video_point))
+        .min_by_key(|tag| tag.rect.width * tag.rect.height)
+        .map(|tag| tag.rect)
+}
+
+fn face_tag_at_rect(rect: FaceRect, face_tags: &[FaceTag]) -> Option<FaceRect> { face_tags.iter().find(|tag| tag.rect == rect).map(|tag| tag.rect) }
+
+fn face_rect_contains(rect: FaceRect, point: Point) -> bool {
+    point.x >= rect.x && point.x < rect.x + rect.width && point.y >= rect.y && point.y < rect.y + rect.height
+}
+
+fn face_rect_from_drag(start: Point, end: Point, video_width: usize, video_height: usize) -> Option<FaceRect> {
+    if start.y < TOOLBAR_HEIGHT || end.y < TOOLBAR_HEIGHT || video_width == 0 || video_height == 0 {
+        return None;
+    }
+
+    let start_y = start.y - TOOLBAR_HEIGHT;
+    let end_y = end.y - TOOLBAR_HEIGHT;
+    let min_x = start.x.min(end.x).min(video_width - 1);
+    let min_y = start_y.min(end_y).min(video_height - 1);
+    let max_x = start.x.max(end.x).min(video_width - 1);
+    let max_y = start_y.max(end_y).min(video_height - 1);
+    let width = max_x.saturating_sub(min_x) + 1;
+    let height = max_y.saturating_sub(min_y) + 1;
+    if width < 16 || height < 16 {
+        return None;
+    }
+
+    Some(FaceRect {
+        x: min_x,
+        y: min_y,
+        width,
+        height,
+    })
+}
+
+fn track_selected_face(selected: Option<FaceRect>, face_tags: &[FaceTag]) -> Option<FaceRect> {
+    let selected = selected?;
+
+    face_tags
+        .iter()
+        .filter_map(|tag| {
+            let score = face_rect_overlap_score(selected, tag.rect);
+            (score > 0.0).then_some((score, tag.rect))
+        })
+        .max_by(|(left_score, _), (right_score, _)| left_score.total_cmp(right_score))
+        .map(|(_, rect)| rect)
+}
+
+fn face_rect_overlap_score(left: FaceRect, right: FaceRect) -> f32 {
+    let x1 = left.x.max(right.x);
+    let y1 = left.y.max(right.y);
+    let x2 = (left.x + left.width).min(right.x + right.width);
+    let y2 = (left.y + left.height).min(right.y + right.height);
+    if x2 <= x1 || y2 <= y1 {
+        return 0.0;
+    }
+
+    let intersection = ((x2 - x1) * (y2 - y1)) as f32;
+    let left_area = (left.width * left.height) as f32;
+    let right_area = (right.width * right.height) as f32;
+    intersection / (left_area + right_area - intersection)
+}
+
+struct ComposeState<'a> {
     recording: bool,
     hover: Option<UiAction>,
-    face_tags: &[FaceTag],
-    registration_form: Option<&RegistrationForm>,
-) -> Vec<u32> {
+    face_tags: &'a [FaceTag],
+    selected_face_rect: Option<FaceRect>,
+    drag_rect: Option<FaceRect>,
+    registration_form: Option<&'a RegistrationForm>,
+}
+
+fn compose_frame(video: &[u32], width: usize, height: usize, state: ComposeState<'_>) -> Vec<u32> {
     let mut output = vec![0; width * (height + TOOLBAR_HEIGHT)];
 
-    draw_toolbar(&mut output, width, recording, hover);
+    draw_toolbar(&mut output, width, state.recording, state.hover);
     for row in 0 .. height {
         let source_start = row * width;
         let target_start = (row + TOOLBAR_HEIGHT) * width;
         output[target_start .. target_start + width].copy_from_slice(&video[source_start .. source_start + width]);
     }
-    draw_face_tags(&mut output, width, face_tags);
-    if let Some(form) = registration_form {
+    draw_face_tags(&mut output, width, state.face_tags, state.selected_face_rect);
+    draw_manual_face_rect(&mut output, width, state.face_tags, state.selected_face_rect);
+    if let Some(drag_rect) = state.drag_rect {
+        draw_face_rect(buffer_rect(drag_rect), &mut output, width, SELECTED_FACE_BOX, 2);
+    }
+    if let Some(form) = state.registration_form {
         draw_registration_form(&mut output, width, height + TOOLBAR_HEIGHT, form);
     }
 
@@ -701,15 +850,17 @@ fn draw_form_field(buffer: &mut [u32], width: usize, x: usize, y: usize, label: 
     draw_text(buffer, width, field_rect.x + 6, field_rect.y + 8, value, FORM_TEXT);
 }
 
-fn draw_face_tags(buffer: &mut [u32], width: usize, face_tags: &[FaceTag]) {
+fn draw_face_tags(buffer: &mut [u32], width: usize, face_tags: &[FaceTag], selected_face_rect: Option<FaceRect>) {
     for tag in face_tags {
-        let rect = Rect {
-            x: tag.rect.x,
-            y: tag.rect.y + TOOLBAR_HEIGHT,
-            width: tag.rect.width,
-            height: tag.rect.height,
-        };
-        draw_rect_border_thick(buffer, width, rect, FACE_BOX, 2);
+        let selected = selected_face_rect == Some(tag.rect);
+        let rect = buffer_rect(tag.rect);
+        draw_face_rect(
+            rect,
+            buffer,
+            width,
+            if selected { SELECTED_FACE_BOX } else { FACE_BOX },
+            if selected { 3 } else { 2 },
+        );
 
         let label_width = tag.label.len() * 6 + 8;
         let label_rect = Rect {
@@ -718,10 +869,41 @@ fn draw_face_tags(buffer: &mut [u32], width: usize, face_tags: &[FaceTag]) {
             width: label_width,
             height: 16,
         };
-        fill_rect(buffer, width, label_rect, FACE_LABEL_BG);
+        fill_rect(buffer, width, label_rect, if selected { SELECTED_FACE_LABEL_BG } else { FACE_LABEL_BG });
         draw_text(buffer, width, label_rect.x + 4, label_rect.y + 5, &tag.label, FACE_LABEL_TEXT);
     }
 }
+
+fn draw_manual_face_rect(buffer: &mut [u32], width: usize, face_tags: &[FaceTag], selected_face_rect: Option<FaceRect>) {
+    let Some(rect) = selected_face_rect else {
+        return;
+    };
+    if face_tag_at_rect(rect, face_tags).is_some() {
+        return;
+    }
+
+    let rect = buffer_rect(rect);
+    draw_face_rect(rect, buffer, width, SELECTED_FACE_BOX, 3);
+    let label_rect = Rect {
+        x: rect.x,
+        y: rect.y.saturating_sub(18),
+        width: 80,
+        height: 16,
+    };
+    fill_rect(buffer, width, label_rect, SELECTED_FACE_LABEL_BG);
+    draw_text(buffer, width, label_rect.x + 4, label_rect.y + 5, "MANUAL", FACE_LABEL_TEXT);
+}
+
+fn buffer_rect(rect: FaceRect) -> Rect {
+    Rect {
+        x: rect.x,
+        y: rect.y + TOOLBAR_HEIGHT,
+        width: rect.width,
+        height: rect.height,
+    }
+}
+
+fn draw_face_rect(rect: Rect, buffer: &mut [u32], width: usize, color: u32, thickness: usize) { draw_rect_border_thick(buffer, width, rect, color, thickness); }
 
 fn draw_toolbar(buffer: &mut [u32], width: usize, recording: bool, hover: Option<UiAction>) {
     fill_rect(

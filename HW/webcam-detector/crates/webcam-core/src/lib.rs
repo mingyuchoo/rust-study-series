@@ -157,7 +157,7 @@ pub struct HeuristicFaceDetector {
 impl Default for HeuristicFaceDetector {
     fn default() -> Self {
         Self {
-            min_area_ratio: 0.01,
+            min_area_ratio: 0.015,
             scan_step: 4,
         }
     }
@@ -366,6 +366,9 @@ fn detect_skin_region_faces(rgb: &[u8], width: usize, height: usize, scan_step: 
     let mut visited = vec![false; mask.len()];
     let mut detections = Vec::new();
     let min_area = (width * height) as f32 * min_area_ratio;
+    let max_area = (width * height) as f32 * 0.45;
+    let min_side = ((width.min(height) as f32) * 0.08).max(16.0);
+    let min_density = 0.35;
 
     for sy in 0 .. sample_height {
         for sx in 0 .. sample_width {
@@ -384,8 +387,14 @@ fn detect_skin_region_faces(rgb: &[u8], width: usize, height: usize, scan_step: 
 
             let area = (rect.width * rect.height) as f32;
             let aspect = rect.width as f32 / rect.height.max(1) as f32;
-            if area >= min_area && (0.55 ..= 1.6).contains(&aspect) {
-                let density = component.count as f32 / ((component.max_x - component.min_x + 1) * (component.max_y - component.min_y + 1)) as f32;
+            let density = component.count as f32 / ((component.max_x - component.min_x + 1) * (component.max_y - component.min_y + 1)) as f32;
+            if area >= min_area
+                && area <= max_area
+                && rect.width as f32 >= min_side
+                && rect.height as f32 >= min_side
+                && density >= min_density
+                && (0.55 ..= 1.6).contains(&aspect)
+            {
                 detections.push(FaceDetection {
                     rect,
                     confidence: density.clamp(0.0, 1.0),
@@ -395,18 +404,26 @@ fn detect_skin_region_faces(rgb: &[u8], width: usize, height: usize, scan_step: 
     }
 
     detections.sort_by_key(|detection| Reverse(detection.rect.width * detection.rect.height));
-    detections.truncate(4);
+    detections.truncate(3);
     detections
 }
 
 fn is_skin_like(r: u8, g: u8, b: u8) -> bool {
-    let r = r as i16;
-    let g = g as i16;
-    let b = b as i16;
-    let max = r.max(g).max(b);
-    let min = r.min(g).min(b);
+    let r_i = r as i16;
+    let g_i = g as i16;
+    let b_i = b as i16;
+    let max = r_i.max(g_i).max(b_i);
+    let min = r_i.min(g_i).min(b_i);
+    let rgb_skin = r_i > 95 && g_i > 40 && b_i > 20 && max - min > 15 && (r_i - g_i).abs() > 15 && r_i > g_i && r_i > b_i;
 
-    r > 95 && g > 40 && b > 20 && max - min > 15 && (r - g).abs() > 15 && r > g && r > b
+    let r = r as f32;
+    let g = g as f32;
+    let b = b as f32;
+    let cb = 128.0 - 0.168_736 * r - 0.331_264 * g + 0.5 * b;
+    let cr = 128.0 + 0.5 * r - 0.418_688 * g - 0.081_312 * b;
+    let ycbcr_skin = (77.0 ..= 127.0).contains(&cb) && (133.0 ..= 173.0).contains(&cr);
+
+    rgb_skin && ycbcr_skin
 }
 
 struct ComponentBounds {
@@ -555,6 +572,38 @@ mod tests {
         let detections = detector.detect(&rgb, width, height);
 
         assert!(!detections.is_empty());
+    }
+
+    #[test]
+    fn heuristic_detector_rejects_tiny_skin_like_region() {
+        let width = 80;
+        let height = 80;
+        let mut rgb = vec![0_u8; width * height * 3];
+        for y in 20 .. 28 {
+            for x in 24 .. 32 {
+                let idx = (y * width + x) * 3;
+                rgb[idx] = 210;
+                rgb[idx + 1] = 145;
+                rgb[idx + 2] = 110;
+            }
+        }
+
+        let mut detector = HeuristicFaceDetector::default();
+        let detections = detector.detect(&rgb, width, height);
+
+        assert!(detections.is_empty());
+    }
+
+    #[test]
+    fn heuristic_detector_rejects_full_frame_skin_like_region() {
+        let width = 80;
+        let height = 80;
+        let rgb = [210_u8, 145, 110].repeat(width * height);
+
+        let mut detector = HeuristicFaceDetector::default();
+        let detections = detector.detect(&rgb, width, height);
+
+        assert!(detections.is_empty());
     }
 
     #[test]
