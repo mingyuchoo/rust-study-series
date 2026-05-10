@@ -1,6 +1,7 @@
 # Rust build outputs
 /target/
 /dist/
+/recordings/
 
 # This is an executable app, so keep the lockfile reproducible.
 !/Cargo.lock

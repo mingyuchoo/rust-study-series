@@ -62,6 +62,13 @@ Windows PowerShell:
 
 The `package` command writes the optimized desktop binary to `dist/`.
 
+## Recording
+
+The `REC` button records the live webcam stream to MP4 files under `recordings/`.
+The app uses `ffmpeg` for encoding, so install `ffmpeg` and make sure it is available on `PATH`.
+
+The `PLAY` button opens the last completed recording with the operating system's default video player.
+
 ## Installer Bundles
 
 Linux:

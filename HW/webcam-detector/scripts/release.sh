@@ -146,7 +146,7 @@ Priority: optional
 Architecture: ${arch}
 Maintainer: ${MAINTAINER}
 Installed-Size: ${control_size}
-Depends: libc6, libx11-6, libxrandr2, libxi6, libxcursor1, libgl1, libv4l-0
+Depends: libc6, libx11-6, libxrandr2, libxi6, libxcursor1, libgl1, libv4l-0, ffmpeg
 Description: ${APP_DESCRIPTION}
  ${APP_DISPLAY_NAME} is a desktop webcam viewer.
 EOF
