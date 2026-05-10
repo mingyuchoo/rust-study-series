@@ -8,6 +8,8 @@ use std::{cmp::Reverse,
           path::Path};
 use thiserror::Error;
 
+const UNKNOWN_FACE_LABEL: &str = "UNKNOWN";
+
 #[derive(Debug, Error)]
 pub enum FrameBufferError {
     #[error("RGB frame size mismatch: actual {actual} bytes, expected {expected} bytes ({width}x{height} RGB)")]
@@ -48,6 +50,17 @@ pub struct FaceRegistry {
 }
 
 impl FaceRegistry {
+    #[must_use]
+    pub fn is_empty(&self) -> bool { self.people.is_empty() && self.embeddings.is_empty() }
+
+    /// Loads a face registry from JSON.
+    ///
+    /// Missing files are treated as an empty registry.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the file cannot be read or its contents are not
+    /// valid registry JSON.
     pub fn load(path: impl AsRef<Path>) -> Result<Self, FaceRegistryError> {
         let path = path.as_ref();
         if !path.exists() {
@@ -58,6 +71,12 @@ impl FaceRegistry {
         Ok(serde_json::from_str(&contents)?)
     }
 
+    /// Saves this face registry as pretty-printed JSON.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the parent directory cannot be created or the JSON
+    /// file cannot be written.
     pub fn save(&self, path: impl AsRef<Path>) -> Result<(), FaceRegistryError> {
         let path = path.as_ref();
         if let Some(parent) = path.parent() {
@@ -69,11 +88,11 @@ impl FaceRegistry {
         Ok(())
     }
 
-    pub fn register_person(&mut self, name: String, age: Option<u8>, gender: Option<String>, embedding: Vec<f32>) -> PersonMetadata {
+    pub fn register_person(&mut self, name: impl Into<String>, age: Option<u8>, gender: Option<String>, embedding: Vec<f32>) -> PersonMetadata {
         let id = format!("person-{:04}", self.people.len() + 1);
         let person = PersonMetadata {
             id: id.clone(),
-            name,
+            name: name.into(),
             age,
             gender,
         };
@@ -94,6 +113,7 @@ impl FaceRegistry {
         Some(person)
     }
 
+    #[must_use]
     pub fn match_embedding(&self, embedding: &[f32], threshold: f32) -> Option<FaceMatch> {
         self.embeddings
             .iter()
@@ -192,30 +212,48 @@ impl FaceRecognizer for HeuristicFaceRecognizer {
 }
 
 /// 두 프레임을 비교해 모션 점수(변화 픽셀 비율)를 반환한다.
+#[must_use]
 pub fn detect_motion(prev: &GrayImage, curr: &GrayImage, threshold: u8) -> f32 {
-    let total = (prev.width() * prev.height()) as f32;
+    let total = u32_to_f32(prev.width() * prev.height());
     let changed = prev
         .pixels()
         .zip(curr.pixels())
-        .filter(|(p, c)| {
-            let diff = (p[0] as i16 - c[0] as i16).unsigned_abs() as u8;
-            diff > threshold
-        })
-        .count() as f32;
+        .filter(|(prev, curr)| prev[0].abs_diff(curr[0]) > threshold)
+        .count();
 
-    changed / total
+    usize_to_f32(changed) / total
 }
 
 /// RGB 이미지를 그레이스케일로 변환한다.
+#[must_use]
 pub fn to_grayscale(rgb: &[u8], width: u32, height: u32) -> GrayImage {
     ImageBuffer::from_fn(width, height, |x, y| {
         let idx = ((y * width + x) * 3) as usize;
-        let (r, g, b) = (rgb[idx] as f32, rgb[idx + 1] as f32, rgb[idx + 2] as f32);
-        // ITU-R BT.601 가중치
-        Luma([(0.299 * r + 0.587 * g + 0.114 * b) as u8])
+        let r = u32::from(rgb[idx]);
+        let g = u32::from(rgb[idx + 1]);
+        let b = u32::from(rgb[idx + 2]);
+        let luma = (299 * r + 587 * g + 114 * b) / 1000;
+
+        Luma([u8::try_from(luma).unwrap_or(u8::MAX)])
     })
 }
 
+#[must_use]
+fn rgb_pixel_to_u32(px: &[u8]) -> u32 {
+    let [r, g, b] = px else {
+        unreachable!("chunks_exact(3) only yields RGB pixels")
+    };
+
+    (u32::from(*r) << 16) | (u32::from(*g) << 8) | u32::from(*b)
+}
+
+/// Converts an RGB byte buffer into a minifb-compatible `0x00RRGGBB` frame
+/// buffer.
+///
+/// # Errors
+///
+/// Returns [`FrameBufferError::SizeMismatch`] when `rgb` does not contain
+/// exactly `width * height * 3` bytes.
 pub fn rgb_to_minifb_buffer(rgb: &[u8], width: usize, height: usize) -> Result<Vec<u32>, FrameBufferError> {
     let expected = width * height * 3;
     if rgb.len() != expected {
@@ -227,27 +265,13 @@ pub fn rgb_to_minifb_buffer(rgb: &[u8], width: usize, height: usize) -> Result<V
         });
     }
 
-    Ok(rgb
-        .chunks_exact(3)
-        .map(|px| {
-            let (r, g, b) = (px[0] as u32, px[1] as u32, px[2] as u32);
-            (r << 16) | (g << 8) | b
-        })
-        .collect())
+    Ok(rgb.chunks_exact(3).map(rgb_pixel_to_u32).collect())
 }
 
-pub fn unknown_face_tags(detections: &[FaceDetection]) -> Vec<FaceTag> {
-    detections
-        .iter()
-        .map(|detection| FaceTag {
-            rect: detection.rect,
-            label: "UNKNOWN".to_string(),
-            confidence: detection.confidence,
-            person_id: None,
-        })
-        .collect()
-}
+#[must_use]
+pub fn unknown_face_tags(detections: &[FaceDetection]) -> Vec<FaceTag> { detections.iter().map(unknown_face_tag).collect() }
 
+#[must_use]
 pub fn recognize_face_tags(registry: &FaceRegistry, rgb: &[u8], width: usize, height: usize, detections: &[FaceDetection], threshold: f32) -> Vec<FaceTag> {
     detections
         .iter()
@@ -260,15 +284,19 @@ pub fn recognize_face_tags(registry: &FaceRegistry, rgb: &[u8], width: usize, he
                     confidence: face_match.score,
                     person_id: Some(face_match.person.id),
                 },
-                | None => FaceTag {
-                    rect: detection.rect,
-                    label: "UNKNOWN".to_string(),
-                    confidence: detection.confidence,
-                    person_id: None,
-                },
+                | None => unknown_face_tag(detection),
             }
         })
         .collect()
+}
+
+fn unknown_face_tag(detection: &FaceDetection) -> FaceTag {
+    FaceTag {
+        rect: detection.rect,
+        label: UNKNOWN_FACE_LABEL.to_owned(),
+        confidence: detection.confidence,
+        person_id: None,
+    }
 }
 
 fn face_tag_label(face_match: &FaceMatch) -> String {
@@ -279,10 +307,11 @@ fn face_tag_label(face_match: &FaceMatch) -> String {
     if let Some(gender) = face_match.person.gender.as_deref().filter(|gender| !gender.trim().is_empty()) {
         parts.push(gender.trim().to_uppercase());
     }
-    parts.push(format!("{}%", (face_match.score * 100.0).round() as u8));
+    parts.push(format!("{:.0}%", (face_match.score * 100.0).clamp(0.0, 100.0)));
     parts.join(" ")
 }
 
+#[must_use]
 pub fn embed_face(rgb: &[u8], width: usize, height: usize, rect: FaceRect) -> Vec<f32> {
     let mut bins = vec![0.0_f32; 12];
     let x_end = (rect.x + rect.width).min(width);
@@ -296,9 +325,9 @@ pub fn embed_face(rgb: &[u8], width: usize, height: usize, rect: FaceRect) -> Ve
                 continue;
             }
 
-            let r = rgb[idx] as usize;
-            let g = rgb[idx + 1] as usize;
-            let b = rgb[idx + 2] as usize;
+            let r = usize::from(rgb[idx]);
+            let g = usize::from(rgb[idx + 1]);
+            let b = usize::from(rgb[idx + 2]);
             bins[(r * 4 / 256).min(3)] += 1.0;
             bins[4 + (g * 4 / 256).min(3)] += 1.0;
             bins[8 + (b * 4 / 256).min(3)] += 1.0;
@@ -365,9 +394,10 @@ fn detect_skin_region_faces(rgb: &[u8], width: usize, height: usize, scan_step: 
 
     let mut visited = vec![false; mask.len()];
     let mut detections = Vec::new();
-    let min_area = (width * height) as f32 * min_area_ratio;
-    let max_area = (width * height) as f32 * 0.45;
-    let min_side = ((width.min(height) as f32) * 0.08).max(16.0);
+    let frame_area = usize_to_f32(width * height);
+    let min_area = frame_area * min_area_ratio;
+    let max_area = frame_area * 0.45;
+    let min_side = (usize_to_f32(width.min(height)) * 0.08).max(16.0);
     let min_density = 0.35;
 
     for sy in 0 .. sample_height {
@@ -385,13 +415,13 @@ fn detect_skin_region_faces(rgb: &[u8], width: usize, height: usize, scan_step: 
                 height: ((component.max_y - component.min_y + 1) * scan_step).min(height - component.min_y * scan_step),
             };
 
-            let area = (rect.width * rect.height) as f32;
-            let aspect = rect.width as f32 / rect.height.max(1) as f32;
-            let density = component.count as f32 / ((component.max_x - component.min_x + 1) * (component.max_y - component.min_y + 1)) as f32;
+            let area = usize_to_f32(rect.width * rect.height);
+            let aspect = usize_to_f32(rect.width) / usize_to_f32(rect.height.max(1));
+            let density = usize_to_f32(component.count) / usize_to_f32((component.max_x - component.min_x + 1) * (component.max_y - component.min_y + 1));
             if area >= min_area
                 && area <= max_area
-                && rect.width as f32 >= min_side
-                && rect.height as f32 >= min_side
+                && usize_to_f32(rect.width) >= min_side
+                && usize_to_f32(rect.height) >= min_side
                 && density >= min_density
                 && (0.55 ..= 1.6).contains(&aspect)
             {
@@ -409,16 +439,16 @@ fn detect_skin_region_faces(rgb: &[u8], width: usize, height: usize, scan_step: 
 }
 
 fn is_skin_like(r: u8, g: u8, b: u8) -> bool {
-    let r_i = r as i16;
-    let g_i = g as i16;
-    let b_i = b as i16;
+    let r_i = i16::from(r);
+    let g_i = i16::from(g);
+    let b_i = i16::from(b);
     let max = r_i.max(g_i).max(b_i);
     let min = r_i.min(g_i).min(b_i);
     let rgb_skin = r_i > 95 && g_i > 40 && b_i > 20 && max - min > 15 && (r_i - g_i).abs() > 15 && r_i > g_i && r_i > b_i;
 
-    let r = r as f32;
-    let g = g as f32;
-    let b = b as f32;
+    let r = f32::from(r);
+    let g = f32::from(g);
+    let b = f32::from(b);
     let cb = 128.0 - 0.168_736 * r - 0.331_264 * g + 0.5 * b;
     let cr = 128.0 + 0.5 * r - 0.418_688 * g - 0.081_312 * b;
     let ycbcr_skin = (77.0 ..= 127.0).contains(&cb) && (133.0 ..= 173.0).contains(&cr);
@@ -473,6 +503,12 @@ fn flood_fill_component(mask: &[bool], visited: &mut [bool], width: usize, heigh
     bounds
 }
 
+#[allow(clippy::cast_precision_loss)]
+fn u32_to_f32(value: u32) -> f32 { value as f32 }
+
+#[allow(clippy::cast_precision_loss)]
+fn usize_to_f32(value: usize) -> f32 { value as f32 }
+
 #[cfg(test)]
 mod tests {
     use super::{FaceDetection,
@@ -496,7 +532,7 @@ mod tests {
         let mut curr = image::GrayImage::from_pixel(2, 2, Luma([10]));
         curr.put_pixel(1, 1, Luma([40]));
 
-        assert_eq!(detect_motion(&prev, &curr, 20), 0.25);
+        assert!((detect_motion(&prev, &curr, 20) - 0.25).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -514,7 +550,7 @@ mod tests {
         let rgb = [255, 0, 0, 0, 255, 0, 0, 0, 255];
         let buffer = rgb_to_minifb_buffer(&rgb, 3, 1).expect("valid RGB frame");
 
-        assert_eq!(buffer, vec![0xff0000, 0x00ff00, 0x0000ff]);
+        assert_eq!(buffer, vec![0x00ff_0000, 0x0000_ff00, 0x0000_00ff]);
     }
 
     #[test]
@@ -550,8 +586,7 @@ mod tests {
 
         let registry = FaceRegistry::load(path).expect("missing registry should be empty");
 
-        assert!(registry.people.is_empty());
-        assert!(registry.embeddings.is_empty());
+        assert!(registry.is_empty());
     }
 
     #[test]
@@ -626,8 +661,7 @@ mod tests {
         let removed = registry.remove_person(&person.id).expect("registered person should be removed");
 
         assert_eq!(removed.name, "PERSON 1");
-        assert!(registry.people.is_empty());
-        assert!(registry.embeddings.is_empty());
+        assert!(registry.is_empty());
     }
 
     #[test]

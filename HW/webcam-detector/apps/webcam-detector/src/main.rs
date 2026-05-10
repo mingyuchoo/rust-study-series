@@ -35,25 +35,25 @@ use webcam_core::{FaceDetection,
                   rgb_to_minifb_buffer};
 
 const TOOLBAR_HEIGHT: usize = 56;
-const TOOLBAR_BG: u32 = 0x1f2937;
-const BUTTON_BG: u32 = 0x374151;
-const BUTTON_HOVER_BG: u32 = 0x4b5563;
-const BUTTON_TEXT: u32 = 0xf9fafb;
-const RECORDING_BG: u32 = 0xb91c1c;
-const RECORD_IDLE_BG: u32 = 0x047857;
-const EXIT_BG: u32 = 0x7f1d1d;
-const FACE_BOX: u32 = 0x22c55e;
-const FACE_LABEL_BG: u32 = 0x064e3b;
-const FACE_LABEL_TEXT: u32 = 0xecfdf5;
-const SELECTED_FACE_BOX: u32 = 0xfacc15;
-const SELECTED_FACE_LABEL_BG: u32 = 0x713f12;
+const TOOLBAR_BG: u32 = 0x001f_2937;
+const BUTTON_BG: u32 = 0x0037_4151;
+const BUTTON_HOVER_BG: u32 = 0x004b_5563;
+const BUTTON_TEXT: u32 = 0x00f9_fafb;
+const RECORDING_BG: u32 = 0x00b9_1c1c;
+const RECORD_IDLE_BG: u32 = 0x0004_7857;
+const EXIT_BG: u32 = 0x007f_1d1d;
+const FACE_BOX: u32 = 0x0022_c55e;
+const FACE_LABEL_BG: u32 = 0x0006_4e3b;
+const FACE_LABEL_TEXT: u32 = 0x00ec_fdf5;
+const SELECTED_FACE_BOX: u32 = 0x00fa_cc15;
+const SELECTED_FACE_LABEL_BG: u32 = 0x0071_3f12;
 const FACE_SCAN_INTERVAL: u64 = 5;
 const FACE_MATCH_THRESHOLD: f32 = 0.96;
-const FORM_BG: u32 = 0x111827;
-const FORM_FIELD_BG: u32 = 0x273548;
-const FORM_ACTIVE_FIELD_BG: u32 = 0x1d4ed8;
-const FORM_TEXT: u32 = 0xf9fafb;
-const FORM_MUTED_TEXT: u32 = 0x9ca3af;
+const FORM_BG: u32 = 0x0011_1827;
+const FORM_FIELD_BG: u32 = 0x0027_3548;
+const FORM_ACTIVE_FIELD_BG: u32 = 0x001d_4ed8;
+const FORM_TEXT: u32 = 0x00f9_fafb;
+const FORM_MUTED_TEXT: u32 = 0x009c_a3af;
 const RECORDINGS_DIR: &str = "recordings";
 const RECORDING_FILE_PREFIX: &str = "webcam-detector-";
 const MIN_WINDOW_WIDTH: usize = 760;
@@ -61,289 +61,428 @@ const DISPLAY_SCALE_STEPS: [usize; 7] = [50, 75, 100, 125, 150, 175, 200];
 
 fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
+    App::new()?.run()
+}
 
-    // 첫 번째 카메라(인덱스 0) 열기
-    let index = CameraIndex::Index(0);
-    let requested = RequestedFormat::new::<RgbFormat>(RequestedFormatType::AbsoluteHighestFrameRate);
+struct App {
+    camera: Camera,
+    window: Window,
+    width: usize,
+    height: usize,
+    display_scale: DisplayScale,
+    frame_rate: u32,
+    recorder: Option<Recorder>,
+    last_recording: Option<PathBuf>,
+    was_left_down: bool,
+    should_exit: bool,
+    registry_path: PathBuf,
+    face_registry: FaceRegistry,
+    face_detector: HeuristicFaceDetector,
+    face_recognizer: HeuristicFaceRecognizer,
+    face_detections: Vec<FaceDetection>,
+    face_tags: Vec<FaceTag>,
+    selected_face_rect: Option<FaceRect>,
+    selected_face_manual: bool,
+    drag_start: Option<Point>,
+    preview_origin: PreviewOrigin,
+    preview_drag: Option<PreviewDrag>,
+    frame_index: u64,
+    registration_form: Option<RegistrationForm>,
+    pending_frame: Option<Buffer>,
+}
 
-    let mut camera = Camera::new(index, requested).context("카메라를 열 수 없습니다")?;
+impl App {
+    fn new() -> Result<Self> {
+        let index = CameraIndex::Index(0);
+        let requested = RequestedFormat::new::<RgbFormat>(RequestedFormatType::AbsoluteHighestFrameRate);
+        let mut camera = Camera::new(index, requested).context("카메라를 열 수 없습니다")?;
+        camera.open_stream().context("스트림 시작 실패")?;
 
-    camera.open_stream().context("스트림 시작 실패")?;
+        let first_frame = camera.frame().context("첫 프레임 캡처 실패")?;
+        let resolution = first_frame.resolution();
+        let width = resolution.width() as usize;
+        let height = resolution.height() as usize;
+        let display_scale = DisplayScale::default();
+        let frame_rate = camera.frame_rate().max(1);
+        let window = create_window(width, height, display_scale)?;
+        let registry_path = PathBuf::from("face-registry/people.json");
+        let face_registry = FaceRegistry::load(&registry_path).context("얼굴 등록 정보 로드 실패")?;
+        face_registry.save(&registry_path).context("얼굴 등록 정보 초기화 실패")?;
 
-    let first_frame = camera.frame().context("첫 프레임 캡처 실패")?;
-    let resolution = first_frame.resolution();
-    let mut width = resolution.width() as usize;
-    let mut height = resolution.height() as usize;
-    let mut display_scale = DisplayScale::default();
+        tracing::info!("웹캠 스트리밍 시작: {width}x{height}. ESC 키로 종료.");
+        tracing::info!("얼굴 등록 정보: {}명", face_registry.people.len());
 
-    let frame_rate = camera.frame_rate().max(1);
-    let mut window = create_window(width, height, display_scale)?;
-    let mut recorder: Option<Recorder> = None;
-    let mut last_recording = latest_recording_path();
-    let mut was_left_down = false;
-    let mut should_exit = false;
-    let registry_path = PathBuf::from("face-registry/people.json");
-    let mut face_registry = FaceRegistry::load(&registry_path).context("얼굴 등록 정보 로드 실패")?;
-    face_registry.save(&registry_path).context("얼굴 등록 정보 초기화 실패")?;
-    let mut face_detector = HeuristicFaceDetector::default();
-    let face_recognizer = HeuristicFaceRecognizer::new(FACE_MATCH_THRESHOLD);
-    let mut face_detections: Vec<FaceDetection> = Vec::new();
-    let mut face_tags: Vec<FaceTag> = Vec::new();
-    let mut selected_face_rect: Option<FaceRect> = None;
-    let mut selected_face_manual = false;
-    let mut drag_start: Option<Point> = None;
-    let mut preview_origin = PreviewOrigin::default();
-    let mut preview_drag: Option<PreviewDrag> = None;
-    let mut frame_index = 0_u64;
-    let mut registration_form: Option<RegistrationForm> = None;
+        Ok(Self {
+            camera,
+            window,
+            width,
+            height,
+            display_scale,
+            frame_rate,
+            recorder: None,
+            last_recording: latest_recording_path(),
+            was_left_down: false,
+            should_exit: false,
+            registry_path,
+            face_registry,
+            face_detector: HeuristicFaceDetector::default(),
+            face_recognizer: HeuristicFaceRecognizer::new(FACE_MATCH_THRESHOLD),
+            face_detections: Vec::new(),
+            face_tags: Vec::new(),
+            selected_face_rect: None,
+            selected_face_manual: false,
+            drag_start: None,
+            preview_origin: PreviewOrigin::default(),
+            preview_drag: None,
+            frame_index: 0,
+            registration_form: None,
+            pending_frame: Some(first_frame),
+        })
+    }
 
-    tracing::info!("웹캠 스트리밍 시작: {width}x{height}. ESC 키로 종료.");
-    tracing::info!("얼굴 등록 정보: {}명", face_registry.people.len());
-
-    let mut pending_frame = Some(first_frame);
-    while window.is_open() && !should_exit {
-        let keys_pressed = window.get_keys_pressed(KeyRepeat::No);
-        if registration_form.is_none() && keys_pressed.contains(&Key::Escape) {
-            should_exit = true;
+    fn run(&mut self) -> Result<()> {
+        while self.window.is_open() && !self.should_exit {
+            self.tick()?;
         }
 
-        let frame = match pending_frame.take() {
-            | Some(frame) => frame,
-            | None => camera.frame().context("프레임 캡처 실패")?,
-        };
+        stop_recorder(&mut self.recorder, &mut self.last_recording, "종료 전 녹화 저장 완료", "종료 전 녹화 저장 실패");
+        self.camera.stop_stream().ok();
+        Ok(())
+    }
 
+    fn tick(&mut self) -> Result<()> {
+        let keys_pressed = self.window.get_keys_pressed(KeyRepeat::No);
+        if self.registration_form.is_none() && keys_pressed.contains(&Key::Escape) {
+            self.should_exit = true;
+        }
+
+        let frame = self.next_frame()?;
+        self.handle_resolution_change(&frame)?;
+        let decoded_frame = decode_frame(&frame, self.width, self.height)?;
+        self.refresh_faces(&decoded_frame);
+        self.handle_registration_keys(&keys_pressed, &decoded_frame);
+        self.write_recording(&decoded_frame);
+
+        let input = self.frame_input();
+        self.handle_preview_drag(&input);
+        self.handle_left_press(&input, &decoded_frame)?;
+        self.handle_drag_release(&input);
+        self.was_left_down = input.left_down;
+        self.render_frame(&input, &decoded_frame)
+    }
+
+    fn next_frame(&mut self) -> Result<Buffer> {
+        Ok(match self.pending_frame.take() {
+            | Some(frame) => frame,
+            | None => self.camera.frame().context("프레임 캡처 실패")?,
+        })
+    }
+
+    fn handle_resolution_change(&mut self, frame: &Buffer) -> Result<()> {
         let resolution = frame.resolution();
         let frame_width = resolution.width() as usize;
         let frame_height = resolution.height() as usize;
-        if frame_width != width || frame_height != height {
-            if let Some(active_recorder) = recorder.take() {
-                match active_recorder.stop() {
-                    | Ok(path) => {
-                        tracing::warn!("해상도가 변경되어 녹화를 중지했습니다: {}", path.display());
-                        last_recording = Some(path);
-                    },
-                    | Err(error) => tracing::warn!("해상도 변경 중 녹화 종료 실패: {error}"),
-                }
-            }
-            width = frame_width;
-            height = frame_height;
-            window = create_window(width, height, display_scale)?;
-            selected_face_rect = None;
-            selected_face_manual = false;
-            drag_start = None;
-            preview_origin = PreviewOrigin::default();
-            preview_drag = None;
-            tracing::info!("웹캠 해상도 변경: {width}x{height}");
+        if frame_width != self.width || frame_height != self.height {
+            stop_recorder(
+                &mut self.recorder,
+                &mut self.last_recording,
+                "해상도가 변경되어 녹화를 중지했습니다",
+                "해상도 변경 중 녹화 종료 실패",
+            );
+            self.width = frame_width;
+            self.height = frame_height;
+            self.window = create_window(self.width, self.height, self.display_scale)?;
+            self.reset_preview_state();
+            tracing::info!("웹캠 해상도 변경: {}x{}", self.width, self.height);
         }
 
-        let decoded_frame = decode_frame(frame, width, height)?;
-        if frame_index.is_multiple_of(FACE_SCAN_INTERVAL) {
-            face_detections = face_detector.detect(&decoded_frame.rgb, width, height);
-            face_tags = face_recognizer.recognize(&face_registry, &decoded_frame.rgb, width, height, &face_detections);
-            if let Some(tracked_rect) = track_selected_face(selected_face_rect, &face_tags) {
-                selected_face_rect = Some(tracked_rect);
-                selected_face_manual = false;
-            } else if !selected_face_manual {
-                selected_face_rect = None;
+        Ok(())
+    }
+
+    fn reset_preview_state(&mut self) {
+        self.selected_face_rect = None;
+        self.selected_face_manual = false;
+        self.drag_start = None;
+        self.preview_origin = PreviewOrigin::default();
+        self.preview_drag = None;
+    }
+
+    fn refresh_faces(&mut self, decoded_frame: &DecodedFrame) {
+        if self.frame_index.is_multiple_of(FACE_SCAN_INTERVAL) {
+            self.face_detections = self.face_detector.detect(&decoded_frame.rgb, self.width, self.height);
+            self.face_tags = self
+                .face_recognizer
+                .recognize(&self.face_registry, &decoded_frame.rgb, self.width, self.height, &self.face_detections);
+            if let Some(tracked_rect) = track_selected_face(self.selected_face_rect, &self.face_tags) {
+                self.selected_face_rect = Some(tracked_rect);
+                self.selected_face_manual = false;
+            } else if !self.selected_face_manual {
+                self.selected_face_rect = None;
             }
         }
-        frame_index = frame_index.wrapping_add(1);
+        self.frame_index = self.frame_index.wrapping_add(1);
+    }
 
-        if let Some(form) = registration_form.as_mut() {
-            match form.handle_keys(&keys_pressed) {
+    fn handle_registration_keys(&mut self, keys_pressed: &[Key], decoded_frame: &DecodedFrame) {
+        if let Some(form) = self.registration_form.as_mut() {
+            match form.handle_keys(keys_pressed) {
                 | RegistrationFormEvent::None => {},
                 | RegistrationFormEvent::Cancel => {
                     tracing::info!("얼굴 등록 취소");
-                    registration_form = None;
+                    self.registration_form = None;
                 },
                 | RegistrationFormEvent::Submit => {
-                    match complete_registration(&mut face_registry, &registry_path, form) {
+                    match complete_registration(&mut self.face_registry, &self.registry_path, form) {
                         | Ok(person_name) => {
                             tracing::info!("얼굴 등록 완료: {person_name}");
-                            face_tags = face_recognizer.recognize(&face_registry, &decoded_frame.rgb, width, height, &face_detections);
+                            self.face_tags =
+                                self.face_recognizer
+                                    .recognize(&self.face_registry, &decoded_frame.rgb, self.width, self.height, &self.face_detections);
                         },
                         | Err(error) => tracing::warn!("얼굴 등록 실패: {error}"),
                     }
-                    registration_form = None;
+                    self.registration_form = None;
                 },
             }
         }
+    }
 
-        if let Some(active_recorder) = recorder.as_mut()
+    fn write_recording(&mut self, decoded_frame: &DecodedFrame) {
+        if let Some(active_recorder) = self.recorder.as_mut()
             && let Err(error) = active_recorder.write_frame(&decoded_frame.rgb)
         {
             tracing::warn!("녹화 프레임 저장 실패: {error}");
-            if let Some(active_recorder) = recorder.take() {
-                match active_recorder.stop() {
-                    | Ok(path) => last_recording = Some(path),
-                    | Err(error) => tracing::warn!("녹화 종료 실패: {error}"),
-                }
-            }
+            stop_recorder(&mut self.recorder, &mut self.last_recording, "녹화 저장 완료", "녹화 종료 실패");
         }
+    }
 
-        let recording = recorder.is_some();
+    fn frame_input(&mut self) -> FrameInput {
+        let recording = self.recorder.is_some();
         let buttons = toolbar_buttons(recording);
-        let mouse = mouse_position(&window);
+        let mouse = mouse_position(&self.window);
         let hover = mouse.and_then(|point| button_at(point, &buttons));
-        let display_width = display_scale.scaled_dimension(width);
-        let display_height = display_scale.scaled_dimension(height);
-        let (window_width, window_height) = window.get_size();
+        let display_width = self.display_scale.scaled_dimension(self.width);
+        let display_height = self.display_scale.scaled_dimension(self.height);
+        let (window_width, window_height) = self.window.get_size();
         let window_width = window_width.max(1);
         let window_height = window_height.max(TOOLBAR_HEIGHT + 1);
-        preview_origin.clamp(window_width, window_height, display_width, display_height);
-        let left_down = window.get_mouse_down(MouseButton::Left);
-        let right_down = window.get_mouse_down(MouseButton::Right);
-        if registration_form.is_none() && right_down {
-            if preview_drag.is_none()
-                && let Some(point) = mouse
-                && mouse_video_point(point, preview_origin, display_scale, width, height).is_some()
+        self.preview_origin.clamp(window_width, window_height, display_width, display_height);
+        FrameInput {
+            mouse,
+            hover,
+            display_width,
+            display_height,
+            window_width,
+            window_height,
+            left_down: self.window.get_mouse_down(MouseButton::Left),
+            right_down: self.window.get_mouse_down(MouseButton::Right),
+        }
+    }
+
+    fn handle_preview_drag(&mut self, input: &FrameInput) {
+        if self.registration_form.is_none() && input.right_down {
+            if self.preview_drag.is_none()
+                && let Some(point) = input.mouse
+                && mouse_video_point(point, self.preview_origin, self.display_scale, self.width, self.height).is_some()
             {
-                preview_drag = Some(PreviewDrag {
+                self.preview_drag = Some(PreviewDrag {
                     mouse_start: point,
-                    origin_start: preview_origin,
+                    origin_start: self.preview_origin,
                 });
             }
-            if let (Some(drag), Some(point)) = (preview_drag, mouse) {
-                preview_origin = drag.preview_origin_at(point);
-                preview_origin.clamp(window_width, window_height, display_width, display_height);
+            if let (Some(drag), Some(point)) = (self.preview_drag, input.mouse) {
+                self.preview_origin = drag.preview_origin_at(point);
+                self.preview_origin
+                    .clamp(input.window_width, input.window_height, input.display_width, input.display_height);
             }
         } else {
-            preview_drag = None;
+            self.preview_drag = None;
         }
-        if registration_form.is_none() && left_down && !was_left_down {
-            drag_start = None;
-            if let Some(action) = hover {
-                match action {
-                    | UiAction::ToggleRecording =>
-                        if let Some(active_recorder) = recorder.take() {
-                            match active_recorder.stop() {
-                                | Ok(path) => {
-                                    tracing::info!("녹화 저장 완료: {}", path.display());
-                                    last_recording = Some(path);
-                                },
-                                | Err(error) => tracing::warn!("녹화 중지 실패: {error}"),
-                            }
-                        } else {
-                            match Recorder::start(width, height, frame_rate) {
-                                | Ok(active_recorder) => {
-                                    tracing::info!("녹화 시작: {}", active_recorder.path().display());
-                                    recorder = Some(active_recorder);
-                                },
-                                | Err(error) => tracing::warn!("녹화 시작 실패: {error}"),
-                            }
-                        },
-                    | UiAction::PlayLastRecording => {
-                        if last_recording.as_ref().is_none_or(|path| !path.exists()) {
-                            last_recording = latest_recording_path();
-                        }
-                        play_last_recording(last_recording.as_deref());
-                    },
-                    | UiAction::RegisterCurrentFace =>
-                        if let Some(rect) = selected_face_rect {
-                            registration_form = Some(start_registration_form(
-                                &face_registry,
-                                &face_recognizer,
-                                &decoded_frame.rgb,
-                                width,
-                                height,
-                                rect,
-                            ));
-                        } else {
-                            tracing::warn!("등록할 얼굴 박스를 먼저 클릭해서 선택하세요.");
-                        },
-                    | UiAction::DeleteCurrentFace => match delete_current_face(&mut face_registry, &registry_path, &face_tags, selected_face_rect) {
-                        | Ok(Some(person_name)) => {
-                            tracing::info!("얼굴 등록 삭제 완료: {person_name}");
-                            face_tags = face_recognizer.recognize(&face_registry, &decoded_frame.rgb, width, height, &face_detections);
-                            selected_face_rect = track_selected_face(selected_face_rect, &face_tags);
-                            selected_face_manual = selected_face_rect.is_some_and(|rect| face_tag_at_rect(rect, &face_tags).is_none());
-                        },
-                        | Ok(None) => tracing::warn!("삭제할 등록 얼굴이 현재 화면에 인식되지 않았습니다."),
-                        | Err(error) => tracing::warn!("얼굴 등록 삭제 실패: {error}"),
-                    },
-                    | UiAction::DecreasePreviewSize => {
-                        display_scale.decrease();
-                        window = create_window(width, height, display_scale)?;
-                        preview_origin = PreviewOrigin::default();
-                        drag_start = None;
-                        preview_drag = None;
-                    },
-                    | UiAction::ResetPreviewSize => {
-                        display_scale.reset();
-                        window = create_window(width, height, display_scale)?;
-                        preview_origin = PreviewOrigin::default();
-                        drag_start = None;
-                        preview_drag = None;
-                    },
-                    | UiAction::IncreasePreviewSize => {
-                        display_scale.increase();
-                        window = create_window(width, height, display_scale)?;
-                        preview_origin = PreviewOrigin::default();
-                        drag_start = None;
-                        preview_drag = None;
-                    },
-                    | UiAction::Exit => should_exit = true,
-                }
-            } else if let Some(point) = mouse {
-                if let Some(rect) = face_tag_at(point, &face_tags, preview_origin, display_scale, width, height) {
-                    selected_face_rect = Some(rect);
-                    selected_face_manual = false;
-                    tracing::info!("얼굴 박스 선택: x={} y={} w={} h={}", rect.x, rect.y, rect.width, rect.height);
-                } else if mouse_video_point(point, preview_origin, display_scale, width, height).is_some() {
-                    selected_face_rect = None;
-                    selected_face_manual = false;
-                    drag_start = Some(point);
-                }
+    }
+
+    fn handle_left_press(&mut self, input: &FrameInput, decoded_frame: &DecodedFrame) -> Result<()> {
+        if self.registration_form.is_some() || !input.left_down || self.was_left_down {
+            return Ok(());
+        }
+
+        self.drag_start = None;
+        if let Some(action) = input.hover {
+            self.handle_toolbar_action(action, decoded_frame)?;
+        } else if let Some(point) = input.mouse {
+            self.select_or_start_drag(point);
+        }
+
+        Ok(())
+    }
+
+    fn handle_toolbar_action(&mut self, action: UiAction, decoded_frame: &DecodedFrame) -> Result<()> {
+        match action {
+            | UiAction::ToggleRecording => self.toggle_recording(),
+            | UiAction::PlayLastRecording => self.play_last_recording(),
+            | UiAction::RegisterCurrentFace => self.start_face_registration(decoded_frame),
+            | UiAction::DeleteCurrentFace => self.delete_selected_face(decoded_frame),
+            | UiAction::DecreasePreviewSize => self.resize_preview(DisplayScaleAction::Decrease)?,
+            | UiAction::ResetPreviewSize => self.resize_preview(DisplayScaleAction::Reset)?,
+            | UiAction::IncreasePreviewSize => self.resize_preview(DisplayScaleAction::Increase)?,
+            | UiAction::Exit => self.should_exit = true,
+        }
+
+        Ok(())
+    }
+
+    fn toggle_recording(&mut self) {
+        if self.recorder.is_some() {
+            stop_recorder(&mut self.recorder, &mut self.last_recording, "녹화 저장 완료", "녹화 중지 실패");
+        } else {
+            match Recorder::start(self.width, self.height, self.frame_rate) {
+                | Ok(active_recorder) => {
+                    tracing::info!("녹화 시작: {}", active_recorder.path().display());
+                    self.recorder = Some(active_recorder);
+                },
+                | Err(error) => tracing::warn!("녹화 시작 실패: {error}"),
             }
         }
-        if registration_form.is_none()
-            && !left_down
-            && was_left_down
-            && let (Some(start), Some(end)) = (drag_start.take(), mouse)
-            && let Some(rect) = face_rect_from_drag(start, end, preview_origin, display_scale, width, height)
+    }
+
+    fn play_last_recording(&mut self) {
+        if self.last_recording.as_ref().is_none_or(|path| !path.exists()) {
+            self.last_recording = latest_recording_path();
+        }
+        play_last_recording(self.last_recording.as_deref());
+    }
+
+    fn start_face_registration(&mut self, decoded_frame: &DecodedFrame) {
+        if let Some(rect) = self.selected_face_rect {
+            self.registration_form = Some(start_registration_form(
+                &self.face_registry,
+                &self.face_recognizer,
+                &decoded_frame.rgb,
+                self.width,
+                self.height,
+                rect,
+            ));
+        } else {
+            tracing::warn!("등록할 얼굴 박스를 먼저 클릭해서 선택하세요.");
+        }
+    }
+
+    fn delete_selected_face(&mut self, decoded_frame: &DecodedFrame) {
+        match delete_current_face(&mut self.face_registry, &self.registry_path, &self.face_tags, self.selected_face_rect) {
+            | Ok(Some(person_name)) => {
+                tracing::info!("얼굴 등록 삭제 완료: {person_name}");
+                self.face_tags = self
+                    .face_recognizer
+                    .recognize(&self.face_registry, &decoded_frame.rgb, self.width, self.height, &self.face_detections);
+                self.selected_face_rect = track_selected_face(self.selected_face_rect, &self.face_tags);
+                self.selected_face_manual = self.selected_face_rect.is_some_and(|rect| face_tag_at_rect(rect, &self.face_tags).is_none());
+            },
+            | Ok(None) => tracing::warn!("삭제할 등록 얼굴이 현재 화면에 인식되지 않았습니다."),
+            | Err(error) => tracing::warn!("얼굴 등록 삭제 실패: {error}"),
+        }
+    }
+
+    fn resize_preview(&mut self, action: DisplayScaleAction) -> Result<()> {
+        match action {
+            | DisplayScaleAction::Decrease => self.display_scale.decrease(),
+            | DisplayScaleAction::Reset => self.display_scale.reset(),
+            | DisplayScaleAction::Increase => self.display_scale.increase(),
+        }
+        self.window = create_window(self.width, self.height, self.display_scale)?;
+        self.preview_origin = PreviewOrigin::default();
+        self.drag_start = None;
+        self.preview_drag = None;
+        Ok(())
+    }
+
+    fn select_or_start_drag(&mut self, point: Point) {
+        if let Some(rect) = face_tag_at(point, &self.face_tags, self.preview_origin, self.display_scale, self.width, self.height) {
+            self.selected_face_rect = Some(rect);
+            self.selected_face_manual = false;
+            tracing::info!("얼굴 박스 선택: x={} y={} w={} h={}", rect.x, rect.y, rect.width, rect.height);
+        } else if mouse_video_point(point, self.preview_origin, self.display_scale, self.width, self.height).is_some() {
+            self.selected_face_rect = None;
+            self.selected_face_manual = false;
+            self.drag_start = Some(point);
+        }
+    }
+
+    fn handle_drag_release(&mut self, input: &FrameInput) {
+        if self.registration_form.is_none()
+            && !input.left_down
+            && self.was_left_down
+            && let (Some(start), Some(end)) = (self.drag_start.take(), input.mouse)
+            && let Some(rect) = face_rect_from_drag(start, end, self.preview_origin, self.display_scale, self.width, self.height)
         {
-            selected_face_rect = Some(rect);
-            selected_face_manual = true;
+            self.selected_face_rect = Some(rect);
+            self.selected_face_manual = true;
             tracing::info!("수동 얼굴 박스 선택: x={} y={} w={} h={}", rect.x, rect.y, rect.width, rect.height);
         }
-        was_left_down = left_down;
+    }
 
-        let recording = recorder.is_some();
-        let drag_rect = if registration_form.is_none() && left_down {
-            drag_start.and_then(|start| mouse.and_then(|end| face_rect_from_drag(start, end, preview_origin, display_scale, width, height)))
+    fn render_frame(&mut self, input: &FrameInput, decoded_frame: &DecodedFrame) -> Result<()> {
+        let drag_rect = if self.registration_form.is_none() && input.left_down {
+            self.drag_start.and_then(|start| {
+                input
+                    .mouse
+                    .and_then(|end| face_rect_from_drag(start, end, self.preview_origin, self.display_scale, self.width, self.height))
+            })
         } else {
             None
         };
-        let scaled_display = scale_video_buffer(&decoded_frame.display, width, height, display_width, display_height);
+        let scaled_display = scale_video_buffer(&decoded_frame.display, self.width, self.height, input.display_width, input.display_height);
         let buffer = compose_frame(
             &scaled_display,
-            window_width,
-            window_height,
-            display_width,
-            display_height,
+            input.window_width,
+            input.window_height,
+            input.display_width,
+            input.display_height,
             ComposeState {
-                recording,
-                hover,
-                preview_origin,
-                display_scale,
-                face_tags: &face_tags,
-                selected_face_rect,
+                recording: self.recorder.is_some(),
+                hover: input.hover,
+                preview_origin: self.preview_origin,
+                display_scale: self.display_scale,
+                face_tags: &self.face_tags,
+                selected_face_rect: self.selected_face_rect,
                 drag_rect,
-                registration_form: registration_form.as_ref(),
+                registration_form: self.registration_form.as_ref(),
             },
         );
-        window.update_with_buffer(&buffer, window_width, window_height).context("화면 업데이트 실패")?;
+        self.window
+            .update_with_buffer(&buffer, input.window_width, input.window_height)
+            .context("화면 업데이트 실패")
     }
+}
 
-    if let Some(active_recorder) = recorder.take() {
-        match active_recorder.stop() {
-            | Ok(path) => tracing::info!("종료 전 녹화 저장 완료: {}", path.display()),
-            | Err(error) => tracing::warn!("종료 전 녹화 저장 실패: {error}"),
-        }
+struct FrameInput {
+    mouse: Option<Point>,
+    hover: Option<UiAction>,
+    display_width: usize,
+    display_height: usize,
+    window_width: usize,
+    window_height: usize,
+    left_down: bool,
+    right_down: bool,
+}
+
+#[derive(Clone, Copy)]
+enum DisplayScaleAction {
+    Decrease,
+    Reset,
+    Increase,
+}
+
+fn stop_recorder(recorder: &mut Option<Recorder>, last_recording: &mut Option<PathBuf>, success_message: &str, error_message: &str) {
+    let Some(active_recorder) = recorder.take() else {
+        return;
+    };
+
+    match active_recorder.stop() {
+        | Ok(path) => {
+            tracing::info!("{success_message}: {}", path.display());
+            *last_recording = Some(path);
+        },
+        | Err(error) => tracing::warn!("{error_message}: {error}"),
     }
-
-    camera.stop_stream().ok();
-    Ok(())
 }
 
 fn create_window(width: usize, height: usize, display_scale: DisplayScale) -> Result<Window> {
@@ -366,7 +505,7 @@ struct DecodedFrame {
     display: Vec<u32>,
 }
 
-fn decode_frame(frame: Buffer, width: usize, height: usize) -> Result<DecodedFrame> {
+fn decode_frame(frame: &Buffer, width: usize, height: usize) -> Result<DecodedFrame> {
     let rgb = frame.decode_image::<RgbFormat>().context("프레임 디코드 실패")?;
     let raw = rgb.into_raw();
     let display = rgb_to_minifb_buffer(&raw, width, height).context("프레임 버퍼 변환 실패")?;
@@ -479,7 +618,7 @@ fn recording_file_name() -> Result<String> {
 fn latest_recording_path() -> Option<PathBuf> {
     fs::read_dir(RECORDINGS_DIR)
         .ok()?
-        .filter_map(|entry| entry.ok())
+        .filter_map(Result::ok)
         .filter_map(|entry| {
             let path = entry.path();
             let file_name = path.file_name()?.to_str()?;
@@ -518,21 +657,24 @@ fn complete_registration(registry: &mut FaceRegistry, registry_path: &Path, form
         anyhow::bail!("이름을 입력해야 합니다");
     }
 
-    let age = if form.age.trim().is_empty() {
-        None
-    } else {
-        Some(form.age.trim().parse::<u8>().context("나이는 0-255 사이 숫자여야 합니다")?)
-    };
-    let gender = if form.gender.trim().is_empty() {
-        None
-    } else {
-        Some(form.gender.trim().to_string())
-    };
+    let age = parse_optional_age(&form.age)?;
+    let gender = trimmed_non_empty(&form.gender).map(str::to_owned);
 
-    let person = registry.register_person(name.to_string(), age, gender, form.embedding.clone());
+    let person = registry.register_person(name, age, gender, form.embedding.clone());
     registry.save(registry_path).context("얼굴 등록 정보 저장 실패")?;
 
     Ok(person.name)
+}
+
+fn parse_optional_age(value: &str) -> Result<Option<u8>> {
+    trimmed_non_empty(value)
+        .map(|age| age.parse::<u8>().context("나이는 0-255 사이 숫자여야 합니다"))
+        .transpose()
+}
+
+fn trimmed_non_empty(value: &str) -> Option<&str> {
+    let value = value.trim();
+    (!value.is_empty()).then_some(value)
 }
 
 fn delete_current_face(
@@ -541,19 +683,19 @@ fn delete_current_face(
     face_tags: &[FaceTag],
     selected_face_rect: Option<FaceRect>,
 ) -> Result<Option<String>> {
-    let selected_person_id = selected_face_rect.and_then(|selected| face_tags.iter().find(|tag| tag.rect == selected).and_then(|tag| tag.person_id.clone()));
+    let selected_person_id = selected_face_rect.and_then(|selected| face_tags.iter().find(|tag| tag.rect == selected).and_then(|tag| tag.person_id.as_deref()));
 
     let largest_person_id = face_tags
         .iter()
-        .filter_map(|tag| tag.person_id.as_ref().map(|person_id| (person_id, tag.rect.width * tag.rect.height)))
+        .filter_map(|tag| tag.person_id.as_deref().map(|person_id| (person_id, tag.rect.width * tag.rect.height)))
         .max_by_key(|(_, area)| *area)
-        .map(|(person_id, _)| person_id.clone());
+        .map(|(person_id, _)| person_id);
 
     let Some(person_id) = selected_person_id.or(largest_person_id) else {
         return Ok(None);
     };
 
-    let person = registry.remove_person(&person_id);
+    let person = registry.remove_person(person_id);
     if person.is_some() {
         registry.save(registry_path).context("얼굴 등록 정보 저장 실패")?;
     }
@@ -634,7 +776,7 @@ impl RegistrationForm {
 fn key_to_form_char(key: Key, field: RegistrationField) -> Option<char> {
     match field {
         | RegistrationField::Age => digit_key(key),
-        | RegistrationField::Name | RegistrationField::Gender => alpha_numeric_key(key).or_else(|| if key == Key::Space { Some(' ') } else { None }),
+        | RegistrationField::Name | RegistrationField::Gender => alpha_numeric_key(key).or_else(|| (key == Key::Space).then_some(' ')),
     }
 }
 
@@ -714,16 +856,16 @@ impl Default for PreviewOrigin {
     fn default() -> Self {
         Self {
             x: 0,
-            y: TOOLBAR_HEIGHT as isize,
+            y: usize_to_isize(TOOLBAR_HEIGHT),
         }
     }
 }
 
 impl PreviewOrigin {
     fn clamp(&mut self, window_width: usize, window_height: usize, display_width: usize, display_height: usize) {
-        let max_x = window_width.saturating_sub(display_width) as isize;
-        let min_y = TOOLBAR_HEIGHT as isize;
-        let max_y = window_height.saturating_sub(display_height) as isize;
+        let max_x = usize_to_isize(window_width.saturating_sub(display_width));
+        let min_y = usize_to_isize(TOOLBAR_HEIGHT);
+        let max_y = usize_to_isize(window_height.saturating_sub(display_height));
         self.x = self.x.clamp(0, max_x);
         self.y = self.y.clamp(min_y, max_y.max(min_y));
     }
@@ -738,8 +880,8 @@ struct PreviewDrag {
 impl PreviewDrag {
     fn preview_origin_at(self, point: Point) -> PreviewOrigin {
         PreviewOrigin {
-            x: self.origin_start.x + point.x as isize - self.mouse_start.x as isize,
-            y: self.origin_start.y + point.y as isize - self.mouse_start.y as isize,
+            x: self.origin_start.x + usize_to_isize(point.x) - usize_to_isize(self.mouse_start.x),
+            y: self.origin_start.y + usize_to_isize(point.y) - usize_to_isize(self.mouse_start.y),
         }
     }
 }
@@ -888,25 +1030,30 @@ fn toolbar_buttons(recording: bool) -> [Button; 8] {
 }
 
 fn mouse_position(window: &Window) -> Option<Point> {
-    window.get_mouse_pos(MouseMode::Discard).map(|(x, y)| Point {
-        x: x as usize,
-        y: y as usize,
+    window.get_mouse_pos(MouseMode::Discard).and_then(|(x, y)| {
+        Some(Point {
+            x: screen_coord(x)?,
+            y: screen_coord(y)?,
+        })
     })
 }
+
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+fn screen_coord(value: f32) -> Option<usize> { value.is_finite().then_some(value).filter(|value| *value >= 0.0).map(|value| value as usize) }
 
 fn button_at(point: Point, buttons: &[Button]) -> Option<UiAction> { buttons.iter().find(|button| button.rect.contains(point)).map(|button| button.action) }
 
 fn mouse_video_point(point: Point, preview_origin: PreviewOrigin, display_scale: DisplayScale, video_width: usize, video_height: usize) -> Option<Point> {
     let display_width = display_scale.scaled_dimension(video_width);
     let display_height = display_scale.scaled_dimension(video_height);
-    let display_x = point.x as isize - preview_origin.x;
-    let display_y = point.y as isize - preview_origin.y;
+    let display_x = usize_to_isize(point.x) - preview_origin.x;
+    let display_y = usize_to_isize(point.y) - preview_origin.y;
     if display_x < 0 || display_y < 0 || video_width == 0 || video_height == 0 {
         return None;
     }
 
-    let display_x = display_x as usize;
-    let display_y = display_y as usize;
+    let display_x = non_negative_isize_to_usize(display_x);
+    let display_y = non_negative_isize_to_usize(display_y);
     if display_x >= display_width || display_y >= display_height {
         return None;
     }
@@ -996,12 +1143,13 @@ fn face_rect_overlap_score(left: FaceRect, right: FaceRect) -> f32 {
         return 0.0;
     }
 
-    let intersection = ((x2 - x1) * (y2 - y1)) as f32;
-    let left_area = (left.width * left.height) as f32;
-    let right_area = (right.width * right.height) as f32;
+    let intersection = usize_to_f32((x2 - x1) * (y2 - y1));
+    let left_area = usize_to_f32(left.width * left.height);
+    let right_area = usize_to_f32(right.width * right.height);
     intersection / (left_area + right_area - intersection)
 }
 
+#[derive(Clone, Copy)]
 struct ComposeState<'a> {
     recording: bool,
     hover: Option<UiAction>,
@@ -1053,8 +1201,8 @@ fn compose_frame(video: &[u32], window_width: usize, window_height: usize, displ
 fn draw_video(buffer: &mut [u32], width: usize, video: &[u32], display_width: usize, display_height: usize, preview_origin: PreviewOrigin) {
     let height = buffer.len() / width;
     for row in 0 .. display_height {
-        let target_y = preview_origin.y + row as isize;
-        if target_y < TOOLBAR_HEIGHT as isize || target_y >= height as isize {
+        let target_y = preview_origin.y + usize_to_isize(row);
+        if target_y < usize_to_isize(TOOLBAR_HEIGHT) || target_y >= usize_to_isize(height) {
             continue;
         }
 
@@ -1063,18 +1211,19 @@ fn draw_video(buffer: &mut [u32], width: usize, video: &[u32], display_width: us
         let mut target_x = preview_origin.x;
         let mut copy_width = display_width;
         if target_x < 0 {
-            source_x = (-target_x) as usize;
+            source_x = non_negative_isize_to_usize(-target_x);
             copy_width = copy_width.saturating_sub(source_x);
             target_x = 0;
         }
-        if target_x as usize + copy_width > width {
-            copy_width = width.saturating_sub(target_x as usize);
+        let target_x = non_negative_isize_to_usize(target_x);
+        if target_x + copy_width > width {
+            copy_width = width.saturating_sub(target_x);
         }
         if copy_width == 0 {
             continue;
         }
 
-        let target_start = target_y as usize * width + target_x as usize;
+        let target_start = non_negative_isize_to_usize(target_y) * width + target_x;
         let source_start = source_start + source_x;
         buffer[target_start .. target_start + copy_width].copy_from_slice(&video[source_start .. source_start + copy_width]);
     }
@@ -1093,7 +1242,7 @@ fn draw_registration_form(buffer: &mut [u32], width: usize, total_height: usize,
     };
 
     fill_rect(buffer, width, rect, FORM_BG);
-    draw_rect_border_thick(buffer, width, rect, 0x60a5fa, 2);
+    draw_rect_border_thick(buffer, width, rect, 0x0060_a5fa, 2);
     draw_text(buffer, width, x + 14, y + 16, "REGISTER FACE", FORM_TEXT);
 
     draw_form_field(buffer, width, x + 14, y + 42, "NAME", &form.name, form.field == RegistrationField::Name);
@@ -1111,7 +1260,7 @@ fn draw_form_field(buffer: &mut [u32], width: usize, x: usize, y: usize, label: 
         height: 22,
     };
     fill_rect(buffer, width, field_rect, if active { FORM_ACTIVE_FIELD_BG } else { FORM_FIELD_BG });
-    draw_rect_border(buffer, width, field_rect, 0x030712);
+    draw_rect_border(buffer, width, field_rect, 0x0003_0712);
     draw_text(buffer, width, field_rect.x + 6, field_rect.y + 8, value, FORM_TEXT);
 }
 
@@ -1180,8 +1329,8 @@ fn draw_manual_face_rect(
 fn buffer_rect(rect: FaceRect, preview_origin: PreviewOrigin, display_scale: DisplayScale) -> Rect {
     let percent = display_scale.percent();
     Rect {
-        x: (preview_origin.x + (rect.x * percent / 100) as isize).max(0) as usize,
-        y: (preview_origin.y + (rect.y * percent / 100) as isize).max(TOOLBAR_HEIGHT as isize) as usize,
+        x: non_negative_isize_to_usize((preview_origin.x + usize_to_isize(rect.x * percent / 100)).max(0)),
+        y: non_negative_isize_to_usize((preview_origin.y + usize_to_isize(rect.y * percent / 100)).max(usize_to_isize(TOOLBAR_HEIGHT))),
         width: (rect.width * percent).div_ceil(100).max(1),
         height: (rect.height * percent).div_ceil(100).max(1),
     }
@@ -1208,15 +1357,15 @@ fn draw_toolbar(buffer: &mut [u32], width: usize, recording: bool, hover: Option
     }
 
     if recording {
-        draw_text(buffer, width, 642, 22, "RECORDING", 0xfca5a5);
-        fill_circle(buffer, width, 630, 28, 5, 0xef4444);
+        draw_text(buffer, width, 642, 22, "RECORDING", 0x00fc_a5a5);
+        fill_circle(buffer, width, 630, 28, 5, 0x00ef_4444);
     }
-    draw_text(buffer, width, 706, 22, &format!("{}%", display_scale.percent()), 0xd1d5db);
+    draw_text(buffer, width, 706, 22, &format!("{}%", display_scale.percent()), 0x00d1_d5db);
 }
 
 fn draw_button(buffer: &mut [u32], width: usize, button: Button, color: u32) {
     fill_rect(buffer, width, button.rect, color);
-    draw_rect_border(buffer, width, button.rect, 0x111827);
+    draw_rect_border(buffer, width, button.rect, 0x0011_1827);
 
     let text_width = button.label.len() * 6;
     let text_x = button.rect.x + button.rect.width.saturating_sub(text_width) / 2;
@@ -1275,15 +1424,15 @@ fn draw_rect_border_thick(buffer: &mut [u32], width: usize, rect: Rect, color: u
 }
 
 fn fill_circle(buffer: &mut [u32], width: usize, cx: usize, cy: usize, radius: usize, color: u32) {
-    let radius_squared = (radius * radius) as isize;
-    let r = radius as isize;
+    let radius_squared = usize_to_isize(radius * radius);
+    let r = usize_to_isize(radius);
     for dy in -r ..= r {
         for dx in -r ..= r {
             if dx * dx + dy * dy <= radius_squared {
-                let x = cx as isize + dx;
-                let y = cy as isize + dy;
+                let x = usize_to_isize(cx) + dx;
+                let y = usize_to_isize(cy) + dy;
                 if x >= 0 && y >= 0 {
-                    set_pixel(buffer, width, x as usize, y as usize, color);
+                    set_pixel(buffer, width, non_negative_isize_to_usize(x), non_negative_isize_to_usize(y), color);
                 }
             }
         }
@@ -1361,6 +1510,13 @@ fn set_pixel(buffer: &mut [u32], width: usize, x: usize, y: usize, color: u32) {
         buffer[y * width + x] = color;
     }
 }
+
+fn usize_to_isize(value: usize) -> isize { isize::try_from(value).unwrap_or(isize::MAX) }
+
+fn non_negative_isize_to_usize(value: isize) -> usize { usize::try_from(value).expect("value is checked to be non-negative") }
+
+#[allow(clippy::cast_precision_loss)]
+fn usize_to_f32(value: usize) -> f32 { value as f32 }
 
 fn play_last_recording(path: Option<&Path>) {
     let Some(path) = path else {
